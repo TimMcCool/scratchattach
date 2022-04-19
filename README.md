@@ -5,6 +5,8 @@ Automate actions and interact with your Scratch projects through cloud variables
 **You also need to have the coding language Python installed on your computer.**
 *Download Python here if you don't have it: https://www.python.org/downloads/*
 
+The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
+
 # Installation
 
 To install the library, run the following command in your command prompt
@@ -117,7 +119,7 @@ def on_create(event):
 @events.on_ready #Called when the event listener is ready
    print("Event listener ready!")
 
-events.run() #Starts the event listener
+events.run() #Make sure this is ALWAYS at the bottom of your Python file!
 ```
 
 **Tip:** If you combine this with the scripts from above, you can make a bot that
@@ -131,7 +133,7 @@ transmit data*
 
 **Add Cloud requests to your Scratch project:**
 
-First, download this sprite to your computer: <https://scratch3-assets.1tim.repl.co/cloudrequests.sprite3
+First, download this sprite to your computer: https://scratch3-assets.1tim.repl.co/cloudrequests.sprite3
 
 Then, go to your project, create a cloud variable called `TO_HOST` and import the downloaded sprite
 
@@ -156,7 +158,7 @@ def ping(): #called when client receives request
 def on_ready():
     print("Request handler is ready")
 
-client.run()
+client.run()  #Make sure this is ALWAYS at the bottom of your Python file!
 ```
 
 In the `Cloud Requests` sprite, you will find this block:
@@ -182,7 +184,7 @@ Scratch code:
 
 ![image](https://scratch3-assets.1tim.repl.co/pypi_docs/example1.png/)
 
-Python code (add this to the code from above):
+Python code (add this to the code from above, but make sure `client.run()` stays at the bottom of the file):
 
 ```
 @client.request
@@ -342,7 +344,7 @@ project.toggle_commenting()
 project.remixes(limit=None, offset=0) #Returns the remixes as list of scratch3.Project
 project.studios(limit=None, offset=0) #Returns the studios the project is in as list of dicts
 
-project.download(filename="project_name.sb3", dir="/") #Downloads the project to your computer
+project.download(filename="project_name.sb3", dir="") #Downloads the project to your computer
 project.get_raw_json() #Returns the json of the project content as dict
 project.get_creator_agent() #Returns the user-agent of the user who created the project (with information about their browser and OS)
 ```
@@ -416,7 +418,7 @@ scratch3.design_studio_projects()
 # Contributors
 
 -   Almost all code by TimMcCool
-    (<https://scratch.mit.edu/users/TimMcCool/)
+    (https://scratch.mit.edu/users/TimMcCool/)
 -   Siddhesh (creator of scratchconnect) for some help and the profile
     comments API
 -   DatOneLefty for ScratchDB which is used to fetch stats and ranks
@@ -424,4 +426,4 @@ scratch3.design_studio_projects()
 # Support
 
 If you need help with your code, leave a comment on TimMcCool's Scratch
-profile: <https://scratch.mit.edu/users/TimMcCool/
+profile: https://scratch.mit.edu/users/TimMcCool/
