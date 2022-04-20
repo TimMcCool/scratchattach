@@ -104,22 +104,23 @@ import scratch3
 
 events = scratch3.CloudEvents("project_id")
 
-@events.on_event
+@events.event
 def on_set(event): #Called when a cloud var is set
     print(f"{event.user} set the variable {event.var} to the valuee {event.value} at {event.timestamp}")
 
-@events.on_event
+@events.event
 def on_del(event):
     print(f"{event.user} deleted variable {event.var}")
 
-@events.on_event
+@events.event
 def on_create(event):
     print(f"{event.user} created variable {event.var}")
 
-@events.on_ready #Called when the event listener is ready
+@events.event #Called when the event listener is ready
+def on_ready():
    print("Event listener ready!")
 
-events.run() #Make sure this is ALWAYS at the bottom of your Python file!
+events.start() #Make sure this is ALWAYS at the bottom of your Python file!
 ```
 
 **Tip:** If you combine this with the scripts from above, you can make a bot that
@@ -275,6 +276,10 @@ user.post_comment("comment content", parent_id="", commentee_id="") #Posts a com
 user.reply_comment("comment content", parent_id="parent_id") #Replies to a specified profile comment. Requires logging in. Returns the info of the posted commented.
 user.delete_comment(comment_id="comment_id")
 user.report_comment(comment_id="comment_id")
+
+user.toggle_commenting()
+user.set_bio(text) #Changes the 'About me' of the user
+user.set_wiwo(text)
 
 user.stats() #Returns the user's statistics as dict. Fetched from
 ScratchDB user.ranks() #Returns the user's ranks as dict. Fetched from ScratchDB

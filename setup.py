@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = '0.2.3'
+VERSION = '0.2.5'
 DESCRIPTION = 'An API Wrapper for scratch.mit.edu'
 LONG_DESCRIPTION = DESCRIPTION
 
