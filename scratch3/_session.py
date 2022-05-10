@@ -7,6 +7,7 @@ import requests
 from . import _user
 from . import _cloud
 from . import _project
+from . import _exceptions
 
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
@@ -17,9 +18,10 @@ headers = {
 
 class Session():
 
-    def __init__(self, session_id):
+    def __init__(self, session_id, *, username=None):
 
-        self.session_id = session_id
+        self.session_id = str(session_id)
+        self._username = username
         self._headers = headers
         self._cookies = {
             "scratchsessionsid" : self.session_id,
@@ -40,27 +42,34 @@ class Session():
     def _get_xtoken(self):
 
         # this will fetch the account token
-        response = json.loads(requests.post(
-            "https://scratch.mit.edu/session",
-            headers = {
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-                "x-csrftoken": "a",
-                "x-requested-with": "XMLHttpRequest",
-                "referer": "https://scratch.mit.edu",
-            },
-            cookies = {
-                "scratchsessionsid" : self.session_id,
-                "scratchcsrftoken" : "a",
-                "scratchlanguage" : "en"
-            }
-        ).text)
+        try:
+            response = json.loads(requests.post(
+                "https://scratch.mit.edu/session",
+                headers = {
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+                    "x-csrftoken": "a",
+                    "x-requested-with": "XMLHttpRequest",
+                    "referer": "https://scratch.mit.edu",
+                },
+                cookies = {
+                    "scratchsessionsid" : self.session_id,
+                    "scratchcsrftoken" : "a",
+                    "scratchlanguage" : "en"
+                }
+            ).text)
 
-        self.xtoken = response['user']['token']
-        self._headers["X-Token"] = self.xtoken
-        self.email = response["user"]["email"]
-        self.new_scratcher = response["permissions"]["new_scratcher"]
-        self.mute_status = response["permissions"]["mute_status"]
-        self._username = response["user"]["username"]
+            self.xtoken = response['user']['token']
+            self._headers["X-Token"] = self.xtoken
+            self.email = response["user"]["email"]
+            self.new_scratcher = response["permissions"]["new_scratcher"]
+            self.mute_status = response["permissions"]["mute_status"]
+            self._username = response["user"]["username"]
+            self.banned = response["user"]["banned"]
+            if self.banned:
+                print("Warning: The account you logged in to is BANNED. Some features may not work properly.")
+
+        except Exception:
+            print("Warning: Logged in, but couldn't fetch XToken. Some features may not work properly.")
 
     def get_linked_user(self):
 
@@ -70,7 +79,11 @@ class Session():
         return self._user
 
     def mystuff_projects(self, ordering, *, page=1, sort_by=""):
-
+        requests.get(
+            "https://scratch.mit.edu/site-api/galleries/all/",
+            headers = headers,
+            cookies = self._cookies,
+        )
         targets = requests.get(
             f"https://scratch.mit.edu/site-api/projects/{ordering}/?page={page}&ascsort=&descsort={sort_by}",
             headers = headers,
@@ -218,17 +231,22 @@ class Session():
 
 def login(username, password):
     data = json.dumps({"username": username, "password": password})
-    headers = headers
-    headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
+    _headers = headers
+    _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     request = requests.post(
-        "https://scratch.mit.edu/login/", data=data, headers=headers
+        "https://scratch.mit.edu/login/", data=data, headers=_headers
     )
-
-    return Session(re.search('"(.*)"', request.headers["Set-Cookie"]).group())
+    try:
+        session_id = str(re.search('"(.*)"', request.headers["Set-Cookie"]).group())
+    except Exception:
+        print("Failed to login. Either the provided authentication data is wrong or your network is banned from Scratch.")
+        raise(_exceptions.LoginFailure)
+    session = Session(session_id, username=username)
+    return session
 
 
 def get_news(*, limit=10, offset=0):
-    return requests.get(f"https://api.scratch.mit.edu/news?limit={limit}&offset={offset}")
+    return requests.get(f"https://api.scratch.mit.edu/news?limit={limit}&offset={offset}").json()
 
 def featured_projects():
     return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_featured_projects"]
@@ -276,3 +294,6 @@ def explore_projects(*, query="", mode="trending", language="en", limit=40, offs
 
 def explore_studios(*, query="", mode="trending", language="en", limit=40, offset=0):
     return requests.get(f"https://api.scratch.mit.edu/explore/studios?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
+
+def search_comments(*, query=""):
+    return requests.get(f"https://sd.sly-little-fox.ru/api/v1/search?q={query}").json()

@@ -5,6 +5,7 @@ import json
 import requests
 from threading import Thread
 import time
+from . import _exceptions
 
 class _CloudMixin:
 
@@ -14,6 +15,7 @@ class _CloudMixin:
         self.project_id = str(project_id)
         self._ratelimited_until = 0#deals with the 0.1 second rate limit for cloud variable sets
         self._connect(cloud_host=cloud_host)
+        self.cloud_host = cloud_host
 
     def _send_packet(self, packet):
         self.websocket.send(json.dumps(packet) + "\n")
@@ -22,23 +24,37 @@ class _CloudMixin:
         self.websocket.close()
 
     def _handshake(self):
-        self._send_packet(
-            {"method": "handshake", "user": self._username, "project_id": self.project_id}
-        )
+        try:
+            self._send_packet(
+                {"method": "handshake", "user": self._username, "project_id": self.project_id}
+            )
+        except Exception:
+            self._connect(cloud_host=self.cloud_host)
+            self._handshake()
 
 class CloudConnection(_CloudMixin):
 
     def _connect(self, *, cloud_host):
-        self.websocket = websocket.WebSocket()
-        self.websocket.connect(
-            "wss://clouddata.scratch.mit.edu",
-            cookie="scratchsessionsid=" + self._session_id + ";",
-            origin="https://scratch.mit.edu",
-            enable_multithread=True,
-        )
+        try:
+            self.websocket = websocket.WebSocket()
+            self.websocket.connect(
+                "wss://clouddata.scratch.mit.edu",
+                cookie="scratchsessionsid=" + self._session_id + ";",
+                origin="https://scratch.mit.edu",
+                enable_multithread=True,
+            )
+        except Exception:
+            raise(_exceptions.ConnectionError)
 
     def set_var(self, variable, value):
-        while self._ratelimited_until + 0.1 > time.time():
+        if len(value) > 256:
+            print("invalid cloud var (too long):", value)
+            raise(_exceptions.InvalidCloudValue)
+        x = value.replace(".", "")
+        if not x.isnumeric():
+            print("invalid cloud var (not numeric):", value)
+            raise(_exceptions.InvalidCloudValue)
+        while self._ratelimited_until + 0.1 >= time.time():
             pass
         try:
             self._send_packet(
@@ -51,11 +67,10 @@ class CloudConnection(_CloudMixin):
                 }
             )
         except Exception as e:
-            print(e)
             try:
                 self._handshake()
             except Exception:
-                self._connect(cloud_host=None)
+                self._connect(cloud_host=self.cloud_host)
                 self._handshake()
 
             time.sleep(0.1)
@@ -65,17 +80,22 @@ class CloudConnection(_CloudMixin):
 class TwCloudConnection(_CloudMixin):
 
     def _connect(self, *, cloud_host):
-        if cloud_host is None:
-            cloud_host = "wss://clouddata.turbowarp.org/"
-        self.websocket = websocket.WebSocket()
-        self.websocket.connect(
-            cloud_host,
-        )
-        self._handshake()
-
+        try:
+            if cloud_host is None:
+                cloud_host = "wss://clouddata.turbowarp.org/"
+            self.websocket = websocket.WebSocket()
+            self.websocket.connect(
+                cloud_host,
+            )
+            self._handshake()
+        except Exception:
+            raise(_exceptions.ConnectionError)
 
     def set_var(self, variable, value):
-        while self._ratelimited_until + 0.1 > time.time():
+        x = value.replace(".", "")
+        if not value.isnumeric():
+            raise(_exceptions.InvalidCloudValue)
+        while self._ratelimited_until + 0.11 > time.time():
             pass
         try:
             self._send_packet(
@@ -89,7 +109,6 @@ class TwCloudConnection(_CloudMixin):
             )
             self.websocket.recv()
         except Exception as e:
-            print(e)
             try:
                 self._handshake()
             except Exception:
@@ -107,7 +126,7 @@ class CloudEvents:
         def __init__(self, **entries):
             self.__dict__.update(entries)
 
-    def __init__(self, *, project_id):
+    def __init__(self, project_id):
         self.project_id = int(project_id)
         self.data = get_cloud_logs(project_id=self.project_id, limit = 15)
         self._thread = None
@@ -131,7 +150,7 @@ class CloudEvents:
                         if activity in self.data:
                             break
                         if "on_"+activity["verb"][:-4] in self._events:
-                            self._events["on_"+activity["verb"][:-4]](self.Event(user=activity["user"], var=activity["name"][2:], value=activity["value"], timestamp=activity["timestamp"]))
+                            self._events["on_"+activity["verb"][:-4]](self.Event(user=activity["user"], var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=activity["timestamp"]))
                 self.data = data
             else:
                 return
@@ -161,7 +180,7 @@ def get_cloud(project_id):
 
 def get_var(project_id, variable):
     try:
-        response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit=100&offset=0").text)
+        response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit=100&off7set=0").text)
         response = list(filter(lambda k: k["name"] == "☁ "+variable, response))
         if response == []:
             return None

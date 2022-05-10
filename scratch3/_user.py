@@ -2,6 +2,8 @@
 
 import json
 import requests
+from . import _project
+from . import _exceptions
 
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
@@ -16,25 +18,33 @@ class User:
         self.__dict__.update(entries)
         if "_session" not in self.__dict__.keys():
             self._session = None
+        if self._session is None:
             self._headers = headers
             self._cookies = {}
         else:
             self._headers = self._session._headers
             self._cookies = self._session._cookies
 
+        self._json_headers = self._headers
+        self._json_headers["accept"] = "application/json"
+        self._json_headers["Content-Type"] = "application/json"
+
     def __str__(self):
-        return self.username
+        return str(self.username)
 
     def update(self):
+        try:
 
-        response = json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/").text)
-        self.id = response["id"]
-        self.scratchteam = response["scratchteam"]
-        self.join_date = response["history"]["joined"]
-        self.about_me = response["profile"]["bio"]
-        self.wiwo = response["profile"]["status"]
-        self.country = response["profile"]["country"]
-        self.icon_url = response["profile"]["images"]["90x90"]
+            response = json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/").text)
+            self.id = response["id"]
+            self.scratchteam = response["scratchteam"]
+            self.join_date = response["history"]["joined"]
+            self.about_me = response["profile"]["bio"]
+            self.wiwo = response["profile"]["status"]
+            self.country = response["profile"]["country"]
+            self.icon_url = response["profile"]["images"]["90x90"]
+        except Exception:
+            raise(_exceptions.UserNotFound)
 
     def message_count(self):
 
@@ -57,7 +67,7 @@ class User:
         except Exception:
             return None
 
-    def follower_count():
+    def follower_count(self):
         # follower count
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/followers/",
@@ -167,6 +177,7 @@ class User:
         projects = []
         for project in _projects:
             projects.append(_project.Project(
+                _session = self._session,
                 author = self.username,
                 comments_allowed = project["comments_allowed"],
                 description=project["description"],
@@ -213,6 +224,7 @@ class User:
         projects = []
         for project in _projects:
             projects.append(_project.Project(
+                _session = self._session,
                 author = self.username,
                 comments_allowed = project["comments_allowed"],
                 description=project["description"],
@@ -232,6 +244,42 @@ class User:
                 url = "https://scratch.mit.edu/projects/"+str(project["id"])
             ))
         return projects
+
+    def toggle_commenting(self):
+        requests.post(f"https://scratch.mit.edu/site-api/comments/user/{self.username}/toggle-comments/",
+            headers = headers,
+            cookies = self._cookies
+        )
+
+    def set_bio(self, text):
+        requests.put(
+            f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
+            headers = self._json_headers,
+            cookies = self._cookies,
+            data = json.dumps(dict(
+                comments_allowed = True,
+                id = self.username,
+                bio = text,
+                thumbnail_url = self.icon_url,
+                userId = self.id,
+                username = self.username
+            ))
+        )
+
+    def set_wiwo(self, text):
+        requests.put(
+            f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
+            headers = self._json_headers,
+            cookies = self._cookies,
+            data = json.dumps(dict(
+                comments_allowed = True,
+                id = self.username,
+                status = text,
+                thumbnail_url = self.icon_url,
+                userId = self.id,
+                username = self.username
+            ))
+        )
 
     def post_comment(self, content, *, parent_id="", commentee_id=""):
         data = {
@@ -285,16 +333,22 @@ class User:
         ).json()
 
     def stats(self):
-        stats= requests.get(
-            f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
-        ).json()["statistics"]
-        stats.pop("ranks")
+        try:
+            stats= requests.get(
+                f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
+            ).json()["statistics"]
+            stats.pop("ranks")
+        except Exception:
+            stats = {"loves":-1,"favorites":-1,"comments":-1,"views":-1,"followers":-1,"following":-1}
         return stats
 
     def ranks(self):
-        return requests.get(
-            f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
-        ).json()["statistics"]["ranks"]
+        try:
+            return requests.get(
+                f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
+            ).json()["statistics"]["ranks"]
+        except Exception:
+            return {"country":{"loves":0,"favorites":0,"comments":0,"views":0,"followers":0,"following":0},"loves":0,"favorites":0,"comments":0,"views":0,"followers":0,"following":0}
 
 
 # ------ #

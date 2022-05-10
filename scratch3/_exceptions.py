@@ -1,5 +1,32 @@
-class UnauthorizedError(Exception):
+class Unauthorized(Exception):
+    pass
+
+class Unauthenticated(Exception):
+    pass
+
+class UserNotFound(Exception):
+    pass
+
+class ProjectNotFound(Exception):
+    pass
+
+class ConnectionError(Exception):
+    pass
+
+class XTokenError(Exception):
     """
-    A function that requires authentication was called without being authenticated.
+    Raised when there are no XToken headers available
     """
+    pass
+
+class LoginFailure(Exception):
+    """
+    Raised when there are no XToken headers available
+    """
+    pass
+
+class InvalidCloudValue(Exception):
+    pass
+
+class FetchError(Exception):
     pass

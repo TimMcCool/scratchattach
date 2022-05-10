@@ -6,12 +6,14 @@ import math
 
 class CloudRequests:
 
-    def __init__(self, cloud_connection : _cloud.CloudConnection):
+    def __init__(self, cloud_connection : _cloud.CloudConnection, *, ignore_exceptions=True):
         print("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m")
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id
         self.requests = []
         self.current_var = 1
+        self.ignore_exceptions = ignore_exceptions
+        self.idle_since = 0
 
     def request(self, function):
 
@@ -24,7 +26,12 @@ class CloudRequests:
 
     def _respond(self, request_id, response):
 
+        if self.idle_since + 8 < time.time():
+            self.connection._connect(cloud_host=None)
+            self.connection._handshake()
+
         remaining_response = str(response)
+
 
         i = 0
         while not remaining_response == "":
@@ -52,9 +59,15 @@ class CloudRequests:
                 remaining_response = ""
                 time.sleep(0.1)
 
+        self.idle_since = time.time()
+
+
 
 
     def run(self):
+        self.connection._connect(cloud_host=None)
+        self.connection._handshake()
+        self.idle_since = time.time()
         self.last_data = _cloud.get_cloud_logs(self.project_id, limit=100)
         self.last_timestamp = 0
         data = _cloud.get_cloud_logs(self.project_id, limit=100)
@@ -68,6 +81,9 @@ class CloudRequests:
         except AttributeError:
             pass
 
+        if self.requests == []:
+            print("Warning: You haven't added any requests!")
+
         while True:
             data = _cloud.get_cloud_logs(self.project_id, limit=100)
             if data == []:
@@ -76,17 +92,16 @@ class CloudRequests:
             if not self.last_data == data:
                 for activity in data:
                     if activity['timestamp'] > self.last_timestamp and activity['name'] == "☁ TO_HOST":
-                        self.last_timestamp = activity['timestamp']
-
                         raw_request, request_id = activity["value"].split(".")
                         request = Encoding.decode(raw_request)
                         arguments = request.split("&")
                         request = arguments.pop(0)
+                        output = ""
 
                         commands = list(filter(lambda k: k.__name__ == request, self.requests))
                         if len(commands) == 0:
-                            print("Warning: Unknown command issued")
-                            continue
+                            print(f"Warning: Client received an unknown request called '{request}'")
+                            self._respond(request_id, Encoding.encode(f"Error: Unknown request"))
                         else:
                             try:
                                 if len(arguments) == 0:
@@ -96,16 +111,23 @@ class CloudRequests:
                                 elif len(arguments) == 2:
                                     output = commands[0](arguments[0],arguments[1])
                                 else:
-                                    print(f"Error: Request {request} has too many arguments")
-                                    output = Encoding.encode("Error: Request has too many arguments")
+                                    print(f"Error in request '{request}': Request failed to parse. Don't use the character '&' in your requests.")
+                                    output = Encoding.encode("Error: Request failed to parse.")
+                            except TypeError as e:
+                                self._respond(request_id, Encoding.encode("Error: Client received too many arguments, not enough arguments or invalid arguments"))
+                                print(f"Error in request '{request}': Client received too many arguments, not enough arguments or invalid arguments.\nOriginal error: {e}")
                             except Exception as e:
                                 self._respond(request_id, Encoding.encode(f"Error: Check the Python console"))
-                                raise(e)
+                                if self.ignore_exceptions:
+                                    print(f"Caught error in request '{request}': {e}")
+                                else:
+                                    print(f"Exception in request '{request}':")
+                                    raise(e)
 
                         if len(str(output)) > 3000:
                             length_output = len(str(output))
-                            print(f"Error: Output of request {request} too large!\nMax. output content length: 3000 characters.\nOutput length of {request}: {length_output} characters")
-                            output = "Error: Output too large, check Python console for details."
+                            print(f"Error in request '{request}': Output too large!\nMax. output content length: 3000 characters.\nOutput length of {request}: {length_output} characters")
+                            output = Encoding.encode("Error: Output too large, check Python console for details.")
 
                         else:
                             if not isinstance(output, list):
@@ -117,3 +139,5 @@ class CloudRequests:
                                     output += Encoding.encode(i)
                                     output += "89"
                         self._respond(request_id, output)
+                        self.last_timestamp = activity['timestamp']
+                self.last_data = data
