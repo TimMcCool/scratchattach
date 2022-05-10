@@ -134,9 +134,9 @@ transmit data*
 
 **Add Cloud requests to your Scratch project:**
 
-First, download this sprite to your computer: https://scratch3-assets.1tim.repl.co/cloudrequests.sprite3
+Download this project file to your computer: https://scratch3-assets.1tim.repl.co/CloudRequests_Template.sb3
 
-Then, go to your project, create a cloud variable called `TO_HOST` and import the downloaded sprite
+Then, go to the Scratch website, create a new project and upload the project file from above.
 
 **How to use:**
 
@@ -148,7 +148,7 @@ import scratch3
 session = scratch3.login("username", "password") #replace with your data
 conn = session.connect_cloud(project_id="project_id") #replace with your project id
 
-client = scratch3.CloudRequests(conn)
+client = scratch3.CloudRequests(conn, ignore_exceptions=True)
 
 @client.request
 def ping(): #called when client receives request
@@ -349,7 +349,7 @@ project.toggle_commenting()
 project.remixes(limit=None, offset=0) #Returns the remixes as list of scratch3.Project
 project.studios(limit=None, offset=0) #Returns the studios the project is in as list of dicts
 
-project.download(filename="project_name.sb3", dir="") #Downloads the project to your computer
+project.download(filename="project_name.sb3", dir="") #Downloads the project to your computer. The downloaded file will only work in the online editor.
 project.get_raw_json() #Returns the json of the project content as dict
 project.get_creator_agent() #Returns the user-agent of the user who created the project (with information about their browser and OS)
 ```
@@ -377,6 +377,8 @@ session.search_projects(query="query", mode="trending", language="en", limit=40,
 scratch3.search_projects(query="query", mode="trending", language="en", limit=40, offset=0) #Doesn't require logging in
 
 scratch3.search_studios(query="query", mode="trending", language="en", limit=40, offset=0)
+
+scratch3.search_comments(query="query") #This will return matching profile comments from all across Scratch. It is based on ScratchData
 ```
 
 **Get the explore page:**
@@ -427,6 +429,9 @@ scratch3.design_studio_projects()
 -   Siddhesh (creator of scratchconnect) for some help and the profile
     comments API
 -   DatOneLefty for ScratchDB which is used to fetch stats and ranks
+-   Lynx for ScratchData (https://sd.sly-little-fox.ru/api/v1/search?q=)
+
+Source code available on GitHub
 
 # Support
 
