@@ -29,7 +29,7 @@ os.system("pip install scratchattach")
 **Logging in to Scratch:**
 
 ```
-import scratch3
+import scratchattach as scratch3
 
 session = scratch3.login("username", "password")
 ```
@@ -39,7 +39,7 @@ session = scratch3.login("username", "password")
 Logging in directly with a sessionId (advanced):
 
 ```
-import scratch3
+import scratchattach as scratch3
 
 session = scratch3.Session("sessionId")
 ```
@@ -95,7 +95,7 @@ To send text to your Scratch project, you can use the built in encoder.
 To decode sent texts in Scratch, download this sprite and add it to your Scratch project: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
 
 ```
-from scratch3 import Encoding
+from scratchattach import Encoding
 
 Encoding.encode("input") #will return the encoded text
 Encoding.decode("encoded") #will decode an encoded text
@@ -112,7 +112,7 @@ They do not require a session
 **How to use:**
 
 ```
-import scratch3
+import scratchattach as scratch3
 
 events = scratch3.CloudEvents("project_id")
 
@@ -155,7 +155,7 @@ Then, go to the Scratch website, create a new project and upload the project fil
 Copy this code to your Python editor:
 
 ```
-import scratch3
+import scratchattach as scratch3
 
 session = scratch3.login("username", "password") #replace with your data
 conn = session.connect_cloud(project_id="project_id") #replace with your project id
