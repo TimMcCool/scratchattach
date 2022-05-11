@@ -1,4 +1,4 @@
-Scratch3.py is a modern and object oriented library for the Scratch website.
+Scratchattach is a modern and object oriented library for the Scratch website.
 Automate actions and interact with your Scratch projects through cloud variables.
 
 **Some functions require logging in to Scratch.**
@@ -12,7 +12,7 @@ The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 To install the library, run the following command in your command prompt
 / shell:
 ```
-pip install scratch3.py
+pip install scratchattach
 ```
 
 **OR**
@@ -21,7 +21,7 @@ Add this to your Python code:
 ```
 import os
 
-os.system("pip install scratch3.py")
+os.system("pip install scratchattach")
 ```
 
 # Logging in  `scratch3.Session`
@@ -88,6 +88,18 @@ logs = scratch3.get_cloud_logs("project_id") #Returns the cloud logs as list
 ```
 
 Getting a TurboWarp cloud var is not possible at the moment
+
+# Encoding / Decoding  `scratch3.Encoding`
+
+To send text to your Scratch project, you can use the built in encoder.
+To decode sent texts in Scratch, download this sprite and add it to your Scratch project: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
+
+```
+from scratch3 import Encoding
+
+Encoding.encode("input") #will return the encoded text
+Encoding.decode("encoded") #will decode an encoded text
+```
 
 # Cloud events  `scratch3.CloudEvents`
 
