@@ -263,7 +263,7 @@ def top_remixed():
 def newest_projects():
     return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_newest_projects"]
 
-def curated_rojects():
+def curated_projects():
     return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["curator_top_projects"]
 
 def design_studio_projects():

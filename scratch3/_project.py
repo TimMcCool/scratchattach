@@ -16,7 +16,11 @@ class PartialProject:
     # This class is for unshared projects
 
     def __init__(self, **entries):
+
+        self.shared = None
+
         self.__dict__.update(entries)
+
         if "_session" not in self.__dict__.keys():
             self._session = None
         if self._session is None:
@@ -290,7 +294,7 @@ class Project(PartialProject):
         if self._session._username != self.author:
             raise(_exceptions.Unauthorized)
             return
-        if self.shared is False:
+        if self.shared is not True:
             requests.put(f"https://api.scratch.mit.edu/proxy/projects/{self.id}/share/",
                 headers = self._json_headers,
                 cookies = self._cookies,
@@ -303,7 +307,7 @@ class Project(PartialProject):
         if self._session._username != self.author:
             raise(_exceptions.Unauthorized)
             return
-        if self.shared is True:
+        if self.shared is not False:
             requests.put(f"https://api.scratch.mit.edu/proxy/projects/{self.id}/unshare/",
                 headers = self._json_headers,
                 cookies = self._cookies,
