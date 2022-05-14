@@ -370,7 +370,7 @@ project.get_creator_agent() #Returns the user-agent of the user who created the 
 
 When connecting / getting a project that you can't access, a `PartialProject` object is returned instead.
 
-**Most functions don't work for such projects. However, these still work:**
+**Most attributes and most functions don't work for such projects. However, these still work:**
 ```
 project.remixes(limit=None, offset=0)
 
