@@ -16,7 +16,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description="The package has been renamed to 'scratchattach', please install that instead! Link: https://pypi.org/project/scratchattach/",#open('README.md').read(),
     packages=find_packages(),
-    install_requires=["websocket-client","numpy"],
+    install_requires=["websocket-client","numpy","requests"],
     keywords=['scratch api', 'scratchattach', 'scratch api python', 'scratch python', 'scratch for python', 'scratch', 'scratch cloud', 'scratch cloud variables', 'scratch bot'],
     url='https://github.com/TimMcCool/scratch3.py',
     classifiers=[
