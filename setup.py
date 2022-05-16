@@ -2,23 +2,23 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = '0.3.9'
+VERSION = '0.4.4'
 DESCRIPTION = 'An Scratch API Wrapper for scratch.mit.edu'
 LONG_DESCRIPTION = DESCRIPTION
 
 # Setting up
 setup(
-    name="scratchattach",
+    name="scratch3.py",
     version=VERSION,
     author="TimMcCool",
     author_email="timmccool.scratch@gmail.com",
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
-    long_description="The package has been renamed to 'scratchattach', please install that instead! Link: https://pypi.org/project/scratchattach/",#open('README.md').read(),
+    long_description="This package was moved to https://pypi.org/project/scratchattach/",#open('README.md').read(),
     packages=find_packages(),
-    install_requires=["websocket-client","numpy"],
+    install_requires=["websocket-client","numpy","requests"],
     keywords=['scratch api', 'scratchattach', 'scratch api python', 'scratch python', 'scratch for python', 'scratch', 'scratch cloud', 'scratch cloud variables', 'scratch bot'],
-    url='https://github.com/TimMcCool/scratch3.py',
+    url='https://github.com/TimMcCool/scratchattach',
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
