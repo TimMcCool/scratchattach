@@ -26,7 +26,7 @@ os.system("pip install scratchattach")
 
 # Logging in  `scratch3.Session`
 
-**Logging in to Scratch:**
+**Logging in with username / password:**
 
 ```python
 import scratchattach as scratch3
@@ -36,7 +36,7 @@ session = scratch3.login("username", "password")
 
 `login()` returns a `Session` object that saves your login
 
-**Logging in directly with a sessionId (cookie login):**
+**Logging in with a sessionId:**
 
 ```python
 import scratchattach as scratch3
