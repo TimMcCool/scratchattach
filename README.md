@@ -18,7 +18,7 @@ pip install scratchattach
 **OR**
 
 Add this to your Python code:
-```
+```python
 import os
 
 os.system("pip install scratchattach")
@@ -28,7 +28,7 @@ os.system("pip install scratchattach")
 
 **Logging in to Scratch:**
 
-```
+```python
 import scratchattach as scratch3
 
 session = scratch3.login("username", "password")
@@ -38,7 +38,7 @@ session = scratch3.login("username", "password")
 
 Logging in directly with a sessionId (advanced):
 
-```
+```python
 import scratchattach as scratch3
 
 session = scratch3.Session("sessionId")
@@ -50,13 +50,13 @@ session = scratch3.Session("sessionId")
 
 With a `Session` object:
 
-```
+```python
 conn = session.connect_cloud(project_id="project_id")
 ```
 
 Directly with a sessionId (advanced):
 
-```
+```python
 conn = scratch3.CloudConnection(project_id = "project_id", username="username", session_id="sessionId")
 ```
 
@@ -64,7 +64,7 @@ conn = scratch3.CloudConnection(project_id = "project_id", username="username", 
 
 Does not require a session
 
-```
+```python
 conn = scratch3.TwCloudConnection(project_id = "project_id", username="username", cloud_host="<wss://clouddata.turbowarp.org")
 ```
 
@@ -72,7 +72,7 @@ conn = scratch3.TwCloudConnection(project_id = "project_id", username="username"
 
 New Scratchers can set Scratch cloud variables too
 
-```
+```python
 conn.set_var("variable", "value") #the variable name is specified
 without the cloud emoji
 ```
@@ -81,7 +81,7 @@ without the cloud emoji
 
 Does not require a session
 
-```
+```python
 value = scratch3.get_var("project_id", "variable") #Returns value of the cloud var
 variables = scratch3.get_cloud("project_id") #Returns a dict with all cloud var values
 logs = scratch3.get_cloud_logs("project_id") #Returns the cloud logs as list
@@ -94,7 +94,7 @@ Getting a TurboWarp cloud var is not possible at the moment
 To send text to your Scratch project, you can use the built in encoder.
 To decode sent texts in Scratch, download this sprite and add it to your Scratch project: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
 
-```
+```python
 from scratchattach import Encoding
 
 Encoding.encode("input") #will return the encoded text
@@ -111,7 +111,7 @@ They do not require a session
 
 **How to use:**
 
-```
+```python
 import scratchattach as scratch3
 
 events = scratch3.CloudEvents("project_id")
@@ -154,7 +154,7 @@ Then, go to the Scratch website, create a new project and upload the project fil
 
 Copy this code to your Python editor:
 
-```
+```python
 import scratchattach as scratch3
 
 session = scratch3.login("username", "password") #replace with your data
@@ -199,7 +199,7 @@ Scratch code:
 
 Python code (add this to the code from above, but make sure `client.run()` stays at the bottom of the file):
 
-```
+```python
 @client.request
 def message_count(argument1):
     print(f"Message count requested for user {argument1}")
@@ -215,7 +215,7 @@ Scratch code:
 
 Python code:
 
-```
+```python
 @client.request
 def foo(argument1):
     print(f"Data requested for user {argument1}")
@@ -236,22 +236,22 @@ def foo(argument1):
 # Users  `scratch3.User`
 
 **Get a user:**
-```
+```python
 user = session.connect_user("username")
 ```
 
 Get the user that you are logged in with:
-```
+```python
 session.get_linked_user()
 ```
 
 You can also get users without logging in:
-```
+```python
 user = scratch3.get_user("username")
 ```
 
 **Attributes:**
-```
+```python
 user.join_date
 user.about_me
 user.wiwo #Returns the user's 'What I'm working on' section
@@ -264,7 +264,7 @@ user.update() #Updates the above data
 ```
 
 **Functions:**
-```
+```python
 user.message_count()
 user.featured_data() #Returns info on the user's featured project as dict
 
@@ -300,17 +300,17 @@ ScratchDB user.ranks() #Returns the user's ranks as dict. Fetched from ScratchDB
 # Projects  `scratch3.Project`
 
 **Get a project:**
-```
+```python
 project = session.connect_project("project_id")
 ```
 
 You can also get projects without logging in:
-```
+```python
 project = scratch3.get_project("project_id")
 ```
 
 **Attributes:**
-```
+```python
 project.id  #Returns the project id
 project.url  #Returns the project url
 project.author  #Returns the username of the author
@@ -332,7 +332,7 @@ project.update()  #Updates the above data
 ```
 
 **Functions:**
-```
+```python
 project.get_author()  #Returns the author as scratch3.User object
 project.ranks()  #Returns the project's ranks. Fetched from ScratchDB
 
@@ -371,7 +371,7 @@ project.get_creator_agent() #Returns the user-agent of the user who created the 
 When connecting / getting a project that you can't access, a `PartialProject` object is returned instead.
 
 **Most attributes and most functions don't work for such projects. However, these still work:**
-```
+```python
 project.remixes(limit=None, offset=0)
 
 project.download(filename="project_name.sb3", dir="/")
@@ -384,7 +384,7 @@ project.get_creator_agent()
 Doesn't require a session
 
 **Search:**
-```
+```python
 session.search_projects(query="query", mode="trending", language="en", limit=40, offset=0)
 scratch3.search_projects(query="query", mode="trending", language="en", limit=40, offset=0) #Doesn't require logging in
 
@@ -394,7 +394,7 @@ scratch3.search_comments(query="query") #This will return matching profile comme
 ```
 
 **Get the explore page:**
-```
+```python
 session.explore_projects(query="*", mode="trending", language="en", limit=40, offset=0)
 scratch3.explore_projects(query="*", mode="trending", language="en", limit=40, offset=0) #Doesn't require logging in
 
@@ -404,7 +404,7 @@ scratch3.explore_studios(query="*", mode="trending", language="en", limit=40, of
 # Messages / My stuff page
 
 **Functions:**
-```
+```python
 session.get_mystuff_projects("all", page=1, sort_by="") #Returns the projects from your "My stuff" page as list
 
 session.messages(limit=40, offset=0) #Returns your messages as dict
@@ -415,7 +415,7 @@ session.get_message_count() #Returns your message count
 # "What's happening" section / Your feed
 
 **Functions:**
-```
+```python
 session.get_feed(limit=20, offset=0) #Returns your "What's happening" section from the Scratch front page as list
 session.loved_by_followed_users(limit=40, offset=0) #Returns the projects loved by users you are following as list
 ```
@@ -424,7 +424,7 @@ session.loved_by_followed_users(limit=40, offset=0) #Returns the projects loved 
 
 Doesn't require a session
 
-```
+```python
 scratch3.get_news(limit=10, offset=0) #Returns the news from the Scratch front page as list
 scratch3.featured_projects() #Returns the featured projects from the Scratch homepage as list
 scratch3.featured_studios()
