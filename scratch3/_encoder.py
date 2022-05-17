@@ -113,8 +113,7 @@ class Encoding:
         outp = ""
         for i in range(0, math.floor(len(inp) / 2)):
             letter = letters[int(f"{inp[i*2]}{inp[(i*2)+1]}")]
-            if not letter == " ":
-                outp = f"{outp}{letter}"
+            outp = f"{outp}{letter}"
         return outp
 
 
