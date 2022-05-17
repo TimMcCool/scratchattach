@@ -36,7 +36,7 @@ session = scratch3.login("username", "password")
 
 `login()` returns a `Session` object that saves your login
 
-Logging in directly with a sessionId (advanced):
+**Logging in directly with a sessionId (cookie login):**
 
 ```python
 import scratchattach as scratch3
