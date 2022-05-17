@@ -44,6 +44,16 @@ import scratchattach as scratch3
 session = scratch3.Session("sessionId")
 ```
 
+**Attributes:**
+```py
+session.session_id #Returns the associated session id
+session.xtoken
+session.email #Returns the email adress associated with the account
+session.new_scratcher #Returns True if the associated account is a New Scratcher
+session.mute_status
+session.banned #Returns True if the associated account is banned
+```
+
 # Cloud variables  `scratch3.CloudConnection`
 
 **Connecting to the Scratch cloud server:**
