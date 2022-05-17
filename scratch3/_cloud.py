@@ -47,6 +47,7 @@ class CloudConnection(_CloudMixin):
             raise(_exceptions.ConnectionError)
 
     def set_var(self, variable, value):
+        value = str(value)
         if len(value) > 256:
             print("invalid cloud var (too long):", value)
             raise(_exceptions.InvalidCloudValue)
@@ -92,6 +93,7 @@ class TwCloudConnection(_CloudMixin):
             raise(_exceptions.ConnectionError)
 
     def set_var(self, variable, value):
+        value = str(value)
         x = value.replace(".", "")
         if not value.isnumeric():
             raise(_exceptions.InvalidCloudValue)
@@ -180,7 +182,7 @@ def get_cloud(project_id):
 
 def get_var(project_id, variable):
     try:
-        response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit=100&off7set=0").text)
+        response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit=100&offset=0").text)
         response = list(filter(lambda k: k["name"] == "☁ "+variable, response))
         if response == []:
             return None
