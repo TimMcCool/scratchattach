@@ -89,8 +89,8 @@ class TwCloudConnection(_CloudMixin):
                 cloud_host,
             )
             self._handshake()
-        except Exception as e:
-            print(e)
+        except Exception:
+            raise(_exceptions.ConnectionError)
 
     def get_var(self, variable):
         variable = "☁ " + str(variable)
