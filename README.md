@@ -54,9 +54,9 @@ session.mute_status
 session.banned #Returns True if the associated account is banned
 ```
 
-# Cloud variables  `scratch3.CloudConnection`
+# Cloud variables  `scratch3.CloudConnection` `scratch3.TwCloudConnection`
 
-**Connecting to the Scratch cloud server:**
+**Connect to the Scratch cloud:**
 
 With a `Session` object:
 
@@ -64,15 +64,15 @@ With a `Session` object:
 conn = session.connect_cloud(project_id="project_id")
 ```
 
-Directly with a sessionId (advanced):
+Directly with a sessionId (cookie connect):
 
 ```python
 conn = scratch3.CloudConnection(project_id = "project_id", username="username", session_id="sessionId")
 ```
 
-**Connecting to the TurboWarp cloud server:**
+**Connect to the TurboWarp cloud:**
 
-Does not require a session
+Does not require a session.
 
 ```python
 conn = scratch3.TwCloudConnection(project_id = "project_id", username="username", cloud_host="<wss://clouddata.turbowarp.org")
@@ -80,24 +80,30 @@ conn = scratch3.TwCloudConnection(project_id = "project_id", username="username"
 
 **Set a cloud var:**
 
-New Scratchers can set Scratch cloud variables too
+New Scratchers can set Scratch cloud variables too.
 
 ```python
 conn.set_var("variable", "value") #the variable name is specified
 without the cloud emoji
 ```
 
-**Get a Scratch cloud var:**
+**Get a Scratch cloud var from the clouddata logs:**
 
-Does not require a session
+Does not require a connection / session.
 
 ```python
-value = scratch3.get_var("project_id", "variable") #Returns value of the cloud var
+value = scratch3.get_var("project_id", "variable")
 variables = scratch3.get_cloud("project_id") #Returns a dict with all cloud var values
 logs = scratch3.get_cloud_logs("project_id") #Returns the cloud logs as list
 ```
 
-Getting a TurboWarp cloud var is not possible at the moment
+**Get a TurboWarp cloud var from the websocket:** (new in v0.4.7)
+
+Requires a connection to TurboWarp's cloud (a `TwCloudConnection` object).
+
+```python
+value = conn.get_var("variable")
+```
 
 # Encoding / Decoding  `scratch3.Encoding`
 
@@ -111,15 +117,15 @@ Encoding.encode("input") #will return the encoded text
 Encoding.decode("encoded") #will decode an encoded text
 ```
 
-# Cloud events  `scratch3.CloudEvents`
+# Cloud events  `scratch3.CloudEvents` `scratch3.TwCloudEvents`
 
 *Cloud events allow reacting to cloud events in real time. If a Scratcher
 sets / creates / deletes a cloud var on the given project, an
 event will be called.*
 
-They do not require a session
+They do not require a session.
 
-**How to use:**
+**How to use with Scratch:**
 
 ```python
 import scratchattach as scratch3
@@ -145,8 +151,15 @@ def on_ready():
 events.start() #Make sure this is ALWAYS at the bottom of your Python file!
 ```
 
-**Tip:** If you combine this with the scripts from above, you can make a bot that
-auto-reacts when a cloud variable is set!
+**How to use with TurboWarp:** (new in v0.4.7)
+
+```python
+import scratchattach as scratch3
+
+events = scratch3.TwCloudEvents("project_id")
+
+...
+```
 
 # Cloud requests  `scratch3.CloudRequests`
 
