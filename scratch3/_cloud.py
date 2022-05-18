@@ -92,7 +92,7 @@ class TwCloudConnection(_CloudMixin):
         except Exception:
             raise(_exceptions.ConnectionError)
 
-    def get_var(self, variable):
+    def get_var(self, variable) :
         variable = "☁ " + str(variable)
         self.set_var('ScratchAttachReadVar','1')
         self.set_var('ScratchAttachReadVar','2')
@@ -101,13 +101,13 @@ class TwCloudConnection(_CloudMixin):
         self.result = []
         for i in self.TwCloudData:
             self.result.append(json.loads(i))
-        if self.TwCloudData == ['']:
+        if self.result == ['']:
             raise(_exceptions.VarNotFound)
         else:
             for i in self.result:
                 if i['name'] == str(variable):
                     return i['value']
-                raise(_exceptions.VarNotFound)
+        raise(_exceptions.VarNotFound)
     
     def set_var(self, variable, value):
         value = str(value)
