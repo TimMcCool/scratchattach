@@ -92,29 +92,33 @@ class TwCloudConnection(_CloudMixin):
         except Exception:
             raise(_exceptions.ConnectionError)
 
-    def get_var(self, variable) :
-        variable = "☁ " + str(variable)
-        self.set_var('ScratchAttachReadVar','1')
-        self.set_var('ScratchAttachReadVar','2')
-        time.sleep(0.5)
-        self.TwCloudData = self.websocket.recv().split('\n')
-        self.result = []
-        for i in self.TwCloudData:
-            self.result.append(json.loads(i))
-        if self.result == ['']:
-            raise(_exceptions.VarNotFound)
-        else:
-            for i in self.result:
-                if i['name'] == str(variable):
-                    return i['value']
-        raise(_exceptions.VarNotFound)
-    
+    def get_var(self, variable):
+        try:
+            variable = "☁ " + str(variable)
+            self.set_var('@scratchattach','0')
+
+            result = []
+            for i in self._clouddata:
+                try:
+                    result.append(json.loads(i))
+                except Exception: pass
+            if result == []:
+                return None
+            else:
+                for i in self.result:
+                    if i['name'] == variable:
+                        return i['value']
+                return None
+        except Exception:
+            raise _exceptions.FetchError
+            
+            
     def set_var(self, variable, value):
         value = str(value)
         x = value.replace(".", "")
         if not value.isnumeric():
             raise(_exceptions.InvalidCloudValue)
-        while self._ratelimited_until + 0.11 > time.time():
+        while self._ratelimited_until + 0.1 > time.time():
             pass
         try:
             self._send_packet(
@@ -126,6 +130,7 @@ class TwCloudConnection(_CloudMixin):
                     "project_id": self.project_id,
                 }
             )
+            self._clouddata = self.websocket.recv().split('\n')
         except Exception as e:
             try:
                 self._handshake()
