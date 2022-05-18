@@ -30,9 +30,3 @@ class InvalidCloudValue(Exception):
 
 class FetchError(Exception):
     pass
-
-class VarNotFound(Exception):
-    """
-    Raised when the variable has not been set from the TurboWarp client side (Variables need to be set before they can be read)
-    """
-    pass
