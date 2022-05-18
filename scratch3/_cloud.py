@@ -1,5 +1,6 @@
 #----- Cloud interactions
 
+from numpy import var
 import websocket
 import json
 import requests
@@ -92,6 +93,18 @@ class TwCloudConnection(_CloudMixin):
         except Exception:
             raise(_exceptions.ConnectionError)
 
+    def get_var(self, variable):
+        variable = "☁ " + str("variable")
+        self.set_var('ScratchAttachReadVar','1')
+        self.set_var('ScratchAttachReadVar','2')
+        if self.TwCloudData == ['']:
+            raise(_exceptions.VarNotFound)
+        else:
+            for i in self.TwCloudData:
+                if i['name'] == variable:
+                    return i['value']
+            raise(_exceptions.VarNotFound)
+    
     def set_var(self, variable, value):
         value = str(value)
         x = value.replace(".", "")
@@ -109,7 +122,7 @@ class TwCloudConnection(_CloudMixin):
                     "project_id": self.project_id,
                 }
             )
-            self.websocket.recv()
+            self.TwCloudData = self.websocket.recv.split('\n')
         except Exception as e:
             try:
                 self._handshake()
