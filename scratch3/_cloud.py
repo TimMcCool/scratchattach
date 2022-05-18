@@ -92,6 +92,7 @@ class TwCloudConnection(_CloudMixin):
         except Exception:
             raise(_exceptions.ConnectionError)
 
+
     def get_var(self, variable):
         try:
             variable = "☁ " + str(variable)
@@ -109,10 +110,10 @@ class TwCloudConnection(_CloudMixin):
                     if i['name'] == variable:
                         return i['value']
                 return None
-        except Exception:
+        except Exception as e:
             raise _exceptions.FetchError
-            
-            
+
+
     def set_var(self, variable, value):
         value = str(value)
         x = value.replace(".", "")
@@ -188,6 +189,29 @@ class CloudEvents:
 
     def event(self, function):
         self._events[function.__name__] = function
+
+class TwCloudEvents(CloudEvents):
+
+    def __init__(self, cloud_connection : TwCloudConnection):
+        self.project_id = cloud_connection.project_id
+        self.data = []
+        self._thread = None
+        self.running = False
+        self._events = {}
+        self.connection = cloud_connection
+
+    def _update(self):
+        while True:
+            data = self.connection.websocket.recv().split('\n')
+            result = []
+            for i in data:
+                try:
+                    result.append(json.loads(i))
+                except Exception: pass
+            for activity in result:
+                if "on_"+activity["method"] in self._events:
+                    self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=None))
+
 # -----
 
 def get_cloud(project_id):
