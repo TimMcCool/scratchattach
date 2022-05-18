@@ -105,7 +105,7 @@ class TwCloudConnection(_CloudMixin):
             if result == []:
                 return None
             else:
-                for i in self.result:
+                for i in result:
                     if i['name'] == variable:
                         return i['value']
                 return None
