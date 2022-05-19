@@ -299,14 +299,14 @@ class User:
 
     def follow(self):
         requests.put(
-            f"https://scratch.mit.edu/site-api/users/followers/bob/add/?usernames={self._session._username}",
+            f"https://scratch.mit.edu/site-api/users/followers/{self.username}/add/?usernames={self._session._username}",
             headers = headers,
             cookies = self._cookies,
         )
 
     def unfollow(self):
         requests.put(
-            f"https://scratch.mit.edu/site-api/users/followers/bob/remove/?usernames={self._session._username}",
+            f"https://scratch.mit.edu/site-api/users/followers/{self.username}/remove/?usernames={self._session._username}",
             headers = headers,
             cookies = self._cookies,
         )
