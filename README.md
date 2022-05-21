@@ -361,8 +361,8 @@ project.ranks()  #Returns the project's ranks. Fetched from ScratchDB
 
 project.comments(limit=40, offset=0)  #Fetches all project comments except for comment replies
 project.get_comment_replies(comment_id="comment_id", limit=40, offset=0)  #Fetches the replies to a specific comment
-project.post_comment(content="comment content", parent_id="", commentee_id="")  #Returns the info of the posted commented.
-project.reply_comment(content="comment content", parent_id="parent_id")  #Returns the info of the posted commented.
+project.post_comment("comment content", parent_id="", commentee_id="")  #Returns the info of the posted commented.
+project.reply_comment("comment content", parent_id="parent_id")  #Returns the info of the posted commented.
 project.delete_comment(comment_id="comment_id")
 project.report_comment(comment_id="comment_id")
 
