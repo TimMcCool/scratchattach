@@ -275,6 +275,7 @@ user = scratch3.get_user("username")
 
 **Attributes:**
 ```python
+user.username
 user.join_date
 user.about_me
 user.wiwo #Returns the user's 'What I'm working on' section
