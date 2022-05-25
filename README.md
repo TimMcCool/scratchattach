@@ -338,7 +338,7 @@ project = scratch3.get_project("project_id")
 ```python
 project.id  #Returns the project id
 project.url  #Returns the project url
-project.author  #Returns the username of the author
+project.author  #RetFurns the username of the author
 project.comments_allowed  #Returns True if comments are enabled
 project.instructions
 project.notes  #Returns the 'Notes and Credits' section
@@ -440,7 +440,7 @@ studio.follower_count
 studio.manager_count
 studio.project_count
 # ----- ----- #
-project.update()  #Updates the above data
+studio.update()  #Updates the above data
 ```
 
 **Functions:**
