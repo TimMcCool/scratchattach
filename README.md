@@ -207,9 +207,7 @@ When active, it will send a "ping" request to the Python client. This will call 
 
 **Notes:**
 
-1)  Almost no limitations: Max. length of the returned
-    data is at 3000 characters. (If the returned data is too long to fit
-    into one cloud var, it will be split to multiple cloud vars)
+1)  **No length limitation** for the returned data! (If the response is too long to fit into one cloud var, it will be split to multiple cloud vars)
 2)  It can handle multiple requests being sent at the same time
 3)  You can freely choose the names of your requests
 4)  You can also return lists
@@ -275,7 +273,6 @@ user = scratch3.get_user("username")
 
 **Attributes:**
 ```python
-user.username
 user.join_date
 user.about_me
 user.wiwo #Returns the user's 'What I'm working on' section
@@ -317,8 +314,12 @@ user.toggle_commenting()
 user.set_bio(text) #Changes the 'About me' of the user
 user.set_wiwo(text)
 
-user.stats() #Returns the user's statistics as dict. Fetched from
-ScratchDB user.ranks() #Returns the user's ranks as dict. Fetched from ScratchDB
+user.stats() #Returns the user's statistics as dict. Fetched from ScratchDB
+user.ranks() #Returns the user's ranks as dict. Fetched from ScratchDB
+
+'''New in v0.5.0:'''
+user.studio_count() #Returns the amount of studios the user is curating
+user.studio_following_count()
 ```
 
 # Projects  `scratch3.Project`
@@ -348,9 +349,10 @@ project.thumbnail_url
 project.remix_parent
 project.remix_root
 project.loves  #Returns the love count
-project.favorite s #Returns the project's favorite count
+project.favorites #Returns the project's favorite count
 project.remix_count  #Returns the number of remixes
 project.views  #Returns the view count
+project.project_token
 # ----- ----- #
 project.update()  #Updates the above data
 ```
@@ -362,8 +364,8 @@ project.ranks()  #Returns the project's ranks. Fetched from ScratchDB
 
 project.comments(limit=40, offset=0)  #Fetches all project comments except for comment replies
 project.get_comment_replies(comment_id="comment_id", limit=40, offset=0)  #Fetches the replies to a specific comment
-project.post_comment("comment content", parent_id="", commentee_id="")  #Returns the info of the posted commented.
-project.reply_comment("comment content", parent_id="parent_id")  #Returns the info of the posted commented.
+project.post_comment(content="comment content", parent_id="", commentee_id="")  #Returns the info of the posted commented.
+project.reply_comment(content="comment content", parent_id="parent_id")  #Returns the info of the posted commented.
 project.delete_comment(comment_id="comment_id")
 project.report_comment(comment_id="comment_id")
 
@@ -390,6 +392,14 @@ project.get_raw_json() #Returns the json of the project content as dict
 project.get_creator_agent() #Returns the user-agent of the user who created the project (with information about their browser and OS)
 ```
 
+**Create a project:** (New in v0.5.0)
+
+Warning: Spam-creating projects is against Scratch's Terms of Use.
+
+```py
+project = session.create_project() #Returns the created project as scratch3.Project object
+```
+
 # Unshared projects  `scratch3.PartialProject`
 
 When connecting / getting a project that you can't access, a `PartialProject` object is returned instead.
@@ -401,6 +411,51 @@ project.remixes(limit=None, offset=0)
 project.download(filename="project_name.sb3", dir="/")
 project.get_raw_json()
 project.get_creator_agent()
+```
+
+# Studios  `scratch3.Studio`
+(New in v0.5.0)
+
+**Get a studio:**
+```python
+project = session.connect_studio("studio_id")
+```
+You can also get studios without logging in:
+```python
+project = scratch3.get_studio("studio_id")
+```
+
+**Attributes:**
+```python
+studio.id
+studio.title
+studio.description
+studio.host_id #The user id of the studio host
+studio.open_to_all #Whether everyone is allowed to add projects
+studio.comments_allowed
+studio.image_url
+studio.created
+studio.modified
+studio.follower_count
+studio.manager_count
+studio.project_count
+# ----- ----- #
+project.update()  #Updates the above data
+```
+
+**Functions:**
+```python
+studio.follow()
+studio.unfollow()
+
+studio.comments(limit=40, offset=0)  #Fetches all project comments except for comment replies
+studio.get_comment_replies(comment_id="comment_id", limit=40, offset=0)  #Fetches the replies to a specific comment
+studio.post_comment(content="comment content", parent_id="", commentee_id="")  #Returns the info of the posted commented.
+studio.reply_comment(content="comment content", parent_id="parent_id")  #Returns the info of the posted commented.
+
+studio.projects(limit=40, offset=0)
+studio.curators(limit=24, offset=0) #Returns the curators as list of users (scratch3.User)
+studio.managers(limit=24, offset=0)
 ```
 
 # Search / Explore page
