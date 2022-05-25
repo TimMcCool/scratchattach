@@ -10,6 +10,9 @@ class UserNotFound(Exception):
 class ProjectNotFound(Exception):
     pass
 
+class StudioNotFound(Exception):
+    pass
+
 class ConnectionError(Exception):
     pass
 

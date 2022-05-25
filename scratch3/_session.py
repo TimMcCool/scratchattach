@@ -8,6 +8,7 @@ from . import _user
 from . import _cloud
 from . import _project
 from . import _exceptions
+from . import _studio
 
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
@@ -139,6 +140,17 @@ class Session():
             cookies = self._cookies
         ).json()
 
+    def create_project(self):
+
+        try:
+            return self.connect_project(requests.post(
+                "https://projects.scratch.mit.edu/",
+                headers = headers,
+                cookies = self._cookies
+            ).json()["content-name"])
+        except Exception:
+            raise(_exceptions.FetchError)
+
     '''
     def created_by_followed_users(self, *, limit=40, offset=0):
         r = requests.get(
@@ -226,6 +238,13 @@ class Session():
         except KeyError:
             return None
 
+    def connect_studio(self, studio_id):
+        try:
+            studio = _studio.Studio(id=int(studio_id), _session=self)
+            studio.update()
+            return studio
+        except KeyError:
+            return None
 
 # ------ #
 

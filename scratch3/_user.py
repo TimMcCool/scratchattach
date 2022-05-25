@@ -33,19 +33,23 @@ class User:
         return str(self.username)
 
     def update(self):
+        response = json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/").text)
+        self._update_from_dict(response)
+
+    def _update_from_dict(self, response):
         try:
 
-            response = json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/").text)
             self.id = response["id"]
-            self.scratchteam = response["scratchteam"]
-            self.join_date = response["history"]["joined"]
-            self.about_me = response["profile"]["bio"]
-            self.wiwo = response["profile"]["status"]
-            self.country = response["profile"]["country"]
-            self.icon_url = response["profile"]["images"]["90x90"]
+
         except Exception:
             raise(_exceptions.UserNotFound)
-
+        self.scratchteam = response["scratchteam"]
+        self.join_date = response["history"]["joined"]
+        self.about_me = response["profile"]["bio"]
+        self.wiwo = response["profile"]["status"]
+        self.country = response["profile"]["country"]
+        self.icon_url = response["profile"]["images"]["90x90"]
+        
     def message_count(self):
 
         return json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/messages/count/", headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',}).text)["count"]
@@ -149,7 +153,65 @@ class User:
         return requests.get(f"https://following-check.1tim.repl.co/api/{user}/?following={self.username}").json()["following"]
 
     def project_count(self):
-        return len(self.projects())
+        text = requests.get(
+            f"https://scratch.mit.edu/users/{self.username}/projects/",
+            headers = {
+                "x-csrftoken": "a",
+                "x-requested-with": "XMLHttpRequest",
+                "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
+                "referer": "https://scratch.mit.edu",
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+            }
+        ).text
+        text = text.split("Shared Projects (")[1]
+        text = text.split(")")[0]
+        return int(text)
+
+    def project_count(self):
+        text = requests.get(
+            f"https://scratch.mit.edu/users/{self.username}/projects/",
+            headers = {
+                "x-csrftoken": "a",
+                "x-requested-with": "XMLHttpRequest",
+                "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
+                "referer": "https://scratch.mit.edu",
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+            }
+        ).text
+        text = text.split("Shared Projects (")[1]
+        text = text.split(")")[0]
+        return int(text)
+
+    def studio_count(self):
+        text = requests.get(
+            f"https://scratch.mit.edu/users/{self.username}/studios/",
+            headers = {
+                "x-csrftoken": "a",
+                "x-requested-with": "XMLHttpRequest",
+                "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
+                "referer": "https://scratch.mit.edu",
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+            }
+        ).text
+        text = text.split("Studios I Curate (")[1]
+        text = text.split(")")[0]
+        return int(text)
+
+    def studios_following_count(self):
+        text = requests.get(
+            f"https://scratch.mit.edu/users/{self.username}/studios/",
+            headers = {
+                "x-csrftoken": "a",
+                "x-requested-with": "XMLHttpRequest",
+                "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
+                "referer": "https://scratch.mit.edu",
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+            }
+        ).text
+        text = text.split("Studios I Follow (")[1]
+        text = text.split(")")[0]
+        return int(text)
+
 
     def projects(self, *, limit=None, offset=0):
         if limit is None:
@@ -244,6 +306,21 @@ class User:
                 url = "https://scratch.mit.edu/projects/"+str(project["id"])
             ))
         return projects
+
+    def favorites_count(self):
+        text = requests.get(
+            f"https://scratch.mit.edu/users/{self.username}/favorites/",
+            headers = {
+                "x-csrftoken": "a",
+                "x-requested-with": "XMLHttpRequest",
+                "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
+                "referer": "https://scratch.mit.edu",
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+            }
+        ).text
+        text = text.split("Favorites (")[1]
+        text = text.split(")")[0]
+        return int(text)
 
     def toggle_commenting(self):
         requests.post(f"https://scratch.mit.edu/site-api/comments/user/{self.username}/toggle-comments/",

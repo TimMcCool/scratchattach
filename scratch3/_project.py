@@ -34,6 +34,8 @@ class PartialProject:
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
+        self.project_token = None
+
 
     def download(self, *, filename=None, dir=""):
         try:
@@ -149,6 +151,7 @@ class Project(PartialProject):
         self.remix_count = project["stats"]["remixes"]
         self.views = project["stats"]["views"]
         self.title = project["title"]
+        self.project_token = project["project_token"]
         return True
 
     def get_author(self):
@@ -158,6 +161,7 @@ class Project(PartialProject):
             return _user.get_user(self.author)
 
     def comments(self, *, limit=40, offset=0):
+        comments = []
         while len(comments) < limit:
             r = requests.get(
                 f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/?limit={limit}&offset={offset}"
@@ -169,6 +173,7 @@ class Project(PartialProject):
         return comments
 
     def get_comment_replies(self, *, comment_id, limit=40, offset=0):
+        comments = []
         while len(comments) < limit:
             r = requests.get(
                 f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}/replies?limit={limit}&offset={offset}"
@@ -363,12 +368,12 @@ class Project(PartialProject):
         }
         headers = self._json_headers
         headers["referer"] = "https://scratch.mit.edu/projects/" + str(self.id) + "/"
-        return requests.post(
+        return json.loads(requests.post(
             f"https://api.scratch.mit.edu/proxy/comments/project/{self.id}/",
             headers = headers,
             cookies = self._cookies,
             data=json.dumps(data),
-        ).text
+        ).text)
 
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
