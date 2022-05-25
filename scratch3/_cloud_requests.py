@@ -6,7 +6,7 @@ import math
 
 class CloudRequests:
 
-    def __init__(self, cloud_connection : _cloud.CloudConnection, *, ignore_exceptions=True):
+    def __init__(self, cloud_connection, *, ignore_exceptions=True):
         print("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m")
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id
@@ -125,19 +125,16 @@ class CloudRequests:
                                     raise(e)
 
                         if len(str(output)) > 3000:
-                            length_output = len(str(output))
-                            print(f"Error in request '{request}': Output too large!\nMax. output content length: 3000 characters.\nOutput length of {request}: {length_output} characters")
-                            output = Encoding.encode("Error: Output too large, check Python console for details.")
+                            print(f"Warning: Output of request '{request}' is longer than 3000 characters (length: {len(str(output))} characters). Responding the request will take >4 seconds.")
 
+                        if not isinstance(output, list):
+                            output = Encoding.encode(output)
                         else:
-                            if not isinstance(output, list):
-                                output = Encoding.encode(output)
-                            else:
-                                input = output
-                                output = ""
-                                for i in input:
-                                    output += Encoding.encode(i)
-                                    output += "89"
-                        self._respond(request_id, output)
-                        self.last_timestamp = activity['timestamp']
+                            input = output
+                            output = ""
+                            for i in input:
+                                output += Encoding.encode(i)
+                                output += "89"
+                    self._respond(request_id, output)
+                    self.last_timestamp = activity['timestamp']
                 self.last_data = data
