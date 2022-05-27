@@ -142,6 +142,52 @@ class Studio:
         return curators
 
 
+    def invite_curator(self, curator):
+        try:
+            return requests.put(
+                f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/invite_curator/?usernames={curator}",
+                headers = headers,
+                cookies = self._cookies,
+            ).json()
+        except Exception:
+            raise(_exceptions.Unauthorized)
+
+    def promote_curator(self, curator):
+        try:
+            return requests.put(
+                f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/promote/?usernames={curator}",
+                headers = headers,
+                cookies = self._cookies
+            ).json()
+        except Exception:
+            raise(_exceptions.Unauthorized)
+
+
+    def remove_curator(self, curator):
+        try:
+            return requests.put(
+                f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/remove/?usernames={curator}",
+                headers = headers,
+                cookies = self._cookies
+            ).json()
+        except Exception:
+            raise(_exceptions.Unauthorized)
+
+    def leave(self):
+        return self.remove_curator(self._session._username)
+
+    def add_project(self, project_id):
+        return requests.post(
+            f"https://api.scratch.mit.edu/studios/{self.id}/project/{project_id}",
+            headers = self._headers
+        ).json()
+
+    def remove_project(self, project_id):
+        return requests.delete(
+            f"https://api.scratch.mit.edu/studios/{self.id}/project/{project_id}",
+            headers = self._headers
+        ).json()
+
     def managers(self, limit=24, offset=0):
         raw_m = requests.get(f"https://api.scratch.mit.edu/studios/{self.id}/managers/?limit={limit}&offset={offset}").json()
         managers = []

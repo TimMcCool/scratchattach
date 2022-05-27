@@ -143,6 +143,7 @@ class Session():
     def create_project(self):
 
         try:
+
             return self.connect_project(requests.post(
                 "https://projects.scratch.mit.edu/",
                 headers = headers,
@@ -215,6 +216,18 @@ class Session():
             projects.append(p)
         return projects
 
+
+    def backpack(self,limit=20, offset=0):
+        return requests.get(
+            f"https://backpack.scratch.mit.edu/{self._username}?limit={limit}&offset={offset}",
+            headers = self._headers,
+        ).json()
+
+    def delete_from_backpack(self, asset_id):
+        return requests.delete(
+            f"https://backpack.scratch.mit.edu/TimMcCool/{asset_id}",
+            headers = self._headers,
+        ).json()
 
     def connect_cloud(self, *, project_id):
 

@@ -4,6 +4,8 @@ import json
 import requests
 from . import _user
 from . import _exceptions
+from . import _studio
+
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
     "x-csrftoken": "a",
@@ -104,6 +106,7 @@ class PartialProject:
         return projects
 
 
+
 class Project(PartialProject):
 
 
@@ -159,6 +162,10 @@ class Project(PartialProject):
             return self._session.connect_user(self.author)
         except AttributeError:
             return _user.get_user(self.author)
+
+
+    def studios(self, *, limit=40, offset=0):
+        data = requests.get(f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/studios?limit={limit}&offset={offset}").json()
 
     def comments(self, *, limit=40, offset=0):
         comments = []

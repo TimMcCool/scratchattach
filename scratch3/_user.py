@@ -49,7 +49,7 @@ class User:
         self.wiwo = response["profile"]["status"]
         self.country = response["profile"]["country"]
         self.icon_url = response["profile"]["images"]["90x90"]
-        
+
     def message_count(self):
 
         return json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/messages/count/", headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',}).text)["count"]
@@ -212,6 +212,8 @@ class User:
         text = text.split(")")[0]
         return int(text)
 
+    def studios(self *, limit=40, offset=):
+        return requests.get(f"https://api.scratch.mit.edu/users/{self.username}/studios/curate?limit={limit}&offset={offset}").json()
 
     def projects(self, *, limit=None, offset=0):
         if limit is None:
@@ -328,6 +330,39 @@ class User:
             cookies = self._cookies
         )
 
+    def viewed_projects(self, limit=24, offset=0):
+        try:
+            _projects = requests.get(
+                f"https://api.scratch.mit.edu/users/{self.username}/projects/recentlyviewed?limit={limit}&offset={offset}",
+                headers = self._headers
+            ).json()
+            projects = []
+            for project in _projects:
+                projects.append(_project.Project(
+                    _session = self._session,
+                    author = self.username,
+                    comments_allowed = project["comments_allowed"],
+                    description=project["description"],
+                    created = project["history"]["created"],
+                    last_modified = project["history"]["modified"],
+                    share_date = project["history"]["shared"],
+                    id = project["id"],
+                    thumbnail_url = project["image"],
+                    instructions = project["instructions"],
+                    remix_parent = project["remix"]["parent"],
+                    remix_root = project["remix"]["root"],
+                    favorites = project["stats"]["favorites"],
+                    loves = project["stats"]["loves"],
+                    remixes = project["stats"]["remixes"],
+                    views = project["stats"]["views"],
+                    title = project["title"],
+                    url = "https://scratch.mit.edu/projects/"+str(project["id"])
+                ))
+            return projects
+        except Exception:
+            raise(_exceptions.Unauthorized)
+
+
     def set_bio(self, text):
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
@@ -427,6 +462,8 @@ class User:
         except Exception:
             return {"country":{"loves":0,"favorites":0,"comments":0,"views":0,"followers":0,"following":0},"loves":0,"favorites":0,"comments":0,"views":0,"followers":0,"following":0}
 
+    def followers_over_time(self, *, segment=1, range=30):
+        return requests.get(f"https://scratchdb.lefty.one/v3/user/graph/{self.username}/followers?segment={segment}&range={range}")
 
 # ------ #
 
