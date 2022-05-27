@@ -380,7 +380,10 @@ project.post_view()
 project.set_title("new title")
 project.set_instructions("new instructions")
 project.set_notes("new notes and credits")  #Sets the notes and credits section of the project
-project.set_thumbnail("filename") #File must be .png and fit Scratch's thumbnail guidelines project.share() project.unshare()
+project.set_thumbnail("filename") #File must be .png and fit Scratch's thumbnail guidelines #
+
+project.share()
+project.unshare()
 
 project.turn_off_commenting()
 project.turn_on_commenting()
