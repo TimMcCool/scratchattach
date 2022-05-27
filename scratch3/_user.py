@@ -212,7 +212,7 @@ class User:
         text = text.split(")")[0]
         return int(text)
 
-    def studios(self *, limit=40, offset=):
+    def studios(self, *, limit=40, offset=0):
         return requests.get(f"https://api.scratch.mit.edu/users/{self.username}/studios/curate?limit={limit}&offset={offset}").json()
 
     def projects(self, *, limit=None, offset=0):
