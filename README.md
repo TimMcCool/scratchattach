@@ -183,7 +183,7 @@ import scratchattach as scratch3
 session = scratch3.login("username", "password") #replace with your data
 conn = session.connect_cloud(project_id="project_id") #replace with your project id
 
-client = scratch3.CloudRequests(conn) #, ignore_exceptions=True)
+client = scratch3.CloudRequests(conn) #optional argument: ignore_exceptions=True
 
 @client.request
 def ping(): #called when client receives request
@@ -380,10 +380,7 @@ project.post_view()
 project.set_title("new title")
 project.set_instructions("new instructions")
 project.set_notes("new notes and credits")  #Sets the notes and credits section of the project
-project.set_thumbnail("filename") #File must be .png and fit Scratch's thumbnail guidelines #
-
-project.share()
-project.unshare()
+project.set_thumbnail("filename") #File must be .png and fit Scratch's thumbnail guidelines project.share() project.unshare()
 
 project.turn_off_commenting()
 project.turn_on_commenting()
