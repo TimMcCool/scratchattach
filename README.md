@@ -293,11 +293,16 @@ user.follower_count()
 user.following_count()
 user.project_count()
 user.favorites_count() #Returns the amount of projects the user has favorited
+user.studio_count() #Returns the amount of studios the user is curating
+user.studio_following_count()
 
 user.followers(limit=40, offset=0) #Returns the followers as list of scratch3.User objects
 user.following(limit=40, offset=0) #Returns the people the user is following as list of scratch3.User objects
 user.projects(limit=None, offset=0) #Returns the projects the user has shared as list of scratch3.Project objects
 user.favorites(limit=None, offset=0) #Returns the projects the user has favorited as list of scratch3.Project objects
+user.studios(limit=None, offset=0) #Returns the studios the user is curating as list of dicts
+
+user.viewed_projects(limit=24, offset=0) #To use this you need to be logged in as the user. Returns the projects the user has recently viewed as list of scratch3.Project objects
 
 user.follow()
 user.unfollow()
@@ -316,10 +321,7 @@ user.set_wiwo(text)
 
 user.stats() #Returns the user's statistics as dict. Fetched from ScratchDB
 user.ranks() #Returns the user's ranks as dict. Fetched from ScratchDB
-
-'''New in v0.5.0:'''
-user.studio_count() #Returns the amount of studios the user is curating
-user.studio_following_count()
+user.followers_over_time(segment=1, range=30) #Fetched from ScratchDB
 ```
 
 # Projects  `scratch3.Project`
@@ -338,7 +340,7 @@ project = scratch3.get_project("project_id")
 ```python
 project.id  #Returns the project id
 project.url  #Returns the project url
-project.author  #RetFurns the username of the author
+project.author  #Returns the username of the author
 project.comments_allowed  #Returns True if comments are enabled
 project.instructions
 project.notes  #Returns the 'Notes and Credits' section
@@ -392,14 +394,6 @@ project.get_raw_json() #Returns the json of the project content as dict
 project.get_creator_agent() #Returns the user-agent of the user who created the project (with information about their browser and OS)
 ```
 
-**Create a project:** (New in v0.5.0)
-
-Warning: Spam-creating projects is against Scratch's Terms of Use.
-
-```py
-project = session.create_project() #Returns the created project as scratch3.Project object
-```
-
 # Unshared projects  `scratch3.PartialProject`
 
 When connecting / getting a project that you can't access, a `PartialProject` object is returned instead.
@@ -418,11 +412,11 @@ project.get_creator_agent()
 
 **Get a studio:**
 ```python
-project = session.connect_studio("studio_id")
+studio = session.connect_studio("studio_id")
 ```
 You can also get studios without logging in:
 ```python
-project = scratch3.get_studio("studio_id")
+studio = scratch3.get_studio("studio_id")
 ```
 
 **Attributes:**
@@ -440,7 +434,7 @@ studio.follower_count
 studio.manager_count
 studio.project_count
 # ----- ----- #
-studio.update()  #Updates the above data
+project.update()  #Updates the above data
 ```
 
 **Functions:**
@@ -453,9 +447,17 @@ studio.get_comment_replies(comment_id="comment_id", limit=40, offset=0)  #Fetche
 studio.post_comment(content="comment content", parent_id="", commentee_id="")  #Returns the info of the posted commented.
 studio.reply_comment(content="comment content", parent_id="parent_id")  #Returns the info of the posted commented.
 
+studio.add_project("project_id")
+studio.remove_project("project_id")
+
+studio.invite_curator("username")
+studio.promote_curator("username")
+studio.remove_curator("username")
+
 studio.projects(limit=40, offset=0)
 studio.curators(limit=24, offset=0) #Returns the curators as list of users (scratch3.User)
 studio.managers(limit=24, offset=0)
+studio.activity(limit=24, offset=0)
 ```
 
 # Search / Explore page
@@ -480,7 +482,7 @@ scratch3.explore_projects(query="*", mode="trending", language="en", limit=40, o
 scratch3.explore_studios(query="*", mode="trending", language="en", limit=40, offset=0)
 ```
 
-# Messages / My stuff page
+# Messages / My stuff page / Backpack
 
 **Functions:**
 ```python
@@ -491,12 +493,20 @@ session.clear_messages() #Marks your messages as read
 session.get_message_count() #Returns your message count
 ```
 
-# "What's happening" section / Your feed
+# "What's happening" section
 
 **Functions:**
 ```python
 session.get_feed(limit=20, offset=0) #Returns your "What's happening" section from the Scratch front page as list
 session.loved_by_followed_users(limit=40, offset=0) #Returns the projects loved by users you are following as list
+```
+
+# Backpack
+
+**Functions:**
+```python
+session.backpack(limit=20, offset=0) #Returns the contents of your backpack as dictionary
+session.delete_from_backpack("asset id") #Deletes an asset from your backpack
 ```
 
 # Featured projects / News
