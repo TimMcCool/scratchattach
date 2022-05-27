@@ -183,7 +183,7 @@ import scratchattach as scratch3
 session = scratch3.login("username", "password") #replace with your data
 conn = session.connect_cloud(project_id="project_id") #replace with your project id
 
-client = scratch3.CloudRequests(conn, ignore_exceptions=True)
+client = scratch3.CloudRequests(conn) #, ignore_exceptions=True)
 
 @client.request
 def ping(): #called when client receives request
