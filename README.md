@@ -41,7 +41,8 @@ session = scratch3.login("username", "password")
 ```python
 import scratchattach as scratch3
 
-session = scratch3.Session("sessionId", username="username") #The username is an optional argument.
+session = scratch3.Session("sessionId", username="username")
+#The username is an optional argument. You only have to provide it if you get the 'Couldn't fetch x-token' warning.
 ```
 
 **Attributes:**
