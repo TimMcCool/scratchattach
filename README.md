@@ -75,7 +75,7 @@ conn = scratch3.CloudConnection(project_id = "project_id", username="username", 
 Does not require a session.
 
 ```python
-conn = scratch3.TwCloudConnection(project_id = "project_id", username="username", cloud_host="<wss://clouddata.turbowarp.org")
+conn = scratch3.TwCloudConnection(project_id = "project_id", username="username", cloud_host="wss://clouddata.turbowarp.org")
 ```
 
 **Set a cloud var:**
