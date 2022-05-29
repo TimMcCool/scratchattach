@@ -41,8 +41,7 @@ session = scratch3.login("username", "password")
 ```python
 import scratchattach as scratch3
 
-session = scratch3.Session("sessionId", username="username")
-#The username is an optional argument. You only have to provide it if you get the 'Couldn't fetch x-token' warning.
+session = scratch3.Session("sessionId")
 ```
 
 **Attributes:**
@@ -76,7 +75,7 @@ conn = scratch3.CloudConnection(project_id = "project_id", username="username", 
 Does not require a session.
 
 ```python
-conn = scratch3.TwCloudConnection(project_id = "project_id", username="username", cloud_host="wss://clouddata.turbowarp.org")
+conn = scratch3.TwCloudConnection(project_id = "project_id", username="username")  #optional argument: cloud_host="wss://clouddata.turbowarp.org"
 ```
 
 **Set a cloud var:**
@@ -174,7 +173,7 @@ Download this project file to your computer: https://scratch3-assets.1tim.repl.c
 
 Then, go to the Scratch website, create a new project and upload the project file from above.
 
-**How to use:**
+**How to use with Scratch:**
 
 Copy this code to your Python editor:
 
@@ -252,6 +251,10 @@ def foo(argument1):
     return return_data
 ```
 
+**How to use with TurboWarp:**
+
+Cloud requests are not available for TurboWarp yet, but that will be implemented soon.
+
 **Make sure to credit @TimMcCool on Scratch if you use the Scratch sprite!**
 **Uncredited use will automatically be reported to the Scratch Team.**
 
@@ -323,6 +326,10 @@ user.set_wiwo(text)
 user.stats() #Returns the user's statistics as dict. Fetched from ScratchDB
 user.ranks() #Returns the user's ranks as dict. Fetched from ScratchDB
 user.followers_over_time(segment=1, range=30) #Fetched from ScratchDB
+
+user.forum_counts() #Returns the amount of posts a user has written different forums as dict. Fetched from ScratchDB
+user.forum_counts_over_time() #Fetched from ScratchDB
+user.forum_signature() #Fetched from ScratchDB
 ```
 
 # Projects  `scratch3.Project`
@@ -364,6 +371,7 @@ project.update()  #Updates the above data
 ```python
 project.get_author()  #Returns the author as scratch3.User object
 project.ranks()  #Returns the project's ranks. Fetched from ScratchDB
+project.moderation_status() #Returns the project's moderation status (either "safe" or "notsafe" (nfe)). New in v0.5.4. Fetched from jeffalo.net
 
 project.comments(limit=40, offset=0)  #Fetches all project comments except for comment replies
 project.get_comment_replies(comment_id="comment_id", limit=40, offset=0)  #Fetches the replies to a specific comment
