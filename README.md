@@ -1,4 +1,4 @@
-Scratchattach is a modern and object oriented library for the Scratch website.
+Scratchattach is a modern and object oriented library for the Scratch website with support for all sorts of site features.
 Automate actions and interact with your Scratch projects through cloud variables.
 
 **Some functions require logging in to Scratch.**
