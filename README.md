@@ -327,9 +327,13 @@ user.stats() #Returns the user's statistics as dict. Fetched from ScratchDB
 user.ranks() #Returns the user's ranks as dict. Fetched from ScratchDB
 user.followers_over_time(segment=1, range=30) #Fetched from ScratchDB
 
+user.forum_posts(page=0, order="newest") #Returns a list of scratch3.ForumPost objects. New in v0.5.5. Fetched from ScratchDB
 user.forum_counts() #Returns the amount of posts a user has written different forums as dict. Fetched from ScratchDB
 user.forum_counts_over_time() #Fetched from ScratchDB
 user.forum_signature() #Fetched from ScratchDB
+user.forum_signature_history() #A change log for the user's forum history. Fetched from ScratchDB
+
+user.ocular_status() #Returns information about the user's ocular status, like the status text, the color, and the time of the last update.
 ```
 
 # Projects  `scratch3.Project`
@@ -443,7 +447,7 @@ studio.follower_count
 studio.manager_count
 studio.project_count
 # ----- ----- #
-project.update()  #Updates the above data
+studio.update()  #Updates the above data
 ```
 
 **Functions:**
@@ -481,6 +485,9 @@ scratch3.search_projects(query="query", mode="trending", language="en", limit=40
 scratch3.search_studios(query="query", mode="trending", language="en", limit=40, offset=0)
 
 scratch3.search_comments(query="query") #This will return matching profile comments from all across Scratch. It is based on ScratchData
+
+session.search_posts(query="query", order="newest", page=0) #Searches forum posts. Returns a list of scratch3.ForumPost objects. New in v0.5.5
+scratch3.search_posts(query="query", order="newest", page=0) #Doesn't require logging in
 ```
 
 **Get the explore page:**
@@ -491,9 +498,8 @@ scratch3.explore_projects(query="*", mode="trending", language="en", limit=40, o
 scratch3.explore_studios(query="*", mode="trending", language="en", limit=40, offset=0)
 ```
 
-# Messages / My stuff page / Backpack
+# Messages / My stuff page
 
-**Functions:**
 ```python
 session.get_mystuff_projects("all", page=1, sort_by="") #Returns the projects from your "My stuff" page as list
 
@@ -502,34 +508,133 @@ session.clear_messages() #Marks your messages as read
 session.get_message_count() #Returns your message count
 ```
 
-# "What's happening" section
-
-**Functions:**
-```python
-session.get_feed(limit=20, offset=0) #Returns your "What's happening" section from the Scratch front page as list
-session.loved_by_followed_users(limit=40, offset=0) #Returns the projects loved by users you are following as list
-```
-
-# Backpack
-
-**Functions:**
-```python
-session.backpack(limit=20, offset=0) #Returns the contents of your backpack as dictionary
-session.delete_from_backpack("asset id") #Deletes an asset from your backpack
-```
-
-# Featured projects / News
-
-Doesn't require a session
+# Frontpage
 
 ```python
 scratch3.get_news(limit=10, offset=0) #Returns the news from the Scratch front page as list
+
 scratch3.featured_projects() #Returns the featured projects from the Scratch homepage as list
 scratch3.featured_studios()
 scratch3.top_loved()
 scratch3.top_remixed()
 scratch3.newest_projects() #Returns a list with the newest Scratch projects. This list is not present on the Scratch home page, but the API still provides it.
 scratch3.design_studio_projects()
+
+session.get_feed(limit=20, offset=0) #Returns your "What's happening" section from the Scratch front page as list
+session.loved_by_followed_users(limit=40, offset=0) #Returns the projects loved by users you are following as list
+```
+
+# Forum topics `scratch3.ForumTopic`
+(New in v0.5.5)
+All of this data is fetched from ScratchDB v3, therefore it may be slighty off.
+
+**Get a forum topic:**
+```python
+topic = session.connect_topic("topic_id")
+```
+You can also get topics without logging in:
+```python
+topic = scratch3.get_topic("topic_id")
+```
+
+**Get a list of the topics in a category:**
+```python
+topic_list = session.connect_topic_list("category_name", page=0)
+```
+You can also do this without logging in:
+```python
+topic_list = scratch3.get_topic_list("category_name", page=0)
+```
+
+**Attributes:**
+```python
+topic.title
+topic.category
+topic.closed
+topic.deleted
+topic.post_count
+# ----- ----- #
+topic.update()  #Updates the above data
+```
+
+**Functions:**
+```python
+topic.posts(page=0, order="oldest") #Returns the topic posts as list of scratch3.ForumPost objects. Possible parameters for "order" are "oldest" and "newest".
+topic.first_post() #Returns the first topic post as scratch3.ForumPost object
+topic.follow()
+topic.unfollow()
+
+topic.post_count_by_user("username")
+topic.activity() #Returns an activity / change log for the topic
+```
+
+To prevent spam, adding posts to topics is not a scratchattach feature and never will be.
+
+# Forum posts `scratch3.ForumPost`
+(New in v0.5.5)
+All of this data is fetched from ScratchDB v3, therefore it may be slighty off.
+
+**Get a forum post:**
+```python
+post = session.connect_post("post_id")
+```
+You can also get posts without logging in:
+```python
+post = scratch3.get_post("post_id")
+```
+
+**Search for forum posts:**
+```python
+post_list = session.search_posts(query="query", order="newest", page=0) #Returns a list of scratch3.ForumPost objects
+```
+You can also get posts without logging in:
+```python
+post_list = scratch3.search_posts(query="query", order="newest", page=0) #Returns a list of scratch3.ForumPost objects
+```
+
+**Attributes:**
+```python
+post.id
+post.author
+post.posted #The date the post was made
+post.edited #The date of the most recent post edit. If the post wasn't edited this is None
+post.edited_by #The user who made the most recent edit. If the post wasn't edited this is None
+post.deleted #Whether the post was deleted
+post.html_content #Returns the content as HTML
+post.bb_content #Returns the content as BBCode
+post.topic_id #The id of the topic the post is in
+post.topic_name #The name of the topic the post is in
+post.topic_category #The name of the category the post topic is in
+# ----- ----- #
+post.update()  #Updates the above data
+```
+
+**Functions:**
+```python
+post.get_topic() #Returns the topic the post is in as scratch3.ForumTopic object
+post.get_author() #Returns the post author as scratch3.User object
+
+post.edit(new_content) #Requires you to be the post author.
+
+post.ocular_reactions()
+```
+
+# Site stats and health
+
+```python
+scratch3.total_site_stats() #Returns the total project count, user count, comment count and other total counts
+scratch3.monthly_site_traffic() #Returns last month's site traffic
+scratch3.country_counts() #Returns the amount of Scratch users in each country
+scratch3.age_distribution() #Returns how many Scratchers were 1,2,3,4,5,6,... years old when they created their account
+
+scratch3.get_health() #Returns Scratch's health data
+```
+
+# Backpack
+
+```python
+session.backpack(limit=20, offset=0) #Returns the contents of your backpack as dictionary
+session.delete_from_backpack("asset id") #Deletes an asset from your backpack
 ```
 
 # Contributors
