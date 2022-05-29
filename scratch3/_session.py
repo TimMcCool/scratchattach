@@ -9,6 +9,7 @@ from . import _cloud
 from . import _project
 from . import _exceptions
 from . import _studio
+from . import _forum
 
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
@@ -259,6 +260,61 @@ class Session():
         except KeyError:
             return None
 
+    def connect_topic(self, topic_id):
+
+        """
+        Connects a forum topic
+        """
+
+        try:
+            topic = _forum.ForumTopic(id=int(topic_id), _session=self)
+            topic.update()
+            return topic
+        except KeyError:
+            return None
+
+    def connect_topic_list(self, category_name, *, page=0, include_deleted=False):
+        category_name.replace(" ", "%20")
+        if include_deleted:
+            filter = 0
+        else:
+            filter = 1
+        try:
+            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/category/topics/{category_name}/{page}?detail=1&filter={filter}").json()
+            return_data = []
+            for topic in data:
+                t = _forum.ForumTopic(id = topic["id"], _session=self)
+                t._update_from_dict(topic)
+                return_data.append(t)
+            return return_data
+        except Exception:
+            return None
+
+    def connect_post(self, post_id):
+
+        """
+        Gets a forum post
+        """
+
+        try:
+            post = _forum.ForumPost(id=int(post_id), _session=self)
+            post.update()
+            return post
+        except KeyError:
+            return None
+
+    def search_posts(self, *, query, order="newest", page=0):
+        try:
+            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/search?q={query}&o={order}&page={page}").json()["posts"]
+            return_data = []
+            for o in data:
+                a = _forum.ForumPost(id = o["id"], _session = self._session)
+                a._update_from_dict(o)
+                return_data.append(a)
+            return return_data
+        except Exception:
+            return []
+
 # ------ #
 
 def login(username, password):
@@ -329,3 +385,43 @@ def explore_studios(*, query="", mode="trending", language="en", limit=40, offse
 
 def search_comments(*, query=""):
     return requests.get(f"https://sd.sly-little-fox.ru/api/v1/search?q={query}").json()
+
+def search_posts(*, query, order="newest", page=0):
+    try:
+        data = requests.get(f"https://scratchdb.lefty.one/v3/forum/search?q={query}&o={order}&page={page}").json()["posts"]
+        return_data = []
+        for o in data:
+            a = _forum.ForumPost(id = o["id"])
+            a._update_from_dict(o)
+            return_data.append(a)
+        return return_data
+    except Exception:
+        return []
+
+def total_site_stats():
+    data = requests.get("https://scratch.mit.edu/statistics/data/daily/").json()
+    data.pop("_TS")
+    return data
+
+def monthly_site_traffic():
+    data = requests.get("https://scratch.mit.edu/statistics/data/monthly-ga/").json()
+    data.pop("_TS")
+    return data
+
+def country_counts():
+    return requests.get("https://scratch.mit.edu/statistics/data/monthly/").json()["country_distribution"]
+
+def age_distribution():
+    data = requests.get("https://scratch.mit.edu/statistics/data/monthly/").json()["age_distribution_data"][0]["values"]
+    return_data = {}
+    for value in data:
+        return_data[value["x"]] = value["y"]
+    return return_data
+
+def get_health():
+    return requests.get("https://api.scratch.mit.edu/health").json()
+
+def get_csrf_token():
+    return requests.get(
+        "https://scratch.mit.edu/csrf_token/"
+    ).headers["set-cookie"].split(";")[3][len(" Path=/, scratchcsrftoken="):]

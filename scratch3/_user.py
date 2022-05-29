@@ -4,6 +4,7 @@ import json
 import requests
 from . import _project
 from . import _exceptions
+from . import _forum
 
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
@@ -482,6 +483,24 @@ class User:
             return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["signature"]
         except Exception:
             raise _exceptions.FetchError
+
+    def forum_signature_history(self):
+        return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/history/{self.username}").json()
+
+    def ocular_status(self):
+        return requests.get(f"https://my-ocular.jeffalo.net/api/user/{self.username}").json()
+
+    def forum_posts(self, *, page=0, order="newest"):
+        try:
+            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/user/posts/{self.username}/{page}?o={order}").json()
+            return_data = []
+            for o in data:
+                a = _forum.ForumPost(id = o["id"], _session = self._session)
+                a._update_from_dict(o)
+                return_data.append(a)
+            return return_data
+        except Exception:
+            return []
 
 # ------ #
 
