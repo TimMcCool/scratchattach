@@ -33,6 +33,9 @@ class Session():
             "Content-Type": "application/json",
         }
         self._get_xtoken()
+        try:
+            self._headers.pop("Cookie")
+        except Exception: pass
 
     def _get_csrftoken(self):
         r = requests.get("https://scratch.mit.edu/csrf_token/").headers
@@ -71,7 +74,10 @@ class Session():
                 print("Warning: The account you logged in to is BANNED. Some features may not work properly.")
 
         except Exception:
-            print("Warning: Logged in, but couldn't fetch XToken. Some features may not work properly.")
+            if self._username is None:
+                print("Warning: Logged in, but couldn't fetch XToken. Some features (including cloud variables) may not work properly.")
+            else:
+                print("Warning: Logged in, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.")
 
     def get_linked_user(self):
 

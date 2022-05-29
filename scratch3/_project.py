@@ -32,6 +32,10 @@ class PartialProject:
             self._headers = self._session._headers
             self._cookies = self._session._cookies
 
+        try:
+            self._headers.pop("Cookie")
+        except Exception: pass
+
         self._json_headers = self._headers
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
@@ -207,7 +211,7 @@ class Project(PartialProject):
         if self._headers is None:
             raise(_exceptions.Unauthenticated)
             return
-        return requests.post(
+        return requests.delete(
             f"https://api.scratch.mit.edu/proxy/projects/{self.id}/loves/user/{self._session._username}",
             headers = self._headers,
             cookies = self._cookies,
@@ -220,7 +224,7 @@ class Project(PartialProject):
             raise(_exceptions.Unauthenticated)
             return
         return requests.post(
-            f"https://api.scratch.mit.edu/proxy/projects/{self.id}/loves/user/{self._session._username}",
+            f"https://api.scratch.mit.edu/proxy/projects/{self.id}/favorites/user/{self._session._username}",
             headers = self._headers,
             cookies = self._cookies,
         ).json()
@@ -231,8 +235,8 @@ class Project(PartialProject):
         if self._headers is None:
             raise(_exceptions.Unauthenticated)
             return
-        return requests.post(
-            f"https://api.scratch.mit.edu/proxy/projects/{self.id}/loves/user/{self._session._username}",
+        return requests.delete(
+            f"https://api.scratch.mit.edu/proxy/projects/{self.id}/favorites/user/{self._session._username}",
             headers = self._headers,
             cookies = self._cookies,
         ).json()

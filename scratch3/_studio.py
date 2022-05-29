@@ -26,6 +26,9 @@ class Studio:
             self._headers = self._session._headers
             self._cookies = self._session._cookies
 
+        try:
+            self._headers.pop("Cookie")
+        except Exception: pass
         self._json_headers = self._headers
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"

@@ -27,6 +27,9 @@ class ForumTopic:
             self._headers = self._session._headers
             self._cookies = self._session._cookies
 
+        try:
+            self._headers.pop("Cookie")
+        except Exception: pass
 
     def update(self):
         topic = requests.get(f"https://scratchdb.lefty.one/v3/forum/topic/info/{self.id}").json()
