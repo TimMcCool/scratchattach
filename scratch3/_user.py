@@ -465,6 +465,24 @@ class User:
     def followers_over_time(self, *, segment=1, range=30):
         return requests.get(f"https://scratchdb.lefty.one/v3/user/graph/{self.username}/followers?segment={segment}&range={range}")
 
+    def forum_counts(self):
+        try:
+            return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["counts"]
+        except Exception:
+            raise _exceptions.FetchError
+
+    def forum_posts_over_time(self):
+        try:
+            return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["history"]
+        except Exception:
+            raise _exceptions.FetchError
+
+    def forum_signature(self):
+        try:
+            return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["signature"]
+        except Exception:
+            raise _exceptions.FetchError
+
 # ------ #
 
 def get_user(username):

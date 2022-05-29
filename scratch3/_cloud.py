@@ -84,6 +84,7 @@ class TwCloudConnection(_CloudMixin):
         try:
             if cloud_host is None:
                 cloud_host = "wss://clouddata.turbowarp.org/"
+                self.cloud_host = "wss://clouddata.turbowarp.org/"
             self.websocket = websocket.WebSocket()
             self.websocket.connect(
                 cloud_host,
@@ -113,12 +114,33 @@ class TwCloudConnection(_CloudMixin):
         except Exception as e:
             raise _exceptions.FetchError
 
+    def get_cloud(self, variable):
+        try:
+            variable = "☁ " + str(variable)
+            self.set_var('@scratchattach','0')
+
+            result = []
+            for i in self._clouddata:
+                try:
+                    result.append(json.loads(i))
+                except Exception: pass
+            data = {}
+            if result == []:
+                return {}
+            else:
+                for item in result:
+                    data[item["name"]] = item["value"]
+                return data
+        except Exception as e:
+            raise _exceptions.FetchError
+
 
     def set_var(self, variable, value):
         value = str(value)
         x = value.replace(".", "")
-        if not value.isnumeric():
+        if not x.isnumeric():
             raise(_exceptions.InvalidCloudValue)
+
         while self._ratelimited_until + 0.1 > time.time():
             pass
         try:
@@ -133,8 +155,10 @@ class TwCloudConnection(_CloudMixin):
             )
             self._clouddata = self.websocket.recv().split('\n')
         except Exception as e:
+            print(e)
             try:
                 self._handshake()
+                self.set_var(variable, value)
             except Exception:
                 self._connect(cloud_host=None)
                 self._handshake()
@@ -192,8 +216,8 @@ class CloudEvents:
 
 class TwCloudEvents(CloudEvents):
 
-    def __init__(self, cloud_connection : TwCloudConnection):
-        self.project_id = cloud_connection.project_id
+    def __init__(self, project_id):
+        cloud_connection = TwCloudConnection(project_id=project_id)
         self.data = []
         self._thread = None
         self.running = False

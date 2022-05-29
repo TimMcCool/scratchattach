@@ -432,6 +432,13 @@ class Project(PartialProject):
     def ranks(self):
         return requests.get(f"https://scratchdb.lefty.one/v3/project/info/{self.id}").json()["statistics"]["ranks"]
 
+    def moderation_status(self):
+        try:
+            return requests.get(f"https://jeffalo.net/api/nfe/?project={self.id}").json()["status"]
+        except Exception:
+            raise(_exceptions.FetchError)
+
+
 
 # ------ #
 
