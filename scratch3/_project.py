@@ -158,7 +158,10 @@ class Project(PartialProject):
         self.remix_count = project["stats"]["remixes"]
         self.views = project["stats"]["views"]
         self.title = project["title"]
-        self.project_token = project["project_token"]
+        try:
+            self.project_token = project["project_token"]
+        except Exception:
+            self.project_token = None
         return True
 
     def get_author(self):
@@ -177,7 +180,7 @@ class Project(PartialProject):
             r = requests.get(
                 f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/?limit={limit}&offset={offset}"
             ).json()
-            if len(response) != 40:
+            if len(r) != 40:
                 break
             offset += 40
             comments.append(r)

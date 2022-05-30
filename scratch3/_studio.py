@@ -91,7 +91,7 @@ class Studio:
             r = requests.get(
                 f"https://api.scratch.mit.edu/studios/{self.id}/comments/?limit={limit}&offset={offset}"
             ).json()
-            if len(response) != 40:
+            if len(r) != 40:
                 break
             offset += 40
             comments.append(r)

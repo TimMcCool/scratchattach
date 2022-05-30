@@ -17,6 +17,10 @@ class User:
 
     def __init__(self, **entries):
         self.__dict__.update(entries)
+
+        if "name" in self.__dict__.keys():
+            self.username = self.name
+
         if "_session" not in self.__dict__.keys():
             self._session = None
         if self._session is None:
