@@ -36,7 +36,8 @@ class User:
         self._json_headers = self._headers
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
-
+        self.followers = follower_count()
+        
     def __str__(self):
         return str(self.username)
 
