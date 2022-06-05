@@ -1,16 +1,16 @@
 import math
 
 letters = [
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
+    "卍"
+    "▩",
+    "●",
+    "☻"
+    "☹"
+    "©"
+    "®"
+    "™"
+    "℗",
+    "§",
     "1",
     "2",
     "3",
