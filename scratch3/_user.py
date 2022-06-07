@@ -41,6 +41,9 @@ class User:
         return str(self.username)
 
     def update(self):
+        """
+        Update user data from scratch
+        """
         response = json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/").text)
         self._update_from_dict(response)
 
@@ -59,10 +62,15 @@ class User:
         self.icon_url = response["profile"]["images"]["90x90"]
 
     def message_count(self):
-
+        """
+        This function return message count
+        """
         return json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/messages/count/", headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',}).text)["count"]
 
     def featured_data(self):
+        """
+        This function return user featured project data
+        """
         # featured data
         try:
             response = json.loads(requests.get(f"https://scratch.mit.edu/site-api/users/all/{self.username}/").text)
