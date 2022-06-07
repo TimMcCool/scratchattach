@@ -151,8 +151,110 @@ class User:
                 break
         return following
 
-    '''def get_comments(self, *, page=1):
-        response = requests.get(f"https://scratch.mit.edu/site-api/comments/user/{self.z}/?page=1")'''
+    def get_comments(self, page=1):
+        # Thanks Quatum_Codes for it parser And to me, since I finalized it :)
+        comments = []
+        soup = BeautifulSoup(
+            requests.get(f"https://scratch.mit.edu/site-api/comments/user/{self.username}/?page={page}").content,
+            "html.parser")
+        result = soup.find_all("li", class_="top-level-reply")
+
+        def get_replies(count):
+            '''
+            Retrieve replies to comment thread.
+            '''
+            replies = result[count].find("ul", class_="replies")
+            if replies.text == "":
+                return None
+            else:
+                # Get DOM node containing user data for comment
+                user = replies.find_all("div", class_="info")
+                # print(user)
+                # Initialize array with name "all_replies"
+                all_replies = []
+                # Iterate through reply list and extract username
+                for i in range(0, len(user)):
+                    # Get username section. Probably does it like this to save memory.
+                    username = user[i].find("div", class_="name")
+                    # Redefine username as the actual username element
+                    username = username.find("a").text
+                    # Get post content
+                    content = user[i].find("div", class_="content").text
+                    # Trim username newlines
+                    username = username.strip().replace("\n", "")
+                    # Trim post content newlines
+                    content = content.strip().replace("\n", "")
+                    # Get comment IDs
+                    search = re.search("data-comment-id=", str(result[i]))
+                    # Get post position in reply list
+                    index = search.span()[1]
+                    data = str(result[i])[index + 1:]
+                    i = 0
+                    id = ""
+                    while data[i] != '"':
+                        id += data[i]
+                        i += 1
+                    id = int(id)
+                    # Get post numbers (I think)
+                    search = re.search("title=", str(result[i]))
+                    index = search.span()[1]
+                    data = str(result[i])[index + 1:]
+                    i = 0
+                    comment_time = ""
+                    while data[i] != '"':
+                        comment_time += data[i]
+                        i += 1
+                    reply = {"id": id, "username": username, "comment": content.replace("                   ", ""),
+                             "timestamp": comment_time}
+                    all_replies.append(reply)
+                return all_replies
+
+        for i in range(0, len(result)):
+            user = result[i].find("div", class_="comment")
+            replies = get_replies(i)
+            user = user.find("div", class_="info")
+            user = user.find("div", class_="name")
+            user = user.find("a")
+            user = user.text
+
+            content = result[i].find("div", class_="comment")
+            content = content.find("div", class_="info")
+            content = content.find("div", class_="content")
+            content = content.text.strip()
+
+            search = re.search("data-comment-id=", str(result[i]))
+            index = search.span()[1]
+            data = str(result[i])[index + 1:]
+            i = 0
+            id = ""
+            while data[i] != '"':
+                id += data[i]
+                i += 1
+            id = int(id)
+
+            search = re.search("title=", str(result[i]))
+            index = search.span()[1]
+            data = str(result[i])[index + 1:]
+            i = 0
+            comment_time = ""
+            while data[i] != '"':
+                comment_time += data[i]
+                i += 1
+            if len(replies) == 0:
+                parent = True
+            else:
+                parent = False
+            comment = {
+                "Username": user,
+                "Content": content,
+                "Time": comment_time,
+                "IsReply": parent,
+                "Replies": replies,
+                "CommentID": id,
+            }
+            comments.append(comment)
+        # Return a list of comments
+        return comments
 
     def is_following(self, user):
         return requests.get(f"https://following-check.1tim.repl.co/api/{self.username}/?following={user}").json()["following"]
