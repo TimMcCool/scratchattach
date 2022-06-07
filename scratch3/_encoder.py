@@ -109,6 +109,9 @@ class Encoding:
     Inner class for encoding / decoding strings.
     """
     def decode(inp):
+        '''
+        This function decodes data and returns them
+        '''
         inp = str(inp)
         outp = ""
         for i in range(0, math.floor(len(inp) / 2)):
@@ -118,6 +121,9 @@ class Encoding:
 
 
     def encode(inp):
+        """
+        This function encodes data and returns them
+        """
         inp = str(inp)
         global encode_letters
         outp = ""
