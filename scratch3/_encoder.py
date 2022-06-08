@@ -110,7 +110,7 @@ class Encoding:
     """
     def decode(inp):
         '''
-        This function decodes data and returns them
+        This function decodes data and returns it
         '''
         inp = str(inp)
         outp = ""
@@ -122,7 +122,7 @@ class Encoding:
 
     def encode(inp):
         """
-        This function encodes data and returns them
+        This function encodes data and returns it
         """
         inp = str(inp)
         global encode_letters
