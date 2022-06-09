@@ -37,7 +37,6 @@ session = scratch3.login("username", "password")
 `login()` returns a `Session` object that saves your login
 
 **Logging in with a sessionId:**
-
 You can get your session id from your browser's cookies.
 
 ```python
@@ -309,6 +308,7 @@ user.favorites(limit=None, offset=0) #Returns the projects the user has favorite
 user.studios(limit=None, offset=0) #Returns the studios the user is curating as list of dicts
 
 user.viewed_projects(limit=24, offset=0) #To use this you need to be logged in as the user. Returns the projects the user has recently viewed as list of scratch3.Project objects
+user.activity_html(limit=1000) #Returns the user's activity as HTML document
 
 user.follow()
 user.unfollow()
@@ -324,6 +324,7 @@ user.report_comment(comment_id="comment_id")
 user.toggle_commenting()
 user.set_bio(text) #Changes the 'About me' of the user
 user.set_wiwo(text)
+user.set_featured("project_id", label="") #Changes the featured project
 
 user.stats() #Returns the user's statistics as dict. Fetched from ScratchDB
 user.ranks() #Returns the user's ranks as dict. Fetched from ScratchDB
@@ -465,9 +466,15 @@ studio.reply_comment(content="comment content", parent_id="parent_id")  #Returns
 studio.add_project("project_id")
 studio.remove_project("project_id")
 
+studio.set_description("new description")
+studio.set_title("new title")
+studio.open_projects() #Allows everyone to add projects
+studio.close_projects()
+
 studio.invite_curator("username")
 studio.promote_curator("username")
 studio.remove_curator("username")
+studio.leave() #Removes yourself from the studio
 
 studio.projects(limit=40, offset=0)
 studio.curators(limit=24, offset=0) #Returns the curators as list of users (scratch3.User)
