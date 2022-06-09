@@ -43,14 +43,14 @@ You can get your session id from your browser's cookies.
 ```python
 import scratchattach as scratch3
 
-session = scratch3.Session("sessionId", username="username") #The username argument is optional. You only have to put it if your IP adress is blocked (for example if you are using replit)
+session = scratch3.Session("sessionId", username="username") #The username argument is optional. You only have to put it if your IP address is blocked (for example if you are using replit)
 ```
 
 **Attributes:**
 ```py
 session.session_id #Returns the associated session id
 session.xtoken
-session.email #Returns the email adress associated with the account
+session.email #Returns the email address associated with the account
 session.new_scratcher #Returns True if the associated account is a New Scratcher
 session.mute_status
 session.banned #Returns True if the associated account is banned
