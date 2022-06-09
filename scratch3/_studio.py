@@ -136,6 +136,8 @@ class Studio:
         return requests.get(f"https://api.scratch.mit.edu/studios/{self.id}/projects/?limit={limit}&offset={offset}").json()
 
     def curators(self, limit=24, offset=0):
+        if limit>24:
+            limit=24
         raw_curators = requests.get(f"https://api.scratch.mit.edu/studios/{self.id}/curators/?limit={limit}&offset={offset}").json()
         curators = []
         for c in raw_curators:
@@ -192,6 +194,8 @@ class Studio:
         ).json()
 
     def managers(self, limit=24, offset=0):
+        if limit>24:
+            limit=24
         raw_m = requests.get(f"https://api.scratch.mit.edu/studios/{self.id}/managers/?limit={limit}&offset={offset}").json()
         managers = []
         for c in raw_m:
@@ -200,6 +204,35 @@ class Studio:
             managers.append(u)
         return managers
 
+    def set_description(self, new):
+        requests.put(
+            f"https://scratch.mit.edu/site-api/galleries/all/{self.id}/",
+            headers = headers,
+            cookies = self._cookies,
+            data=json.dumps({"description":new+"\n"})
+        )
+
+    def set_title(self, new):
+        requests.put(
+            f"https://scratch.mit.edu/site-api/galleries/all/{self.id}/",
+            headers = headers,
+            cookies = self._cookies,
+            data=json.dumps({"title":new}))
+
+    def open_projects(self):
+        requests.put(
+            f"https://scratch.mit.edu/site-api/galleries/{self.id}/mark/open/",
+            headers = headers,
+            cookies = self._cookies,
+        )
+
+
+    def close_projects(self):
+        requests.put(
+            f"https://scratch.mit.edu/site-api/galleries/{self.id}/mark/closed/",
+            headers = headers,
+            cookies = self._cookies,
+        )
 
 def get_studio(studio_id):
     try:

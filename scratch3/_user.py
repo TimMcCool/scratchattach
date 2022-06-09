@@ -112,11 +112,14 @@ class User:
         return int(text)
 
     def followers(self, *, limit=40, offset=0):
+
+        if limit>40:
+            limit=40
         followers = []
         response = requests.get(
             f"https://api.scratch.mit.edu/users/{self.username}/followers/?limit={limit}&offset={offset}").json()
-        while not len(response) == 0 and not len(followers) > limit:
-            for follower in response:
+        for follower in response:
+            try:
                 followers.append(User(
                     id = follower["id"],
                     name = follower["username"],
@@ -127,30 +130,31 @@ class User:
                     bio = follower["profile"]["bio"],
                     country = follower["profile"]["country"]
                 ))
-            if len(followers) == limit:
-                break
+            except Exception:
+                print("Failed to parse ", follower)
         return followers
 
     def following(self, *, limit=40, offset=0):
-        following = []
+        if limit>40:
+            limit=40
+        followers = []
         response = requests.get(
             f"https://api.scratch.mit.edu/users/{self.username}/following/?limit={limit}&offset={offset}").json()
-        while not len(response) == 0 and not len(following) > limit:
-            for following_user in response:
-                following.append(User(
-                    id = following_user["id"],
-                    name = following_user["username"],
-                    scratchteam = following_user["scratchteam"],
-                    join_date = following_user["history"]["joined"],
-                    icon_url = following_user["profile"]["images"]["90x90"],
-                    status = following_user["profile"]["status"],
-                    bio = following_user["profile"]["bio"],
-                    country = following_user["profile"]["country"]
+        for follower in response:
+            try:
+                followers.append(User(
+                    id = follower["id"],
+                    name = follower["username"],
+                    scratchteam = follower["scratchteam"],
+                    join_date = follower["history"]["joined"],
+                    icon_url = follower["profile"]["images"]["90x90"],
+                    status = follower["profile"]["status"],
+                    bio = follower["profile"]["bio"],
+                    country = follower["profile"]["country"]
                 ))
-            if len(following) == limit:
-                break
-        return following
-
+            except Exception:
+                print("Failed to parse ", follower)
+        return followers
     '''def get_comments(self, *, page=1):
         response = requests.get(f"https://scratch.mit.edu/site-api/comments/user/{self.z}/?page=1")'''
 
@@ -401,6 +405,15 @@ class User:
             ))
         )
 
+    def set_featured(self, project_id, *, label=""):
+        requests.put(
+            f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
+            headers = self._json_headers,
+            cookies = self._cookies,
+            data = json.dumps({"featured_project":int(project_id),"featured_project_label":label})
+        )
+
+
     def post_comment(self, content, *, parent_id="", commentee_id=""):
         data = {
             "commentee_id": commentee_id,
@@ -416,6 +429,10 @@ class User:
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         return self.post_comment(content, parent_id=parent_id, commentee_id=commentee_id)
+
+    def activity_html(self, *, limit=1000):
+        return requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text
+
 
     def follow(self):
         requests.put(

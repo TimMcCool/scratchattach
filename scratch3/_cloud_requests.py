@@ -97,7 +97,11 @@ class CloudRequests:
             if not self.last_data == data:
                 for activity in data:
                     if activity['timestamp'] > self.last_timestamp and activity['name'] == "☁ TO_HOST":
-                        raw_request, request_id = activity["value"].split(".")
+                        try:
+                            raw_request, request_id = activity["value"].split(".")
+                        except Exception:
+                            self.last_timestamp = activity['timestamp']
+                            continue
                         request = Encoding.decode(raw_request)
                         arguments = request.split("&")
                         request = arguments.pop(0)

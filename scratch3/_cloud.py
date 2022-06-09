@@ -52,6 +52,7 @@ class CloudConnection(_CloudMixin):
             print("invalid cloud var (too long):", value)
             raise(_exceptions.InvalidCloudValue)
         x = value.replace(".", "")
+        x = x.replace("-", "")
         if not x.isnumeric():
             print("invalid cloud var (not numeric):", value)
             raise(_exceptions.InvalidCloudValue)
@@ -138,6 +139,7 @@ class TwCloudConnection(_CloudMixin):
     def set_var(self, variable, value):
         value = str(value)
         x = value.replace(".", "")
+        x = x.replace("-", "")
         if not x.isnumeric():
             raise(_exceptions.InvalidCloudValue)
 

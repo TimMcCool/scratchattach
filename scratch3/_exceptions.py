@@ -33,3 +33,9 @@ class InvalidCloudValue(Exception):
 
 class FetchError(Exception):
     pass
+
+class InvalidDecodeInput(Exception):
+    pass
+
+class BadRequest(Exception):
+    pass

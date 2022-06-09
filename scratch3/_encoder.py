@@ -1,4 +1,5 @@
 import math
+from . import _exceptions
 
 letters = [
     None,
@@ -109,10 +110,10 @@ class Encoding:
     Inner class for encoding / decoding strings.
     """
     def decode(inp):
-        '''
-        This function decodes data and returns it
-        '''
-        inp = str(inp)
+        try:
+            inp = str(inp)
+        except Exception:
+            raise(_exceptions.InvalidDecodeInput)
         outp = ""
         for i in range(0, math.floor(len(inp) / 2)):
             letter = letters[int(f"{inp[i*2]}{inp[(i*2)+1]}")]
@@ -121,9 +122,6 @@ class Encoding:
 
 
     def encode(inp):
-        """
-        This function encodes data and returns it
-        """
         inp = str(inp)
         global encode_letters
         outp = ""

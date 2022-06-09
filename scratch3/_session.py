@@ -75,9 +75,9 @@ class Session():
 
         except Exception:
             if self._username is None:
-                print("Warning: Logged in, but couldn't fetch XToken. Some features (including cloud variables) may not work properly.")
+                print("Warning: Logged in, but couldn't fetch XToken. Some features (including cloud variables) may not work properly.\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
             else:
-                print("Warning: Logged in, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.")
+                print("Warning: Logged in, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
 
     def get_linked_user(self):
 
@@ -333,8 +333,7 @@ def login(username, password):
     try:
         session_id = str(re.search('"(.*)"', request.headers["Set-Cookie"]).group())
     except Exception:
-        print("Failed to login. Either the provided authentication data is wrong or your network is banned from Scratch.")
-        raise(_exceptions.LoginFailure)
+        raise _exceptions.LoginFailure("Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach#logging-in--scratch3session")
     session = Session(session_id, username=username)
     return session
 
