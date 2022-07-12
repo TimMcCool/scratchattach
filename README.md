@@ -188,7 +188,7 @@ client = scratch3.CloudRequests(conn) #optional argument: ignore_exceptions=True
 
 @client.request
 def ping(): #called when client receives request
-    print("Ping request received")
+    print("Ping request received"
     return "pong" #sends back 'pong' to the Scratch project
 
 @client.event
@@ -396,7 +396,9 @@ project.post_view()
 project.set_title("new title")
 project.set_instructions("new instructions")
 project.set_notes("new notes and credits")  #Sets the notes and credits section of the project
-project.set_thumbnail("filename") #File must be .png and fit Scratch's thumbnail guidelines project.share() project.unshare()
+project.set_thumbnail(file="filename.png") #File must be .png and fit Scratch's thumbnail guidelines
+project.share()
+project.unshare()
 
 project.turn_off_commenting()
 project.turn_on_commenting()
