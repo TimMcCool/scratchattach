@@ -101,7 +101,7 @@ letters = [
     "&",
     "|",
     "^",
-    "'"
+    "'",
 ]
 
 
@@ -109,17 +109,17 @@ class Encoding:
     """
     Inner class for encoding / decoding strings.
     """
+
     def decode(inp):
         try:
             inp = str(inp)
         except Exception:
-            raise(_exceptions.InvalidDecodeInput)
+            raise (_exceptions.InvalidDecodeInput)
         outp = ""
         for i in range(0, math.floor(len(inp) / 2)):
             letter = letters[int(f"{inp[i*2]}{inp[(i*2)+1]}")]
             outp = f"{outp}{letter}"
         return outp
-
 
     def encode(inp):
         inp = str(inp)
