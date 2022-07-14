@@ -98,9 +98,9 @@ variables = scratch3.get_cloud("project_id") #Returns a dict with all cloud var 
 logs = scratch3.get_cloud_logs("project_id") #Returns the cloud logs as list
 ```
 
-**Get a TurboWarp cloud var from the websocket:** (new in v0.4.7)
+**Get a Scratch / TurboWarp cloud var from the websocket:** (new in v0.8.0)
 
-Requires a connection to TurboWarp's cloud (a `TwCloudConnection` object).
+Requires a connection to Scratch or TurboWarp's cloud (a `CloudConnection` / `TwCloudConnection` object).
 
 ```python
 value = conn.get_var("variable")
@@ -188,7 +188,7 @@ client = scratch3.CloudRequests(conn) #optional argument: ignore_exceptions=True
 
 @client.request
 def ping(): #called when client receives request
-    print("Ping request received"
+    print("Ping request received")
     return "pong" #sends back 'pong' to the Scratch project
 
 @client.event
@@ -252,9 +252,21 @@ def foo(argument1):
     return return_data
 ```
 
-**How to use with TurboWarp:**
+**How to use with TurboWarp:** (new in v0.8.0)
 
-Cloud requests are not available for TurboWarp yet, but that will be implemented soon.
+```python
+import scratchattach as scratch3
+
+conn = scratch3.TwCloudConnection(project_id="project_id") #replace with your project id
+client = scratch3.TwCloudRequests(conn) #optional argument: ignore_exceptions=True
+
+@client.request
+def ping(): #called when client receives request
+    print("Ping request received")
+    return "pong" #sends back 'pong' to the Scratch project
+
+client.run()
+```
 
 **Make sure to credit @TimMcCool on Scratch if you use the Scratch sprite!**
 **Uncredited use will automatically be reported to the Scratch Team.**
