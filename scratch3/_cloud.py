@@ -9,13 +9,18 @@ from . import _exceptions
 
 class _CloudMixin:
 
-    def __init__(self, *, project_id, username="python", session_id=None, cloud_host=None):
+    def __init__(self, *, project_id, username="python", session_id=None, cloud_host=None, _allow_non_numeric=False, _no_reconnect=False):
         self._session_id = session_id
         self._username = username
         self.project_id = str(project_id)
         self._ratelimited_until = 0#deals with the 0.1 second rate limit for cloud variable sets
+        self.websocket = websocket.WebSocket()
+        self._no_reconnect = False
         self._connect(cloud_host=cloud_host)
+        self._handshake()
+        self._no_reconnect = _no_reconnect
         self.cloud_host = cloud_host
+        self.allow_non_numeric = _allow_non_numeric #TurboWarp only. If this is true, turbowarp cloud variables can be set to non-numeric values (if) the cloud_host wss allows it)
 
     def _send_packet(self, packet):
         self.websocket.send(json.dumps(packet) + "\n")
@@ -24,6 +29,8 @@ class _CloudMixin:
         self.websocket.close()
 
     def _handshake(self):
+        if self._no_reconnect is True:
+            return
         try:
             self._send_packet(
                 {"method": "handshake", "user": self._username, "project_id": self.project_id}
@@ -31,6 +38,26 @@ class _CloudMixin:
         except Exception:
             self._connect(cloud_host=self.cloud_host)
             self._handshake()
+
+    def get_var(self, variable):
+        try:
+            variable = "☁ " + str(variable)
+            self.set_var('@scratchattach','0')
+
+            result = []
+            for i in self._clouddata:
+                try:
+                    result.append(json.loads(i))
+                except Exception: pass
+            if result == []:
+                return None
+            else:
+                for i in result:
+                    if i['name'] == variable:
+                        return i['value']
+                return None
+        except Exception as e:
+            raise _exceptions.FetchError
 
 class CloudConnection(_CloudMixin):
 
@@ -65,9 +92,11 @@ class CloudConnection(_CloudMixin):
                     "name": "☁ " + variable,
                     "value": str(value),
                     "user": self._username,
-                    "project_id": self.project_id,
+                    "project_id": int(self.project_id),
                 }
             )
+            if variable == "@scratchattach":
+                self._clouddata = self.websocket.recv().split('\n')
         except Exception as e:
             try:
                 self._handshake()
@@ -82,38 +111,18 @@ class CloudConnection(_CloudMixin):
 class TwCloudConnection(_CloudMixin):
 
     def _connect(self, *, cloud_host):
+        if self._no_reconnect is True:
+            return
         try:
             if cloud_host is None:
                 cloud_host = "wss://clouddata.turbowarp.org/"
                 self.cloud_host = "wss://clouddata.turbowarp.org/"
-            self.websocket = websocket.WebSocket()
             self.websocket.connect(
                 cloud_host,
+                enable_multithread=True
             )
-            self._handshake()
         except Exception:
             raise(_exceptions.ConnectionError)
-
-
-    def get_var(self, variable):
-        try:
-            variable = "☁ " + str(variable)
-            self.set_var('@scratchattach','0')
-
-            result = []
-            for i in self._clouddata:
-                try:
-                    result.append(json.loads(i))
-                except Exception: pass
-            if result == []:
-                return None
-            else:
-                for i in result:
-                    if i['name'] == variable:
-                        return i['value']
-                return None
-        except Exception as e:
-            raise _exceptions.FetchError
 
     def get_cloud(self, variable):
         try:
@@ -141,7 +150,8 @@ class TwCloudConnection(_CloudMixin):
         x = value.replace(".", "")
         x = x.replace("-", "")
         if not x.isnumeric():
-            raise(_exceptions.InvalidCloudValue)
+            if self.allow_non_numeric is False:
+                raise(_exceptions.InvalidCloudValue)
 
         while self._ratelimited_until + 0.1 > time.time():
             pass
@@ -152,14 +162,16 @@ class TwCloudConnection(_CloudMixin):
                     "name": "☁ " + variable,
                     "value": str(value),
                     "user": self._username,
-                    "project_id": self.project_id,
+                    "project_id": int(self.project_id),
                 }
             )
-            self._clouddata = self.websocket.recv().split('\n')
+            if variable == "@scratchattach":
+                self._clouddata = self.websocket.recv().split('\n')
         except Exception as e:
             print(e)
             try:
                 self._handshake()
+                time.sleep(0.1)
                 self.set_var(variable, value)
             except Exception:
                 self._connect(cloud_host=None)
@@ -229,6 +241,7 @@ class TwCloudEvents(CloudEvents):
     def _update(self):
         while True:
             data = self.connection.websocket.recv().split('\n')
+            print(data)
             result = []
             for i in data:
                 try:
@@ -262,9 +275,9 @@ def get_var(project_id, variable):
     except Exception:
         return []
 
-def get_cloud_logs(project_id, *, filter_by_var_named =None, limit=25, offset=0):
+def get_cloud_logs(project_id, *, filter_by_var_named =None, limit=25, offset=0, log_url="https://clouddata.scratch.mit.edu/logs"):
     try:
-        response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit={limit}&offset={offset}").text)
+        response = json.loads(requests.get(f"{log_url}?projectid={project_id}&limit={limit}&offset={offset}").text)
         if filter_by_var_named is None: return response
         else:
             return list(filter(lambda k: k["name"] == "☁ "+filter_by_var_named, response))
