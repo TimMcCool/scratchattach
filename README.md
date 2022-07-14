@@ -162,7 +162,7 @@ events = scratch3.TwCloudEvents("project_id")
 ...
 ```
 
-# Cloud requests  `scratch3.CloudRequests`
+# Cloud requests  `scratch3.CloudRequests` `scratch3.TwCloudRequests`
 
 *Cloud requests make it possible to access data like message counts, user
 stats and more from Scratch projects. They use cloud variables to
