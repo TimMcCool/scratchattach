@@ -268,50 +268,10 @@ client.run()
 3)  You can freely choose the names of your requests
 4)  You can also return lists
 
-**Make sure to credit TimMcCool when using cloud requests!**
-
-# Cloud Requests - Advanced
-
-**Get the request metadata:** (new in v0.8.4)
-
-In your requests, you can use these functions:
-```py
-requester = client.get_requester() #Returns the name of the user who sent the request
-timestamp = client.get_timestamp() #Returns the timestamp when the request was sent (in milliseconds since 1970)
-
-**Method used to get the cloud variables:** (new in v0.8.4)
-
-By default, the cloud variables will be fetched from the cloud logs:
-```py
-client.run(data_from_websocket=False)
-```
-
-You can also get the cloud data directly from the websocket:
-```py
-client.run(data_from_websocket=True)
-```
-This will make the response time of your Python code slighty faster, but you will no longer be able to use the `client.get_requester()` function (it will return `None`).
-
-**Ignore exceptions:**
-
-By default, the request handler will ignore exceptions occuring in your requests. You can also make it raise these exceptions instead:
-```py
-client = scratch3.CloudRequests(conn, ignore_exceptions=False)
-```
-
-**Send more than two arguments:**
-
-The seperator used to join the different arguments is "&". To send more than three arguments from Scratch, join them using "&".
+***More info can be found in the `Cloud Requests - Advanced` section at the bottom of this page!***
+**Make sure to credit TimMcCool when using cloud requests**
 
 # Users  `scratch3.User`
-
-**Change packet length and clouddata log URL:**
-
-Only change this if you know what you are doing.
-
-```py
-client = scratch3.CloudRequests(conn, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=220)
-```
 
 **Get a user:**
 ```python
@@ -698,6 +658,47 @@ scratch3.get_health() #Returns Scratch's health data
 ```python
 session.backpack(limit=20, offset=0) #Returns the contents of your backpack as dictionary
 session.delete_from_backpack("asset id") #Deletes an asset from your backpack
+```
+
+# Cloud Requests - Advanced
+
+**Get the request metadata:** (new in v0.8.4)
+
+In your requests, you can use these functions:
+```py
+requester = client.get_requester() #Returns the name of the user who sent the request
+timestamp = client.get_timestamp() #Returns the timestamp when the request was sent (in milliseconds since 1970)
+
+**Method used to get the cloud variables:** (new in v0.8.4)
+
+By default, the cloud variables will be fetched from the cloud logs:
+```py
+client.run(data_from_websocket=False)
+```
+
+You can also get the cloud data directly from the websocket:
+```py
+client.run(data_from_websocket=True)
+```
+This will make the response time of your Python code slighty faster, but you will no longer be able to use the `client.get_requester()` function (it will return `None`).
+
+**Ignore exceptions:**
+
+By default, the request handler will ignore exceptions occuring in your requests. You can also make it raise these exceptions instead:
+```py
+client = scratch3.CloudRequests(conn, ignore_exceptions=False)
+```
+
+**Send more than two arguments:**
+
+The seperator used to join the different arguments is "&". To send more than three arguments from Scratch, join them using "&".
+
+**Change packet length and clouddata log URL:**
+
+Only change this if you know what you are doing.
+
+```py
+client = scratch3.CloudRequests(conn, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=220)
 ```
 
 # Contributors
