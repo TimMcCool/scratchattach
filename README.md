@@ -165,7 +165,7 @@ events = scratch3.TwCloudEvents("project_id")
 # Cloud requests  `scratch3.CloudRequests` `scratch3.TwCloudRequests`
 
 *Cloud requests make it possible to access data like message counts, user
-stats and more from Scratch projects. They use cloud variables to
+stats and  more from Scratch projects. They use cloud variables to
 transmit data*
 
 **Add Cloud requests to your Scratch project:**
@@ -205,6 +205,15 @@ In the `Cloud Requests` sprite, you will find this block:
 When active, it will send a "ping" request to the Python client. This will call the `ping()` function. The data returned by the function will be sent back to the project.
 
 ![image](https://scratch3-assets.1tim.repl.co/pypi_docs/tutorial_result.png/)
+
+**More information:**
+
+1)  **No length limitation** for the returned data! (If the response is too long to fit into one cloud var, it will be split to multiple cloud vars)
+2)  It can handle multiple requests being sent at the same time
+3)  You can freely choose the names of your requests
+4)  You can also return lists
+
+***More info can be found in the `Cloud Requests - Advanced` section at the bottom of this page!***
 
 **Example 1: Script that loads your message count**
 
