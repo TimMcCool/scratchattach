@@ -675,8 +675,8 @@ session.delete_from_backpack("asset id") #Deletes an asset from your backpack
 
 In your requests, you can use these functions:
 ```py
-requester = client.get_requester() #Returns the name of the user who sent the request
-timestamp = client.get_timestamp() #Returns the timestamp when the request was sent (in milliseconds since 1970)
+client.get_requester() #Returns the name of the user who sent the request
+client.get_timestamp() #Returns the timestamp when the request was sent (in milliseconds since 1970)
 ```
 
 **Method used to get the cloud variables:** (new in v0.8.4)
