@@ -692,6 +692,44 @@ client.run(data_from_websocket=True)
 ```
 This will make the response time of your Python code slighty faster, but you will no longer be able to use the `client.get_requester()` function (it will return `None`).
 
+**Change what "FROM_HOST_" cloud vars are used:** (new in v0.9.1)
+```py
+client = scratch3.CloudRequests(conn, used_cloud_vars=["1","2","3","4","5",...])
+```
+This allows you to set what "FROM_HOST_" cloud variables the Python script uses to send data back to your project. You can remove unused "FROM_HOST_" cloud variables from the Scratch project.
+
+**Events:** (new in v0.9.1)
+Will be called when specific things happen.
+
+*Called after the client connected to the cloud:*
+```py
+@client.event
+def on_ready():
+    print("Request handler is ready")
+```
+
+*Called every time the client receives any request:*
+```py
+@client.event
+def on_request(request):
+    print("Received request", request.name, request.requester, request.arguments, request.timestamp, request.id)
+```
+
+*Called when the client receives an unknown / undefined request:*
+```py
+@client.event
+def on_unknown_request(request):
+    print("Received unknown request", request.name, request.requester, request.arguments, request.timestamp, request.id)
+```
+
+*Called when an error occurs in a request:*
+```py
+@client.event
+def on_error(request, e):
+    print("Request: ", request.name, request.requester, request.arguments, request.timestamp, request.id)
+    print("Error that occured: ", e)
+```
+
 **Ignore exceptions:**
 
 By default, the request handler will ignore exceptions occuring in your requests. You can also make it raise these exceptions instead:
