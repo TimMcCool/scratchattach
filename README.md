@@ -195,7 +195,7 @@ def ping(): #called when client receives request
 def on_ready():
     print("Request handler is running")
 
-client.run() 
+client.run() #make sure this is ALWAYS at the bottom of your Python file
 ```
 
 In the `Cloud Requests` sprite, you will find this block:
@@ -267,7 +267,7 @@ def ping(): #called when client receives request
     print("Ping request received")
     return "pong" #sends back 'pong' to the Scratch project
 
-client.run()
+client.run() #make sure this is ALWAYS at the bottom of your Python file
 ```
 
 **More information:**
@@ -679,6 +679,15 @@ client.get_requester() #Returns the name of the user who sent the request
 client.get_timestamp() #Returns the timestamp when the request was sent (in milliseconds since 1970)
 ```
 
+**Run cloud requests in a thread:** (new in v0.9.4)
+
+By default, this is not enabled. How to enable:
+```py
+client.run(thread=True)
+```
+
+If enabled, you can put code below the client.run function.
+
 **Method used to get the cloud variables:** (new in v0.8.4)
 
 By default, the cloud variables will be fetched from the cloud logs:
@@ -698,7 +707,28 @@ client = scratch3.CloudRequests(conn, used_cloud_vars=["1","2","3","4","5",...])
 ```
 This allows you to set what "FROM_HOST_" cloud variables the Python script uses to send data back to your project. You can remove unused "FROM_HOST_" cloud variables from the Scratch project.
 
-**Events:** (new in v0.9.1)
+**Ignore exceptions:**
+
+By default, the request handler will ignore exceptions occuring in your requests. You can also make it raise these exceptions instead:
+```py
+client = scratch3.CloudRequests(conn, ignore_exceptions=False)
+```
+
+**Send more than two arguments:**
+
+The seperator used to join the different arguments is "&". To send more than three arguments from Scratch, join them using "&".
+
+**Change packet length and clouddata log URL:**
+
+Only change this if you know what you are doing.
+
+```py
+client = scratch3.CloudRequests(conn, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=220)
+```
+
+# Cloud Requests - Events
+(new in v0.9.1)
+
 Will be called when specific things happen.
 
 *Called after the client connected to the cloud:*
@@ -728,25 +758,6 @@ def on_unknown_request(request):
 def on_error(request, e):
     print("Request: ", request.name, request.requester, request.arguments, request.timestamp, request.id)
     print("Error that occured: ", e)
-```
-
-**Ignore exceptions:**
-
-By default, the request handler will ignore exceptions occuring in your requests. You can also make it raise these exceptions instead:
-```py
-client = scratch3.CloudRequests(conn, ignore_exceptions=False)
-```
-
-**Send more than two arguments:**
-
-The seperator used to join the different arguments is "&". To send more than three arguments from Scratch, join them using "&".
-
-**Change packet length and clouddata log URL:**
-
-Only change this if you know what you are doing.
-
-```py
-client = scratch3.CloudRequests(conn, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=220)
 ```
 
 # Contributors
