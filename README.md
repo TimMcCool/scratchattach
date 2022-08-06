@@ -193,7 +193,7 @@ def ping(): #called when client receives request
 
 @client.event
 def on_ready():
-    print("Request handler is ready")
+    print("Request handler is running")
 
 client.run() 
 ```
