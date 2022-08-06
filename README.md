@@ -149,7 +149,7 @@ def on_create(event):
 def on_ready():
    print("Event listener ready!")
 
-events.start() #Make sure this is ALWAYS at the bottom of your Python file!
+events.start()
 ```
 
 **How to use with TurboWarp:** (new in v0.4.7)
@@ -195,7 +195,7 @@ def ping(): #called when client receives request
 def on_ready():
     print("Request handler is ready")
 
-client.run()  #Make sure this is ALWAYS at the bottom of your Python file!
+client.run() 
 ```
 
 In the `Cloud Requests` sprite, you will find this block:
