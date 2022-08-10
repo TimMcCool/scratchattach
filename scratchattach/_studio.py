@@ -35,8 +35,8 @@ class Studio:
 
     def update(self):
         studio = requests.get(f"https://api.scratch.mit.edu/studios/{self.id}")
-        if "429" in studio:
-            raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+        if "429" in str(studio):
+            return "429"
         studio = studio.json()
         return self._update_from_dict(studio)
 
@@ -54,25 +54,6 @@ class Studio:
         self.manager_count = studio["stats"]["managers"]
         self.project_count = studio["stats"]["projects"]
 
-    ''' these don't work for some reason, I'll fix them soon
-    def set_title(self, new_title):
-        self.update()
-        return requests.put(
-            f"https://scratch.mit.edu/site-api/galleries/all/{self.id}",
-            headers = self._headers,
-            cookies = self._cookies,
-            data = json.dumps({"title":new_title,"description":self.description, "id":self.id})
-        )
-
-    def set_description(self, new_description):
-        self.update()
-        requests.put(
-            f"https://scratch.mit.edu/site-api/galleries/all/{self.id}",
-            headers = self._headers,
-            cookies = self._cookies,
-            data = json.dumps({"title":self.title,"description":new_description, "id":self.id})
-        )
-    '''
 
     def follow(self):
         requests.put(
@@ -240,7 +221,8 @@ class Studio:
 def get_studio(studio_id):
     try:
         studio = Studio(id=int(studio_id))
-        studio.update()
+        if studio.update() == "429":
+            raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
         return studio
     except KeyError:
         return None

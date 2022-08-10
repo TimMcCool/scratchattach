@@ -245,7 +245,8 @@ class Session():
     def connect_user(self, username):
         try:
             user = _user.User(username=username, _session=self)
-            user.update()
+            if user.update() == "429":
+                raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
             return user
         except KeyError:
             return None
@@ -253,7 +254,10 @@ class Session():
     def connect_project(self, project_id):
         try:
             project = _project.Project(id=int(project_id), _session=self)
-            if not project.update():
+            u = project.update()
+            if u == "429":
+                raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+            if not u:
                 project = _project.PartialProject(id=int(project_id))
             return project
         except KeyError:
@@ -262,7 +266,8 @@ class Session():
     def connect_studio(self, studio_id):
         try:
             studio = _studio.Studio(id=int(studio_id), _session=self)
-            studio.update()
+            if studio.update() == "429":
+                raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
             return studio
         except KeyError:
             return None

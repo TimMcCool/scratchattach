@@ -42,8 +42,8 @@ class User:
 
     def update(self):
         r = requests.get(f"https://api.scratch.mit.edu/users/{self.username}/")
-        if "429" in r:
-            raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+        if "429" in str(r):
+            return "429"
         response = json.loads(r.text)
         self._update_from_dict(response)
 
@@ -534,7 +534,8 @@ class User:
 def get_user(username):
     try:
         user = User(username=username)
-        user.update()
+        if user.update() == "429":
+            raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
         return user
     except KeyError:
         return None

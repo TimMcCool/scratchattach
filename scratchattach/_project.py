@@ -126,13 +126,13 @@ class Project(PartialProject):
                     "x-token": self._session.xtoken,
                 }
             )
-            if "429" in project:
-                raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+            if "429" in str(project):
+                return "429"
             project = project.json()
         else:
             project = requests.get(f"https://api.scratch.mit.edu/projects/{self.id}")
-            if "429" in project:
-                raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+            if "429" in str(project):
+                return "429"
             project = project.json()
         if "code" in list(project.keys()):
             return False
@@ -458,7 +458,10 @@ class Project(PartialProject):
 def get_project(project_id):
     try:
         project = Project(id=int(project_id))
-        if not project.update():
+        u = project.update()
+        if u == "429":
+            raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+        if not u:
             project = PartialProject(id=int(project_id))
         return project
     except KeyError:
