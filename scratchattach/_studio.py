@@ -34,7 +34,10 @@ class Studio:
         self._json_headers["Content-Type"] = "application/json"
 
     def update(self):
-        studio = requests.get(f"https://api.scratch.mit.edu/studios/{self.id}").json()
+        studio = requests.get(f"https://api.scratch.mit.edu/studios/{self.id}")
+        if "429" in studio:
+            raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+        studio = studio.json()
         return self._update_from_dict(studio)
 
     def _update_from_dict(self, studio):

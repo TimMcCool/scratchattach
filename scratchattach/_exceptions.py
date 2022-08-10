@@ -39,3 +39,6 @@ class InvalidDecodeInput(Exception):
 
 class BadRequest(Exception):
     pass
+
+class Response429(Exception):
+    pass

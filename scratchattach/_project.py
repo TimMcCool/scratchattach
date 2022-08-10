@@ -125,9 +125,15 @@ class Project(PartialProject):
                     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36",
                     "x-token": self._session.xtoken,
                 }
-            ).json()
+            )
+            if "429" in project:
+                raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+            project = project.json()
         else:
-            project = requests.get(f"https://api.scratch.mit.edu/projects/{self.id}").json()
+            project = requests.get(f"https://api.scratch.mit.edu/projects/{self.id}")
+            if "429" in project:
+                raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+            project = project.json()
         if "code" in list(project.keys()):
             return False
         else:

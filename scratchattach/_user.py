@@ -41,7 +41,10 @@ class User:
         return str(self.username)
 
     def update(self):
-        response = json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/").text)
+        r = requests.get(f"https://api.scratch.mit.edu/users/{self.username}/")
+        if "429" in r:
+            raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+        response = json.loads(r.text)
         self._update_from_dict(response)
 
     def _update_from_dict(self, response):

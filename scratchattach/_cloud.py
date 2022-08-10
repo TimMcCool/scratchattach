@@ -272,7 +272,7 @@ class WsCloudEvents(CloudEvents):
                     if "on_"+activity["method"] in self._events:
                         self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=None))
             except Exception:
-                self.connection._connect(cloud_host=self.cloud_host)
+                self.connection._connect(cloud_host=self.connection.cloud_host)
                 self.connection._handshake()
 # -----
 
