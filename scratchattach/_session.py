@@ -233,7 +233,7 @@ class Session():
 
     def delete_from_backpack(self, asset_id):
         return requests.delete(
-            f"https://backpack.scratch.mit.edu/TimMcCool/{asset_id}",
+            f"https://backpack.scratch.mit.edu/{self._username}/{asset_id}",
             headers = self._headers,
         ).json()
 
@@ -250,6 +250,8 @@ class Session():
             return user
         except KeyError:
             return None
+        except Exception as e:
+            raise(e)
 
     def connect_project(self, project_id):
         try:
@@ -262,6 +264,8 @@ class Session():
             return project
         except KeyError:
             return None
+        except Exception as e:
+            raise(e)
 
     def connect_studio(self, studio_id):
         try:
@@ -271,6 +275,8 @@ class Session():
             return studio
         except KeyError:
             return None
+        except Exception as e:
+            raise(e)
 
     def connect_topic(self, topic_id):
 
