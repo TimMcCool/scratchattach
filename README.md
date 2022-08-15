@@ -708,7 +708,7 @@ This allows you to set what "FROM_HOST_" cloud variables the Python script uses 
 
 **Ignore exceptions:**
 
-By default, the request handler will ignore exceptions occuring in your requests. You can also make it raise these exceptions instead:
+By default, the request handler will ignore exceptions occuring in your requests. You can make it raise these exceptions instead:
 ```py
 client = scratch3.CloudRequests(conn, ignore_exceptions=False)
 ```
