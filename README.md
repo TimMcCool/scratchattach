@@ -715,7 +715,7 @@ client = scratch3.CloudRequests(conn, ignore_exceptions=False)
 
 **Send more than two arguments:**
 
-The seperator used to join the different arguments is "&". To send more than three arguments from Scratch, join them using "&".
+The seperator used to join the different arguments is "&". To send more than two arguments from Scratch, join them using "&".
 
 **Change packet length and clouddata log URL:**
 
