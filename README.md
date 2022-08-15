@@ -84,8 +84,7 @@ conn = scratch3.TwCloudConnection(project_id = "project_id", username="username"
 New Scratchers can set Scratch cloud variables too.
 
 ```python
-conn.set_var("variable", "value") #the variable name is specified
-without the cloud emoji
+conn.set_var("variable", "value") #the variable name is specified without the cloud emoji
 ```
 
 **Get a Scratch cloud var from the clouddata logs:**
