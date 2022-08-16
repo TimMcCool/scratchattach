@@ -291,7 +291,7 @@ Get the user that you are logged in with:
 session.get_linked_user()
 ```
 
-You can also get users without logging in:
+You can also get users without logging in: (but then, you can't use user.follow(), user.post_comment() and other functions that require a log in) 
 ```python
 user = scratch3.get_user("username")
 ```
