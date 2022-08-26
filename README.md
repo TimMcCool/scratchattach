@@ -64,6 +64,7 @@ With a `Session` object:
 ```python
 conn = session.connect_cloud("project_id")
 ```
+*If this line causes a TypeError, update scratchattach to the latest version with `pip install scratchattach --upgrade`*
 
 Directly with a sessionId (cookie connect):
 
