@@ -56,6 +56,7 @@ session.banned #Returns True if the associated account is banned
 ```
 
 # Cloud variables  `scratch3.CloudConnection` `scratch3.TwCloudConnection`
+*Please make sure you're using the latest scratchattach version. You can update scratchattach with `pip install scratchattach --upgrade`*
 
 **Connect to the Scratch cloud:**
 
@@ -64,7 +65,6 @@ With a `Session` object:
 ```python
 conn = session.connect_cloud("project_id")
 ```
-*If this line causes a TypeError, update scratchattach to the latest version with `pip install scratchattach --upgrade`*
 
 Directly with a sessionId (cookie connect):
 
