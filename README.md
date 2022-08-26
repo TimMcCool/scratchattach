@@ -9,10 +9,10 @@ The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 
 # Installation
 
-To install the library, run the following command in your command prompt
+To install / update the library, run the following command in your command prompt
 / shell:
 ```
-pip install scratchattach
+pip install scratchattach --upgrade
 ```
 
 **OR**
