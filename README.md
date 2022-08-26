@@ -21,7 +21,7 @@ Add this to your Python code:
 ```python
 import os
 
-os.system("pip install scratchattach")
+os.system("pip install scratchattach --upgrade")
 ```
 
 # Logging in  `scratch3.Session`
