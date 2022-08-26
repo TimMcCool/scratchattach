@@ -62,7 +62,7 @@ session.banned #Returns True if the associated account is banned
 With a `Session` object:
 
 ```python
-conn = session.connect_cloud(project_id="project_id")
+conn = session.connect_cloud("project_id")
 ```
 
 Directly with a sessionId (cookie connect):
@@ -84,7 +84,8 @@ conn = scratch3.TwCloudConnection(project_id = "project_id", username="username"
 New Scratchers can set Scratch cloud variables too.
 
 ```python
-conn.set_var("variable", "value") #the variable name is specified without the cloud emoji
+conn.set_var("variable", "value") #the variable name is specified
+without the cloud emoji
 ```
 
 **Get a Scratch cloud var from the clouddata logs:**
@@ -181,7 +182,7 @@ Copy this code to your Python editor:
 import scratchattach as scratch3
 
 session = scratch3.login("username", "password") #replace with your data
-conn = session.connect_cloud(project_id="project_id") #replace with your project id
+conn = session.connect_cloud("project_id") #replace with your project id
 
 client = scratch3.CloudRequests(conn) #optional argument: ignore_exceptions=True
 
@@ -258,7 +259,7 @@ def foo(argument1):
 ```python
 import scratchattach as scratch3
 
-conn = scratch3.TwCloudConnection(project_id="project_id") #replace with your project id
+conn = scratch3.TwCloudConnection("project_id") #replace with your project id
 client = scratch3.TwCloudRequests(conn) #optional argument: ignore_exceptions=True
 
 @client.request
@@ -291,7 +292,7 @@ Get the user that you are logged in with:
 session.get_linked_user()
 ```
 
-You can also get users without logging in: (but then, you can't use user.follow(), user.post_comment() and other functions that require a log in) 
+You can also get users without logging in:
 ```python
 user = scratch3.get_user("username")
 ```
@@ -708,14 +709,14 @@ This allows you to set what "FROM_HOST_" cloud variables the Python script uses 
 
 **Ignore exceptions:**
 
-By default, the request handler will ignore exceptions occuring in your requests. You can make it raise these exceptions instead:
+By default, the request handler will ignore exceptions occuring in your requests. You can also make it raise these exceptions instead:
 ```py
 client = scratch3.CloudRequests(conn, ignore_exceptions=False)
 ```
 
 **Send more than two arguments:**
 
-The seperator used to join the different arguments is "&". To send more than two arguments from Scratch, join them using "&".
+The seperator used to join the different arguments is "&". To send more than three arguments from Scratch, join them using "&".
 
 **Change packet length and clouddata log URL:**
 
