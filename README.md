@@ -6,7 +6,6 @@ Automate actions and interact with your Scratch projects through cloud variables
 *Download Python here if you don't have it: https://www.python.org/downloads/*
 
 The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
-**If you have issues, make sure you have the latest version installed! Use `pip install scratchattach --upgrade` to update to the latest version**
 
 # Installation
 
