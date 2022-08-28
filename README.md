@@ -37,7 +37,7 @@ session = scratch3.login("username", "password")
 `login()` returns a `Session` object that saves your login
 
 **Logging in with a sessionId:**
-You can get your session id from your browser's cookies.
+You can get your session id from your browser's cookies. [More information](https://github.com/TimMcCool/scratchattach/#get-your-session-id)
 
 ```python
 import scratchattach as scratch3
@@ -56,7 +56,7 @@ session.banned #Returns True if the associated account is banned
 ```
 
 # Cloud variables  `scratch3.CloudConnection` `scratch3.TwCloudConnection`
-*Please make sure you're using the latest scratchattach version. You can update scratchattach with `pip install scratchattach --upgrade`*
+*Please make sure you're using the latest scratchattach version. You can [udate scratchattach](https://github.com/TimMcCool/scratchattach/#installation) with `pip install scratchattach --upgrade`*
 
 **Connect to the Scratch cloud:**
 
