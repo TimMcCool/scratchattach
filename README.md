@@ -56,7 +56,7 @@ session.banned #Returns True if the associated account is banned
 ```
 
 # Cloud variables  `scratch3.CloudConnection` `scratch3.TwCloudConnection`
-*Please make sure you're using the latest scratchattach version. You can [udate scratchattach](https://github.com/TimMcCool/scratchattach/#installation) with `pip install scratchattach --upgrade`*
+*Make sure you're using the latest scratchattach version. You can [udate scratchattach](https://github.com/TimMcCool/scratchattach/#installation) with `pip install scratchattach --upgrade`*
 
 **Connect to the Scratch cloud:**
 
