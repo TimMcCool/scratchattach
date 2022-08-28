@@ -763,7 +763,7 @@ def on_error(request, e):
 
 # Get your session id
 
-*This section explains how to get your Scratch session id from your browser cookies.*
+This section explains how to get your Scratch session id from your browser cookies.
 
 1. Open scratch.mit.edu in your browser
 2. Click the 🔒 icon in the URL bar, then click "Cookies"
