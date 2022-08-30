@@ -210,9 +210,10 @@ When active, it will send a "ping" request to the Python client. This will call 
 **More information:**
 
 1)  **No length limitation** for the returned data! (If the response is too long to fit into one cloud var, it will be split to multiple cloud vars)
-2)  It can handle multiple requests being sent at the same time
-3)  You can freely choose the names of your requests
-4)  You can also return lists
+2)  **No length limitation** for the request! (The request will also be split to multiple cloud variables. New in v0.9.98)
+3)  It can handle multiple requests being sent at the same time
+4)  You can freely choose the names of your requests
+5)  You can also return lists
 
 ***More info can be found in the `Cloud Requests - Advanced` section at the bottom of this page!***
 
@@ -274,9 +275,10 @@ client.run() #make sure this is ALWAYS at the bottom of your Python file
 **More information:**
 
 1)  **No length limitation** for the returned data! (If the response is too long to fit into one cloud var, it will be split to multiple cloud vars)
-2)  It can handle multiple requests being sent at the same time
-3)  You can freely choose the names of your requests
-4)  You can also return lists
+2)  **No length limitation** for the request! (The request will also be split to multiple cloud variables. New in v0.9.98)
+3)  It can handle multiple requests being sent at the same time
+4)  You can freely choose the names of your requests
+5)  You can also return lists
 
 ***More info can be found in the `Cloud Requests - Advanced` section at the bottom of this page!***
 **Make sure to credit TimMcCool when using cloud requests**
