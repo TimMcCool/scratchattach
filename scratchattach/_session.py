@@ -237,7 +237,11 @@ class Session():
             headers = self._headers,
         ).json()
 
-    def connect_cloud(self, *, project_id):
+    def connect_cloud(self, project_id=None, *, project_id_kwarg=None):
+        if project_id is None:
+            project_id = project_id_kwarg
+        if project_id is None:
+            return None
 
         return _cloud.CloudConnection(username = self._username, session_id = self.session_id, project_id = int(project_id))
 

@@ -74,6 +74,7 @@ class CloudConnection(_CloudMixin):
             raise(_exceptions.ConnectionError)
 
     def set_var(self, variable, value):
+        variable = variable.replace("☁ ", "")
         value = str(value)
         if len(value) > 256:
             print("invalid cloud var (too long):", value)
@@ -146,6 +147,7 @@ class TwCloudConnection(_CloudMixin):
 
 
     def set_var(self, variable, value):
+        variable = variable.replace("☁ ", "")
         value = str(value)
         x = value.replace(".", "")
         x = x.replace("-", "")
@@ -194,13 +196,19 @@ class CloudEvents:
         self.running = False
         self._events = {}
 
-    def start(self, *, update_interval = 0.1):
+    def start(self, *, update_interval = 0.1, thread=True, daemon=False):
         if self.running is False:
             self.update_interval = update_interval
             self.running = True
-            self._thread = Thread(target=self._update, args=()).start()
             if "on_ready" in self._events:
                 self._events["on_ready"]()
+            if thread:
+                self._thread = Thread(target=self._update, args=())
+                self._thread.daemon = daemon
+                self._thread.start()
+            else:
+                self._thread = None
+                self._update()
 
     def _update(self):
         while True:
@@ -296,7 +304,7 @@ def get_var(project_id, variable):
         else:
             return response[0]["value"]
     except Exception:
-        return []
+        return None
 
 def get_cloud_logs(project_id, *, filter_by_var_named =None, limit=25, offset=0, log_url="https://clouddata.scratch.mit.edu/logs"):
     try:

@@ -44,6 +44,8 @@ class User:
         r = requests.get(f"https://api.scratch.mit.edu/users/{self.username}/")
         if "429" in str(r):
             return "429"
+        if r.text == '{\n  "response": "Too many requests"\n}':
+            return "429"
         response = json.loads(r.text)
         self._update_from_dict(response)
 
@@ -539,3 +541,5 @@ def get_user(username):
         return user
     except KeyError:
         return None
+    except Exception as e:
+        raise(e)

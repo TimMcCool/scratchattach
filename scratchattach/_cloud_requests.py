@@ -14,16 +14,16 @@ class CloudRequests:
             self.__dict__.update(entries)
             self.id = self.request_id
 
-    def __init__(self, cloud_connection : _cloud.CloudConnection, *, used_cloud_vars = ["1","2","3","4","5","6","7","8","9"], ignore_exceptions=True, force_reconnect=True, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=220):
+    def __init__(self, cloud_connection : _cloud.CloudConnection, *, used_cloud_vars = ["1","2","3","4","5","6","7","8","9"], ignore_exceptions=True, force_reconnect=True, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=245):
         print("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m")
         if _log_url != "https://clouddata.scratch.mit.edu/logs":
             print("Warning: Log URL isn't the URL of Scratch's clouddata logs. Don't use the _log_url parameter unless you know what you are doing.")
-        if _packet_length > 220:
-            print("Warning: The packet length was set to a value higher than default (220). Your project most likely won't work on Scratch.")
+        if _packet_length > 245:
+            print("Warning: The packet length was set to a value higher than default (245). Your project most likely won't work on Scratch.")
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id
-        self.requests = []
+        self.requests = {}
         self.current_var = 0
         self.ignore_exceptions = ignore_exceptions
         self.idle_since = 0
@@ -32,10 +32,19 @@ class CloudRequests:
         self.last_requester = None
         self.last_timestamp = 0
         self.events = []
+        self.request_parts = {}
 
     def request(self, function):
+        def inner(encode_response=True)
+            self.requests[function] = {"encode":encode_response}
+        return inner
 
-        self.requests.append(function)
+    def add_request(self, function, *, encode_response=True):
+        self.request(function)(encode_response=encode_response)
+
+    def remove_request(self, name):
+        r = filter(lambda x : x.__name__ == name, self.requests)[0]
+        self.requests.pop(r)
 
     def event(self, function):
 
@@ -65,10 +74,12 @@ class CloudRequests:
                 remaining_response = remaining_response[limit:]
 
                 i+=1
-                if i > 9:
+                if i > 99:
                     iteration_string = str(i)
-                else:
+                elif i > 9:
                     iteration_string = "0"+str(i)
+                else:
+                    iteration_string = "00"+str(i)
 
                 self.connection.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", f"{response_part}.{request_id}{iteration_string}1")
                 self.current_var += 1
@@ -156,18 +167,35 @@ class CloudRequests:
                     if activity['timestamp'] > self.last_timestamp and activity['name'] == "☁ TO_HOST":
                         self.last_requester = activity["user"]
                         self.last_timestamp = activity['timestamp']
+
                         try:
                             raw_request, request_id = activity["value"].split(".")
                         except Exception:
                             self.last_timestamp = activity['timestamp']
                             continue
+
+
+                        if activity["value"][0] == "-":
+                            if not request_id in self.request_parts:
+                                self.request_parts[request_id] = []
+                            self.request_parts[request_id].append(raw_request[1:])
+                            continue
+
+                        _raw_request = ""
+                        if request_id in self.request_parts:
+                            data = self.request_parts[request_id]
+                            for i in data:
+                                _raw_request += i
+                            self.request_parts.pop(request_id)
+                        raw_request = _raw_request + raw_request
+
                         request = Encoding.decode(raw_request)
                         arguments = request.split("&")
                         request = arguments.pop(0)
                         self.call_event("on_request", [self.Request(name=request,request=request,requester=self.last_requester,timestamp=self.last_timestamp,arguments=arguments,request_id=request_id,id=request_id)])
                         output = ""
 
-                        commands = list(filter(lambda k: k.__name__ == request, self.requests))
+                        commands = list(filter(lambda k: k.__name__ == request, list(self.requests.keys())))
                         if len(commands) == 0:
                             print(f"Warning: Client received an unknown request called '{request}'")
                             self.call_event("on_unknown_request", [self.Request(name=request,request=request,requester=self.last_requester,timestamp=self.last_timestamp,arguments=arguments,request_id=request_id)])
@@ -175,13 +203,14 @@ class CloudRequests:
                         else:
                             try:
                                 output = commands[0](*arguments)
+                                req_settings = self.requests[commands[0]]
                             except Exception as e:
                                 self._respond(request_id, Encoding.encode(f"Error: Check the Python console"), self.packet_length)
                                 self.call_event("on_error", [self.Request(name=request,request=request,requester=self.last_requester,timestamp=self.last_timestamp,arguments=arguments,request_id=request_id), e])
                                 if self.ignore_exceptions:
                                     print(f"Caught error in request '{request}' - Full error below")
                                     try:
-                                        traceback.print_exception(e)
+                                        traceback.print_exc()
                                     except Exception:
                                         print(e)
                                 else:
@@ -195,6 +224,10 @@ class CloudRequests:
                             print(f"Warning: Request '{request}' didn't return anything.")
                             self.last_data = data
                             continue
+                        elif req_settings["encode"] is False:
+                            if isinstance(output, list):
+                                output = "".join(output)
+                            output = str(output)
                         elif not isinstance(output, list):
                             if output == "":
                                 output = "-"

@@ -128,10 +128,14 @@ class Project(PartialProject):
             )
             if "429" in str(project):
                 return "429"
+            if project.text == '{\n  "response": "Too many requests"\n}':
+                return "429"
             project = project.json()
         else:
             project = requests.get(f"https://api.scratch.mit.edu/projects/{self.id}")
             if "429" in str(project):
+                return "429"
+            if project.text == '{\n  "response": "Too many requests"\n}':
                 return "429"
             project = project.json()
         if "code" in list(project.keys()):
@@ -180,28 +184,28 @@ class Project(PartialProject):
     def studios(self, *, limit=40, offset=0):
         data = requests.get(f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/studios?limit={limit}&offset={offset}").json()
 
-    def comments(self, *, limit=40, offset=0):
+    def comments(self, *, limit=40, offset=0):#
         comments = []
         while len(comments) < limit:
             r = requests.get(
-                f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/?limit={limit}&offset={offset}"
+                f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/?limit={min(40, limit-len(comments))}&offset={offset}"
             ).json()
             if len(r) != 40:
                 break
             offset += 40
-            comments.append(r)
+            comments = comments + r
         return comments
 
     def get_comment_replies(self, *, comment_id, limit=40, offset=0):
         comments = []
         while len(comments) < limit:
             r = requests.get(
-                f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}/replies?limit={limit}&offset={offset}"
+                f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}/replies?limit={min(40, limit-len(comments))}&offset={offset}"
             ).json()
             if len(response) != 40:
                 break
             offset += 40
-            comments.append(r)
+            comments = comments + r
         return comments
 
     def love(self):
@@ -466,3 +470,5 @@ def get_project(project_id):
         return project
     except KeyError:
         return None
+    except Exception as e:
+        raise(e)

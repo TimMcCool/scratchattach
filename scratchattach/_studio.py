@@ -37,6 +37,8 @@ class Studio:
         studio = requests.get(f"https://api.scratch.mit.edu/studios/{self.id}")
         if "429" in str(studio):
             return "429"
+        if studio.text == '{\n  "response": "Too many requests"\n}':
+            return "429"
         studio = studio.json()
         return self._update_from_dict(studio)
 
@@ -73,24 +75,24 @@ class Studio:
         comments = []
         while len(comments) < limit:
             r = requests.get(
-                f"https://api.scratch.mit.edu/studios/{self.id}/comments/?limit={limit}&offset={offset}"
+                f"https://api.scratch.mit.edu/studios/{self.id}/comments/?limit={min(40, limit-len(comments))}&offset={offset}"
             ).json()
             if len(r) != 40:
                 break
             offset += 40
-            comments.append(r)
+            comments = comments + r
         return comments
 
     def get_comment_replies(self, *, comment_id, limit=40, offset=0):
         comments = []
         while len(comments) < limit:
             r = requests.get(
-                f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}/replies?limit={limit}&offset={offset}"
+                f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}/replies?limit={min(40, limit-len(comments))}&offset={offset}"
             ).json()
             if len(response) != 40:
                 break
             offset += 40
-            comments.append(r)
+            comments = comments + r
         return comments
 
 
@@ -226,3 +228,5 @@ def get_studio(studio_id):
         return studio
     except KeyError:
         return None
+    except Exception as e:
+        raise(e)
