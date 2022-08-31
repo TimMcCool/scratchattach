@@ -74,7 +74,7 @@ class CloudRequests:
                 remaining_response = remaining_response[limit:]
 
                 i+=1
-                if i > 999: #maDU59_ was here B)
+                if i > 999: #maDU59_ was here
                     iteration_string = str(i)+str(len(str(i)))
                 elif i > 99:
                     iteration_string = str(i)+"1"
