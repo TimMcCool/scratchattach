@@ -14,12 +14,12 @@ class CloudRequests:
             self.__dict__.update(entries)
             self.id = self.request_id
 
-    def __init__(self, cloud_connection : _cloud.CloudConnection, *, used_cloud_vars = ["1","2","3","4","5","6","7","8","9"], ignore_exceptions=True, force_reconnect=True, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=245):
+    def __init__(self, cloud_connection : _cloud.CloudConnection, *, used_cloud_vars = ["1","2","3","4","5","6","7","8","9"], ignore_exceptions=True, force_reconnect=True, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=240):
         print("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m")
         if _log_url != "https://clouddata.scratch.mit.edu/logs":
             print("Warning: Log URL isn't the URL of Scratch's clouddata logs. Don't use the _log_url parameter unless you know what you are doing.")
-        if _packet_length > 245:
-            print("Warning: The packet length was set to a value higher than default (245). Your project most likely won't work on Scratch.")
+        if _packet_length > 240:
+            print("Warning: The packet length was set to a value higher than default (240). Your project most likely won't work on Scratch.")
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id
@@ -74,14 +74,16 @@ class CloudRequests:
                 remaining_response = remaining_response[limit:]
 
                 i+=1
-                if i > 99:
-                    iteration_string = str(i)
+                if i > 999: #maDU59_ was here B)
+                    iteration_string = str(i)+str(len(str(i)))
+                elif i > 99:
+                    iteration_string = str(i)+"1"
                 elif i > 9:
-                    iteration_string = "0"+str(i)
+                    iteration_string = "0"+str(i)+"1"
                 else:
-                    iteration_string = "00"+str(i)
+                    iteration_string = "00"+str(i)+"1"
 
-                self.connection.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", f"{response_part}.{request_id}{iteration_string}1")
+                self.connection.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", f"{response_part}.{request_id}{iteration_string}")
                 self.current_var += 1
                 if self.current_var == len(self.used_cloud_vars):
                     self.current_var = 0
