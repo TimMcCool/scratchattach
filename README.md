@@ -8,7 +8,10 @@ Automate actions and interact with your Scratch projects through cloud variables
 The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 
 [![stability-stable](https://img.shields.io/badge/stability-stable-green.svg)](https://github.com/emersion/stability-badges#stable)
-[![Latest Version](https://pypi.org/project/scratchattach/)](https://pypi.org/project/scratchattach//)
+[![PyPI license](https://img.shields.io/pypi/l/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
+[![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
+[![PyPI download month](https://img.shields.io/pypi/dm/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
 
 # Installation
 
