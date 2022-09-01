@@ -12,7 +12,7 @@ The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 To install / update the library, run the following command in your command prompt
 / shell:
 ```
-pip install scratchattach --upgrade
+pip install -U scratchattach
 ```
 
 **OR**
@@ -21,7 +21,7 @@ Add this to your Python code:
 ```python
 import os
 
-os.system("pip install scratchattach --upgrade")
+os.system("pip install -U scratchattach")
 ```
 
 # Logging in  `scratch3.Session`
