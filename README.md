@@ -163,125 +163,15 @@ events = scratch3.TwCloudEvents("project_id")
 ...
 ```
 
-# Cloud requests  `scratch3.CloudRequests` `scratch3.TwCloudRequests`
+# Cloud Requests  `scratch3.CloudRequests` `scratch3.TwCloudRequests`
 
-*Cloud requests make it possible to access data like message counts, user
-stats and  more from Scratch projects. They use cloud variables to
-transmit data*
+*Cloud requests make it possible to access data like message counts, user stats and more from Scratch projects! They use cloud variables to transmit data*
+They are similar to cloud events, but automatically encode / decode sent data and have tons of extra features.
 
-**Add Cloud requests to your Scratch project:**
+[They are documenteds on this page: (check it out!)](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)
+[https://github.com/TimMcCool/scratchattach/blob/main/CLOUD_REQUESTS.md](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)
 
-Download this project file to your computer: https://scratch3-assets.1tim.repl.co/CloudRequests_Template.sb3
-
-Then, go to the Scratch website, create a new project and upload the project file from above.
-
-**How to use with Scratch:**
-
-Copy this code to your Python editor:
-
-```python
-import scratchattach as scratch3
-
-session = scratch3.login("username", "password") #replace with your data
-conn = session.connect_cloud("project_id") #replace with your project id
-
-client = scratch3.CloudRequests(conn) #optional argument: ignore_exceptions=True
-
-@client.request
-def ping(): #called when client receives request
-    print("Ping request received")
-    return "pong" #sends back 'pong' to the Scratch project
-
-@client.event
-def on_ready():
-    print("Request handler is running")
-
-client.run() #make sure this is ALWAYS at the bottom of your Python file
-```
-
-In the `Cloud Requests` sprite, you will find this block:
-
-![image](https://scratch3-assets.1tim.repl.co/pypi_docs/tutorial.png/)
-
-When active, it will send a "ping" request to the Python client. This will call the `ping()` function. The data returned by the function will be sent back to the project.
-
-![image](https://scratch3-assets.1tim.repl.co/pypi_docs/tutorial_result.png/)
-
-**More information:**
-
-1)  **No length limitation** for the returned data! (If the response is too long to fit into one cloud var, it will be split to multiple cloud vars)
-2)  **No length limitation** for the request! (The request will also be split to multiple cloud variables. New in v0.9.98)
-3)  It can handle multiple requests being sent at the same time
-4)  You can freely choose the names of your requests
-5)  You can also return lists
-
-***More info can be found in the `Cloud Requests - Advanced` section at the bottom of this page!***
-
-**Example 1: Script that loads your message count**
-
-Scratch code:
-
-![image](https://scratch3-assets.1tim.repl.co/pypi_docs/example1.png/)
-
-Python code (add this to the code from above, but make sure `client.run()` stays at the bottom of the file):
-
-```python
-@client.request
-def message_count(argument1):
-    print(f"Message count requested for user {argument1}")
-    user = scratch3.get_user(argument1)
-    return user.message_count()
-```
-
-**Example 2: Script that loads someone's stats**
-
-Scratch code:
-
-![image](https://scratch3-assets.1tim.repl.co/pypi_docs/example3.png/)
-
-Python code:
-
-```python
-@client.request
-def foo(argument1):
-    print(f"Data requested for user {argument1}")
-    user = scratch3.get_user(argument1)
-    stats = user.stats()
-
-    return_data = []
-    return_data.append(f"Total loves: {stats['loves']}")
-    return_data.append(f"Total favorites: {stats['favorites']}")
-    return_data.append(f"Total views: {stats['views']}")
-
-    return return_data
-```
-
-**How to use with TurboWarp:** (new in v0.8.0)
-
-```python
-import scratchattach as scratch3
-
-conn = scratch3.TwCloudConnection("project_id") #replace with your project id
-client = scratch3.TwCloudRequests(conn) #optional argument: ignore_exceptions=True
-
-@client.request
-def ping(): #called when client receives request
-    print("Ping request received")
-    return "pong" #sends back 'pong' to the Scratch project
-
-client.run() #make sure this is ALWAYS at the bottom of your Python file
-```
-
-**More information:**
-
-1)  **No length limitation** for the returned data! (If the response is too long to fit into one cloud var, it will be split to multiple cloud vars)
-2)  **No length limitation** for the request! (The request will also be split to multiple cloud variables. New in v0.9.98)
-3)  It can handle multiple requests being sent at the same time
-4)  You can freely choose the names of your requests
-5)  You can also return lists
-
-***More info can be found in the `Cloud Requests - Advanced` section at the bottom of this page!***
-**Make sure to credit TimMcCool when using cloud requests**
+If you want to access external information in Scratch projects or store data on an external database, scratchattach's Cloud Requests are ideal for your project.
 
 # Users  `scratch3.User`
 
@@ -536,7 +426,7 @@ scratch3.explore_studios(query="*", mode="trending", language="en", limit=40, of
 # Messages / My stuff page
 
 ```python
-session.get_mystuff_projects("all", page=1, sort_by="") #Returns the projects from your "My stuff" page as list
+session.mystuff_projects("all", page=1, sort_by="") #Returns the projects from your "My stuff" page as list
 
 session.messages(limit=40, offset=0) #Returns your messages as dict
 session.clear_messages() #Marks your messages as read
@@ -672,104 +562,13 @@ session.backpack(limit=20, offset=0) #Returns the contents of your backpack as d
 session.delete_from_backpack("asset id") #Deletes an asset from your backpack
 ```
 
-# Cloud Requests - Advanced
-
-**Get the request metadata:** (new in v0.8.4)
-
-In your requests, you can use these functions:
-```py
-client.get_requester() #Returns the name of the user who sent the request
-client.get_timestamp() #Returns the timestamp when the request was sent (in milliseconds since 1970)
-```
-
-**Run cloud requests in a thread:** (new in v0.9.4)
-
-By default, this is not enabled. How to enable:
-```py
-client.run(thread=True)
-```
-
-If enabled, you can put code below the client.run function.
-
-**Method used to get the cloud variables:** (new in v0.8.4)
-
-By default, the cloud variables will be fetched from the cloud logs:
-```py
-client.run(data_from_websocket=False)
-```
-
-You can also get the cloud data directly from the websocket:
-```py
-client.run(data_from_websocket=True)
-```
-This will make the response time of your Python code slighty faster, but you will no longer be able to use the `client.get_requester()` function (it will return `None`).
-
-**Change what "FROM_HOST_" cloud vars are used:** (new in v0.9.1)
-```py
-client = scratch3.CloudRequests(conn, used_cloud_vars=["1","2","3","4","5",...])
-```
-This allows you to set what "FROM_HOST_" cloud variables the Python script uses to send data back to your project. You can remove unused "FROM_HOST_" cloud variables from the Scratch project.
-
-**Ignore exceptions:**
-
-By default, the request handler will ignore exceptions occuring in your requests. You can also make it raise these exceptions instead:
-```py
-client = scratch3.CloudRequests(conn, ignore_exceptions=False)
-```
-
-**Send more than two arguments:**
-
-The seperator used to join the different arguments is "&". To send more than three arguments from Scratch, join them using "&".
-
-**Change packet length and clouddata log URL:**
-
-Only change this if you know what you are doing.
-
-```py
-client = scratch3.CloudRequests(conn, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=220)
-```
-
-# Cloud Requests - Events
-(new in v0.9.1)
-
-Will be called when specific things happen.
-
-*Called after the client connected to the cloud:*
-```py
-@client.event
-def on_ready():
-    print("Request handler is ready")
-```
-
-*Called every time the client receives any request:*
-```py
-@client.event
-def on_request(request):
-    print("Received request", request.name, request.requester, request.arguments, request.timestamp, request.id)
-```
-
-*Called when the client receives an unknown / undefined request:*
-```py
-@client.event
-def on_unknown_request(request):
-    print("Received unknown request", request.name, request.requester, request.arguments, request.timestamp, request.id)
-```
-
-*Called when an error occurs in a request:*
-```py
-@client.event
-def on_error(request, e):
-    print("Request: ", request.name, request.requester, request.arguments, request.timestamp, request.id)
-    print("Error that occured: ", e)
-```
-
 # Get your session id
 
 This section explains how to get your Scratch session id from your browser cookies.
 
 1. Open scratch.mit.edu in your browser
 2. Click the 🔒 icon in the URL bar, then click "Cookies"
-3. Then find a cookie called `scratchsessionid` (in the scratch.mit.edu folder). The content of this cookie is your Scratch session id
+3. Then find a cookie called `scratchsessionid` (in the "scratch.mit.edu" » "Cookies" folder). The content of this cookie is your Scratch session id
 
 ![](https://scratch3-assets.1tim.repl.co/template/cookies.png)
 
