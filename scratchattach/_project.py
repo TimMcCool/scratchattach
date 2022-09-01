@@ -466,7 +466,7 @@ def get_project(project_id):
         if u == "429":
             raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
         if not u:
-            project = PartialProject(id=int(project_id))
+            project = PartialProject(id=int(project_id), author=None, title=None, shared=False, instructions=None, notes=None, loves=None, views=None, favorites=None)
         return project
     except KeyError:
         return None

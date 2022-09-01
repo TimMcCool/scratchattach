@@ -42,3 +42,6 @@ class BadRequest(Exception):
 
 class Response429(Exception):
     pass
+
+class RequestNotFound(Exception):
+    pass

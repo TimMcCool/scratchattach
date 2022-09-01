@@ -255,7 +255,7 @@ class TwCloudEvents(CloudEvents):
                 except Exception: pass
             for activity in result:
                 if "on_"+activity["method"] in self._events:
-                    self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=None))
+                    self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=time.time()*10000))
 
 class WsCloudEvents(CloudEvents):
 
@@ -278,7 +278,7 @@ class WsCloudEvents(CloudEvents):
                         pass
                 for activity in result:
                     if "on_"+activity["method"] in self._events:
-                        self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=None))
+                        self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=time.time()*10000))
             except Exception:
                 self.connection._connect(cloud_host=self.connection.cloud_host)
                 self.connection._handshake()

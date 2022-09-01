@@ -20,6 +20,8 @@ class User:
 
         if "name" in self.__dict__.keys():
             self.username = self.name
+        if "username" in self.__dict__.keys():
+            self.name = self.username
 
         if "_session" not in self.__dict__.keys():
             self._session = None

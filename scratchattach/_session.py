@@ -75,7 +75,7 @@ class Session():
 
         except Exception:
             if self._username is None:
-                print("Warning: Logged in, but couldn't fetch XToken. Some features (including cloud variables) may not work properly.\nTo get cloud variables to work, provide a username argument: Session('session_id', username='username')\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
+                print("Warning: Logged in, but couldn't fetch XToken.\nSome features (including cloud variables) will not work properly. To get cloud variables to work, provide a username argument: Session('session_id', username='username')\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
             else:
                 print("Warning: Logged in, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
             self.xtoken = ""
@@ -88,38 +88,39 @@ class Session():
         return self._user
 
     def mystuff_projects(self, ordering, *, page=1, sort_by=""):
-        requests.get(
-            "https://scratch.mit.edu/site-api/galleries/all/",
-            headers = headers,
-            cookies = self._cookies,
-        )
-        targets = requests.get(
-            f"https://scratch.mit.edu/site-api/projects/{ordering}/?page={page}&ascsort=&descsort={sort_by}",
-            headers = headers,
-            cookies = self._cookies,
-        ).json()
-        projects = []
-        for target in targets:
-            projects.append(
-                dict(
-                    author = self._username,
-                    created = target["fields"]["datetime_created"],
-                    last_modified = target["fields"]["datetime_modified"],
-                    share_date = target["fields"]["datetime_shared"],
-                    shared = target["fields"]["isPublished"],
-                    id = target["pk"],
-                    thumbnail_url = "https://uploads.scratch.mit.edu"+target["fields"]["uncached_thumbnail_url"][1:],
-                    favorites = target["fields"]["favorite_count"],
-                    loves = target["fields"]["love_count"],
-                    remixes = target["fields"]["remixers_count"],
-                    views = target["fields"]["view_count"],
-                    thumbnail_name = target["fields"]["thumbnail"],
-                    title = target["fields"]["title"],
-                    url = "https://scratch.mit.edu/projects/" + str(target["pk"]),
-                    comment_count = target["fields"]["commenters_count"],
+        try:
+            targets = requests.get(
+                f"https://scratch.mit.edu/site-api/projects/{ordering}/?page={page}&ascsort=&descsort={sort_by}",
+                headers = headers,
+                cookies = self._cookies,
+            ).json()
+            projects = []
+            for target in targets:
+                projects.append(
+                    dict(
+                        author = self._username,
+                        created = target["fields"]["datetime_created"],
+                        last_modified = target["fields"]["datetime_modified"],
+                        share_date = target["fields"]["datetime_shared"],
+                        shared = target["fields"]["isPublished"],
+                        id = target["pk"],
+                        thumbnail_url = "https://uploads.scratch.mit.edu"+target["fields"]["uncached_thumbnail_url"][1:],
+                        favorites = target["fields"]["favorite_count"],
+                        loves = target["fields"]["love_count"],
+                        remixes = target["fields"]["remixers_count"],
+                        views = target["fields"]["view_count"],
+                        thumbnail_name = target["fields"]["thumbnail"],
+                        title = target["fields"]["title"],
+                        url = "https://scratch.mit.edu/projects/" + str(target["pk"]),
+                        comment_count = target["fields"]["commenters_count"],
+                    )
                 )
-            )
-        return projects
+            return projects
+        except Exception:
+            raise(_exceptions.FetchError)
+
+    def get_mystuff_projects(self, ordering, *, page=1, sort_by=""):
+        return self.mystuff_projects(ordering, page=page, sort_by=sort_by)
 
     def messages(self, *, limit=40, offset=0):
 

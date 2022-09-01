@@ -14,12 +14,12 @@ class CloudRequests:
             self.__dict__.update(entries)
             self.id = self.request_id
 
-    def __init__(self, cloud_connection : _cloud.CloudConnection, *, used_cloud_vars = ["1","2","3","4","5","6","7","8","9"], ignore_exceptions=True, force_reconnect=True, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=240):
+    def __init__(self, cloud_connection : _cloud.CloudConnection, *, used_cloud_vars = ["1","2","3","4","5","6","7","8","9"], ignore_exceptions=True, force_reconnect=True, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=245):
         print("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m")
         if _log_url != "https://clouddata.scratch.mit.edu/logs":
             print("Warning: Log URL isn't the URL of Scratch's clouddata logs. Don't use the _log_url parameter unless you know what you are doing.")
-        if _packet_length > 240:
-            print("Warning: The packet length was set to a value higher than default (240). Your project most likely won't work on Scratch.")
+        if _packet_length > 245:
+            print("Warning: The packet length was set to a value higher than default (245). Your project most likely won't work on Scratch.")
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id
@@ -33,18 +33,61 @@ class CloudRequests:
         self.last_timestamp = 0
         self.events = []
         self.request_parts = {}
+        self.outputs = {}
 
-    def request(self, function):
-        def inner(encode_response=True)
-            self.requests[function] = {"encode":encode_response}
-        return inner
+    def request(self, function=None, *, enabled=True, name=None, thread=False):
+        def inner(function):
+            self.requests[function.__name__ if name is None else name] = {"name":function.__name__ if name is None else name,"enabled":enabled,"on_call":function,"thread":thread}
+        if function is None:
+            return inner
+        else:
+            self.requests[function.__name__] = {"name":function.__name__,"enabled":True,"on_call":function,"thread":False}
 
-    def add_request(self, function, *, encode_response=True):
-        self.request(function)(encode_response=encode_response)
+    def call_request(self, request_id, req_obj, arguments):
+        request = req_obj["name"]
+        try:
+            if not req_obj["enabled"]:
+                print(f"Warning: Client received the disabled request '{request}'")
+                self.call_event("on_disabled_request", [self.Request(name=request,request=request,requester=self.last_requester,timestamp=self.last_timestamp,arguments=arguments,request_id=request_id)])
+                return None
+            output = req_obj["on_call"](*arguments)
+            if req_obj["thread"]:
+                self.outputs[request_id] = {"output":output, "request":req_obj}
+            else:
+                self._parse_output(output, request, req_obj, request_id)
+        except Exception as e:
+            self.call_event("on_error", [self.Request(name=request,request=request,requester=self.last_requester,timestamp=self.last_timestamp,arguments=arguments,request_id=request_id), e])
+            if self.ignore_exceptions:
+                print(f"Caught error in request '{request}' - Full error below")
+                try:
+                    traceback.print_exc()
+                except Exception:
+                    print(e)
+            else:
+                print(f"Exception in request '{request}':")
+                raise(e)
+            if req_obj["thread"]:
+                self.outputs[request_id] = {"output":f"Error: Check the Python console", "request":req_obj}
+            else:
+                self._parse_output(output, request, req_obj, request_id)
+
+    def add_request(self, function, *, enabled=True, name=None):
+        self.request(enabled=enabled, name=name)(function)
 
     def remove_request(self, name):
-        r = filter(lambda x : x.__name__ == name, self.requests)[0]
-        self.requests.pop(r)
+        self.requests.pop(name)
+
+    def edit_request(self, name, *, enabled=None, new_name=None, new_function=None, thread=None):
+        if name not in self.requests:
+            raise(_exceptions.RequestNotFound(name))
+        if enabled is not None:
+            self.requests[name]["enabled"] = enabled
+        if new_name is not None:
+            self.requests[name]["name"] = new_name
+        if new_function is not None:
+            self.requests[name]["on_call"] = new_function
+        if thread is not None:
+            self.requests[name]["thread"] = thread
 
     def event(self, function):
 
@@ -58,7 +101,7 @@ class CloudRequests:
 
         return self.last_timestamp
 
-    def _respond(self, request_id, response, limit, *, force_reconnect=False):
+    def _respond(self, request_id, response, limit, *, force_reconnect=False, validation=2222):
 
         if self.idle_since + 8 < time.time() or force_reconnect:
             self.connection._connect(cloud_host=self.connection.cloud_host)
@@ -74,22 +117,20 @@ class CloudRequests:
                 remaining_response = remaining_response[limit:]
 
                 i+=1
-                if i > 999: #maDU59_ was here
-                    iteration_string = str(i)+str(len(str(i)))
-                elif i > 99:
-                    iteration_string = str(i)+"1"
+                if i > 99:
+                    iteration_string = str(i)
                 elif i > 9:
-                    iteration_string = "0"+str(i)+"1"
+                    iteration_string = "0"+str(i)
                 else:
-                    iteration_string = "00"+str(i)+"1"
+                    iteration_string = "00"+str(i)
 
-                self.connection.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", f"{response_part}.{request_id}{iteration_string}")
+                self.connection.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", f"{response_part}.{request_id}{iteration_string}1")
                 self.current_var += 1
                 if self.current_var == len(self.used_cloud_vars):
                     self.current_var = 0
                 time.sleep(0.1)
             else:
-                self.connection.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", f"{remaining_response}.{request_id}2222")
+                self.connection.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", f"{remaining_response}.{request_id}{validation}")
                 self.current_var += 1
                 if self.current_var == len(self.used_cloud_vars):
                     self.current_var = 0
@@ -104,7 +145,7 @@ class CloudRequests:
         if data_from_websocket is True:
             events = _cloud.WsCloudEvents(self.project_id, _cloud.CloudConnection(project_id = self.project_id, username = self.connection._username, session_id=self.connection._session_id))
         else:
-            events = None
+            events = _cloud.CloudEvents(self.project_id)
         if thread:
             thread = Thread(target=self._run, args=[events], kwargs={"data_from_websocket":data_from_websocket})
             thread.start()
@@ -119,16 +160,52 @@ class CloudRequests:
             events[0](*args)
             return True
 
+    def _parse_output(self, output, request, req_obj, request_id):
+        if len(str(output)) > 3000 and not data_from_websocket:
+            print(f"Warning: Output of request '{request}' is longer than 3000 characters (length: {len(str(output))} characters). Responding the request will take >4 seconds.")
+
+        if str(request_id).endswith("0"):
+            try:
+                int(output) == output
+            except Exception:
+                send_as_integer = False
+            else:
+                send_as_integer = not "-" in str(output)
+        else:
+            send_as_integer = False
+
+
+        if output is None:
+            print(f"Warning: Request '{request}' didn't return anything.")
+            return
+        elif send_as_integer:
+            output = str(output)
+        elif not isinstance(output, list):
+            if output == "":
+                output = "-"
+            output = Encoding.encode(output)
+        else:
+            input = output
+            output = ""
+            for i in input:
+                output += Encoding.encode(i)
+                output += "89"
+        if send_as_integer:
+            self._respond(request_id, output, self.packet_length, validation=3222)
+        else:
+            self._respond(request_id, output, self.packet_length)
+
+
     def _run(self, events, data_from_websocket=False):
-        if data_from_websocket:
-            self.ws_data = []
+        self.ws_data = []
 
-            @events.event
-            def on_set(event):
-                self.ws_data.insert(0, {"user":event.user,"verb":"set_var","name":"☁ "+event.name,"value":event.value,"timestamp":time.time()*10000})
-                self.ws_data = self.ws_data[:100]
+        @events.event
+        def on_set(event):
+            if event.name == "TO_HOST":
+                self.ws_data.insert(0, {"user":event.user,"value":event.value,"timestamp":event.timestamp})
+            self.ws_data = self.ws_data[:100]
 
-            events.start()
+        events.start(update_interval=0)
 
 
         self.connection._connect(cloud_host=self.connection.cloud_host)
@@ -154,19 +231,15 @@ class CloudRequests:
 
         while True:
 
-            if data_from_websocket:
-                data = self.ws_data
-            else:
-                data = _cloud.get_cloud_logs(self.project_id, limit=100, log_url=self.log_url)
+            data = self.ws_data
             if data == []:
                 continue
             data.reverse()
             if self.last_data == data:
-                if data_from_websocket:
-                    pass#time.sleep(0.1)
+                pass
             else:
                 for activity in data:
-                    if activity['timestamp'] > self.last_timestamp and activity['name'] == "☁ TO_HOST":
+                    if activity['timestamp'] > self.last_timestamp:
                         self.last_requester = activity["user"]
                         self.last_timestamp = activity['timestamp']
 
@@ -197,69 +270,44 @@ class CloudRequests:
                         self.call_event("on_request", [self.Request(name=request,request=request,requester=self.last_requester,timestamp=self.last_timestamp,arguments=arguments,request_id=request_id,id=request_id)])
                         output = ""
 
-                        commands = list(filter(lambda k: k.__name__ == request, list(self.requests.keys())))
-                        if len(commands) == 0:
+                        if request not in self.requests:
                             print(f"Warning: Client received an unknown request called '{request}'")
                             self.call_event("on_unknown_request", [self.Request(name=request,request=request,requester=self.last_requester,timestamp=self.last_timestamp,arguments=arguments,request_id=request_id)])
-                            self._respond(request_id, Encoding.encode(f"Error: Unknown request"), self.packet_length)
-                        else:
-                            try:
-                                output = commands[0](*arguments)
-                                req_settings = self.requests[commands[0]]
-                            except Exception as e:
-                                self._respond(request_id, Encoding.encode(f"Error: Check the Python console"), self.packet_length)
-                                self.call_event("on_error", [self.Request(name=request,request=request,requester=self.last_requester,timestamp=self.last_timestamp,arguments=arguments,request_id=request_id), e])
-                                if self.ignore_exceptions:
-                                    print(f"Caught error in request '{request}' - Full error below")
-                                    try:
-                                        traceback.print_exc()
-                                    except Exception:
-                                        print(e)
-                                else:
-                                    print(f"Exception in request '{request}':")
-                                    raise(e)
-
-                        if len(str(output)) > 3000 and not data_from_websocket:
-                            print(f"Warning: Output of request '{request}' is longer than 3000 characters (length: {len(str(output))} characters). Responding the request will take >4 seconds.")
-
-                        if output is None:
-                            print(f"Warning: Request '{request}' didn't return anything.")
-                            self.last_data = data
                             continue
-                        elif req_settings["encode"] is False:
-                            if isinstance(output, list):
-                                output = "".join(output)
-                            output = str(output)
-                        elif not isinstance(output, list):
-                            if output == "":
-                                output = "-"
-                            output = Encoding.encode(output)
                         else:
-                            input = output
-                            output = ""
-                            for i in input:
-                                output += Encoding.encode(i)
-                                output += "89"
-                        self._respond(request_id, output, self.packet_length)
-
+                            req_obj = self.requests[request]
+                            if req_obj["thread"]:
+                                Thread(target=self.call_request, args=(request_id, req_obj, arguments)).start()
+                            else:
+                                self.call_request(request_id, req_obj, arguments)
                 self.last_data = data
+
+            output_ids = list(self.outputs.keys())
+            if len(output_ids) > 0:
+                for request_id in output_ids:
+                    output = self.outputs[request_id]["output"]
+                    request = self.outputs[request_id]["request"]["name"]
+                    req_obj = self.outputs[request_id]["request"]
+                    self._parse_output(output, request, req_obj, request_id)
 
 class TwCloudRequests(CloudRequests):
 
-    def __init__(self, cloud_connection, *, used_cloud_vars = ["1","2","3","4","5","6","7","8","9"], ignore_exceptions=True, force_reconnect=True, _packet_length=49980):
+    def __init__(self, cloud_connection, *, used_cloud_vars = ["1","2","3","4","5","6","7","8","9"], ignore_exceptions=True, force_reconnect=True, _packet_length=98800):
         print("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m")
-        if _packet_length > 49980:
-            print("Warning: The packet length was set to a value higher than TurboWarp's default (49980).")
+        if _packet_length > 98800:
+            print("Warning: The packet length was set to a value higher than TurboWarp's default (98800).")
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id
-        self.requests = []
+        self.requests = {}
         self.current_var = 1
         self.ignore_exceptions = ignore_exceptions
         self.idle_since = 0
         self.packet_length = _packet_length
         self.last_timestamp = 0
         self.events = []
+        self.request_parts = {}
+        self.outputs = {}
 
     def get_requester(self):
         return None
