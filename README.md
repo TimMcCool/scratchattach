@@ -8,9 +8,9 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 
 The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 
-[![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
-[![PyPI download month](https://img.shields.io/pypi/dm/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
-[![PyPI version shields.io](https://img.shields.io/pypi/v/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
+[![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)]()
+[![PyPI download month](https://img.shields.io/pypi/dm/scratchattach.svg)]()
+[![PyPI version shields.io](https://img.shields.io/pypi/v/scratchattach.svg)]()
 [![GitHub license](https://badgen.net/github/license/TimMcCool/scratchattach)](https://github.com/TimMcCool/scratchattach/blob/master/LICENSE)
 
 # Installation
