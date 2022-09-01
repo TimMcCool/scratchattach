@@ -115,8 +115,7 @@ value = conn.get_var("variable")
 
 # Encoding / Decoding  `scratch3.Encoding`
 
-To send text to your Scratch project, you can use the built in encoder.
-To decode sent texts in Scratch, download this sprite and add it to your Scratch project: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
+Scratchattach has a built in encoder. Scratch sprite to decode texts encoded with scratchattach: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
 
 ```python
 from scratchattach import Encoding
