@@ -1,8 +1,9 @@
-Scratch API wrapper with support for almost all site features.
+Scratch API wrapper with support for almost all site features
+
 This library can set cloud variables, follow Scratchers, post comments and so much more! It has special features that make it easy to transmit data through cloud variables.
 
 **Some functions require logging in to Scratch.**
-**You also need to have the coding language Python installed on your computer.**
+**You also need to have the coding language Python installed on your device.**
 *Download Python here if you don't have it: https://www.python.org/downloads/*
 
 The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
