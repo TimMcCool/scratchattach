@@ -7,6 +7,8 @@ Automate actions and interact with your Scratch projects through cloud variables
 
 The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 
+[![Github All Releases](https://img.shields.io/github/downloads/TimMcCool/scratchattach/total.svg)]()
+
 # Installation
 
 To install / update the library, run the following command in your command prompt
