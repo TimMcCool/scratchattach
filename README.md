@@ -55,7 +55,7 @@ session.mute_status
 session.banned #Returns True if the associated account is banned
 ```
 
-# Cloud variables  `scratch3.CloudConnection` `scratch3.TwCloudConnection`
+# Cloud variables  `scratch3.CloudConnection`
 *Make sure you're using the latest scratchattach version. Update scratchattach with `pip install scratchattach --upgrade`*
 
 **Connect to the Scratch cloud:**
@@ -119,7 +119,7 @@ Encoding.encode("input") #will return the encoded text
 Encoding.decode("encoded") #will decode an encoded text
 ```
 
-# Cloud events  `scratch3.CloudEvents` `scratch3.TwCloudEvents`
+# Cloud events  `scratch3.CloudEvents`
 
 *Cloud events allow reacting to cloud events in real time. If a Scratcher
 sets / creates / deletes a cloud var on the given project, an
@@ -163,7 +163,7 @@ events = scratch3.TwCloudEvents("project_id")
 ...
 ```
 
-# Cloud Requests  `scratch3.CloudRequests` `scratch3.TwCloudRequests`
+# Cloud Requests  `scratch3.CloudRequests`
 
 *Cloud requests make it possible to access data like message counts, user stats and more from Scratch projects! They use cloud variables to transmit data.*
 
