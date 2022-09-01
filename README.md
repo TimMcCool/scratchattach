@@ -42,7 +42,7 @@ session = scratch3.login("username", "password")
 ```python
 import scratchattach as scratch3
 
-session = scratch3.Session("sessionId", username="username") #The username argument is optional. You only have to put it if your IP address is blocked (for example if you are using replit)
+session = scratch3.Session("sessionId", username="username")
 ```
 
 **Attributes:**
