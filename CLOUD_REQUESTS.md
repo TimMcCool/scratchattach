@@ -21,7 +21,7 @@ Next, copy this code to your Python editor. [How to get your session id](https:/
 ```py
 import scratchattach as scratch3
 
-session = scratch3.login("session_id", username="username") #replace with your session_id and username
+session = scratch3.Session("session_id", username="username") #replace with your session_id and username
 conn = session.connect_cloud("project_id") #replace with your project id
 
 client = scratch3.CloudRequests(conn)
