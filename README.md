@@ -7,6 +7,8 @@ Automate actions and interact with your Scratch projects through cloud variables
 
 The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 
+[![stability-stable](https://img.shields.io/badge/stability-stable-green.svg)](https://github.com/emersion/stability-badges#stable)
+
 # Installation
 
 To install / update the library, run the following command in your command prompt
