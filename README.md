@@ -170,9 +170,9 @@ events = scratch3.TwCloudEvents("project_id")
 
 # Cloud Requests  `scratch3.CloudRequests`
 
-*Cloud requests make it possible to access data like message counts, user stats and more from Scratch projects! They use cloud variables to transmit data.*
+*Cloud requests allow Scratch projects and Python to interact - that make it possible to access data like message counts, user stats and more from Scratch projects! They use cloud variables to transmit data.*
 
-**[They are documenteds on this page: (check it out!)](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)**
+**[They're documented on this page: (check it out!)](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)**
 
 [https://github.com/TimMcCool/scratchattach/blob/main/CLOUD_REQUESTS.md](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)
 
