@@ -1,10 +1,4 @@
-# What are Cloud Requests?
-
-Cloud requests make it easy to receive and send data to your Scratch project through cloud variables. They make it possible to external access data like message counts, user stats and more from Scratch projects.
-
-# Questions / help
-
-If you have questions or need help, don't hesitate to ask on the official forum topic: https://scratch.mit.edu/discuss/topic/603418/?page=1
+Cloud Requests Framework (inspired by discord.py)
 
 # Basic usage
 
@@ -16,7 +10,7 @@ Then, go to the Scratch website, create a new project and upload the project fil
 
 **How to use with Scratch:**
 
-Next, copy this code to your Python editor. [How to get your session id](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests#get-your-session-id)
+Copy this code to your Python editor. [How to get your session id](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests#get-your-session-id)
 
 ```py
 import scratchattach as scratch3
@@ -45,7 +39,7 @@ Now go to the Scratch project. In the `Cloud Requests` sprite, you will find thi
 
 ![image](https://scratch3-assets.1tim.repl.co/pypi_docs/tutorial.png/)
 
-When active, it will send a "ping" request to the Python client. This will call the `ping()` function. The data returned by the function will be sent back to the project.
+When active, it sends a "ping" request to the Python client. This will call the `ping()` function. The data returned by the function will be sent back to the project.
 Try it out by clicking the block!
 
 ![image](https://scratch3-assets.1tim.repl.co/pypi_docs/tutorial_result.png/)
@@ -61,17 +55,7 @@ client = scratch3.TwCloudRequests(conn)
 ...
 ```
 
-# Basic features
-
-- **No length limitation** for the request or the returned data! (If it is too long for one cloud variable, it will be split into multiple cloud variables)
-- Cloud Requests can handle **multiple requests sent at the same time**
-- Requests can also **return lists,** these will be decoded as list in the Scratch project
-- You can freely choose the name of your requests
-- Requests that only return numbers won't be encoded (-> 50% faster!)
-
 # Examples
-
-These examples showcase how cloud requests can be used to access external information from your Scratch project. Try them out!
 
 **Example 1: Script that loads your message count**
 
@@ -88,6 +72,8 @@ def message_count(argument1):
     user = scratch3.get_user(argument1)
     return user.message_count()
 ```
+
+The arguments you specify in the Scratch code are given to the Python function.
 
 **Example 2: Script that loads someone's stats**
 
@@ -111,6 +97,14 @@ def foo(argument1):
 
     return return_data
 ```
+
+# Basic features
+
+- **No length limitation** for the request or the returned data! (If it is too long for one cloud variable, it will be split into multiple cloud variables)
+- Cloud Requests can handle **multiple requests sent at the same time**
+- Requests can also **return lists,** these will be decoded as list in the Scratch project
+- You can freely choose the name of your requests
+- Requests that only return numbers won't be encoded (-> 50% faster!)
 
 # Advanced features
 
