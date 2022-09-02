@@ -8,9 +8,9 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 
 The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 
-[![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)]()
-[![PyPI download month](https://img.shields.io/pypi/dm/scratchattach.svg)]()
-[![PyPI version shields.io](https://img.shields.io/pypi/v/scratchattach.svg)]()
+[![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
+[![PyPI download month](https://img.shields.io/pypi/dm/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
+[![PyPI version shields.io](https://img.shields.io/pypi/v/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
 [![GitHub license](https://badgen.net/github/license/TimMcCool/scratchattach)](https://github.com/TimMcCool/scratchattach/blob/master/LICENSE)
 
 # Installation
@@ -170,9 +170,9 @@ events = scratch3.TwCloudEvents("project_id")
 
 # Cloud Requests  `scratch3.CloudRequests`
 
-*Cloud requests allow Scratch projects and Python to interact - that make it possible to access data like message counts, user stats and more from Scratch projects! They use cloud variables to transmit data.*
+*Cloud requests allow Scratch projects and Python to interact - that makes it possible to access data like message counts, user stats and more from Scratch projects! They use cloud variables to transmit data.*
 
-**[They're documented on this page: (check it out!)](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)**
+**[They are documenteds on this page: (check it out!)](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)**
 
 [https://github.com/TimMcCool/scratchattach/blob/main/CLOUD_REQUESTS.md](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)
 
@@ -193,7 +193,7 @@ Get the user that you are logged in with:
 session.get_linked_user()
 ```
 
-You can also get users without logging in:
+You can also get users without logging in: (but then you can't use any functions that require a login, like user.follow(), user.post_comment(), ...)
 ```python
 user = scratch3.get_user("username")
 ```
@@ -268,7 +268,7 @@ user.ocular_status() #Returns information about the user's ocular status, like t
 project = session.connect_project("project_id")
 ```
 
-You can also get projects without logging in:
+You can also get projects without logging in: (but then you can't use any functions that require a login, and you can't get your unshared projects)
 ```python
 project = scratch3.get_project("project_id")
 ```
@@ -354,7 +354,7 @@ project.get_creator_agent()
 ```python
 studio = session.connect_studio("studio_id")
 ```
-You can also get studios without logging in:
+You can also get studios without logging in: (But then you can't use any functions that require a login, like studio.follow(), studio.add_project(), ...)
 ```python
 studio = scratch3.get_studio("studio_id")
 ```
@@ -395,6 +395,10 @@ studio.set_title("new title")
 studio.open_projects() #Allows everyone to add projects
 studio.close_projects()
 
+studio.turn_off_commenting() # New in v1.0.1
+studio.turn_on_commenting()
+studio.toggle_commenting()
+
 studio.invite_curator("username")
 studio.promote_curator("username")
 studio.remove_curator("username")
@@ -403,7 +407,7 @@ studio.leave() #Removes yourself from the studio
 studio.projects(limit=40, offset=0)
 studio.curators(limit=24, offset=0) #Returns the curators as list of users (scratch3.User)
 studio.managers(limit=24, offset=0)
-studio.activity(limit=24, offset=0)
+studio.activity(limit=24, offset=0) #New in v1.0.1
 ```
 
 # Search / Explore page
