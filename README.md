@@ -179,6 +179,7 @@ events = scratch3.TwCloudEvents("project_id")
 If you want to access external information in Scratch projects or store data on an external database, scratchattach's Cloud Requests are ideal for your project:
 - Similar to cloud events, but send back data to the project
 - Automatically encode / decode sent data
+- Request and response data automatically split to multiple cloud variables if too long to fit into one cloud variable
 - Tons of extra features.
 
 # Users  `scratch3.User`
