@@ -238,9 +238,9 @@ class Session():
             headers = self._headers,
         ).json()
 
-    def connect_cloud(self, project_id=None, *, project_id_kwarg=None):
+    def connect_cloud(self, project_id_arg=None, *, project_id=None):
         if project_id is None:
-            project_id = project_id_kwarg
+            project_id = project_id_arg
         if project_id is None:
             return None
 
