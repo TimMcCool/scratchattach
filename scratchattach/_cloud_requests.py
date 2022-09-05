@@ -161,7 +161,7 @@ class CloudRequests:
             return True
 
     def _parse_output(self, output, request, req_obj, request_id):
-        if len(str(output)) > 3000 and not data_from_websocket:
+        if len(str(output)) > 3000 and not self.data_from_websocket:
             print(f"Warning: Output of request '{request}' is longer than 3000 characters (length: {len(str(output))} characters). Responding the request will take >4 seconds.")
 
         if str(request_id).endswith("0"):
@@ -198,6 +198,7 @@ class CloudRequests:
 
     def _run(self, events, data_from_websocket=False):
         self.ws_data = []
+        self.data_from_websocket = data_from_websocket
 
         @events.event
         def on_set(event):
