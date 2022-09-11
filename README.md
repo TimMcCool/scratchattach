@@ -62,7 +62,6 @@ session.banned #Returns True if the associated account is banned
 ```
 
 # Cloud variables  `scratch3.CloudConnection`
-*Make sure you're using the latest scratchattach version. Update scratchattach with `pip install scratchattach --upgrade`*
 
 **Connect to the Scratch cloud:**
 
