@@ -1,18 +1,19 @@
-#----- Getting studios
+# ----- Getting studios
 
 import json
 import requests
 from . import _user
 from . import _exceptions
+
 headers = {
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
     "x-csrftoken": "a",
     "x-requested-with": "XMLHttpRequest",
     "referer": "https://scratch.mit.edu",
 }
 
-class Studio:
 
+class Studio:
     def __init__(self, **entries):
 
         self.__dict__.update(entries)
@@ -28,7 +29,8 @@ class Studio:
 
         try:
             self._headers.pop("Cookie")
-        except Exception: pass
+        except Exception:
+            pass
         self._json_headers = self._headers
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
@@ -56,19 +58,18 @@ class Studio:
         self.manager_count = studio["stats"]["managers"]
         self.project_count = studio["stats"]["projects"]
 
-
     def follow(self):
         requests.put(
             f"https://scratch.mit.edu/site-api/users/bookmarkers/{self.id}/add/?usernames={self._session._username}",
-            headers = headers,
-            cookies = self._cookies,
+            headers=headers,
+            cookies=self._cookies,
         )
 
     def unfollow(self):
         requests.put(
             f"https://scratch.mit.edu/site-api/users/bookmarkers/{self.id}/remove/?usernames={self._session._username}",
-            headers = headers,
-            cookies = self._cookies,
+            headers=headers,
+            cookies=self._cookies,
         )
 
     def comments(self, *, limit=40, offset=0):
@@ -95,10 +96,9 @@ class Studio:
             comments = comments + r
         return comments
 
-
     def post_comment(self, content, *, parent_id="", commentee_id=""):
         if self._headers is None:
-            raise(_exceptions.Unauthenticated)
+            raise (_exceptions.Unauthenticated)
             return
         data = {
             "commentee_id": commentee_id,
@@ -107,24 +107,31 @@ class Studio:
         }
         headers = self._json_headers
         headers["referer"] = "https://scratch.mit.edu/projects/" + str(self.id) + "/"
-        return json.loads(requests.post(
-            f"https://api.scratch.mit.edu/proxy/comments/studio/{self.id}/",
-            headers = headers,
-            cookies = self._cookies,
-            data=json.dumps(data),
-        ).text)
-
+        return json.loads(
+            requests.post(
+                f"https://api.scratch.mit.edu/proxy/comments/studio/{self.id}/",
+                headers=headers,
+                cookies=self._cookies,
+                data=json.dumps(data),
+            ).text
+        )
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
-        return self.post_comment(content, parent_id=parent_id, commentee_id=commentee_id)
+        return self.post_comment(
+            content, parent_id=parent_id, commentee_id=commentee_id
+        )
 
     def projects(self, limit=40, offset=0):
-        return requests.get(f"https://api.scratch.mit.edu/studios/{self.id}/projects/?limit={limit}&offset={offset}").json()
+        return requests.get(
+            f"https://api.scratch.mit.edu/studios/{self.id}/projects/?limit={limit}&offset={offset}"
+        ).json()
 
     def curators(self, limit=24, offset=0):
-        if limit>24:
-            limit=24
-        raw_curators = requests.get(f"https://api.scratch.mit.edu/studios/{self.id}/curators/?limit={limit}&offset={offset}").json()
+        if limit > 24:
+            limit = 24
+        raw_curators = requests.get(
+            f"https://api.scratch.mit.edu/studios/{self.id}/curators/?limit={limit}&offset={offset}"
+        ).json()
         curators = []
         for c in raw_curators:
             u = _user.User(username=c["username"], session=self._session)
@@ -132,37 +139,35 @@ class Studio:
             curators.append(u)
         return curators
 
-
     def invite_curator(self, curator):
         try:
             return requests.put(
                 f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/invite_curator/?usernames={curator}",
-                headers = headers,
-                cookies = self._cookies,
+                headers=headers,
+                cookies=self._cookies,
             ).json()
         except Exception:
-            raise(_exceptions.Unauthorized)
+            raise (_exceptions.Unauthorized)
 
     def promote_curator(self, curator):
         try:
             return requests.put(
                 f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/promote/?usernames={curator}",
-                headers = headers,
-                cookies = self._cookies
+                headers=headers,
+                cookies=self._cookies,
             ).json()
         except Exception:
-            raise(_exceptions.Unauthorized)
-
+            raise (_exceptions.Unauthorized)
 
     def remove_curator(self, curator):
         try:
             return requests.put(
                 f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/remove/?usernames={curator}",
-                headers = headers,
-                cookies = self._cookies
+                headers=headers,
+                cookies=self._cookies,
             ).json()
         except Exception:
-            raise(_exceptions.Unauthorized)
+            raise (_exceptions.Unauthorized)
 
     def leave(self):
         return self.remove_curator(self._session._username)
@@ -170,19 +175,21 @@ class Studio:
     def add_project(self, project_id):
         return requests.post(
             f"https://api.scratch.mit.edu/studios/{self.id}/project/{project_id}",
-            headers = self._headers
+            headers=self._headers,
         ).json()
 
     def remove_project(self, project_id):
         return requests.delete(
             f"https://api.scratch.mit.edu/studios/{self.id}/project/{project_id}",
-            headers = self._headers
+            headers=self._headers,
         ).json()
 
     def managers(self, limit=24, offset=0):
-        if limit>24:
-            limit=24
-        raw_m = requests.get(f"https://api.scratch.mit.edu/studios/{self.id}/managers/?limit={limit}&offset={offset}").json()
+        if limit > 24:
+            limit = 24
+        raw_m = requests.get(
+            f"https://api.scratch.mit.edu/studios/{self.id}/managers/?limit={limit}&offset={offset}"
+        ).json()
         managers = []
         for c in raw_m:
             u = _user.User(username=c["username"], _session=self._session)
@@ -193,40 +200,45 @@ class Studio:
     def set_description(self, new):
         requests.put(
             f"https://scratch.mit.edu/site-api/galleries/all/{self.id}/",
-            headers = headers,
-            cookies = self._cookies,
-            data=json.dumps({"description":new+"\n"})
+            headers=headers,
+            cookies=self._cookies,
+            data=json.dumps({"description": new + "\n"}),
         )
 
     def set_title(self, new):
         requests.put(
             f"https://scratch.mit.edu/site-api/galleries/all/{self.id}/",
-            headers = headers,
-            cookies = self._cookies,
-            data=json.dumps({"title":new}))
+            headers=headers,
+            cookies=self._cookies,
+            data=json.dumps({"title": new}),
+        )
 
     def open_projects(self):
         requests.put(
             f"https://scratch.mit.edu/site-api/galleries/{self.id}/mark/open/",
-            headers = headers,
-            cookies = self._cookies,
+            headers=headers,
+            cookies=self._cookies,
         )
-
 
     def close_projects(self):
         requests.put(
             f"https://scratch.mit.edu/site-api/galleries/{self.id}/mark/closed/",
-            headers = headers,
-            cookies = self._cookies,
+            headers=headers,
+            cookies=self._cookies,
         )
+
 
 def get_studio(studio_id):
     try:
         studio = Studio(id=int(studio_id))
         if studio.update() == "429":
-            raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+            raise (
+                _exceptions.Response429(
+                    "Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."
+                )
+            )
         return studio
     except KeyError:
         return None
     except Exception as e:
-        raise(e)
+        raise (e)
