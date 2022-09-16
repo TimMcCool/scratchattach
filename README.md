@@ -154,7 +154,7 @@ def on_create(event):
 def on_ready():
    print("Event listener ready!")
 
-events.start(thread=True)
+events.start(thread=True) #thread argument is optional
 ```
 
 **How to use with TurboWarp:** (new in v0.4.7)
