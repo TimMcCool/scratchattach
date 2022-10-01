@@ -85,7 +85,7 @@ class Session:
                 )
             else:
                 print(
-                    "Warning: Logged in, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress."
+                    "Warning: Logged in, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address."
                 )
             self.xtoken = ""
 
