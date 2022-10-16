@@ -21,15 +21,6 @@ Run the following command in your command prompt
 pip install -U scratchattach
 ```
 
-**OR**
-
-Add this to your Python code:
-```python
-import os
-
-os.system("pip install -U scratchattach")
-```
-
 # Logging in  `scratch3.Session`
 
 **Logging in with username / password:**
