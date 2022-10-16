@@ -21,6 +21,8 @@ Run the following command in your command prompt
 pip install -U scratchattach
 ```
 
+If you're on macOS / Linux and the command doesn't work for you, try using `pip3` instead of `pip`.
+
 # Logging in  `scratch3.Session`
 
 **Logging in with username / password:**
