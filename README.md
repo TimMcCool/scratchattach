@@ -8,9 +8,9 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 
 The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 
-[![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)](/)
-[![PyPI download month](https://img.shields.io/pypi/dm/scratchattach.svg)](/)
-[![PyPI version shields.io](https://img.shields.io/pypi/v/scratchattach.svg)](/)
+[![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
+[![PyPI download month](https://img.shields.io/pypi/dm/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
+[![PyPI version shields.io](https://img.shields.io/pypi/v/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
 [![GitHub license](https://badgen.net/github/license/TimMcCool/scratchattach)](https://github.com/TimMcCool/scratchattach/blob/master/LICENSE)
 
 # Installation
@@ -62,6 +62,7 @@ session.banned #Returns True if the associated account is banned
 ```
 
 # Cloud variables  `scratch3.CloudConnection`
+*Make sure you're using the latest scratchattach version. Update scratchattach with `pip install scratchattach --upgrade`*
 
 **Connect to the Scratch cloud:**
 
@@ -82,7 +83,9 @@ conn = scratch3.CloudConnection(project_id = "project_id", username="username", 
 Does not require a session.
 
 ```python
-conn = scratch3.TwCloudConnection(project_id = "project_id", username="username")  #optional argument: cloud_host="wss://clouddata.turbowarp.org"
+conn = scratch3.TwCloudConnection(project_id = "project_id", username="username")  
+# Optional argument: cloud_host="wss://clouddata.turbowarp.org"
+# To connect to forkphorus's cloud server, use cloud_host="wss://stratus.turbowarp.org"
 ```
 
 **Set a cloud var:**
@@ -90,8 +93,7 @@ conn = scratch3.TwCloudConnection(project_id = "project_id", username="username"
 New Scratchers can set Scratch cloud variables too.
 
 ```python
-conn.set_var("variable", "value") #the variable name is specified
-without the cloud emoji
+conn.set_var("variable", "value") #the variable name is specified without the cloud emoji
 ```
 
 **Get a Scratch cloud var from the clouddata logs:**
@@ -110,6 +112,12 @@ Requires a connection to Scratch or TurboWarp's cloud (a `CloudConnection` / `Tw
 
 ```python
 value = conn.get_var("variable")
+```
+
+**Close the cloud connection:**
+
+```python
+conn.disconnect()
 ```
 
 # Encoding / Decoding  `scratch3.Encoding`
@@ -154,7 +162,7 @@ def on_create(event):
 def on_ready():
    print("Event listener ready!")
 
-events.start(thread=True) #thread argument is optional
+events.start()
 ```
 
 **How to use with TurboWarp:** (new in v0.4.7)
@@ -167,19 +175,28 @@ events = scratch3.TwCloudEvents("project_id")
 ...
 ```
 
+**Functions:**
+```py
+events.start(thread=True)
+events.pause()
+events.resume()
+events.stop()
+```
+
 # Cloud Requests  `scratch3.CloudRequests`
 
-*Cloud requests allow Scratch projects and Python to interact - that makes it possible to access data like message counts, user stats and more from Scratch projects! They use cloud variables to transmit data.*
+Cloud Requests Framework (inspired by discord.py) that allows Scratch projects and Python to interact
 
-**[They are documenteds on this page: (check it out!)](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)**
+*This makes it possible to access data like message counts, user stats and more from Scratch projects! Uses cloud variables to transmit data.*
+
+**[Cloud Requests are documented on this page:](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)**
 
 [https://github.com/TimMcCool/scratchattach/blob/main/CLOUD_REQUESTS.md](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)
 
 If you want to access external information in Scratch projects or store data on an external database, scratchattach's Cloud Requests are ideal for your project:
 - Similar to cloud events, but send back data to the project
 - Automatically encode / decode sent data
-- Request and response data automatically split to multiple cloud variables if too long to fit into one cloud variable
-- Tons of extra features.
+- Tons of extra features
 
 # Users  `scratch3.User`
 
@@ -421,9 +438,7 @@ scratch3.search_projects(query="query", mode="trending", language="en", limit=40
 
 scratch3.search_studios(query="query", mode="trending", language="en", limit=40, offset=0)
 
-scratch3.search_comments(query="query") #This will return matching profile comments from all across Scratch. It is based on ScratchData
-
-session.search_posts(query="query", order="newest", page=0) #Searches forum posts. Returns a list of scratch3.ForumPost objects. New in v0.5.5
+session.search_posts(query="query", order="newest", page=0) #Searches forum posts. Returns a list of scratch3.ForumPost objects
 scratch3.search_posts(query="query", order="newest", page=0) #Doesn't require logging in
 ```
 
@@ -496,7 +511,7 @@ topic.update()  #Updates the above data
 
 **Functions:**
 ```python
-topic.posts(page=0, order="oldest") #Returns the topic posts as list of scratch3.ForumPost objects. Possible parameters for "order" are "oldest" and "newest".
+topic.posts(page=0, order="oldest") #Returns the topic posts as list of scratch3.ForumPost objects. Possible parameters for "order" are "oldest" and "newest"
 topic.first_post() #Returns the first topic post as scratch3.ForumPost object
 topic.follow()
 topic.unfollow()
@@ -586,14 +601,9 @@ This section explains how to get your Scratch session id from your browser cooki
 
 # Contributors
 
--   Almost all code by TimMcCool
-    (https://scratch.mit.edu/users/TimMcCool/)
--   Siddhesh (creator of scratchconnect) for some help and the profile
-    comments API
--   DatOneLefty for ScratchDB which is used to fetch stats and ranks
--   Lynx for ScratchData (https://sd.sly-little-fox.ru/api/v1/search?q=)
-
-Source code available on GitHub
+- Allmost all code by TimMcCool.
+- See the GitHub repository for full list of contributors.
+- Create a pull request to contribute code yourself.
 
 # Support
 
