@@ -296,6 +296,7 @@ project.id  #Returns the project id
 project.url  #Returns the project url
 project.author  #Returns the username of the author
 project.comments_allowed  #Returns True if comments are enabled
+project.title
 project.instructions
 project.notes  #Returns the 'Notes and Credits' section
 project.created  #Returns the date of the project creation
