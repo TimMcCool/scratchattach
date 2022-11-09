@@ -122,7 +122,7 @@ conn.disconnect()
 
 # Encoding / Decoding  `scratch3.Encoding`
 
-Scratchattach has a built in encoder. Scratch sprite to decode texts encoded with scratchattach: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
+Scratchattach has a built in encoder. (Scratch sprite to decode texts encoded with scratchattach: https://scratch3-assets.1tim.repl.co/Encoder.sprite3)
 
 ```python
 from scratchattach import Encoding
@@ -185,7 +185,7 @@ events.stop()
 
 # Cloud Requests  `scratch3.CloudRequests`
 
-Cloud Requests Framework (inspired by discord.py) that allows Scratch projects and Python to interact
+Cloud Requests Framework (inspired by discord.py) allows Scratch projects and Python to interact.
 
 *This makes it possible to access data like message counts, user stats and more from Scratch projects! Uses cloud variables to transmit data.*
 
