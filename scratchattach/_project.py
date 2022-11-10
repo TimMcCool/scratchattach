@@ -196,9 +196,9 @@ class Project(PartialProject):
                 f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/?limit={min(40, limit-len(comments))}&offset={offset}"
             ).json()
             comments = comments + r
-            if len(r) != 40:
+            if len(r) != limit:
                 break
-            offset += 40
+            offset += limit
         return comments
 
     def get_comment_replies(self, *, comment_id, limit=40, offset=0):
@@ -208,9 +208,9 @@ class Project(PartialProject):
                 f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}/replies?limit={min(40, limit-len(comments))}&offset={offset}"
             ).json()
             comments = comments + r
-            if len(r) != 40:
+            if len(r) != limit:
                 break
-            offset += 40
+            offset += limit
         return comments
 
     def love(self):
