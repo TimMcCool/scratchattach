@@ -233,7 +233,7 @@ user.update() #Updates the above data
 user.message_count()
 user.featured_data() #Returns info on the user's featured project as dict
 
-user.follower_count()
+user.follower_count() #Returns the user's exact follower count
 user.following_count()
 user.project_count()
 user.favorites_count() #Returns the amount of projects the user has favorited
