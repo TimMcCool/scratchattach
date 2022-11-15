@@ -233,7 +233,7 @@ user.update() #Updates the above data
 user.message_count()
 user.featured_data() #Returns info on the user's featured project as dict
 
-user.follower_count() #Returns the user's exact follower count
+user.follower_count()
 user.following_count()
 user.project_count()
 user.favorites_count() #Returns the amount of projects the user has favorited
@@ -296,7 +296,6 @@ project.id  #Returns the project id
 project.url  #Returns the project url
 project.author  #Returns the username of the author
 project.comments_allowed  #Returns True if comments are enabled
-project.title
 project.instructions
 project.notes  #Returns the 'Notes and Credits' section
 project.created  #Returns the date of the project creation
@@ -347,7 +346,7 @@ project.toggle_commenting()
 project.remixes(limit=None, offset=0) #Returns the remixes as list of scratch3.Project
 project.studios(limit=None, offset=0) #Returns the studios the project is in as list of dicts
 
-project.download(filename="project_name.sb3", dir="") #Downloads the project to your computer. The downloaded file will only work in the online editor.
+project.download(filename="project_name.sb3", dir="") #Downloads the project to your computer. The downloaded file will only work in the online editor
 project.get_raw_json() #Returns the json of the project content as dict
 project.get_creator_agent() #Returns the user-agent of the user who created the project (with information about their browser and OS)
 ```
@@ -359,10 +358,6 @@ When connecting / getting a project that you can't access, a `PartialProject` ob
 **Most attributes and most functions don't work for such projects. However, these still work:**
 ```python
 project.remixes(limit=None, offset=0)
-
-project.download(filename="project_name.sb3", dir="/")
-project.get_raw_json()
-project.get_creator_agent()
 ```
 
 # Studios  `scratch3.Studio`

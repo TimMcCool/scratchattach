@@ -1,4 +1,5 @@
 Cloud Requests Framework (inspired by discord.py)
+Allow Scratch projects and Python to interact
 
 # Basic usage
 
