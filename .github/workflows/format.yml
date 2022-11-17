@@ -24,3 +24,12 @@ jobs:
         run: |
           python3 -m black .
           python3 -m isort .
+
+      - if: steps.changes.outputs.scratchattach == 'true'
+        name: 'Push formatted code'
+        run: |
+          git config --global user.name 'TimMcCool'
+          git config --global user.email 'TimMcCool@users.noreply.github.com'
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git commit -am "Code format"
+          git push
