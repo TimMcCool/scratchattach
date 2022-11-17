@@ -1,27 +1,28 @@
-name: auto-format
-on: [push, pull_request]
+
+
+name: Run tests
+
+on: [push]
+
 jobs:
-  format:
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+    steps: 
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: changes
         with:
-          ref: ${{ github.ref_name }}
+          filters: |
+            scratchattach:
+              - 'scratchattach/**'
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      
       - if: steps.changes.outputs.scratchattach == 'true'
-      - name: Install dependencies
+        name: did anything change
         run: |
-          pip install -U pip
-          pip install black isort
-      - if: steps.changes.outputs.scratchattach == 'true'
-      - name: Format codebase
-        run: |
-          python3 -m black .
-          python3 -m isort .
-      - if: steps.changes.outputs.scratchattach == 'true'
-      - name: Push changes back
-        run: |
-          git config --global user.name 'YOUR USERNAME'
-          git config --global user.email 'YOUR USERNAME@users.noreply.github.com'
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git commit -am "Format codebase"
-          git push
+          echo things have changed
