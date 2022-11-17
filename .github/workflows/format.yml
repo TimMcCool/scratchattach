@@ -1,15 +1,10 @@
+name: Run formatting
 
-
-name: Run tests
-
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9", "3.10"]
     steps: 
       - uses: actions/checkout@v3
       - uses: dorny/paths-filter@v2
@@ -18,11 +13,14 @@ jobs:
           filters: |
             scratchattach:
               - 'scratchattach/**'
-      - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
       
       - if: steps.changes.outputs.scratchattach == 'true'
-        name: did anything change
+        name: Install requirements
         run: |
-          echo things have changed
+          python3 -m pip install black isort
+          
+      - if: steps.changes.outputs.scratchattach == 'true'
+        name: Do formatting
+        run: |
+          python3 -m black .
+          python3 -m isort .
