@@ -294,6 +294,7 @@ project = scratch3.get_project("project_id")
 ```python
 project.id  #Returns the project id
 project.url  #Returns the project url
+project.title #Returns the project title
 project.author  #Returns the username of the author
 project.comments_allowed  #Returns True if comments are enabled
 project.instructions
