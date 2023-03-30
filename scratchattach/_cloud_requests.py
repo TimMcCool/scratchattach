@@ -132,13 +132,19 @@ class CloudRequests:
                 else:
                     iteration_string = "00"+str(i)
 
-                self.connection.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", f"{response_part}.{request_id}{iteration_string}1")
+                try:
+                    self.connection.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", f"{response_part}.{request_id}{iteration_string}1")
+                except Exception:
+                    self.call_event("on_disconnect")
                 self.current_var += 1
                 if self.current_var == len(self.used_cloud_vars):
                     self.current_var = 0
                 time.sleep(0.1)
             else:
-                self.connection.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", f"{remaining_response}.{request_id}{validation}")
+                try:
+                    self.connection.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", f"{remaining_response}.{request_id}{validation}")
+                except Exception:
+                    self.call_event("on_disconnect")
                 self.current_var += 1
                 if self.current_var == len(self.used_cloud_vars):
                     self.current_var = 0
@@ -209,19 +215,27 @@ class CloudRequests:
 
         if data_from_websocket or self.respond_in_thread:
             self.cloud_events = events
+
             @self.cloud_events.event
             def on_set(event):
                 if event.name == "TO_HOST":
                     self.ws_data.insert(0, {"user":event.user,"value":event.value,"timestamp":event.timestamp})
                 self.ws_data = self.ws_data[:100]
 
+            @self.cloud_events.event
+            def on_disconnect():
+                self.call_event("on_disconnect")
+
             self.cloud_events.start(update_interval=0)
         else:
             self.cloud_events = None
 
 
-        self.connection._connect(cloud_host=self.connection.cloud_host)
-        self.connection._handshake()
+        try:
+            self.connection._connect(cloud_host=self.connection.cloud_host)
+            self.connection._handshake()
+        except Exception:
+            self.call_event("on_disconnect")
         self.idle_since = time.time()
         if data_from_websocket:
             self.last_data = []

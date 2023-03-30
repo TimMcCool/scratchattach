@@ -106,8 +106,11 @@ class CloudConnection(_CloudMixin):
             try:
                 self._handshake()
             except Exception:
-                self._connect(cloud_host=self.cloud_host)
-                self._handshake()
+                try:
+                    self._connect(cloud_host=self.cloud_host)
+                    self._handshake()
+                except Exception as e:
+                    raise _exceptions.ConnectionError("Connection lost while setting cloud variable.", str(e))
 
             time.sleep(0.1)
             self.set_var(variable, value)
@@ -179,8 +182,11 @@ class TwCloudConnection(_CloudMixin):
                 time.sleep(0.1)
                 self.set_var(variable, value)
             except Exception:
-                self._connect(cloud_host=None)
-                self._handshake()
+                try:
+                    self._connect(cloud_host=None)
+                    self._handshake()
+                except Exception as e:
+                    raise _exceptions.ConnectionError("Connection lost while setting cloud variable.", str(e))
 
             time.sleep(0.1)
             self.set_var(variable, value)
@@ -269,9 +275,13 @@ class TwCloudEvents(CloudEvents):
                     if "on_"+activity["method"] in self._events:
                         self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=time.time()*10000))
             except Exception:
-                self.connection._connect(cloud_host=self.connection.cloud_host)
-                self.connection._handshake()
-
+                try:
+                    self.connection._connect(cloud_host=self.connection.cloud_host)
+                    self.connection._handshake()
+                except Exception:
+                    if "on_disconnect" in self._events:
+                        self._events["on_disconnect"]()
+                        
 class WsCloudEvents(CloudEvents):
 
     def __init__(self, project_id, connection):
@@ -295,8 +305,12 @@ class WsCloudEvents(CloudEvents):
                     if "on_"+activity["method"] in self._events:
                         self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=time.time()*10000))
             except Exception:
-                self.connection._connect(cloud_host=self.connection.cloud_host)
-                self.connection._handshake()
+                try:
+                    self.connection._connect(cloud_host=self.connection.cloud_host)
+                    self.connection._handshake()
+                except Exception:
+                    if "on_disconnect" in self._events:
+                        self._events["on_disconnect"]()
 # -----
 
 def get_cloud(project_id):
