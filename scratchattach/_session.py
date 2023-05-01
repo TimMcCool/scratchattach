@@ -2,6 +2,7 @@
 
 import json
 import re
+import warnings
 import requests
 
 from . import _user
@@ -71,13 +72,13 @@ class Session():
             self._username = response["user"]["username"]
             self.banned = response["user"]["banned"]
             if self.banned:
-                print("Warning: The account you logged in to is BANNED. Some features may not work properly.")
+                warnings.warn("The account you logged in to is BANNED. Some features may not work properly.")
 
         except Exception:
             if self._username is None:
-                print("Warning: Logged in, but couldn't fetch XToken.\nSome features (including cloud variables) will not work properly. To get cloud variables to work, provide a username argument: Session('session_id', username='username')\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
+                warnings.warn("Warning: Logged in, but couldn't fetch XToken.\nSome features (including cloud variables) will not work properly. To get cloud variables to work, provide a username argument: Session('session_id', username='username')\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
             else:
-                print("Warning: Logged in, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
+                warnings.warn("Warning: Logged in, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
             self.xtoken = ""
 
     def get_linked_user(self):
@@ -406,7 +407,7 @@ def explore_studios(*, query="", mode="trending", language="en", limit=40, offse
     return requests.get(f"https://api.scratch.mit.edu/explore/studios?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
 
 def search_comments(*, query=""):
-    print("WARNING: scratchattach.Session.search_comments does not work anymore")
+    warnings.warn("scratchattach.Session.search_comments does not work anymore", DeprecationWarning)
     return {}
     #return requests.get(f"https://sd.sly-little-fox.ru/api/v1/search?q={query}").json()
 

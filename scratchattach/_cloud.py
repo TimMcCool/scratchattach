@@ -81,12 +81,12 @@ class CloudConnection(_CloudMixin):
         variable = variable.replace("☁ ", "")
         value = str(value)
         if len(value) > 256:
-            print("invalid cloud var (too long):", value)
+            print("Invalid cloud var (too long):", value)
             raise(_exceptions.InvalidCloudValue)
         x = value.replace(".", "")
         x = x.replace("-", "")
         if not x.isnumeric():
-            print("invalid cloud var (not numeric):", value)
+            print("Invalid cloud var (not numeric):", value)
             raise(_exceptions.InvalidCloudValue)
         while self._ratelimited_until + 0.1 >= time.time():
             pass
