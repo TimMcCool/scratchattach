@@ -586,14 +586,6 @@ session.backpack(limit=20, offset=0) #Returns the contents of your backpack as d
 session.delete_from_backpack("asset id") #Deletes an asset from your backpack
 ```
 
-# Get your session id
-
-This section explains how to get your Scratch session id from your browser cookies.
-
-1. Open scratch.mit.edu in your browser
-2. Click the 🔒 icon in the URL bar, then click "Cookies"
-3. Then find a cookie called `scratchsessionid` (in the "scratch.mit.edu" » "Cookies" folder). The content of this cookie is your Scratch session id
-
 ![](https://scratch3-assets.1tim.repl.co/template/cookies.png)
 
 # Contributors
