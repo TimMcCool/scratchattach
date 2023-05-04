@@ -43,7 +43,7 @@ session = scratch3.login("username", "password")
 `login()` returns a `Session` object that saves your login
 
 **Logging in with a sessionId:**
-*You can get your session id from your browser's cookies. [More information](https://github.com/TimMcCool/scratchattach/#get-your-session-id)*
+*You can get your session id from your browser's cookies. [More information](https://github.com/TimMcCool/scratchattach/wiki/Get-your-session-id)*
 
 ```python
 import scratchattach as scratch3
