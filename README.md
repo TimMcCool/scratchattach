@@ -586,8 +586,6 @@ session.backpack(limit=20, offset=0) #Returns the contents of your backpack as d
 session.delete_from_backpack("asset id") #Deletes an asset from your backpack
 ```
 
-![](https://scratch3-assets.1tim.repl.co/template/cookies.png)
-
 # Contributors
 
 - Allmost all code by TimMcCool.
