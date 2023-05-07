@@ -14,22 +14,10 @@ class CloudRequests:
             self.__dict__.update(entries)
             self.id = self.request_id
 
-    def __init__(self, cloud_connection : _cloud.CloudConnection, *, used_cloud_vars = ["1","2","3","4","5","6","7","8","9"], ignore_exceptions=True, force_reconnect=True, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=245):
-        print("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m")
-        if _log_url != "https://clouddata.scratch.mit.edu/logs":
-            print("Warning: Log URL isn't the URL of Scratch's clouddata logs. Don't use the _log_url parameter unless you know what you are doing.")
-        if _packet_length > 245:
-            print("Warning: The packet length was set to a value higher than default (245). Your project most likely won't work on Scratch.")
-        self.used_cloud_vars = used_cloud_vars
-        self.connection = cloud_connection
-        self.project_id = cloud_connection.project_id
-
-        self.ignore_exceptions = ignore_exceptions
-        self.log_url = _log_url
-        self.packet_length = _packet_length
-
+    def init_attributes(self):
         self.last_requester = None
         self.last_timestamp = 0
+        self.last_request_id = None
 
         self.requests = {}
         self.events = []
@@ -39,6 +27,23 @@ class CloudRequests:
         self.respond_in_thread= False
         self.current_var = 0
         self.idle_since = 0
+
+    def __init__(self, cloud_connection : _cloud.CloudConnection, *, used_cloud_vars = ["1","2","3","4","5","6","7","8","9"], ignore_exceptions=True, force_reconnect=True, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=245):
+        print("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m")
+        if _log_url != "https://clouddata.scratch.mit.edu/logs":
+            print("Warning: Log URL isn't the URL of Scratch's clouddata logs. Don't use the _log_url parameter unless you know what you are doing.")
+        if _packet_length > 245:
+            print("Warning: The packet length was set to a value higher than default (245). Your project most likely won't work on Scratch.")
+
+        self.used_cloud_vars = used_cloud_vars
+        self.connection = cloud_connection
+        self.project_id = cloud_connection.project_id
+
+        self.ignore_exceptions = ignore_exceptions
+        self.log_url = _log_url
+        self.packet_length = _packet_length
+
+        self.init_attributes()
 
     def request(self, function=None, *, enabled=True, name=None, thread=False):
         def inner(function):
@@ -103,6 +108,12 @@ class CloudRequests:
 
     def get_requester(self):
 
+        if self.last_requester is None:
+            logs = _cloud.get_cloud_logs(self.project_id, filter_by_var_named="TO_HOST")
+            activity = list(filter(lambda x : "."+self.last_request_id in x["value"], logs))
+            if len(activity) > 0:
+                self.last_requester = activity[0]["user"]
+
         return self.last_requester
 
     def get_timestamp(self):
@@ -154,7 +165,7 @@ class CloudRequests:
 
         self.idle_since = time.time()
 
-    def run(self, thread=False, data_from_websocket=False):
+    def run(self, thread=False, data_from_websocket=True):
         if data_from_websocket is True:
             events = _cloud.WsCloudEvents(self.project_id, _cloud.CloudConnection(project_id = self.project_id, username = self.connection._username, session_id=self.connection._session_id))
         else:
@@ -306,6 +317,7 @@ class CloudRequests:
                             continue
                         else:
                             req_obj = self.requests[request]
+                            self.last_request_id = request_id
                             if req_obj["thread"]:
                                 Thread(target=self.call_request, args=(request_id, req_obj, arguments)).start()
                             else:
@@ -333,18 +345,7 @@ class TwCloudRequests(CloudRequests):
         self.ignore_exceptions = ignore_exceptions
         self.packet_length = _packet_length
 
-        self.last_requester = None
-        self.last_timestamp = 0
-
-        self.requests = {}
-        self.events = []
-
-        self.request_parts = {}
-        self.outputs = {}
-        self.respond_in_thread= False
-        self.current_var = 0
-        self.idle_since = 0
-
+        self.init_attributes()
 
     def get_requester(self):
         return None

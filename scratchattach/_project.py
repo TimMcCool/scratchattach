@@ -390,7 +390,7 @@ class Project(PartialProject):
             return
         data = {
             "commentee_id": commentee_id,
-            "content": content,
+            "content": str(content),
             "parent_id": parent_id,
         }
         headers = self._json_headers

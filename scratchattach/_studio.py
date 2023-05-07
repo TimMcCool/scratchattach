@@ -102,17 +102,17 @@ class Studio:
             return
         data = {
             "commentee_id": commentee_id,
-            "content": content,
+            "content": str(content),
             "parent_id": parent_id,
         }
         headers = self._json_headers
         headers["referer"] = "https://scratch.mit.edu/projects/" + str(self.id) + "/"
-        return json.loads(requests.post(
+        return requests.post(
             f"https://api.scratch.mit.edu/proxy/comments/studio/{self.id}/",
             headers = headers,
             cookies = self._cookies,
             data=json.dumps(data),
-        ).text)
+        ).json()
 
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):

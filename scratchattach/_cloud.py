@@ -6,6 +6,7 @@ import requests
 from threading import Thread
 import time
 from . import _exceptions
+import traceback
 
 class _CloudMixin:
 
@@ -229,7 +230,14 @@ class CloudEvents:
                         if activity in self.data:
                             break
                         if "on_"+activity["verb"][:-4] in self._events:
-                            self._events["on_"+activity["verb"][:-4]](self.Event(user=activity["user"], var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=activity["timestamp"]))
+                            try:
+                                self._events["on_"+activity["verb"][:-4]](self.Event(user=activity["user"], var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=activity["timestamp"]))
+                            except Exception as e:
+                                print("Caught error in cloud event - Full error below")
+                                try:
+                                    traceback.print_exc()
+                                except Exception:
+                                    print(e)
                 self.data = data
             else:
                 return
@@ -281,7 +289,7 @@ class TwCloudEvents(CloudEvents):
                 except Exception:
                     if "on_disconnect" in self._events:
                         self._events["on_disconnect"]()
-                        
+
 class WsCloudEvents(CloudEvents):
 
     def __init__(self, project_id, connection):

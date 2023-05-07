@@ -147,6 +147,9 @@ class User:
                 print("Failed to parse ", follower)
         return followers
 
+    def follower_names(self, *, limit=40, offset=0):
+        return [i.name for i in self.followers(limit=limit, offset=offset)]
+
     def following(self, *, limit=40, offset=0):
         if limit>40:
             limit=40
@@ -168,6 +171,9 @@ class User:
             except Exception:
                 print("Failed to parse ", follower)
         return followers
+
+    def following_names(self, *, limit=40, offset=0):
+        return [i.name for i in self.following(limit=limit, offset=offset)]
 
     '''def get_comments(self, *, page=1):
         response = requests.get(f"https://scratch.mit.edu/site-api/comments/user/{self.z}/?page=1")'''
@@ -430,16 +436,19 @@ class User:
 
     def post_comment(self, content, *, parent_id="", commentee_id=""):
         data = {
-            "commentee_id": commentee_id,
-            "content": content,
-            "parent_id": parent_id,
+        "commentee_id": commentee_id,
+        "content": str(content),
+        "parent_id": parent_id,
         }
-        return requests.post(
+        r = requests.post(
             f"https://scratch.mit.edu/site-api/comments/user/{self.username}/add/",
             headers = headers,
             cookies = self._cookies,
             data=json.dumps(data),
         )
+        if r.status_code != 200:
+            raise _exceptions.CommentPostFailure(r.text)
+        return r.text
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         return self.post_comment(content, parent_id=parent_id, commentee_id=commentee_id)
