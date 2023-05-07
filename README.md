@@ -240,6 +240,9 @@ user.favorites_count() #Returns the amount of projects the user has favorited
 user.studio_count() #Returns the amount of studios the user is curating
 user.studio_following_count()
 
+user.follower_names(limit=40, offset=0) #Returns the followers as list of usernames (strings). New in v1.1.5
+user.following_names(limit=40, offset=0) #Returns the people the user is following as a list of usernames (strings). New in v1.1.5
+
 user.followers(limit=40, offset=0) #Returns the followers as list of scratch3.User objects
 user.following(limit=40, offset=0) #Returns the people the user is following as list of scratch3.User objects
 user.projects(limit=None, offset=0) #Returns the projects the user has shared as list of scratch3.Project objects
