@@ -1,5 +1,4 @@
-Cloud Requests Framework (inspired by discord.py)
-Allow Scratch projects and Python to interact
+Cloud Requests Framework (inspired by discord.py) that allows Scratch projects and Python to interact
 
 # Basic usage
 
@@ -11,7 +10,7 @@ Then, go to the Scratch website, create a new project and upload the project fil
 
 **How to use with Scratch:**
 
-Copy this code to your Python editor. [How to get your session id](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests#get-your-session-id)
+Copy this code to your Python editor. [How to get your session id](https://github.com/TimMcCool/scratchattach/wiki/Get-your-session-id)
 
 ```py
 import scratchattach as scratch3
@@ -50,7 +49,7 @@ Try it out by clicking the block!
 ```python
 import scratchattach as scratch3
 
-conn = scratch3.TwCloudConnection("project_id") #replace with your project id
+conn = scratch3.TwCloudConnection(project_id="project_id") #replace with your project id
 client = scratch3.TwCloudRequests(conn)
 
 ...
@@ -119,25 +118,18 @@ client.get_timestamp() #Returns the timestamp when the request was sent (in mill
 
 **Run cloud requests in a thread:** (new in v0.9.4)
 
-By default, this is not enabled. How to enable:
+By default, this is disabled. How to enable:
 ```py
 client.run(thread=True)
 ```
-
 If enabled, you can put code below the client.run function.
 
 **Method used to get the cloud variables:** (new in v0.8.4)
 
-By default, the cloud variables will be fetched from the cloud logs:
+By default, the cloud variables will be fetched from the websocket. You can also get the cloud data directly from the websocket (deprecated):
 ```py
 client.run(data_from_websocket=False)
 ```
-
-You can also get the cloud data directly from the websocket:
-```py
-client.run(data_from_websocket=True)
-```
-This will make the response time of your Python code slighty faster, but you will no longer be able to use the `client.get_requester()` function (it will return `None`).
 
 **Change what "FROM_HOST_" cloud vars are used:** (new in v0.9.1)
 ```py
@@ -173,7 +165,8 @@ Above requests, you put the decorator `@client.request`.
 You can use this decorator to customize your requests!
 
 *Run request in thread*
-Put this decorator above a request to run it in a thread (this makes it possible to run multiple request simultaneously):
+
+Put this decorator above a request to run it in a thread (makes it possible to run multiple request simultaneously):
 ```py
 @client.request(thread=True)
 ```
@@ -246,13 +239,3 @@ def on_error(request, e):
 def on_disabled_request(request):
     print("Received disabled request", request.name, request.requester, request.arguments, request.timestamp, request.id)
 ```
-
-# Get your session id
-
-This section explains how to get your Scratch session id from your browser cookies.
-
-1. Open scratch.mit.edu in your browser
-2. Click the 🔒 icon in the URL bar, then click "Cookies"
-3. Then find a cookie called `scratchsessionid` (in the "scratch.mit.edu" » "Cookies" folder). The content of this cookie is your Scratch session id
-
-![](https://scratch3-assets.1tim.repl.co/template/cookies.png)
