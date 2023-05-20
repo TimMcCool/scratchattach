@@ -1,5 +1,4 @@
 #----- Cloud interactions
-from numpy import var
 import websocket
 import json
 import requests
