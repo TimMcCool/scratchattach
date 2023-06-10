@@ -116,6 +116,13 @@ client.get_requester() #Returns the name of the user who sent the request
 client.get_timestamp() #Returns the timestamp when the request was sent (in milliseconds since 1970)
 ```
 
+**no_packet_loss mode:** (new in v1.1.8)
+
+Enabled by default. When enabled, the request handler will reconnect to the cloud websocket after every single request to make sure there is no packet loss. This however causes the request handler to respond slower. How to disable:
+```py
+client.run(no_packet_loss=False)
+```
+
 **Run cloud requests in a thread:** (new in v0.9.4)
 
 By default, this is disabled. How to enable:
@@ -123,13 +130,6 @@ By default, this is disabled. How to enable:
 client.run(thread=True)
 ```
 If enabled, you can put code below the client.run function.
-
-**Method used to get the cloud variables:** (new in v0.8.4)
-
-By default, the cloud variables will be fetched from the websocket. You can also get the cloud data directly from the websocket (deprecated):
-```py
-client.run(data_from_websocket=False)
-```
 
 **Change what "FROM_HOST_" cloud vars are used:** (new in v0.9.1)
 ```py
