@@ -6,6 +6,7 @@ import math
 from threading import Thread
 import json
 import traceback
+import warnings
 
 class CloudRequests:
 
@@ -31,9 +32,9 @@ class CloudRequests:
     def __init__(self, cloud_connection : _cloud.CloudConnection, *, used_cloud_vars = ["1","2","3","4","5","6","7","8","9"], ignore_exceptions=True, force_reconnect=True, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=245):
         print("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m")
         if _log_url != "https://clouddata.scratch.mit.edu/logs":
-            print("Warning: Log URL isn't the URL of Scratch's clouddata logs. Don't use the _log_url parameter unless you know what you are doing.")
+            warnings.warn("Log URL isn't the URL of Scratch's clouddata logs. Don't use the _log_url parameter unless you know what you are doing", RuntimeWarning)
         if _packet_length > 245:
-            print("Warning: The packet length was set to a value higher than default (245). Your project most likely won't work on Scratch.")
+            warnings.warn("The packet length was set to a value higher than default (245). Your project most likely won't work on Scratch.", RuntimeWarning)
 
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
@@ -49,7 +50,7 @@ class CloudRequests:
         def inner(function):
             if thread:
                 self.respond_in_thread = True
-                print("Warning: Running individual requests in threads increases CPU usage")
+                warnings.warn("Running individual requests in threads increases CPU usage", RuntimeWarning)
             self.requests[function.__name__ if name is None else name] = {"name":function.__name__ if name is None else name,"enabled":enabled,"on_call":function,"thread":thread}
         if function is None:
             return inner
@@ -71,13 +72,13 @@ class CloudRequests:
         except Exception as e:
             self.call_event("on_error", [self.Request(name=request,request=request,requester=self.last_requester,timestamp=self.last_timestamp,arguments=arguments,request_id=request_id), e])
             if self.ignore_exceptions:
-                print(f"Caught error in request '{request}' - Full error below")
+                print(f"Warning: Caught error in request '{request}' - Full error below")
                 try:
                     traceback.print_exc()
                 except Exception:
                     print(e)
             else:
-                print(f"Exception in request '{request}':")
+                print(f"Warning: Exception in request '{request}':")
                 raise(e)
             if req_obj["thread"]:
                 self.outputs[request_id] = {"output":f"Error: Check the Python console", "request":req_obj}
@@ -264,7 +265,7 @@ class CloudRequests:
         self.call_event("on_ready")
 
         if self.requests == []:
-            print("Warning: You haven't added any requests!")
+            warnings.warn("You haven't added any requests!", RuntimeWarning)
 
         while True:
 
@@ -275,7 +276,7 @@ class CloudRequests:
                 self.ws_data = data
             if self.ws_data == []:
                 continue
-            data.reverse()
+            data = reversed(data)
             if self.last_data == data:
                 pass
             else:
@@ -312,7 +313,7 @@ class CloudRequests:
                         output = ""
 
                         if request not in self.requests:
-                            print(f"Warning: Client received an unknown request called '{request}'")
+                            warnings.warn(f"Warning: Client received an unknown request called '{request}'")
                             self.call_event("on_unknown_request", [self.Request(name=request,request=request,requester=self.last_requester,timestamp=self.last_timestamp,arguments=arguments,request_id=request_id)])
                             continue
                         else:
@@ -337,7 +338,7 @@ class TwCloudRequests(CloudRequests):
     def __init__(self, cloud_connection, *, used_cloud_vars = ["1","2","3","4","5","6","7","8","9"], ignore_exceptions=True, force_reconnect=True, _packet_length=98800):
         print("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m")
         if _packet_length > 98800:
-            print("Warning: The packet length was set to a value higher than TurboWarp's default (98800).")
+            warnings.warn("The packet length was set to a value higher than TurboWarp's default (98800).", RuntimeWarning)
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id

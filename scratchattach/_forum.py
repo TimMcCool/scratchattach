@@ -165,7 +165,7 @@ def get_topic(topic_id):
         return None
 
 def get_topic_list(category_name, *, page=0, include_deleted=False):
-    category_name.replace(" ", "%20")
+    category_name = category_name.replace(" ", "%20")
     if include_deleted:
         filter = 0
     else:

@@ -194,6 +194,7 @@ class Project(PartialProject):
                 f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/?limit={min(40, limit-len(comments))}&offset={offset}"
             ).json()
             if len(r) != 40:
+                comments = comments + r
                 break
             offset += 40
             comments = comments + r
@@ -206,6 +207,7 @@ class Project(PartialProject):
                 f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}/replies?limit={min(40, limit-len(comments))}&offset={offset}"
             ).json()
             if len(r) != 40:
+                comments = comments + r
                 break
             offset += 40
             comments = comments + r

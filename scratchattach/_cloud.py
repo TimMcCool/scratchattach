@@ -6,6 +6,7 @@ from threading import Thread
 import time
 from . import _exceptions
 import traceback
+import warnings
 
 class _CloudMixin:
 
@@ -79,15 +80,16 @@ class CloudConnection(_CloudMixin):
 
     def set_var(self, variable, value):
         variable = variable.replace("☁ ", "")
-        value = str(value)
-        if len(value) > 256:
-            print("invalid cloud var (too long):", value)
-            raise(_exceptions.InvalidCloudValue)
-        x = value.replace(".", "")
-        x = x.replace("-", "")
-        if not x.isnumeric():
-            print("invalid cloud var (not numeric):", value)
-            raise(_exceptions.InvalidCloudValue)
+        if not (value is True or value is False or value in [float('inf'), -float('inf')]):
+            value = str(value)
+            if len(value) > 256:
+                warnings.warn("invalid cloud var (too long): "+str(value), Warning)
+                raise(_exceptions.InvalidCloudValue)
+            x = value.replace(".", "")
+            x = x.replace("-", "")
+            if not x.isnumeric():
+                warnings.warn("invalid cloud var (not numeric): "+str(value), Warning)
+                raise(_exceptions.InvalidCloudValue)
         while self._ratelimited_until + 0.1 >= time.time():
             pass
         try:
@@ -155,12 +157,13 @@ class TwCloudConnection(_CloudMixin):
 
     def set_var(self, variable, value):
         variable = variable.replace("☁ ", "")
-        value = str(value)
-        x = value.replace(".", "")
-        x = x.replace("-", "")
-        if not x.isnumeric():
-            if self.allow_non_numeric is False:
-                raise(_exceptions.InvalidCloudValue)
+        if not (value is True or value is False or value in [float('inf'), -float('inf')]):
+            value = str(value)
+            x = value.replace(".", "")
+            x = x.replace("-", "")
+            if not x.isnumeric():
+                if self.allow_non_numeric is False:
+                    raise(_exceptions.InvalidCloudValue)
 
         while self._ratelimited_until + 0.1 > time.time():
             pass
@@ -232,7 +235,7 @@ class CloudEvents:
                             try:
                                 self._events["on_"+activity["verb"][:-4]](self.Event(user=activity["user"], var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=activity["timestamp"]))
                             except Exception as e:
-                                print("Caught error in cloud event - Full error below")
+                                print("Warning: Caught error in cloud event - Full error below")
                                 try:
                                     traceback.print_exc()
                                 except Exception:

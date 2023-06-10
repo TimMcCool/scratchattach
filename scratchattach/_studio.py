@@ -78,6 +78,7 @@ class Studio:
                 f"https://api.scratch.mit.edu/studios/{self.id}/comments/?limit={min(40, limit-len(comments))}&offset={offset}"
             ).json()
             if len(r) != 40:
+                comments = comments + r
                 break
             offset += 40
             comments = comments + r
@@ -90,6 +91,7 @@ class Studio:
                 f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}/replies?limit={min(40, limit-len(comments))}&offset={offset}"
             ).json()
             if len(r) != 40:
+                comments = comments + r
                 break
             offset += 40
             comments = comments + r
