@@ -137,7 +137,7 @@ Encoding.decode("encoded") #will decode an encoded text
 sets / creates / deletes a cloud var on the given project, an
 event will be called.*
 
-They do not require a session.
+They do not require a session because they use the clouddata logs to receive cloud updates.
 
 **How to use with Scratch:**
 
@@ -171,6 +171,18 @@ events.start()
 import scratchattach as scratch3
 
 events = scratch3.TwCloudEvents("project_id")
+
+...
+```
+
+**Cloud events that use a `scratch3.CloudConnection` object to receive cloud updates:
+
+```python
+import scratchattach as scratch3
+
+session = scratch3.Session("session_id", username="username") #Replace with your data
+conn = session.connect_cloud("project_id")
+events = scratch3.WsCloudEvents("project_id", conn)
 
 ...
 ```
