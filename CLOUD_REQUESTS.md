@@ -116,7 +116,7 @@ client.get_requester() #Returns the name of the user who sent the request
 client.get_timestamp() #Returns the timestamp when the request was sent (in milliseconds since 1970)
 ```
 
-**no_packet_loss mode:** (new in v1.1.8)
+**no_packet_loss mode:** (new in v1.1.9)
 
 Enabled by default. When enabled, the request handler will reconnect to the cloud websocket after every single request to make sure there is no packet loss. This however causes the request handler to respond slower. How to disable:
 ```py
