@@ -165,7 +165,7 @@ def on_ready():
 events.start()
 ```
 
-**How to use with TurboWarp:** (new in v0.4.7)
+**How to use with TurboWarp:**
 
 ```python
 import scratchattach as scratch3
@@ -175,7 +175,7 @@ events = scratch3.TwCloudEvents("project_id")
 ...
 ```
 
-**Cloud events that use a `scratch3.CloudConnection` object to receive cloud updates:
+**Cloud events that use a `scratch3.CloudConnection` object to receive cloud updates:**
 
 ```python
 import scratchattach as scratch3
