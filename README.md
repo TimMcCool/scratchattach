@@ -373,7 +373,8 @@ project.get_raw_json() #Returns the json of the project content as dict
 project.get_creator_agent() #Returns the user-agent of the user who created the project (with information about their browser and OS)
 ```
 
-# Unshared projects  `scratch3.PartialProject`
+# Unshared projects
+`scratch3.PartialProject`
 
 When connecting / getting a project that you can't access, a `PartialProject` object is returned instead.
 
