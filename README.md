@@ -210,7 +210,6 @@ If you want to access external information in Scratch projects or store data on 
 - Tons of extra features
 
 # Users 
-`scratch3.User`
 
 **Get a user:**
 ```python
@@ -533,7 +532,6 @@ topic.activity() #Returns an activity / change log for the topic
 To prevent spam, adding posts to topics is not a scratchattach feature and never will be.
 
 # Forum posts
-(New in v0.5.5)
 All of this data is fetched from ScratchDB v3, therefore it may be slighty off.
 
 **Get a forum post:**
