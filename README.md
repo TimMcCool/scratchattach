@@ -31,7 +31,6 @@ os.system("pip install -U scratchattach")
 ```
 
 # Logging in 
-`scratch3.Session`
 
 **Logging in with username / password:**
 
@@ -63,7 +62,6 @@ session.banned #Returns True if the associated account is banned
 ```
 
 # Cloud variables 
-`scratch3.CloudConnection` `scratch3.TwCloudConnection`
 
 **Connect to the Scratch cloud:**
 
@@ -122,7 +120,6 @@ conn.disconnect()
 ```
 
 # Encoding / Decoding 
-`scratch3.Encoding`
 
 Scratchattach has a built in encoder. Scratch sprite to decode texts encoded with scratchattach: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
 
@@ -134,7 +131,6 @@ Encoding.decode("encoded") #will decode an encoded text
 ```
 
 # Cloud events 
-`scratch3.CloudEvents` `scratch3.TwCloudEvents` `scratch3.WsCloudEvents`
 
 *Cloud events allow reacting to cloud events in real time. If a Scratcher
 sets / creates / deletes a cloud var on the given project, an
@@ -199,7 +195,6 @@ events.stop()
 ```
 
 # Cloud Requests
-`scratch3.CloudRequests` `scratch3.TwCloudRequests`
 
 Cloud Requests Framework (inspired by discord.py) that allows Scratch projects and Python to interact
 
@@ -299,7 +294,6 @@ user.ocular_status() #Returns information about the user's ocular status, like t
 ```
 
 # Projects
-`scratch3.Project`
 
 **Get a project:**
 ```python
@@ -374,7 +368,6 @@ project.get_creator_agent() #Returns the user-agent of the user who created the 
 ```
 
 # Unshared projects
-`scratch3.PartialProject`
 
 When connecting / getting a project that you can't access, a `PartialProject` object is returned instead.
 
@@ -384,7 +377,6 @@ project.remixes(limit=None, offset=0)
 ```
 
 # Studios 
-`scratch3.Studio`
 
 **Get a studio:**
 ```python
@@ -496,7 +488,6 @@ session.loved_by_followed_users(limit=40, offset=0) #Returns the projects loved 
 ```
 
 # Forum topics
-`scratch3.ForumTopic`
 All of this data is fetched from ScratchDB v3, therefore it may be slighty off.
 
 **Get a forum topic:**
@@ -541,7 +532,7 @@ topic.activity() #Returns an activity / change log for the topic
 
 To prevent spam, adding posts to topics is not a scratchattach feature and never will be.
 
-# Forum posts `scratch3.ForumPost`
+# Forum posts
 (New in v0.5.5)
 All of this data is fetched from ScratchDB v3, therefore it may be slighty off.
 
