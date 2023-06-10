@@ -44,7 +44,7 @@ Try it out by clicking the block!
 
 ![image](https://scratch3-assets.1tim.repl.co/pypi_docs/tutorial_result.png/)
 
-**How to use with TurboWarp:** (new in v0.8.0)
+**How to use with TurboWarp:**
 
 ```python
 import scratchattach as scratch3
@@ -108,14 +108,6 @@ def foo(argument1):
 
 # Advanced features
 
-**Get the request metadata:** (new in v0.8.4)
-
-In your requests, you can use these functions:
-```py
-client.get_requester() #Returns the name of the user who sent the request
-client.get_timestamp() #Returns the timestamp when the request was sent (in milliseconds since 1970)
-```
-
 **no_packet_loss mode:** (new in v1.1.9)
 
 Disabled by default. When enabled, the request handler will reconnect to the cloud websocket after every single request to make sure there is no packet loss. This however causes the request handler to respond slower. How to enable no_packet_loss:
@@ -123,7 +115,15 @@ Disabled by default. When enabled, the request handler will reconnect to the clo
 client.run(no_packet_loss=True)
 ```
 
-**Run cloud requests in a thread:** (new in v0.9.4)
+**Get the request metadata:**
+
+In your requests, you can use these functions:
+```py
+client.get_requester() #Returns the name of the user who sent the request
+client.get_timestamp() #Returns the timestamp when the request was sent (in milliseconds since 1970)
+```
+
+**Run cloud requests in a thread:**
 
 By default, this is disabled. How to enable:
 ```py
@@ -131,7 +131,7 @@ client.run(thread=True)
 ```
 If enabled, you can put code below the client.run function.
 
-**Change what "FROM_HOST_" cloud vars are used:** (new in v0.9.1)
+**Change what "FROM_HOST_" cloud vars are used:**
 ```py
 client = scratch3.CloudRequests(conn, used_cloud_vars=["1","2","3","4","5",...])
 ```
@@ -199,7 +199,6 @@ client.remove_request("request_name")
 ```
 
 # Advanced events
-(new in v0.9.1)
 
 Events will be called when specific things happen.
 There are more events than just `on_ready`!
