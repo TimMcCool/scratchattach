@@ -30,7 +30,8 @@ import os
 os.system("pip install -U scratchattach")
 ```
 
-# Logging in  `scratch3.Session`
+# Logging in 
+`scratch3.Session`
 
 **Logging in with username / password:**
 
@@ -61,8 +62,8 @@ session.mute_status
 session.banned #Returns True if the associated account is banned
 ```
 
-# Cloud variables  `scratch3.CloudConnection`
-*Make sure you're using the latest scratchattach version. Update scratchattach with `pip install scratchattach --upgrade`*
+# Cloud variables 
+`scratch3.CloudConnection` `scratch3.TwCloudConnection`
 
 **Connect to the Scratch cloud:**
 
@@ -120,7 +121,8 @@ value = conn.get_var("variable")
 conn.disconnect()
 ```
 
-# Encoding / Decoding  `scratch3.Encoding`
+# Encoding / Decoding 
+`scratch3.Encoding`
 
 Scratchattach has a built in encoder. Scratch sprite to decode texts encoded with scratchattach: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
 
@@ -131,7 +133,8 @@ Encoding.encode("input") #will return the encoded text
 Encoding.decode("encoded") #will decode an encoded text
 ```
 
-# Cloud events  `scratch3.CloudEvents`
+# Cloud events 
+`scratch3.CloudEvents` `scratch3.TwCloudEvents` `scratch3.WsCloudEvents`
 
 *Cloud events allow reacting to cloud events in real time. If a Scratcher
 sets / creates / deletes a cloud var on the given project, an
@@ -195,7 +198,8 @@ events.resume()
 events.stop()
 ```
 
-# Cloud Requests  `scratch3.CloudRequests`
+# Cloud Requests
+`scratch3.CloudRequests` `scratch3.TwCloudRequests`
 
 Cloud Requests Framework (inspired by discord.py) that allows Scratch projects and Python to interact
 
@@ -210,7 +214,8 @@ If you want to access external information in Scratch projects or store data on 
 - Automatically encode / decode sent data
 - Tons of extra features
 
-# Users  `scratch3.User`
+# Users 
+`scratch3.User`
 
 **Get a user:**
 ```python
@@ -293,7 +298,8 @@ user.forum_signature_history() #A change log for the user's forum history. Fetch
 user.ocular_status() #Returns information about the user's ocular status, like the status text, the color, and the time of the last update.
 ```
 
-# Projects  `scratch3.Project`
+# Projects
+`scratch3.Project`
 
 **Get a project:**
 ```python
@@ -376,8 +382,8 @@ When connecting / getting a project that you can't access, a `PartialProject` ob
 project.remixes(limit=None, offset=0)
 ```
 
-# Studios  `scratch3.Studio`
-(New in v0.5.0)
+# Studios 
+`scratch3.Studio`
 
 **Get a studio:**
 ```python
@@ -488,8 +494,8 @@ session.get_feed(limit=20, offset=0) #Returns your "What's happening" section fr
 session.loved_by_followed_users(limit=40, offset=0) #Returns the projects loved by users you are following as list
 ```
 
-# Forum topics `scratch3.ForumTopic`
-(New in v0.5.5)
+# Forum topics
+`scratch3.ForumTopic`
 All of this data is fetched from ScratchDB v3, therefore it may be slighty off.
 
 **Get a forum topic:**
@@ -610,4 +616,4 @@ session.delete_from_backpack("asset id") #Deletes an asset from your backpack
 # Support
 
 If you need help with your code, leave a comment on TimMcCool's Scratch
-profile: https://scratch.mit.edu/users/TimMcCool/
+profile (https://scratch.mit.edu/users/TimMcCool/) or open an issue on the github repo
