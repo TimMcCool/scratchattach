@@ -105,13 +105,8 @@ variables = scratch3.get_cloud("project_id") #Returns a dict with all cloud var 
 logs = scratch3.get_cloud_logs("project_id") #Returns the cloud logs as list
 ```
 
-**Get a Scratch / TurboWarp cloud var from the websocket:** (new in v0.8.0)
-
-Requires a connection to Scratch or TurboWarp's cloud (a `CloudConnection` / `TwCloudConnection` object).
-
-```python
-value = conn.get_var("variable")
-```
+**Get a Scratch / TurboWarp cloud var from the websocket:**
+This feature is not working anymore.
 
 **Close the cloud connection:**
 
