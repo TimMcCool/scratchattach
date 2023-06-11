@@ -106,7 +106,8 @@ logs = scratch3.get_cloud_logs("project_id") #Returns the cloud logs as list
 ```
 
 **Get a Scratch / TurboWarp cloud var from the websocket:**
-This feature is not working anymore.
+
+This feature is not working at the moment.
 
 **Close the cloud connection:**
 
