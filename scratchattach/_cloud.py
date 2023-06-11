@@ -76,7 +76,16 @@ class CloudConnection(_CloudMixin):
                 enable_multithread=True,
             )
         except Exception:
-            raise(_exceptions.ConnectionError)
+            try:
+                self.websocket = websocket.WebSocket()
+                self.websocket.connect(
+                    "wss://clouddata.scratch.mit.edu",
+                    cookie="scratchsessionsid=" + self._session_id + ";",
+                    origin="https://scratch.mit.edu",
+                    enable_multithread=True,
+                )
+            except Exception:
+                raise(_exceptions.ConnectionError)
 
     def set_var(self, variable, value):
         variable = variable.replace("☁ ", "")
@@ -202,12 +211,14 @@ class CloudEvents:
         def __init__(self, **entries):
             self.__dict__.update(entries)
 
-    def __init__(self, project_id):
+    def __init__(self, project_id, **entries):
         self.project_id = int(project_id)
         self.data = get_cloud_logs(project_id=self.project_id, limit = 15)
         self._thread = None
         self.running = False
         self._events = {}
+        self.cloud_log_limit = 15
+        self.__dict__.update(entries)
 
     def start(self, *, update_interval = 0.1, thread=True, daemon=False):
         if self.running is False:
@@ -226,7 +237,7 @@ class CloudEvents:
     def _update(self):
         while True:
             if self.running:
-                data = get_cloud_logs(project_id = self.project_id, limit = 15)
+                data = get_cloud_logs(project_id = self.project_id, limit = self.cloud_log_limit)
                 if data != self.data:
                     for activity in data:
                         if activity in self.data:
@@ -264,13 +275,14 @@ class CloudEvents:
 
 class TwCloudEvents(CloudEvents):
 
-    def __init__(self, project_id):
+    def __init__(self, project_id, **entries):
         cloud_connection = TwCloudConnection(project_id=project_id)
         self.data = []
         self._thread = None
         self.running = False
         self._events = {}
         self.connection = cloud_connection
+        self.__dict__.update(entries)
 
     def _update(self):
         while True:
@@ -294,12 +306,13 @@ class TwCloudEvents(CloudEvents):
 
 class WsCloudEvents(CloudEvents):
 
-    def __init__(self, project_id, connection):
+    def __init__(self, project_id, connection, **entries):
         self.data = []
         self._thread = None
         self.running = False
         self._events = {}
         self.connection = connection
+        self.__dict__.update(entries)
 
     def _update(self):
         while True:

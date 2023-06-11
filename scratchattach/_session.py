@@ -3,6 +3,7 @@
 import json
 import re
 import requests
+import warnings
 
 from . import _user
 from . import _cloud
@@ -71,13 +72,13 @@ class Session():
             self._username = response["user"]["username"]
             self.banned = response["user"]["banned"]
             if self.banned:
-                print("Warning: The account you logged in to is BANNED. Some features may not work properly.")
+                warnings.warn(f"Warning: The account {self._username} you logged in to is BANNED. Some features may not work properly.")
 
         except Exception:
             if self._username is None:
                 print("Warning: Logged in, but couldn't fetch XToken.\nSome features (including cloud variables) will not work properly. To get cloud variables to work, provide a username argument: Session('session_id', username='username')\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
             else:
-                print("Warning: Logged in, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
+                print(f"Warning: Logged in as {self._username}, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
             self.xtoken = ""
 
     def get_linked_user(self):
