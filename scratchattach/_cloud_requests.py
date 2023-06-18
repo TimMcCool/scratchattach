@@ -357,6 +357,13 @@ class CloudRequests:
 
                 try:
                     raw_request, request_id = event.value.split(".")
+
+                    if event.value[0] == "-":
+                        if not request_id in self.request_parts:
+                            self.request_parts[request_id] = []
+                        self.request_parts[request_id].append(raw_request[1:])
+                        continue
+
                     if request_id in self.responded_request_ids:
                         continue
                     else:
@@ -369,12 +376,6 @@ class CloudRequests:
 
                 self.last_requester = event.user
                 self.last_timestamp = event.timestamp
-
-                if event.value[0] == "-":
-                    if not request_id in self.request_parts:
-                        self.request_parts[request_id] = []
-                    self.request_parts[request_id].append(raw_request[1:])
-                    continue
 
                 _raw_request = ""
                 if request_id in self.request_parts:
