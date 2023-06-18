@@ -48,7 +48,7 @@ session = scratch3.login("username", "password")
 ```python
 import scratchattach as scratch3
 
-session = scratch3.Session("sessionId", username="username")
+session = scratch3.Session("sessionId", username="username") #The username field is case sensitive
 ```
 
 **Attributes:**
