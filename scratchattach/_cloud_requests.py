@@ -179,6 +179,18 @@ class CloudRequests:
 
         return self.last_timestamp
 
+    def get_exact_timestamp(self):
+
+        logs = _cloud.get_cloud_logs(self.project_id,
+                                     filter_by_var_named="TO_HOST")
+        activity = list(
+            filter(lambda x: "." + self.last_request_id in x["value"],
+                   logs))
+        if len(activity) > 0:
+            return activity[0]["timestamp"]
+        else:
+            return None
+
     def _respond(self, request_id, response, limit, *, validation=2222):
 
         if self.idle_since + 8 < time.time() or self.force_reconnect:

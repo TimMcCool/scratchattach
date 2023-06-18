@@ -17,7 +17,8 @@ class _CloudMixin:
             self.project_id = int(project_id)
         except ValueError: #non-numeric project id (possible on turbowarp's cloud server)
             self.project_id = str(project_id)
-        self._ratelimited_until = 0#deals with the 0.1 second rate limit for cloud variable sets
+        self._ratelimited_until = 0 #deals with the 0.1 second rate limit for cloud variable sets
+        self._connect_timestamp = 0 #timestamp of when the cloud connection was opened
         self.websocket = websocket.WebSocket()
         self._no_reconnect = False
         self._connect(cloud_host=cloud_host)
@@ -86,6 +87,7 @@ class CloudConnection(_CloudMixin):
                 )
             except Exception:
                 raise(_exceptions.ConnectionError)
+        self._connect_timestamp = time.time()
 
     def set_var(self, variable, value):
         variable = variable.replace("☁ ", "")
@@ -142,6 +144,7 @@ class TwCloudConnection(_CloudMixin):
             )
         except Exception:
             raise(_exceptions.ConnectionError)
+        self._connect_timestamp = time.time()
 
     def get_cloud(self, variable):
         try:
@@ -318,6 +321,8 @@ class WsCloudEvents(CloudEvents):
         while True:
             try:
                 data = self.connection.websocket.recv().split('\n')
+                if len(data) > 1 and time.time() < self.connection._connect_timestamp + 0.5:
+                    continue
                 result = []
                 for i in data:
                     try:
