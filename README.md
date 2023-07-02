@@ -143,7 +143,7 @@ events = scratch3.CloudEvents("project_id")
 
 @events.event
 def on_set(event): #Called when a cloud var is set
-    print(f"{event.user} set the variable {event.var} to the valuee {event.value} at {event.timestamp}")
+    print(f"{event.user} set the variable {event.var} to the value {event.value} at {event.timestamp}")
 
 @events.event
 def on_del(event):
