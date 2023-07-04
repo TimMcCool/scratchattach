@@ -109,7 +109,7 @@ logs = scratch3.get_cloud_logs("project_id") #Returns the cloud logs as list
 ```
 
 Get TurboWarp cloud variables:
-*Do not spam these methods, they create a new connection every time they are run.*
+*Do not spam these methods, they create a new cloud connection on every run*
 
 ```python
 value = scratch3.get_tw_var("project_id", "variable")
