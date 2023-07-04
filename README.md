@@ -30,7 +30,7 @@ import os
 os.system("pip install -U scratchattach")
 ```
 
-# Logging in 
+# Logging in
 
 **Logging in with username / password:**
 
@@ -61,7 +61,7 @@ session.mute_status
 session.banned #Returns True if the associated account is banned
 ```
 
-# Cloud variables 
+# Cloud variables
 
 **Connect to the Scratch cloud:**
 
@@ -79,9 +79,14 @@ conn = scratch3.CloudConnection(project_id = "project_id", username="username", 
 
 **Connect to the TurboWarp cloud:**
 
-Does not require a session.
-
 ```python
+conn = scratch3.connect_tw_cloud("project_id")
+```
+
+Alternative ways to do it:
+
+```py
+conn = session.connect_tw_cloud("project_id")
 conn = scratch3.TwCloudConnection(project_id = "project_id", username="username")  
 # Optional argument: cloud_host="wss://clouddata.turbowarp.org"
 # To connect to forkphorus's cloud server, use cloud_host="wss://stratus.turbowarp.org"
@@ -89,15 +94,13 @@ conn = scratch3.TwCloudConnection(project_id = "project_id", username="username"
 
 **Set a cloud var:**
 
-New Scratchers can set Scratch cloud variables too.
-
 ```python
 conn.set_var("variable", "value") #the variable name is specified without the cloud emoji
 ```
 
-**Get a Scratch cloud var from the clouddata logs:**
+**Get a cloud var:**
 
-Does not require a connection / session.
+Get Scratch cloud variables:
 
 ```python
 value = scratch3.get_var("project_id", "variable")
@@ -105,9 +108,13 @@ variables = scratch3.get_cloud("project_id") #Returns a dict with all cloud var 
 logs = scratch3.get_cloud_logs("project_id") #Returns the cloud logs as list
 ```
 
-**Get a Scratch / TurboWarp cloud var from the websocket:**
+Get TurboWarp cloud variables:
+*Do not spam these methods, they create a new connection every time they are run.*
 
-This feature is not working at the moment.
+```python
+value = scratch3.get_tw_var("project_id", "variable")
+variables = scratch3.get_tw_cloud("project_id")
+```
 
 **Close the cloud connection:**
 
@@ -115,7 +122,7 @@ This feature is not working at the moment.
 conn.disconnect()
 ```
 
-# Encoding / Decoding 
+# Encoding / Decoding
 
 Scratchattach has a built in encoder. Scratch sprite to decode texts encoded with scratchattach: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
 
@@ -126,7 +133,7 @@ Encoding.encode("input") #will return the encoded text
 Encoding.decode("encoded") #will decode an encoded text
 ```
 
-# Cloud events 
+# Cloud events
 
 *Cloud events allow reacting to cloud events in real time. If a Scratcher
 sets / creates / deletes a cloud var on the given project, an
@@ -205,7 +212,7 @@ If you want to access external information in Scratch projects or store data on 
 - Automatically encode / decode sent data
 - Tons of extra features
 
-# Users 
+# Users
 
 **Get a user:**
 ```python
@@ -371,7 +378,7 @@ When connecting / getting a project that you can't access, a `PartialProject` ob
 project.remixes(limit=None, offset=0)
 ```
 
-# Studios 
+# Studios
 
 **Get a studio:**
 ```python
