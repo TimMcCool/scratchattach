@@ -83,7 +83,7 @@ conn = scratch3.CloudConnection(project_id = "project_id", username="username", 
 conn = scratch3.connect_tw_cloud("project_id")
 ```
 
-Alternative ways to do it:
+Alternative ways to do connect to the TurboWarp cloud:
 
 ```py
 conn = session.connect_tw_cloud("project_id")
