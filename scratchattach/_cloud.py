@@ -10,7 +10,7 @@ import warnings
 
 class _CloudMixin:
 
-    def __init__(self, *, project_id, username="python", session_id=None, cloud_host=None, _allow_non_numeric=False, _no_reconnect=False):
+    def __init__(self, *, project_id, username="python", session_id=None, cloud_host=None, _allow_non_numeric=False, _ws_timeout=None):
         self._session_id = session_id
         self._username = username
         try:
@@ -19,14 +19,12 @@ class _CloudMixin:
             self.project_id = str(project_id)
         self._ratelimited_until = 0 #deals with the 0.1 second rate limit for cloud variable sets
         self._connect_timestamp = 0 #timestamp of when the cloud connection was opened
+        self._ws_timeout = _ws_timeout
         self.websocket = websocket.WebSocket()
-        self._no_reconnect = False
         self._connect(cloud_host=cloud_host)
         self._handshake()
-        self._no_reconnect = _no_reconnect
         self.cloud_host = cloud_host
         self.allow_non_numeric = _allow_non_numeric #TurboWarp only. If this is true, turbowarp cloud variables can be set to non-numeric values (if) the cloud_host wss allows it)
-        self._clouddata = []
 
     def _send_packet(self, packet):
         self.websocket.send(json.dumps(packet) + "\n")
@@ -35,8 +33,6 @@ class _CloudMixin:
         self.websocket.close()
 
     def _handshake(self):
-        if self._no_reconnect is True:
-            return
         try:
             self._send_packet(
                 {"method": "handshake", "user": self._username, "project_id": self.project_id}
@@ -45,25 +41,23 @@ class _CloudMixin:
             self._connect(cloud_host=self.cloud_host)
             self._handshake()
 
-    def get_var(self, variable):
-        try:
-            variable = "☁ " + str(variable)
-            self.set_var('@scratchattach','0')
+    # ---
 
-            result = []
-            for i in self._clouddata:
-                try:
-                    result.append(json.loads(i))
-                except Exception: pass
-            if result == []:
-                return None
-            else:
-                for i in result:
-                    if i['name'] == variable:
-                        return i['value']
-                return None
-        except Exception as e:
-            raise _exceptions.FetchError
+    def get_cloud(self):
+        # DEPRECATED: On Scratch's cloud variables, this method of getting a cloud variable does not work. On TurboWarp's cloud variables it does work, but there's the scratchattach.get_tw_cloud function for that now
+        print("Warning: scratchattach.CloudConnection.get_cloud and scratchattach.TwCloudConnection.get_cloud are deprecated. Use scratchattach.get_cloud or scratchattach.get_tw_cloud instead")
+        warnings.warn(
+            "scratchattach.CloudConnection.get_cloud and scratchattach.TwCloudConnection.get_cloud are deprecated. Use scratchattach.get_cloud or scratchattach.get_tw_cloud instead", DeprecationWarning
+        )
+        return []
+
+    def get_var(self, variable):
+        # DEPRECATED: On Scratch's cloud variables, this method of getting a cloud variable does not work. On TurboWarp's cloud variables it does work, but there's the scratchattach.get_tw_var function for that now
+        print("Warning: scratchattach.CloudConnection.get_var and scratchattach.TwCloudConnection.get_var are deprecated. Use scratchattach.get_var or scratchattach.get_tw_var instead")
+        warnings.warn(
+            "scratchattach.CloudConnection.get_var and scratchattach.TwCloudConnection.get_var are deprecated. Use scratchattach.get_var or scratchattach.get_tw_var instead", DeprecationWarning
+        )
+        return None
 
 class CloudConnection(_CloudMixin):
 
@@ -75,6 +69,7 @@ class CloudConnection(_CloudMixin):
                 cookie="scratchsessionsid=" + self._session_id + ";",
                 origin="https://scratch.mit.edu",
                 enable_multithread=True,
+                timeout=self._ws_timeout
             )
         except Exception:
             try:
@@ -84,6 +79,7 @@ class CloudConnection(_CloudMixin):
                     cookie="scratchsessionsid=" + self._session_id + ";",
                     origin="https://scratch.mit.edu",
                     enable_multithread=True,
+                    timeout=timeout
                 )
             except Exception:
                 raise(_exceptions.ConnectionError)
@@ -113,8 +109,6 @@ class CloudConnection(_CloudMixin):
                     "project_id": self.project_id,
                 }
             )
-            if variable == "@scratchattach":
-                self._clouddata = self.websocket.recv().split('\n')
         except Exception as e:
             try:
                 self._handshake()
@@ -131,40 +125,19 @@ class CloudConnection(_CloudMixin):
 
 class TwCloudConnection(_CloudMixin):
 
-    def _connect(self, *, cloud_host):
-        if self._no_reconnect is True:
-            return
+    def _connect(self, *, cloud_host, timeout=None):
         try:
             if cloud_host is None:
                 cloud_host = "wss://clouddata.turbowarp.org/"
                 self.cloud_host = "wss://clouddata.turbowarp.org/"
             self.websocket.connect(
                 cloud_host,
-                enable_multithread=True
+                enable_multithread=True,
+                timeout = self._ws_timeout
             )
         except Exception:
             raise(_exceptions.ConnectionError)
         self._connect_timestamp = time.time()
-
-    def get_cloud(self, variable):
-        try:
-            variable = "☁ " + str(variable)
-            self.set_var('@scratchattach','0')
-
-            result = []
-            for i in self._clouddata:
-                try:
-                    result.append(json.loads(i))
-                except Exception: pass
-            data = {}
-            if result == []:
-                return {}
-            else:
-                for item in result:
-                    data[item["name"]] = item["value"]
-                return data
-        except Exception as e:
-            raise _exceptions.FetchError
 
 
     def set_var(self, variable, value):
@@ -189,8 +162,6 @@ class TwCloudConnection(_CloudMixin):
                     "project_id": self.project_id,
                 }
             )
-            if variable == "@scratchattach":
-                self._clouddata = self.websocket.recv().split('\n') + self._clouddata
         except Exception as e:
             try:
                 self._handshake()
@@ -341,7 +312,9 @@ class WsCloudEvents(CloudEvents):
                         self._events["on_disconnect"]()
 # -----
 
+
 def get_cloud(project_id):
+    #Gets the Scratch clouddata of a project from the Scratch cloud log
     try:
         response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit=100&offset=0").text)
         response.reverse()
@@ -353,6 +326,7 @@ def get_cloud(project_id):
         return []
 
 def get_var(project_id, variable):
+    #Gets the value of a Scratch cloud variable from the Scratch cloud log
     try:
         response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit=100&offset=0").text)
         response = list(filter(lambda k: k["name"] == "☁ "+variable, response))
@@ -363,6 +337,42 @@ def get_var(project_id, variable):
     except Exception:
         return None
 
+def get_tw_cloud(project_id):
+    #Gets the clouddata of a TurboWarp project from the TurboWarp websocket
+    #Do not spam this method, it creates a new connection to the TW cloud on every run
+    try:
+        conn = TwCloudConnection(project_id=project_id, _ws_timeout=1)
+        data = conn.websocket.recv().split("\n")
+        conn.disconnect()
+
+        result = []
+        for i in data:
+            try:
+                result.append(json.loads(i))
+            except Exception: pass
+        return result
+    except websocket._exceptions.WebSocketTimeoutException:
+        return []
+    except Exception:
+        raise _exceptions.FetchError
+
+def get_tw_var(project_id, variable):
+    #Gets the value of a Turbowarp cloud variable from the TW websocket
+    #Do not spam this method, it creates a new connection to the TW cloud on every run
+    try:
+        variable = "☁ " + str(variable)
+        result = get_tw_cloud(project_id)
+        if result == []:
+            return None
+        else:
+            for i in result:
+                if i['name'] == variable:
+                    return i['value']
+            else:
+                return None
+    except Exception as e:
+        raise _exceptions.FetchError
+
 def get_cloud_logs(project_id, *, filter_by_var_named =None, limit=25, offset=0, log_url="https://clouddata.scratch.mit.edu/logs"):
     try:
         response = json.loads(requests.get(f"{log_url}?projectid={project_id}&limit={limit}&offset={offset}").text)
@@ -371,3 +381,11 @@ def get_cloud_logs(project_id, *, filter_by_var_named =None, limit=25, offset=0,
             return list(filter(lambda k: k["name"] == "☁ "+filter_by_var_named, response))
     except Exception:
         return []
+
+def connect_tw_cloud(project_id_arg=None, *, project_id=None):
+    if project_id is None:
+        project_id = project_id_arg
+    if project_id is None:
+        return None
+
+    return TwCloudConnection(project_id = int(project_id))
