@@ -120,7 +120,8 @@ client.run(no_packet_loss=True)
 In your requests, you can use these functions:
 ```py
 client.get_requester() #Returns the name of the user who sent the request
-client.get_timestamp() #Returns the timestamp when the request was sent (in milliseconds since 1970)
+client.get_timestamp() #Returns the timestamp of when the request was sent (in milliseconds since 1970)
+client.get_exact_timestamp() #Returns the exact timestamp of when the request was sent (fetches it from the clouddata logs). New in v1.2.6
 ```
 
 **Run cloud requests in a thread:**
