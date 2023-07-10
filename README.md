@@ -272,8 +272,8 @@ user.is_following("scratcher") #Returns True if user is following the specified 
 user.is_followed_by("scratcher") #Returns True if user is followed by the specified Scratcher
 
 user.comments(limit=20, page=1) #Returns the user's profile comments
-user.post_comment("comment content", parent_id="", commentee_id="") #Posts a comment on the user's profile. Requires logging in. Returns the info of the posted commented.
-user.reply_comment("comment content", parent_id="parent_id") #Replies to a specified profile comment. Requires logging in. Returns the info of the posted commented.
+user.post_comment("comment content") #Posts a comment on the user's profile. Requires logging in. Returns the info of the posted commented.
+user.reply_comment("comment content", parent_id="parent_id", commentee_id="commentee_id") #Replies to a specified profile comment. Requires logging in. Returns the info of the posted commented.
 user.delete_comment(comment_id="comment_id")
 user.report_comment(comment_id="comment_id")
 
@@ -339,8 +339,8 @@ project.moderation_status() #Returns the project's moderation status (either "sa
 
 project.comments(limit=40, offset=0)  #Fetches all project comments except for comment replies
 project.get_comment_replies(comment_id="comment_id", limit=40, offset=0)  #Fetches the replies to a specific comment
-project.post_comment(content="comment content", parent_id="", commentee_id="")  #Returns the info of the posted commented.
-project.reply_comment(content="comment content", parent_id="parent_id")  #Returns the info of the posted commented.
+project.post_comment(content="comment content")  #Returns the info of the posted commented.
+project.reply_comment(content="comment content", parent_id="parent_id", commentee_id="commentee_id")  #Returns the info of the posted commented.
 project.delete_comment(comment_id="comment_id")
 project.report_comment(comment_id="comment_id")
 
@@ -414,8 +414,8 @@ studio.unfollow()
 
 studio.comments(limit=40, offset=0)  #Fetches all project comments except for comment replies
 studio.get_comment_replies(comment_id="comment_id", limit=40, offset=0)  #Fetches the replies to a specific comment
-studio.post_comment(content="comment content", parent_id="", commentee_id="")  #Returns the info of the posted commented.
-studio.reply_comment(content="comment content", parent_id="parent_id")  #Returns the info of the posted commented.
+studio.post_comment(content="comment content")  #Returns the info of the posted commented.
+studio.reply_comment(content="comment content", parent_id="parent_id", commentee_id="commentee_id")  #Returns the info of the posted commented.
 
 studio.add_project("project_id")
 studio.remove_project("project_id")
