@@ -32,7 +32,7 @@ def on_ready():
 client.run() #make sure this is ALWAYS at the bottom of your Python file
 ```
 
-Replace "username" and "password" with your data and "project_id" with the id of the project you created on Scratch.
+Replace "session_id" and "username" with your data and "project_id" with the id of the project you created on Scratch.
 Then, run the code.
 
 Now go to the Scratch project. In the `Cloud Requests` sprite, you will find this block:
