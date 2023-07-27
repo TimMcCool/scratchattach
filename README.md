@@ -484,6 +484,7 @@ scratch3.top_loved()
 scratch3.top_remixed()
 scratch3.newest_projects() #Returns a list with the newest Scratch projects. This list is not present on the Scratch home page, but the API still provides it.
 scratch3.design_studio_projects()
+scratch3.curated_projects()
 
 session.get_feed(limit=20, offset=0) #Returns your "What's happening" section from the Scratch front page as list
 session.loved_by_followed_users(limit=40, offset=0) #Returns the projects loved by users you are following as list
