@@ -179,10 +179,10 @@ class User:
         response = requests.get(f"https://scratch.mit.edu/site-api/comments/user/{self.z}/?page=1")'''
 
     def is_following(self, user):
-        return requests.get(f"https://following-check.1tim.repl.co/api/{self.username}/?following={user}").json()["following"]
+        return requests.get(f"http://explodingstar.pythonanywhere.com/api/{self.username}/?following={user}").json()["following"]
 
     def is_followed_by(self, user):
-        return requests.get(f"https://following-check.1tim.repl.co/api/{user}/?following={self.username}").json()["following"]
+        return requests.get(f"http://explodingstar.pythonanywhere.com/api/{user}/?following={self.username}").json()["following"]
 
     def project_count(self):
         text = requests.get(
