@@ -434,8 +434,8 @@ class CloudRequests:
                         self.call_request(request_id, req_obj, arguments)
 
             #Send outputs
-            output_ids = list(self.outputs.keys())
-            while len(output_ids) > 0:
+            while list(self.outputs.keys()) > 0:
+                output_ids = list(self.outputs.keys())
                 for request_id in output_ids:
                     output = self.outputs[request_id]["output"]
                     request = self.outputs[request_id]["request"]["name"]
