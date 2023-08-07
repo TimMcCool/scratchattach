@@ -79,7 +79,7 @@ class CloudConnection(_CloudMixin):
                     cookie="scratchsessionsid=" + self._session_id + ";",
                     origin="https://scratch.mit.edu",
                     enable_multithread=True,
-                    timeout=timeout
+                    timeout=self._ws_timeout
                 )
             except Exception:
                 raise(_exceptions.ConnectionError)
