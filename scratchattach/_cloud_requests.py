@@ -197,7 +197,8 @@ class CloudRequests:
             self.connection._connect(cloud_host=self.connection.cloud_host)
             self.connection._handshake()
 
-        remaining_response = str(response)
+        response = f"{len(str(response))}89{str(response)}"
+        remaining_response = response
 
         i = 0
         while not remaining_response == "":
