@@ -344,28 +344,35 @@ class CloudRequests:
         old_clouddata = []
         self.call_event("on_ready")  #Calls the on_ready event
 
+        if data_from_websocket is False:
+            old_clouddata = _cloud.get_cloud_logs(self.project_id, filter_by_var_named="TO_HOST", limit=100)
+            try:
+                self.last_timestamp = old_clouddata[0]["timestamp"]
+            except Exception:
+                self.last_timestamp = 0
+
         while True:
 
             time.sleep(0.001)
 
             if data_from_websocket is False:
                 clouddata = _cloud.get_cloud_logs(
-                    self.project_id, filter_by_var_named="TO_HOST", limit=100)[::-1]
+                    self.project_id, filter_by_var_named="TO_HOST", limit=100)
                 if clouddata == old_clouddata:
                     continue
                 else:
                     old_clouddata = list(clouddata)
-                self.ws_data = [
-                    _cloud.CloudEvents.Event(user=activity["user"],
-                                             var=activity["name"][2:],
-                                             name=activity["name"][2:],
-                                             value=activity["value"],
-                                             timestamp=activity["timestamp"])
-                    for activity in clouddata
-                ]
+                self.ws_data = []
+                for activity in clouddata:
+                    if activity["timestamp"] > self.last_timestamp:
+                        self.ws_data.insert(0,_cloud.CloudEvents.Event(user=activity["user"],
+                                                 var=activity["name"][2:],
+                                                 name=activity["name"][2:],
+                                                 value=activity["value"],
+                                                 timestamp=activity["timestamp"]))
 
-            if self.ws_data != []:
-                event = self.ws_data.pop()
+            while self.ws_data != []:
+                event = self.ws_data.pop(0)
 
                 try:
                     raw_request, request_id = event.value.split(".")
@@ -380,10 +387,8 @@ class CloudRequests:
                         continue
                     else:
                         self.responded_request_ids.insert(0, request_id)
-                        self.responded_request_ids = self.responded_request_ids[:
-                                                                                15]
+                        self.responded_request_ids = self.responded_request_ids[:15]
                 except Exception:
-                    self.last_timestamp = event.timestamp
                     continue
 
                 self.last_requester = event.user

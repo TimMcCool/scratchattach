@@ -289,11 +289,13 @@ class WsCloudEvents(CloudEvents):
         self.__dict__.update(entries)
 
     def _update(self):
+        if isinstance(self.connection, CloudConnection):
+            log_data = get_cloud(project_id = self.connection.project_id)
+        else:
+            log_data = {}
         while True:
             try:
                 data = self.connection.websocket.recv().split('\n')
-                if len(data) > 1 and time.time() < self.connection._connect_timestamp + 0.5:
-                    continue
                 result = []
                 for i in data:
                     try:
@@ -302,11 +304,18 @@ class WsCloudEvents(CloudEvents):
                         pass
                 for activity in result:
                     if "on_"+activity["method"] in self._events:
-                        self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=time.time()*10000))
+                        if log_data[activity["name"][2:]] == activity["value"]:
+                            log_data.pop(activity["name"][2:])
+                        else:
+                            self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=time.time()*10000))
             except Exception:
                 try:
                     self.connection._connect(cloud_host=self.connection.cloud_host)
                     self.connection._handshake()
+                    if isinstance(self.connection, CloudConnection):
+                        log_data = get_cloud(project_id = self.connection.project_id)
+                    else:
+                        log_data = {}
                 except Exception:
                     if "on_disconnect" in self._events:
                         self._events["on_disconnect"]()
