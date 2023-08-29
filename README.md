@@ -8,7 +8,9 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 
 The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 
-![scratchattach logo](https://github.com/TimMcCool/scratchattach/blob/main/logos/logo_dark_transparent_eyes.svg)
+<p align="left">
+  <img width="230" height="150" src="https://github.com/TimMcCool/scratchattach/blob/main/logos/logo_dark_transparent_eyes.svg">
+</p>
 
 [![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
 [![PyPI download month](https://img.shields.io/pypi/dm/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
@@ -85,7 +87,7 @@ conn = scratch3.CloudConnection(project_id = "project_id", username="username", 
 conn = scratch3.connect_tw_cloud("project_id")
 ```
 
-Alternative ways to do connect to the TurboWarp cloud:
+Alternative ways to connect to the TurboWarp cloud:
 
 ```py
 conn = session.connect_tw_cloud("project_id")
