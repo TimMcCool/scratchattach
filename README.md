@@ -9,7 +9,7 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 
 <p align="left">
-  <img width="230" height="150" src="https://github.com/TimMcCool/scratchattach/blob/main/logos/logo_dark_transparent_eyes.svg">
+  <img width="188.01" height="141.76" src="https://github.com/TimMcCool/scratchattach/blob/main/logos/logo_dark_transparent_eyes.svg">
 </p>
 
 [![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
