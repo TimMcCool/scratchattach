@@ -320,8 +320,7 @@ class CloudRequests:
 
         def on_set(event):
             if event.name == "TO_HOST":
-                self.ws_data.insert(0, event)
-                self.ws_data = self.ws_data[:50]
+                self.ws_data.append(event)
 
         try:
             self.connection._connect(cloud_host=self.connection.cloud_host)
