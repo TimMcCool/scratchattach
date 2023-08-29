@@ -150,7 +150,7 @@ class TwCloudConnection(_CloudMixin):
                 if self.allow_non_numeric is False:
                     raise(_exceptions.InvalidCloudValue)
 
-        while self._ratelimited_until + 0.1 > time.time():
+        while self._ratelimited_until + 0.005 > time.time():
             pass
         try:
             self._send_packet(
