@@ -4,11 +4,14 @@ import json
 import requests
 from threading import Thread
 import time
-from . import _exceptions
+from . import exceptions
 import traceback
 import warnings
 
 class _CloudMixin:
+    """
+    Base class for a connection to a cloud variable server.
+    """
 
     def __init__(self, *, project_id, username="python", session_id=None, cloud_host=None, _allow_non_numeric=False, _ws_timeout=None):
         self._session_id = session_id
@@ -60,6 +63,13 @@ class _CloudMixin:
         return None
 
 class CloudConnection(_CloudMixin):
+    """
+    Represents a connection to Scratch's cloud variable server.
+
+    Attributes:
+
+    .websocket: The websocket connection (WebSocket object from the websocket-client library)
+    """
 
     def _connect(self, *, cloud_host):
         try:
@@ -82,21 +92,28 @@ class CloudConnection(_CloudMixin):
                     timeout=self._ws_timeout
                 )
             except Exception:
-                raise(_exceptions.ConnectionError)
+                raise(exceptions.ConnectionError)
         self._connect_timestamp = time.time()
 
     def set_var(self, variable, value):
+        """
+        Sets a cloud variable.
+
+        Args:
+            variable (str): The name of the cloud variable that should be set (provided without the cloud emoji)
+            value (str): The value the cloud variable should be set to
+        """
         variable = variable.replace("☁ ", "")
         if not (value is True or value is False or value in [float('inf'), -float('inf')]):
             value = str(value)
             if len(value) > 256:
                 warnings.warn("invalid cloud var (too long): "+str(value), Warning)
-                raise(_exceptions.InvalidCloudValue)
+                raise(exceptions.InvalidCloudValue)
             x = value.replace(".", "")
             x = x.replace("-", "")
             if not x.isnumeric():
                 warnings.warn("invalid cloud var (not numeric): "+str(value), Warning)
-                raise(_exceptions.InvalidCloudValue)
+                raise(exceptions.InvalidCloudValue)
         while self._ratelimited_until + 0.1 >= time.time():
             pass
         try:
@@ -117,13 +134,22 @@ class CloudConnection(_CloudMixin):
                     self._connect(cloud_host=self.cloud_host)
                     self._handshake()
                 except Exception as e:
-                    raise _exceptions.ConnectionError("Connection lost while setting cloud variable.", str(e))
+                    raise exceptions.ConnectionError("Connection lost while setting cloud variable.", str(e))
 
             time.sleep(0.1)
             self.set_var(variable, value)
         self._ratelimited_until = time.time()
 
 class TwCloudConnection(_CloudMixin):
+    """
+    Represents a connection to TurboWarp's cloud variable server or a custom cloud variable server that behaves like TurboWarp's.
+
+    Attributes:
+
+    .websocket: The websocket connection (WebSocket object from the websocket-client library)
+    .cloud_host: The websocket URL of the cloud variable server
+    .allow_non_numeric: Whether the cloud variables can be set to non-numeric values
+    """
 
     def _connect(self, *, cloud_host, timeout=None):
         try:
@@ -136,11 +162,18 @@ class TwCloudConnection(_CloudMixin):
                 timeout = self._ws_timeout
             )
         except Exception:
-            raise(_exceptions.ConnectionError)
+            raise(exceptions.ConnectionError)
         self._connect_timestamp = time.time()
 
 
     def set_var(self, variable, value):
+        """
+        Sets a cloud variable.
+
+        Args:
+            variable (str): The name of the cloud variable that should be set (provided without the cloud emoji)
+            value (str): The value the cloud variable should be set to
+        """
         variable = variable.replace("☁ ", "")
         if not (value is True or value is False or value in [float('inf'), -float('inf')]):
             value = str(value)
@@ -148,7 +181,7 @@ class TwCloudConnection(_CloudMixin):
             x = x.replace("-", "")
             if not x.isnumeric():
                 if self.allow_non_numeric is False:
-                    raise(_exceptions.InvalidCloudValue)
+                    raise(exceptions.InvalidCloudValue)
 
         while self._ratelimited_until + 0.005 > time.time():
             pass
@@ -172,7 +205,7 @@ class TwCloudConnection(_CloudMixin):
                     self._connect(cloud_host=None)
                     self._handshake()
                 except Exception as e:
-                    raise _exceptions.ConnectionError("Connection lost while setting cloud variable.", str(e))
+                    raise exceptions.ConnectionError("Connection lost while setting cloud variable.", str(e))
 
             time.sleep(0.1)
             self.set_var(variable, value)
@@ -180,8 +213,29 @@ class TwCloudConnection(_CloudMixin):
 
 
 class CloudEvents:
-
+    """
+    Class that calls events on Scratch cloud variable updates.
+    
+    Data source: Scratch clouddata logs.
+    
+    The cloud event handler can be started with :meth:`scratchattach.cloud.CloudEvents.start`.
+    """
     class Event:
+        """
+        Represents a received cloud event. When the cloud event handler calls a cloud event, an Event object is provided as attribute.
+
+        Attributes:
+
+        .user: The user who caused the cloud event (the user who added / set / deleted the cloud variable)
+
+        .var: The name of the cloud variable that was updated (specified without the cloud emoji)
+
+        .name: The name of the cloud variable that was updated (specified without the cloud emoji)
+
+        .timestamp: Then timestamp of when the action was performed
+
+        .value: If the cloud variable was set, then this attribute provides the value the cloud variable was set to
+        """
         def __init__(self, **entries):
             self.__dict__.update(entries)
 
@@ -194,7 +248,14 @@ class CloudEvents:
         self.cloud_log_limit = 15
         self.__dict__.update(entries)
 
-    def start(self, *, update_interval = 0.1, thread=True, daemon=False):
+    def start(self, *, update_interval = 0.1, thread=True):
+        """
+        Starts the cloud event handler.
+
+        Keyword Arguments:
+            update_interval (float): The clouddata log is continuosly checked for cloud updates. This argument provides the interval between these checks.
+            thread (boolean): Whether the event handler should be run in a thread.
+        """
         if self.running is False:
             self.update_interval = update_interval
             self.running = True
@@ -202,7 +263,6 @@ class CloudEvents:
                 self._events["on_ready"]()
             if thread:
                 self._thread = Thread(target=self._update, args=())
-                self._thread.daemon = daemon
                 self._thread.start()
             else:
                 self._thread = None
@@ -231,6 +291,9 @@ class CloudEvents:
             time.sleep(self.update_interval)
 
     def stop(self):
+        """
+        Permanently stops the cloud event handler.
+        """
         if self._thread is not None:
             self.running = False
             self.project_id = None
@@ -238,17 +301,32 @@ class CloudEvents:
             self._thread = None
 
     def pause(self):
+        """
+        Pauses the cloud event handler.
+        """
         self.running = False
 
     def resume(self):
+        """
+        Resumes the cloud event handler.
+        """
         if self.running is False:
             self.start(update_interval=self.update_interval, thread=True)
 
     def event(self, function):
+        """
+        Decorator function. Adds a cloud event.
+        """
         self._events[function.__name__] = function
 
 class TwCloudEvents(CloudEvents):
-
+    """
+    Class that calls events on TurboWarp cloud variable updates.
+    
+    Data source: Turbowarp cloud websocket.
+    
+    The cloud event handler can be started with :meth:`scratchattach.cloud.TwCloudEvents.start`.
+    """
     def __init__(self, project_id, **entries):
         cloud_connection = TwCloudConnection(project_id=project_id)
         self.data = []
@@ -279,7 +357,13 @@ class TwCloudEvents(CloudEvents):
                         self._events["on_disconnect"]()
 
 class WsCloudEvents(CloudEvents):
-
+    """
+    Class that calls events on Scratch or Turbowarp cloud variable updates.
+    
+    Data source: A provided CloudConnection or TwCloudConnection object.
+    
+    The cloud event handler can be started with :meth:`scratchattach.cloud.WsCloudEvents.start`.
+    """
     def __init__(self, project_id, connection, **entries):
         self.data = []
         self._thread = None
@@ -323,7 +407,15 @@ class WsCloudEvents(CloudEvents):
 
 
 def get_cloud(project_id):
-    #Gets the Scratch clouddata of a project from the Scratch cloud log
+    """
+    Gets the clouddata of a Scratch cloud project from the clouddata log.
+
+    Args:
+        project_id (str):
+    
+    Returns:
+        dict: The values of the project's cloud variables
+    """
     try:
         response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit=100&offset=0").text)
         response.reverse()
@@ -335,7 +427,18 @@ def get_cloud(project_id):
         return []
 
 def get_var(project_id, variable):
-    #Gets the value of a Scratch cloud variable from the Scratch cloud log
+    """
+    Gets the value of of a Scratch cloud variable from the clouddata log.
+    
+    Args:
+        project_id (str):
+        variable (str): The name of the cloud variable (specified without the cloud emoji)
+    
+    Returns:
+        str: The cloud variable's value
+    
+    If the value can't be fetched, the method returns None.
+    """
     try:
         response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit=100&offset=0").text)
         response = list(filter(lambda k: k["name"] == "☁ "+variable, response))
@@ -347,8 +450,19 @@ def get_var(project_id, variable):
         return None
 
 def get_tw_cloud(project_id):
-    #Gets the clouddata of a TurboWarp project from the TurboWarp websocket
-    #Do not spam this method, it creates a new connection to the TW cloud on every run
+    """
+    Gets the clouddata of a TurboWarp cloud project from the TurboWarp's websoclet.
+
+    Warning:
+        Do not spam this method, it creates a new connection to the TurboWarp cloud server every time it is called.
+
+    Args:
+        project_id (str):
+    
+    Returns:
+        dict: The values of the project's cloud variables
+    """
+
     try:
         conn = TwCloudConnection(project_id=project_id, _ws_timeout=1)
         data = conn.websocket.recv().split("\n")
@@ -360,14 +474,27 @@ def get_tw_cloud(project_id):
                 result.append(json.loads(i))
             except Exception: pass
         return result
-    except websocket._exceptions.WebSocketTimeoutException:
+    except websocket.exceptions.WebSocketTimeoutException:
         return []
     except Exception:
-        raise _exceptions.FetchError
+        raise exceptions.FetchError
 
 def get_tw_var(project_id, variable):
-    #Gets the value of a Turbowarp cloud variable from the TW websocket
-    #Do not spam this method, it creates a new connection to the TW cloud on every run
+    """
+    Gets the value of of a TurboWarp cloud variable from TurboWarp's websocket.
+
+    Warning:
+        Do not spam this method, it creates a new connection to the TurboWarp cloud server every time it is called.
+
+    Args:
+        project_id (str):
+        variable (str): The name of the cloud variable (specified without the cloud emoji)
+    
+    Returns:
+        str: The cloud variable's value
+    
+    If the value can't be fetched, the method returns None.
+    """
     try:
         variable = "☁ " + str(variable)
         result = get_tw_cloud(project_id)
@@ -380,9 +507,21 @@ def get_tw_var(project_id, variable):
             else:
                 return None
     except Exception as e:
-        raise _exceptions.FetchError
+        raise exceptions.FetchError
 
-def get_cloud_logs(project_id, *, filter_by_var_named =None, limit=25, offset=0, log_url="https://clouddata.scratch.mit.edu/logs"):
+def get_cloud_logs(project_id, *, filter_by_var_named =None, limit=25, offset=0):
+    """
+    Gets Scratch's clouddata log for a project.
+    
+    Args:
+        project_id:
+    
+    Keyword Arguments:
+        filter_by_var_named (str or None): If you only want to get data for one cloud variable, set this argument to its name.
+        limit (int): Max. amount of returned activity.
+        offset (int): Offset of the first activity in the returned list.
+        log_url (str): If you want to get the clouddata from a cloud log API different to Scratch's normal cloud log API, set this argument to the URL of the API. Only set this argument if you know what you are doing. If you want to get the clouddata from the normal API, don't put this argument.
+    """
     try:
         response = json.loads(requests.get(f"{log_url}?projectid={project_id}&limit={limit}&offset={offset}").text)
         if filter_by_var_named is None: return response
@@ -392,6 +531,15 @@ def get_cloud_logs(project_id, *, filter_by_var_named =None, limit=25, offset=0,
         return []
 
 def connect_tw_cloud(project_id_arg=None, *, project_id=None):
+    """
+    Connects to TurboWarp's cloud websocket.
+
+    Args:
+        project_id (str)
+
+    Returns:
+        scratchattach.cloud.TwCloudConnection: An object that represents a connection to TurboWarp's cloud server
+    """
     if project_id is None:
         project_id = project_id_arg
     if project_id is None:

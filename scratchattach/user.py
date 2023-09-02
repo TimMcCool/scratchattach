@@ -2,9 +2,9 @@
 
 import json
 import requests
-from . import _project
-from . import _exceptions
-from . import _forum
+from . import project
+from . import exceptions
+from . import forum
 from bs4 import BeautifulSoup
 
 headers = {
@@ -16,6 +16,27 @@ headers = {
 
 class User:
 
+    '''
+    Represents a Scratch user.
+
+    Attributes:
+
+    .join_date
+
+    .about_me
+
+    .wiwo: Returns the user's 'What I'm working on' section
+    
+    .country: Returns the country from the user profile
+    
+    .icon_url: Returns the link to the user's pfp (90x90)
+   
+    .id: Returns the id of the user
+   
+    .scratchteam: Retuns True if the user is in the Scratch team
+    
+    .update() will update these attributes
+    '''
     def __init__(self, **entries):
         self.__dict__.update(entries)
 
@@ -49,6 +70,9 @@ class User:
         return str(self.username)
 
     def update(self):
+        """
+        Updates the attributes of the User object
+        """
         r = requests.get(f"https://api.scratch.mit.edu/users/{self.username}/")
         if "429" in str(r):
             return "429"
@@ -63,7 +87,7 @@ class User:
             self.id = response["id"]
 
         except Exception:
-            raise(_exceptions.UserNotFound)
+            raise(exceptions.UserNotFound)
         self.scratchteam = response["scratchteam"]
         self.join_date = response["history"]["joined"]
         self.about_me = response["profile"]["bio"]
@@ -76,7 +100,10 @@ class User:
         return json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/messages/count/", headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',}).text)["count"]
 
     def featured_data(self):
-        # featured data
+        """           
+        Returns:
+            dict: Gets info on the user's featured project and featured label (like "Featured project", "My favorite things", etc.)
+        """        
         try:
             response = json.loads(requests.get(f"https://scratch.mit.edu/site-api/users/all/{self.username}/").text)
             return {
@@ -175,9 +202,6 @@ class User:
     def following_names(self, *, limit=40, offset=0):
         return [i.name for i in self.following(limit=limit, offset=offset)]
 
-    '''def get_comments(self, *, page=1):
-        response = requests.get(f"https://scratch.mit.edu/site-api/comments/user/{self.z}/?page=1")'''
-
     def is_following(self, user):
         return requests.get(f"http://explodingstar.pythonanywhere.com/api/{self.username}/?following={user}").json()["following"]
 
@@ -272,7 +296,7 @@ class User:
             ).json()
         projects = []
         for project in _projects:
-            projects.append(_project.Project(
+            projects.append(project.Project(
                 _session = self._session,
                 author = self.username,
                 comments_allowed = project["comments_allowed"],
@@ -319,7 +343,7 @@ class User:
             ).json()
         projects = []
         for project in _projects:
-            projects.append(_project.Project(
+            projects.append(project.Project(
                 _session = self._session,
                 author = self.username,
                 comments_allowed = project["comments_allowed"],
@@ -357,12 +381,18 @@ class User:
         return int(text)
 
     def toggle_commenting(self):
+        """
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        """
         requests.post(f"https://scratch.mit.edu/site-api/comments/user/{self.username}/toggle-comments/",
             headers = headers,
             cookies = self._cookies
         )
 
     def viewed_projects(self, limit=24, offset=0):
+        """
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        """
         try:
             _projects = requests.get(
                 f"https://api.scratch.mit.edu/users/{self.username}/projects/recentlyviewed?limit={limit}&offset={offset}",
@@ -370,7 +400,7 @@ class User:
             ).json()
             projects = []
             for project in _projects:
-                projects.append(_project.Project(
+                projects.append(project.Project(
                     _session = self._session,
                     author = self.username,
                     comments_allowed = project["comments_allowed"],
@@ -392,10 +422,13 @@ class User:
                 ))
             return projects
         except Exception:
-            raise(_exceptions.Unauthorized)
+            raise(exceptions.Unauthorized)
 
 
     def set_bio(self, text):
+        """
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        """
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
             headers = self._json_headers,
@@ -411,6 +444,9 @@ class User:
         )
 
     def set_wiwo(self, text):
+        """
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        """
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
             headers = self._json_headers,
@@ -426,6 +462,15 @@ class User:
         )
 
     def set_featured(self, project_id, *, label=""):
+        """
+        Sets the user's featured project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user` 
+
+        Args:
+            project_id: Project id of the project that should be set as featured
+
+        Keyword Args:
+            label: The label that should appear above the featured project on the user's profile (Like "Featured project", "Featured tutorial", "My favorite things", etc.)
+        """
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
             headers = self._json_headers,
@@ -435,6 +480,16 @@ class User:
 
 
     def post_comment(self, content, *, parent_id="", commentee_id=""):
+        """
+        Posts a comment on the user's profile. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+
+        Args:
+            content: Content of the comment that should be posted
+        
+        Keyword Arguments:
+            parent_id: ID of the comment you want to reply to. If you don't want to mention a user, don't put the argument.
+            commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
+        """
         data = {
         "commentee_id": commentee_id,
         "content": str(content),
@@ -447,10 +502,20 @@ class User:
             data=json.dumps(data),
         )
         if r.status_code != 200:
-            raise _exceptions.CommentPostFailure(r.text)
+            raise exceptions.CommentPostFailure(r.text)
         return r.text
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
+        """
+        Posts a reply to a comment on the user's profile. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+
+        Args:
+            content: Content of the comment that should be posted
+
+        Keyword Arguments:
+            parent_id: ID of the comment you want to reply to
+            commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
+        """
         return self.post_comment(content, parent_id=parent_id, commentee_id=commentee_id)
 
     def activity_html(self, *, limit=1000):
@@ -458,6 +523,9 @@ class User:
 
 
     def follow(self):
+        """
+        Follows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        """
         requests.put(
             f"https://scratch.mit.edu/site-api/users/followers/{self.username}/add/?usernames={self._session._username}",
             headers = headers,
@@ -465,6 +533,9 @@ class User:
         )
 
     def unfollow(self):
+        """
+        Unfollows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        """
         requests.put(
             f"https://scratch.mit.edu/site-api/users/followers/{self.username}/remove/?usernames={self._session._username}",
             headers = headers,
@@ -472,6 +543,12 @@ class User:
         )
 
     def delete_comment(self, *, comment_id):
+        """
+        Deletes a comment. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+
+        Args:
+            comment_id: The id of the comment that should be deleted
+        """
         return requests.post(
             f"https://scratch.mit.edu/site-api/comments/user/{self.username}/del/",
             headers = headers,
@@ -480,6 +557,12 @@ class User:
         )
 
     def report_comment(self, *, comment_id):
+        """
+        Reports a comment to the Scratch team. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+
+        Args:
+            comment_id: The id of the comment that should be reported
+        """
         return requests.post(
             f"https://scratch.mit.edu/site-api/comments/user/{self.username}/rep/",
             headers = headers,
@@ -538,10 +621,26 @@ class User:
 
 
     def comments(self, *, page=1, limit=None):
+        """
+        Returns the comments posted on the user's profile (with replies).
+
+        Keyword Arguments:
+            page: The page of the comments that should be returned.
+            limit: Max. amount of returned comments.
+
+        Returns:
+            list<dict>: A list containing the requested comments as dicts.
+        """
         URL = f"https://scratch.mit.edu/site-api/comments/user/{self.username}/?page={page}"
         return self._get_comments(URL)[:limit]
 
     def stats(self):
+        """
+        Gets information about the user's stats. Fetched from ScratchDB.
+
+        Returns:
+            dict: A dict containing the user's stats. If the stats aren't available, all values will be -1.
+        """
         try:
             stats= requests.get(
                 f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
@@ -552,6 +651,12 @@ class User:
         return stats
 
     def ranks(self):
+        """
+        Gets information about the user's ranks. Fetched from ScratchDB.
+
+        Returns:
+            dict: A dict containing the user's ranks. If the ranks aren't available, all values will be -1.
+        """
         try:
             return requests.get(
                 f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
@@ -560,38 +665,67 @@ class User:
             return {"country":{"loves":0,"favorites":0,"comments":0,"views":0,"followers":0,"following":0},"loves":0,"favorites":0,"comments":0,"views":0,"followers":0,"following":0}
 
     def followers_over_time(self, *, segment=1, range=30):
+        """
+        Gets information about the user's follower count history. Fetched from ScratchDB.
+
+        Keyword Args:
+            segment (int): Offset for the first returned element.
+            range (int): Amount of returned elements.
+
+        Returns:
+            list<dict>
+        """
         return requests.get(f"https://scratchdb.lefty.one/v3/user/graph/{self.username}/followers?segment={segment}&range={range}")
 
     def forum_counts(self):
         try:
             return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["counts"]
         except Exception:
-            raise _exceptions.FetchError
+            raise exceptions.FetchError
 
     def forum_posts_over_time(self):
         try:
             return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["history"]
         except Exception:
-            raise _exceptions.FetchError
+            raise exceptions.FetchError
 
     def forum_signature(self):
         try:
             return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["signature"]
         except Exception:
-            raise _exceptions.FetchError
+            raise exceptions.FetchError
 
     def forum_signature_history(self):
         return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/history/{self.username}").json()
 
     def ocular_status(self):
+        """
+        Gets information about the user's ocular status. Ocular is a website developed by jeffalo: https://ocular.jeffalo.net/
+
+        Returns:
+            dict
+        """
         return requests.get(f"https://my-ocular.jeffalo.net/api/user/{self.username}").json()
 
     def forum_posts(self, *, page=0, order="newest"):
+        """
+        Gets the forum posts associated with the user.
+
+        Args:
+            username (str): Username of the requested user
+
+        Keyword Args:
+            page (int): Search the page of the results that should be returned.
+            order (str): Specifies the order of the returned posts. "newest" means the first returned post is the newest one, "oldest" means it is the oldest one.
+
+        Returns:
+            list<scratchattach.forum.ForumPost>: A list that contains the forum posts associated with the user.
+        """
         try:
             data = requests.get(f"https://scratchdb.lefty.one/v3/forum/user/posts/{self.username}/{page}?o={order}").json()
             return_data = []
             for o in data:
-                a = _forum.ForumPost(id = o["id"], _session = self._session)
+                a = forum.ForumPost(id = o["id"], _session = self._session)
                 a._update_from_dict(o)
                 return_data.append(a)
             return return_data
@@ -601,10 +735,24 @@ class User:
 # ------ #
 
 def get_user(username):
+    """
+    Gets a user without logging in.
+
+    Args:
+        username (str): Username of the requested user
+
+    Returns:
+        scratchattach.user.User: An object representing the requested user
+
+    Warning:
+        All methods that require authentication (like user.follow) will not work on the returned object.
+        
+        If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_user` instead.
+    """
     try:
         user = User(username=username)
         if user.update() == "429":
-            raise(_exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+            raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
         return user
     except KeyError:
         return None
