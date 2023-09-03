@@ -15,7 +15,7 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 [![PyPI version shields.io](https://img.shields.io/pypi/v/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
 [![GitHub license](https://badgen.net/github/license/TimMcCool/scratchattach)](https://github.com/TimMcCool/scratchattach/blob/master/LICENSE)
 
-# Documentation and other links
+# Links
 
 - **[Documentation](https://github.com/TimMcCool/scratchattach/wiki)**
 - [Extended documentation (WIP)]()
