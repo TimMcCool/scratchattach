@@ -23,7 +23,7 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
 
 # Examples
-Setting a cloud var with scratchattach:
+**Set a cloud var with scratchattach:**
 ```py
 import scratchattach as scratch3
 
@@ -33,7 +33,7 @@ conn = session.connect_cloud("project_id")
 conn.set_var("variable", value)
 ```
 
-Cloud event handler:
+**Cloud event handler:**
 ```
 import scratchattach as scratch3
 events = scratch3.CloudEvents("project_id")
