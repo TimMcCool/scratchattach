@@ -30,7 +30,7 @@ conn.set_var("variable", value)
 ```
 
 **Cloud event handler:**
-```
+```py
 import scratchattach as scratch3
 events = scratch3.CloudEvents("project_id")
 
