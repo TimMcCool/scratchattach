@@ -26,16 +26,6 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 [Official forum topic](https://scratch.mit.edu/discuss/topic/603418/
 )
 
-# Reasons to use scratchattach
-
-➥ Simple to use
-➥ Fast and safe
-➥ Cloud events & built-in class for encoded cloud requests
-➥ Users, projects, comments, search, explore & more!
-➥ Forum posts and topics
-➥ Most features don't require a session
-➥ Open-source
-
 # Contributors
 
 - Allmost all code by TimMcCool.
