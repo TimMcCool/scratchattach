@@ -34,7 +34,7 @@ If you need help with your code, leave a comment in the [official forum topic](h
 ) on [TimMcCool's Scratch
 profile](https://scratch.mit.edu/users/TimMcCool/) or open an issue on the github repo
 
-( &nbsp; )
+&nbsp;
 
 # logging-in--scratch3session
 
