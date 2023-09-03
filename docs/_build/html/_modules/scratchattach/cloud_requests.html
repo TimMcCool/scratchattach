@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scratchattach.cloud_requests &mdash; scratchattach 1.3.7 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            scratchattach
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">scratchattach</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scratchattach</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../scratchattach.html">scratchattach</a></li>
+      <li class="breadcrumb-item active">scratchattach.cloud_requests</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scratchattach.cloud_requests</h1><div class="highlight"><pre>
+<span></span><span class="c1">#----- The cloud request handler class</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">cloud</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">.encoder</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exceptions</span>
+
+<div class="viewcode-block" id="CloudRequests"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests">[docs]</a><span class="k">class</span> <span class="nc">CloudRequests</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Framework (inspired by discord.py) that allows Scratch cloud variables and Python to communicate. More information: https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="CloudRequests.Request"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.Request">[docs]</a>    <span class="k">class</span> <span class="nc">Request</span><span class="p">:</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">entries</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_id</span></div>
+
+<div class="viewcode-block" id="CloudRequests.init_attributes"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.init_attributes">[docs]</a>    <span class="k">def</span> <span class="nf">init_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_requester</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_timestamp</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_request_id</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">requests</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">request_parts</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">respond_in_thread</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_var</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idle_since</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">force_reconnect</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">cloud_connection</span><span class="p">:</span> <span class="n">cloud</span><span class="o">.</span><span class="n">CloudConnection</span><span class="p">,</span>
+                 <span class="o">*</span><span class="p">,</span>
+                 <span class="n">used_cloud_vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;4&quot;</span><span class="p">,</span> <span class="s2">&quot;5&quot;</span><span class="p">,</span> <span class="s2">&quot;6&quot;</span><span class="p">,</span> <span class="s2">&quot;7&quot;</span><span class="p">,</span> <span class="s2">&quot;8&quot;</span><span class="p">,</span> <span class="s2">&quot;9&quot;</span><span class="p">],</span>
+                 <span class="n">ignore_exceptions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">force_reconnect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">_log_url</span><span class="o">=</span><span class="s2">&quot;https://clouddata.scratch.mit.edu/logs&quot;</span><span class="p">,</span>
+                 <span class="n">_packet_length</span><span class="o">=</span><span class="mi">245</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!</span><span class="se">\033</span><span class="s2">[0m&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">_log_url</span> <span class="o">!=</span> <span class="s2">&quot;https://clouddata.scratch.mit.edu/logs&quot;</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;Log URL isn&#39;t the URL of Scratch&#39;s clouddata logs. Don&#39;t use the _log_url parameter unless you know what you are doing&quot;</span><span class="p">,</span>
+                <span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_packet_length</span> <span class="o">&gt;</span> <span class="mi">245</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The packet length was set to a value higher than default (245). Your project most likely won&#39;t work on Scratch.&quot;</span><span class="p">,</span>
+                <span class="ne">RuntimeWarning</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">used_cloud_vars</span> <span class="o">=</span> <span class="n">used_cloud_vars</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">cloud_connection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span> <span class="o">=</span> <span class="n">cloud_connection</span><span class="o">.</span><span class="n">project_id</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ignore_exceptions</span> <span class="o">=</span> <span class="n">ignore_exceptions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_url</span> <span class="o">=</span> <span class="n">_log_url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packet_length</span> <span class="o">=</span> <span class="n">_packet_length</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_attributes</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CloudRequests.request"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.request">[docs]</a>    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">thread</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Decorator function. Adds a request to the request handler.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">thread</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">respond_in_thread</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="p">[</span><span class="n">function</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">name</span><span class="p">,</span>
+                <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">,</span>
+                <span class="s2">&quot;on_call&quot;</span><span class="p">:</span> <span class="n">function</span><span class="p">,</span>
+                <span class="s2">&quot;thread&quot;</span><span class="p">:</span> <span class="n">thread</span>
+            <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">inner</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="p">[</span><span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;on_call&quot;</span><span class="p">:</span> <span class="n">function</span><span class="p">,</span>
+                <span class="s2">&quot;thread&quot;</span><span class="p">:</span> <span class="kc">False</span>
+            <span class="p">}</span></div>
+
+<div class="viewcode-block" id="CloudRequests.call_request"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.call_request">[docs]</a>    <span class="k">def</span> <span class="nf">call_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request_id</span><span class="p">,</span> <span class="n">req_obj</span><span class="p">,</span> <span class="n">arguments</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calls a request. Called by the request handler when it detects a request.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">req_obj</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">req_obj</span><span class="p">[</span><span class="s2">&quot;enabled&quot;</span><span class="p">]:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Warning: Client received the disabled request &#39;</span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_event</span><span class="p">(</span><span class="s2">&quot;on_disabled_request&quot;</span><span class="p">,</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
+                                 <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
+                                 <span class="n">requester</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">last_requester</span><span class="p">,</span>
+                                 <span class="n">timestamp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">last_timestamp</span><span class="p">,</span>
+                                 <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">,</span>
+                                 <span class="n">request_id</span><span class="o">=</span><span class="n">request_id</span><span class="p">)</span>
+                <span class="p">])</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">req_obj</span><span class="p">[</span><span class="s2">&quot;on_call&quot;</span><span class="p">](</span><span class="o">*</span><span class="n">arguments</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">req_obj</span><span class="p">[</span><span class="s2">&quot;thread&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">request_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="n">output</span><span class="p">,</span>
+                    <span class="s2">&quot;request&quot;</span><span class="p">:</span> <span class="n">req_obj</span>
+                <span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">req_obj</span><span class="p">,</span> <span class="n">request_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_event</span><span class="p">(</span><span class="s2">&quot;on_error&quot;</span><span class="p">,</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
+                             <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
+                             <span class="n">requester</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">last_requester</span><span class="p">,</span>
+                             <span class="n">timestamp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">last_timestamp</span><span class="p">,</span>
+                             <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">,</span>
+                             <span class="n">request_id</span><span class="o">=</span><span class="n">request_id</span><span class="p">),</span> <span class="n">e</span>
+            <span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_exceptions</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Warning: Caught error in request &#39;</span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">&#39; - Full error below&quot;</span>
+                <span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Exception in request &#39;</span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">&#39;:&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">req_obj</span><span class="p">[</span><span class="s2">&quot;thread&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">request_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;output&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Error: Check the Python console&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;request&quot;</span><span class="p">:</span> <span class="n">req_obj</span>
+                <span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="s2">&quot;Error: Check the Python console&quot;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span>
+                                   <span class="n">req_obj</span><span class="p">,</span> <span class="n">request_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CloudRequests.add_request"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.add_request">[docs]</a>    <span class="k">def</span> <span class="nf">add_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">enabled</span><span class="o">=</span><span class="n">enabled</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)(</span><span class="n">function</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CloudRequests.remove_request"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.remove_request">[docs]</a>    <span class="k">def</span> <span class="nf">remove_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CloudRequests.edit_request"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.edit_request">[docs]</a>    <span class="k">def</span> <span class="nf">edit_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">name</span><span class="p">,</span>
+                     <span class="o">*</span><span class="p">,</span>
+                     <span class="n">enabled</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">new_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">new_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">thread</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RequestNotFound</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">enabled</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;enabled&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">enabled</span>
+        <span class="k">if</span> <span class="n">new_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_name</span>
+        <span class="k">if</span> <span class="n">new_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;on_call&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_function</span>
+        <span class="k">if</span> <span class="n">thread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;thread&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">thread</span></div>
+
+<div class="viewcode-block" id="CloudRequests.event"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.event">[docs]</a>    <span class="k">def</span> <span class="nf">event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Decorator function. Adds an event to the request handler.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">function</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CloudRequests.get_requester"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.get_requester">[docs]</a>    <span class="k">def</span> <span class="nf">get_requester</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Can be used inside a request to get the username that performed the request.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_requester</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logs</span> <span class="o">=</span> <span class="n">cloud</span><span class="o">.</span><span class="n">get_cloud_logs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
+                                         <span class="n">filter_by_var_named</span><span class="o">=</span><span class="s2">&quot;TO_HOST&quot;</span><span class="p">)</span>
+            <span class="n">activity</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+                <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_request_id</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                       <span class="n">logs</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">activity</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_requester</span> <span class="o">=</span> <span class="n">activity</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;user&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_requester</span></div>
+
+<div class="viewcode-block" id="CloudRequests.get_timestamp"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.get_timestamp">[docs]</a>    <span class="k">def</span> <span class="nf">get_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Can be used inside a request to get the timestamp of when the request was performed or received.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_timestamp</span></div>
+
+<div class="viewcode-block" id="CloudRequests.get_exact_timestamp"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.get_exact_timestamp">[docs]</a>    <span class="k">def</span> <span class="nf">get_exact_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Can be used inside a request to get the exact timestamp of when the request was performed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logs</span> <span class="o">=</span> <span class="n">cloud</span><span class="o">.</span><span class="n">get_cloud_logs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
+                                     <span class="n">filter_by_var_named</span><span class="o">=</span><span class="s2">&quot;TO_HOST&quot;</span><span class="p">)</span>
+        <span class="n">activity</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_request_id</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                   <span class="n">logs</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">activity</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">activity</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+    <span class="k">def</span> <span class="nf">_respond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request_id</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">validation</span><span class="o">=</span><span class="mi">2222</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">idle_since</span> <span class="o">+</span> <span class="mi">8</span> <span class="o">&lt;</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_reconnect</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">_connect</span><span class="p">(</span><span class="n">cloud_host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">cloud_host</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">_handshake</span><span class="p">()</span>
+
+        <span class="n">remaining_response</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">remaining_response</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">remaining_response</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">limit</span><span class="p">:</span>
+                <span class="n">response_part</span> <span class="o">=</span> <span class="n">remaining_response</span><span class="p">[:</span><span class="n">limit</span><span class="p">]</span>
+                <span class="n">remaining_response</span> <span class="o">=</span> <span class="n">remaining_response</span><span class="p">[</span><span class="n">limit</span><span class="p">:]</span>
+
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">99</span><span class="p">:</span>
+                    <span class="n">iteration_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">9</span><span class="p">:</span>
+                    <span class="n">iteration_string</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iteration_string</span> <span class="o">=</span> <span class="s2">&quot;00&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">set_var</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;FROM_HOST_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">used_cloud_vars</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_var</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">response_part</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">request_id</span><span class="si">}{</span><span class="n">iteration_string</span><span class="si">}</span><span class="s2">1&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_event</span><span class="p">(</span><span class="s2">&quot;on_disconnect&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_var</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_var</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_cloud_vars</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">current_var</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">set_var</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;FROM_HOST_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">used_cloud_vars</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_var</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">remaining_response</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">request_id</span><span class="si">}{</span><span class="n">validation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_event</span><span class="p">(</span><span class="s2">&quot;on_disconnect&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_var</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_var</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">used_cloud_vars</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">current_var</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="n">remaining_response</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">idle_since</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CloudRequests.run"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">thread</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">data_from_websocket</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">no_packet_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Starts the request handler.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            thread: Whether the request handler should be run in a thread.</span>
+<span class="sd">            data_from_websocket: Whether the websocket should be used to detect requests.</span>
+<span class="sd">            no_packet_loss: Whether the request handler should reconnect to the cloud websocket before responding to a request, this can help to avoid packet loss.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">force_reconnect</span> <span class="o">=</span> <span class="n">no_packet_loss</span>
+        <span class="k">if</span> <span class="n">data_from_websocket</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">events</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">cloud</span><span class="o">.</span><span class="n">WsCloudEvents</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
+                    <span class="n">cloud</span><span class="o">.</span><span class="n">CloudConnection</span><span class="p">(</span>
+                        <span class="n">project_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
+                        <span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">_username</span><span class="p">,</span>
+                        <span class="n">session_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">_session_id</span><span class="p">),</span>
+                    <span class="n">update_interval</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                <span class="n">cloud</span><span class="o">.</span><span class="n">CloudEvents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
+                                   <span class="n">update_interval</span><span class="o">=</span><span class="mf">4.5</span><span class="p">,</span>
+                                   <span class="n">cloud_log_limit</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">events</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">thread</span><span class="p">:</span>
+            <span class="n">thread</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span>
+                <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">events</span><span class="p">],</span>
+                <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data_from_websocket&quot;</span><span class="p">:</span> <span class="n">data_from_websocket</span><span class="p">})</span>
+            <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="n">data_from_websocket</span><span class="o">=</span><span class="n">data_from_websocket</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CloudRequests.call_event"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.CloudRequests.call_event">[docs]</a>    <span class="k">def</span> <span class="nf">call_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calls an event. Called by the request handler when it detects an event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">events</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="n">event</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">events</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">events</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">_parse_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">req_obj</span><span class="p">,</span> <span class="n">request_id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">3000</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Warning: Output of request &#39;</span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">&#39; is longer than 3000 characters (length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="p">))</span><span class="si">}</span><span class="s2"> characters). Responding the request will take &gt;4 seconds.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">request_id</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;0&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">==</span> <span class="n">output</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">send_as_integer</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">send_as_integer</span> <span class="o">=</span> <span class="ow">not</span> <span class="s2">&quot;-&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">send_as_integer</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Request &#39;</span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">&#39; didn&#39;t return anything.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">elif</span> <span class="n">send_as_integer</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">output</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">Encoding</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">input</span> <span class="o">=</span> <span class="n">output</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">input</span><span class="p">:</span>
+                <span class="n">output</span> <span class="o">+=</span> <span class="n">Encoding</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">output</span> <span class="o">+=</span> <span class="s2">&quot;89&quot;</span>
+        <span class="k">if</span> <span class="n">send_as_integer</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_respond</span><span class="p">(</span><span class="n">request_id</span><span class="p">,</span>
+                          <span class="n">output</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">packet_length</span><span class="p">,</span>
+                          <span class="n">validation</span><span class="o">=</span><span class="mi">3222</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_respond</span><span class="p">(</span><span class="n">request_id</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">packet_length</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events</span><span class="p">,</span> <span class="n">data_from_websocket</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ws_data</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">def</span> <span class="nf">on_set</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;TO_HOST&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ws_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">_connect</span><span class="p">(</span><span class="n">cloud_host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">cloud_host</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">_handshake</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">call_event</span><span class="p">(</span><span class="s2">&quot;on_disconnect&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">idle_since</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">responded_request_ids</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">requests</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;You haven&#39;t added any requests!&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">events</span> <span class="o">!=</span> <span class="p">[]:</span>
+            <span class="n">event_handler</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">event_handler</span><span class="o">.</span><span class="n">event</span><span class="p">(</span><span class="n">on_set</span><span class="p">)</span>
+            <span class="n">event_handler</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">update_interval</span><span class="o">=</span><span class="n">event_handler</span><span class="o">.</span><span class="n">update_interval</span><span class="p">,</span>
+                                <span class="n">thread</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">old_clouddata</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">call_event</span><span class="p">(</span><span class="s2">&quot;on_ready&quot;</span><span class="p">)</span>  <span class="c1">#Calls the on_ready event</span>
+
+        <span class="k">if</span> <span class="n">data_from_websocket</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">old_clouddata</span> <span class="o">=</span> <span class="n">cloud</span><span class="o">.</span><span class="n">get_cloud_logs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span> <span class="n">filter_by_var_named</span><span class="o">=</span><span class="s2">&quot;TO_HOST&quot;</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_timestamp</span> <span class="o">=</span> <span class="n">old_clouddata</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_timestamp</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.001</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">data_from_websocket</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">clouddata</span> <span class="o">=</span> <span class="n">cloud</span><span class="o">.</span><span class="n">get_cloud_logs</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span> <span class="n">filter_by_var_named</span><span class="o">=</span><span class="s2">&quot;TO_HOST&quot;</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">clouddata</span> <span class="o">==</span> <span class="n">old_clouddata</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">old_clouddata</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">clouddata</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ws_data</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">activity</span> <span class="ow">in</span> <span class="n">clouddata</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">activity</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_timestamp</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">ws_data</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">cloud</span><span class="o">.</span><span class="n">CloudEvents</span><span class="o">.</span><span class="n">Event</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">],</span>
+                                                 <span class="n">var</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">:],</span>
+                                                 <span class="n">name</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">:],</span>
+                                                 <span class="n">value</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                                                 <span class="n">timestamp</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]))</span>
+
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">ws_data</span> <span class="o">!=</span> <span class="p">[]:</span>
+                <span class="n">event</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ws_data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">raw_request</span><span class="p">,</span> <span class="n">request_id</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">request_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_parts</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">request_parts</span><span class="p">[</span><span class="n">request_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">request_parts</span><span class="p">[</span><span class="n">request_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">raw_request</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                        <span class="k">continue</span>
+
+                    <span class="k">if</span> <span class="n">request_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">responded_request_ids</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">responded_request_ids</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">request_id</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">responded_request_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responded_request_ids</span><span class="p">[:</span><span class="mi">15</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_requester</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">user</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_timestamp</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">timestamp</span>
+
+                <span class="n">_raw_request</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="k">if</span> <span class="n">request_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_parts</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_parts</span><span class="p">[</span><span class="n">request_id</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                        <span class="n">_raw_request</span> <span class="o">+=</span> <span class="n">i</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">request_parts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">request_id</span><span class="p">)</span>
+                <span class="n">raw_request</span> <span class="o">=</span> <span class="n">_raw_request</span> <span class="o">+</span> <span class="n">raw_request</span>
+
+                <span class="n">request</span> <span class="o">=</span> <span class="n">Encoding</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">raw_request</span><span class="p">)</span>
+                <span class="n">arguments</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&amp;&quot;</span><span class="p">)</span>
+                <span class="n">request</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">call_event</span><span class="p">(</span><span class="s2">&quot;on_request&quot;</span><span class="p">,</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
+                                 <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
+                                 <span class="n">requester</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">last_requester</span><span class="p">,</span>
+                                 <span class="n">timestamp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">last_timestamp</span><span class="p">,</span>
+                                 <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">,</span>
+                                 <span class="n">request_id</span><span class="o">=</span><span class="n">request_id</span><span class="p">,</span>
+                                 <span class="nb">id</span><span class="o">=</span><span class="n">request_id</span><span class="p">)</span>
+                <span class="p">])</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+                <span class="k">if</span> <span class="n">request</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Warning: Client received an unknown request called &#39;</span><span class="si">{</span><span class="n">request</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">call_event</span><span class="p">(</span><span class="s2">&quot;on_unknown_request&quot;</span><span class="p">,</span> <span class="p">[</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
+                                     <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
+                                     <span class="n">requester</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">last_requester</span><span class="p">,</span>
+                                     <span class="n">timestamp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">last_timestamp</span><span class="p">,</span>
+                                     <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">,</span>
+                                     <span class="n">request_id</span><span class="o">=</span><span class="n">request_id</span><span class="p">)</span>
+                    <span class="p">])</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">req_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">requests</span><span class="p">[</span><span class="n">request</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">last_request_id</span> <span class="o">=</span> <span class="n">request_id</span>
+                    <span class="k">if</span> <span class="n">req_obj</span><span class="p">[</span><span class="s2">&quot;thread&quot;</span><span class="p">]:</span>
+                        <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">call_request</span><span class="p">,</span>
+                               <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">request_id</span><span class="p">,</span> <span class="n">req_obj</span><span class="p">,</span> <span class="n">arguments</span><span class="p">))</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">call_request</span><span class="p">(</span><span class="n">request_id</span><span class="p">,</span> <span class="n">req_obj</span><span class="p">,</span> <span class="n">arguments</span><span class="p">)</span>
+
+            <span class="c1">#Send outputs</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">output_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="k">for</span> <span class="n">request_id</span> <span class="ow">in</span> <span class="n">output_ids</span><span class="p">:</span>
+                    <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">request_id</span><span class="p">][</span><span class="s2">&quot;output&quot;</span><span class="p">]</span>
+                    <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">request_id</span><span class="p">][</span><span class="s2">&quot;request&quot;</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                    <span class="n">req_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">request_id</span><span class="p">][</span><span class="s2">&quot;request&quot;</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">req_obj</span><span class="p">,</span> <span class="n">request_id</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">request_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TwCloudRequests"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.TwCloudRequests">[docs]</a><span class="k">class</span> <span class="nc">TwCloudRequests</span><span class="p">(</span><span class="n">CloudRequests</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Framework (inspired by discord.py) that allows TurboWarp cloud variables and Python to communicate. More information: https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">cloud_connection</span><span class="p">,</span>
+                 <span class="o">*</span><span class="p">,</span>
+                 <span class="n">used_cloud_vars</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;4&quot;</span><span class="p">,</span> <span class="s2">&quot;5&quot;</span><span class="p">,</span> <span class="s2">&quot;6&quot;</span><span class="p">,</span> <span class="s2">&quot;7&quot;</span><span class="p">,</span> <span class="s2">&quot;8&quot;</span><span class="p">,</span> <span class="s2">&quot;9&quot;</span><span class="p">],</span>
+                 <span class="n">ignore_exceptions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">force_reconnect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">_packet_length</span><span class="o">=</span><span class="mi">98800</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!</span><span class="se">\033</span><span class="s2">[0m&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">_packet_length</span> <span class="o">&gt;</span> <span class="mi">98800</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The packet length was set to a value higher than TurboWarp&#39;s default (98800).&quot;</span><span class="p">,</span>
+                <span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">used_cloud_vars</span> <span class="o">=</span> <span class="n">used_cloud_vars</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">cloud_connection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span> <span class="o">=</span> <span class="n">cloud_connection</span><span class="o">.</span><span class="n">project_id</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ignore_exceptions</span> <span class="o">=</span> <span class="n">ignore_exceptions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packet_length</span> <span class="o">=</span> <span class="n">_packet_length</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_attributes</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TwCloudRequests.get_requester"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.TwCloudRequests.get_requester">[docs]</a>    <span class="k">def</span> <span class="nf">get_requester</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="TwCloudRequests.run"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud_requests.TwCloudRequests.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">thread</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">data_from_websocket</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">no_packet_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Starts the request handler.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            thread: Whether the request handler should be run in a thread.</span>
+<span class="sd">            data_from_websocket: Whether the websocket should be used to detect requests.</span>
+<span class="sd">            no_packet_loss: Whether the request handler should reconnect to the cloud websocket before responding to a request, this can help to avoid packet loss.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">force_reconnect</span> <span class="o">=</span> <span class="n">no_packet_loss</span>
+        <span class="n">events</span> <span class="o">=</span> <span class="p">[</span><span class="n">cloud</span><span class="o">.</span><span class="n">TwCloudEvents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span> <span class="n">update_interval</span><span class="o">=</span><span class="mi">0</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">thread</span><span class="p">:</span>
+            <span class="n">thread</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">events</span><span class="p">])</span>
+            <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="n">events</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, TimMcCool.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scratchattach.project &mdash; scratchattach 1.3.7 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            scratchattach
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">scratchattach</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scratchattach</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../scratchattach.html">scratchattach</a></li>
+      <li class="breadcrumb-item active">scratchattach.project</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scratchattach.project</h1><div class="highlight"><pre>
+<span></span><span class="c1">#----- Getting projects</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">user</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exceptions</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">studio</span>
+
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+    <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<div class="viewcode-block" id="PartialProject"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.PartialProject">[docs]</a><span class="k">class</span> <span class="nc">PartialProject</span><span class="p">:</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents an unshared Scratch project that can&#39;t be accessed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">entries</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">shared</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_token</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;_session&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="n">headers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_headers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_cookies</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;Cookie&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span> <span class="k">pass</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">[</span><span class="s2">&quot;accept&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;application/json&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;application/json&quot;</span>
+
+<div class="viewcode-block" id="PartialProject.remixes"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.PartialProject.remixes">[docs]</a>    <span class="k">def</span> <span class="nf">remixes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;scratchattach.project.Project&gt;: A list containing the remixes of the project, each project is represented by a Project object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_projects</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/remixes/?offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                    <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_projects</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/remixes/?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                    <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">projects</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">_projects</span><span class="p">:</span>
+            <span class="n">projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Project</span><span class="p">(</span>
+                <span class="n">author</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">][</span><span class="s2">&quot;username&quot;</span><span class="p">],</span>
+                <span class="n">comments_allowed</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;comments_allowed&quot;</span><span class="p">],</span>
+                <span class="n">description</span><span class="o">=</span><span class="n">project</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">],</span>
+                <span class="n">created</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;created&quot;</span><span class="p">],</span>
+                <span class="n">last_modified</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;modified&quot;</span><span class="p">],</span>
+                <span class="n">share_date</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;shared&quot;</span><span class="p">],</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                <span class="n">thumbnail_url</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">],</span>
+                <span class="n">instructions</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;instructions&quot;</span><span class="p">],</span>
+                <span class="n">remix_parent</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;remix&quot;</span><span class="p">][</span><span class="s2">&quot;parent&quot;</span><span class="p">],</span>
+                <span class="n">remix_root</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;remix&quot;</span><span class="p">][</span><span class="s2">&quot;root&quot;</span><span class="p">],</span>
+                <span class="n">favorites</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;favorites&quot;</span><span class="p">],</span>
+                <span class="n">loves</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;loves&quot;</span><span class="p">],</span>
+                <span class="n">remixes</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;remixes&quot;</span><span class="p">],</span>
+                <span class="n">views</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;views&quot;</span><span class="p">],</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">],</span>
+                <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://scratch.mit.edu/projects/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]),</span>
+                <span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span>
+            <span class="p">))</span>
+        <span class="k">return</span> <span class="n">projects</span></div></div>
+
+
+
+<div class="viewcode-block" id="Project"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project">[docs]</a><span class="k">class</span> <span class="nc">Project</span><span class="p">(</span><span class="n">PartialProject</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Represents a Scratch project.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    .id: The project id</span>
+
+<span class="sd">    .url: The project url</span>
+
+<span class="sd">    .title</span>
+
+<span class="sd">    .author: The username of the author</span>
+
+<span class="sd">    .comments_allowed: boolean that is True if comments are enabled</span>
+
+<span class="sd">    .instructions</span>
+
+<span class="sd">    .notes: The &#39;Notes and Credits&#39; section</span>
+
+<span class="sd">    .created: The date of the project creation</span>
+
+<span class="sd">    .last_modified: The date when the project was modified the last time</span>
+
+<span class="sd">    .share_date</span>
+
+<span class="sd">    .thumbnail_url</span>
+
+<span class="sd">    .remix_parent</span>
+
+<span class="sd">    .remix_root</span>
+
+<span class="sd">    .loves: The project&#39;s love count</span>
+
+<span class="sd">    .favorites: The project&#39;s favorite count</span>
+
+<span class="sd">    .remix_count: The number of remixes</span>
+
+<span class="sd">    .views: The view count</span>
+
+<span class="sd">    .project_token: The project token (required to access the project json)</span>
+
+<span class="sd">    .update() will update these attributes</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span>
+
+<div class="viewcode-block" id="Project.update"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates the attributes of the Project object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">project</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;user-agent&quot;</span><span class="p">:</span> <span class="s2">&quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;x-token&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">xtoken</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;429&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s2">&quot;429&quot;</span>
+            <span class="k">if</span> <span class="n">project</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;{</span><span class="se">\n</span><span class="s1">  &quot;response&quot;: &quot;Too many requests&quot;</span><span class="se">\n</span><span class="s1">}&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;429&quot;</span>
+            <span class="n">project</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">project</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;429&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s2">&quot;429&quot;</span>
+            <span class="k">if</span> <span class="n">project</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;{</span><span class="se">\n</span><span class="s1">  &quot;response&quot;: &quot;Too many requests&quot;</span><span class="se">\n</span><span class="s1">}&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s2">&quot;429&quot;</span>
+            <span class="n">project</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;code&quot;</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">project</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Project.download"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.download">[docs]</a>    <span class="k">def</span> <span class="nf">download</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Downloads the project json to the given directory.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">                filename (str): The name that will be given to the downloaded file.</span>
+<span class="sd">                dir (str): The path of the directory the file will be saved in.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://projects.scratch.mit.edu/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">?token=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.sb3&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">dir</span><span class="si">}{</span><span class="n">filename</span><span class="si">}</span><span class="s2">.sb3&quot;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">FetchError</span><span class="p">(</span><span class="s2">&quot;Method only works for projects created with Scratch 3&quot;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Project.get_raw_json"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.get_raw_json">[docs]</a>    <span class="k">def</span> <span class="nf">get_raw_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method only works for project created with Scratch 3.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: The project JSON</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://projects.scratch.mit.edu/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">?token=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">FetchError</span><span class="p">(</span><span class="s2">&quot;Method only works for projects created with Scratch 3&quot;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Project.get_creator_agent"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.get_creator_agent">[docs]</a>    <span class="k">def</span> <span class="nf">get_creator_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method only works for project created with Scratch 3.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The user agent of the browser that this project was saved with.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://projects.scratch.mit.edu/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">?token=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">project_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;meta&quot;</span><span class="p">][</span><span class="s2">&quot;agent&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">FetchError</span><span class="p">(</span><span class="s2">&quot;Method only works for projects created with Scratch 3&quot;</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">_update_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">project</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://scratch.mit.edu/projects/&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;author&quot;</span><span class="p">][</span><span class="s2">&quot;username&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comments_allowed</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;comments_allowed&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instructions</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;instructions&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">notes</span><span class="o">=</span><span class="n">project</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">created</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;created&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_modified</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;modified&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">share_date</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;shared&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thumbnail_url</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remix_parent</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;remix&quot;</span><span class="p">][</span><span class="s2">&quot;parent&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remix_root</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;remix&quot;</span><span class="p">][</span><span class="s2">&quot;root&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remix_parent</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remix_root</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">favorites</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;favorites&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loves</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;loves&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remix_count</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;remixes&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">views</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;views&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">project_token</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;project_token&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">project_token</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="Project.get_author"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.get_author">[docs]</a>    <span class="k">def</span> <span class="nf">get_author</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            scratchattach.user.User: An object representing the Scratch user who created this project.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">connect_user</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">user</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Project.studios"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.studios">[docs]</a>    <span class="k">def</span> <span class="nf">studios</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;dict&gt;: A list containing the studios this project is in, each studio is represented by a dict.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="si">}</span><span class="s2">/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/studios?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Project.comments"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.comments">[docs]</a>    <span class="k">def</span> <span class="nf">comments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the comments posted on the project (except for replies. To get replies use :meth:`scratchattach.project.Project.get_comment_replies`).</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            page: The page of the comments that should be returned.</span>
+<span class="sd">            limit: Max. amount of returned comments.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;dict&gt;: A list containing the requested comments as dicts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">comments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="si">}</span><span class="s2">/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/comments/?limit=</span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">))</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">40</span><span class="p">:</span>
+                <span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span> <span class="o">+</span> <span class="n">r</span>
+                <span class="k">break</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="mi">40</span>
+            <span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span> <span class="o">+</span> <span class="n">r</span>
+        <span class="k">return</span> <span class="n">comments</span></div>
+
+<div class="viewcode-block" id="Project.get_comment_replies"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.get_comment_replies">[docs]</a>    <span class="k">def</span> <span class="nf">get_comment_replies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">comment_id</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">comments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="si">}</span><span class="s2">/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/comments/</span><span class="si">{</span><span class="n">comment_id</span><span class="si">}</span><span class="s2">/replies?limit=</span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">))</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">40</span><span class="p">:</span>
+                <span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span> <span class="o">+</span> <span class="n">r</span>
+                <span class="k">break</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="mi">40</span>
+            <span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span> <span class="o">+</span> <span class="n">r</span>
+        <span class="k">return</span> <span class="n">comments</span></div>
+
+<div class="viewcode-block" id="Project.love"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.love">[docs]</a>    <span class="k">def</span> <span class="nf">love</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posts a love on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/loves/user/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;userLove&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">love</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Project.unlove"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.unlove">[docs]</a>    <span class="k">def</span> <span class="nf">unlove</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes the love from this project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/loves/user/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;userLove&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">love</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Project.favorite"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.favorite">[docs]</a>    <span class="k">def</span> <span class="nf">favorite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posts a favorite on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/favorites/user/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;userFavorite&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">love</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Project.unfavorite"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.unfavorite">[docs]</a>    <span class="k">def</span> <span class="nf">unfavorite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes the favorite from this project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/favorites/user/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;userFavorite&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">love</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Project.post_view"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.post_view">[docs]</a>    <span class="k">def</span> <span class="nf">post_view</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Increases the project&#39;s view counter by 1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="si">}</span><span class="s2">/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/views/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Project.turn_off_commenting"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.turn_off_commenting">[docs]</a>    <span class="k">def</span> <span class="nf">turn_off_commenting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Disables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;comments_allowed&quot;</span> <span class="p">:</span> <span class="kc">False</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Project.turn_on_commenting"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.turn_on_commenting">[docs]</a>    <span class="k">def</span> <span class="nf">turn_on_commenting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Enables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;comments_allowed&quot;</span> <span class="p">:</span> <span class="kc">True</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="Project.toggle_commenting"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.toggle_commenting">[docs]</a>    <span class="k">def</span> <span class="nf">toggle_commenting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Switches commenting on / off on the project (If comments are on, they will be turned off, else they will be turned on). You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;comments_allowed&quot;</span> <span class="p">:</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments_allowed</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Project.share"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.share">[docs]</a>    <span class="k">def</span> <span class="nf">share</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Shares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/share/&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">,</span>
+                <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Project.unshare"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.unshare">[docs]</a>    <span class="k">def</span> <span class="nf">unshare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unshares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/unshare/&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">,</span>
+                <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Project.set_thumbnail"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.set_thumbnail">[docs]</a>    <span class="k">def</span> <span class="nf">set_thumbnail</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project` </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">thumbnail</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/internalapi/project/thumbnail/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/set/&quot;</span><span class="p">,</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">thumbnail</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Project.delete_comment"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.delete_comment">[docs]</a>    <span class="k">def</span> <span class="nf">delete_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">comment_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deletes a comment. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            comment_id: The id of the comment that should be deleted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/comments/project/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/comment/</span><span class="si">{</span><span class="n">comment_id</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">headers</span></div>
+
+<div class="viewcode-block" id="Project.report_comment"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.report_comment">[docs]</a>    <span class="k">def</span> <span class="nf">report_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">comment_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reports a comment to the Scratch team. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            comment_id: The id of the comment that should be reported</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/comments/project/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/comment/</span><span class="si">{</span><span class="n">comment_id</span><span class="si">}</span><span class="s2">/report&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Project.post_comment"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.post_comment">[docs]</a>    <span class="k">def</span> <span class="nf">post_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">commentee_id</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posts a comment on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            content: Content of the comment that should be posted</span>
+<span class="sd">        </span>
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            parent_id: ID of the comment you want to reply to. If you don&#39;t want to mention a user, don&#39;t put the argument.</span>
+<span class="sd">            commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don&#39;t want to mention a user, don&#39;t put the argument.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;commentee_id&quot;</span><span class="p">:</span> <span class="n">commentee_id</span><span class="p">,</span>
+            <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">content</span><span class="p">),</span>
+            <span class="s2">&quot;parent_id&quot;</span><span class="p">:</span> <span class="n">parent_id</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span>
+        <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;referer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;https://scratch.mit.edu/projects/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/comments/project/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Project.reply_comment"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.reply_comment">[docs]</a>    <span class="k">def</span> <span class="nf">reply_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">commentee_id</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posts a reply to a comment on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            content: Content of the comment that should be posted</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            parent_id: ID of the comment you want to reply to</span>
+<span class="sd">            commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don&#39;t want to mention a user, don&#39;t put the argument.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">post_comment</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="n">parent_id</span><span class="p">,</span> <span class="n">commentee_id</span><span class="o">=</span><span class="n">commentee_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Project.set_title"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.set_title">[docs]</a>    <span class="k">def</span> <span class="nf">set_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Changes the projects title. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project` </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">(</span><span class="s2">&quot;You must be the project owner to do this.&quot;</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;title&quot;</span><span class="p">:</span><span class="n">text</span><span class="p">}))</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">r</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Project.set_instructions"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.set_instructions">[docs]</a>    <span class="k">def</span> <span class="nf">set_instructions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Changes the projects instructions. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project` </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">(</span><span class="s2">&quot;You must be the project owner to do this.&quot;</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;instructions&quot;</span><span class="p">:</span><span class="n">text</span><span class="p">}))</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">r</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Project.set_notes"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.set_notes">[docs]</a>    <span class="k">def</span> <span class="nf">set_notes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Changes the projects notes and credits. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project` </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">(</span><span class="s2">&quot;You must be the project owner to do this.&quot;</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/projects/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;description&quot;</span><span class="p">:</span><span class="n">text</span><span class="p">}))</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">r</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Project.ranks"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.ranks">[docs]</a>    <span class="k">def</span> <span class="nf">ranks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets information about the project&#39;s ranks. Fetched from ScratchDB.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: A dict containing the project&#39;s ranks. If the ranks aren&#39;t available, all values will be -1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/project/info/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;statistics&quot;</span><span class="p">][</span><span class="s2">&quot;ranks&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Project.moderation_status"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.Project.moderation_status">[docs]</a>    <span class="k">def</span> <span class="nf">moderation_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets information about the project&#39;s moderation status. Fetched from jeffalo&#39;s API.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The moderation status of the project.</span>
+
+<span class="sd">        These moderation statuses exist:</span>
+
+<span class="sd">        safe: The project was reviewed by the Scratch team and was considered safe for everyone.</span>
+
+<span class="sd">        notsafe: The project was reviewed by the Scratch team and was considered not safe for everyone (nfe). It can&#39;t appear in search results, on the explore page and on the front page.</span>
+<span class="sd">        </span>
+<span class="sd">        notreviewed: The project hasn&#39;t been reviewed yet.</span>
+<span class="sd">        </span>
+<span class="sd">        no_remixes: Unable to fetch the project&#39;s moderation status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://jeffalo.net/api/nfe/?project=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">FetchError</span><span class="p">)</span></div></div>
+
+
+
+<span class="c1"># ------ #</span>
+
+<div class="viewcode-block" id="get_project"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.get_project">[docs]</a><span class="k">def</span> <span class="nf">get_project</span><span class="p">(</span><span class="n">project_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a project without logging in.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        project_id (int): Project id of the requested project</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        scratchattach.project.Project: An object representing the requested project.</span>
+<span class="sd">    </span>
+<span class="sd">    Warning:</span>
+<span class="sd">        All methods that require authentication (like project.love) will not work on the returned object.</span>
+<span class="sd">        </span>
+<span class="sd">        If you want to use these methods, get the project with :meth:`scratchattach.session.Session.connect_project` instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">project</span> <span class="o">=</span> <span class="n">Project</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">project_id</span><span class="p">))</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">u</span> <span class="o">==</span> <span class="s2">&quot;429&quot;</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Response429</span><span class="p">(</span><span class="s2">&quot;Your network is blocked or rate-limited by Scratch.</span><span class="se">\n</span><span class="s2">If you&#39;re using an online IDE like replit.com, try running the code on your computer.&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+            <span class="n">project</span> <span class="o">=</span> <span class="n">PartialProject</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span> <span class="n">author</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">notes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loves</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">views</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">favorites</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">project</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="explore_projects"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.explore_projects">[docs]</a><span class="k">def</span> <span class="nf">explore_projects</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;trending&quot;</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">&quot;en&quot;</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Gets projects from the explore page without logging in.</span>
+
+<span class="sd">    Keyword arguments:</span>
+<span class="sd">        query (str): Specifies the tag of the explore page. To get the projects from the &quot;All&quot; tag, set this argument to &quot;*&quot;.</span>
+<span class="sd">        mode (str): Has to be one of these values: &quot;trending&quot;, &quot;popular&quot; or &quot;recent&quot;. Defaults to &quot;trending&quot;.</span>
+<span class="sd">        language (str): A language abbreviation, defaults to &quot;en&quot;. (Depending on the language used on the Scratch website, Scratch displays you different explore pages.)</span>
+<span class="sd">        limit (int): Max. amount of returned projects.</span>
+<span class="sd">        offset (int): Offset of the first returned project.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list&lt;scratchattach.project.Project&gt;: List that contains the explore page projects</span>
+<span class="sd">    </span>
+<span class="sd">    Warning:</span>
+<span class="sd">        All methods that require authentication (like project.love) will not work on the returned objects.</span>
+<span class="sd">        </span>
+<span class="sd">        If you want to use these methods, get the explore page projects with :meth:`scratchattach.session.Session.search_projects` instead.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/explore/projects?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&amp;language=</span><span class="si">{</span><span class="n">language</span><span class="si">}</span><span class="s2">&amp;mode=</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&amp;q=</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="n">projects</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">Project</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+        <span class="n">projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">projects</span></div>
+
+<div class="viewcode-block" id="search_projects"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.project.search_projects">[docs]</a><span class="k">def</span> <span class="nf">search_projects</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;trending&quot;</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">&quot;en&quot;</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Uses the Scratch search to search projects without logging in.</span>
+
+<span class="sd">    Keyword arguments:</span>
+<span class="sd">        query (str): The query that will be searched.</span>
+<span class="sd">        mode (str): Has to be one of these values: &quot;trending&quot;, &quot;popular&quot; or &quot;recent&quot;. Defaults to &quot;trending&quot;.</span>
+<span class="sd">        language (str): A language abbreviation, defaults to &quot;en&quot;. (Depending on the language used on the Scratch website, Scratch displays you different results.)</span>
+<span class="sd">        limit (int): Max. amount of returned projects.</span>
+<span class="sd">        offset (int): Offset of the first returned project.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list&lt;scratchattach.project.Project&gt;: List that contains the search results</span>
+
+<span class="sd">    Warning:</span>
+<span class="sd">        All methods that require authentication (like project.love) will not work on the returned objects.</span>
+<span class="sd">        </span>
+<span class="sd">        If you want to use these methods, perform the search with :meth:`scratchattach.session.Session.search_projects` instead.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/search/projects?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&amp;language=</span><span class="si">{</span><span class="n">language</span><span class="si">}</span><span class="s2">&amp;mode=</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&amp;q=</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="n">projects</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">Project</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+        <span class="n">projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">projects</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, TimMcCool.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

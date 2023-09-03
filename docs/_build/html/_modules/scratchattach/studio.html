@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scratchattach.studio &mdash; scratchattach 1.3.7 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            scratchattach
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">scratchattach</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scratchattach</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../scratchattach.html">scratchattach</a></li>
+      <li class="breadcrumb-item active">scratchattach.studio</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scratchattach.studio</h1><div class="highlight"><pre>
+<span></span><span class="c1">#----- Getting studios</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">user</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exceptions</span>
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+    <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<div class="viewcode-block" id="Studio"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio">[docs]</a><span class="k">class</span> <span class="nc">Studio</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Represents a Scratch studio.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    .id</span>
+
+<span class="sd">    .title</span>
+
+<span class="sd">    .description</span>
+
+<span class="sd">    .host_id: The user id of the studio host</span>
+
+<span class="sd">    .open_to_all: Whether everyone is allowed to add projects</span>
+
+<span class="sd">    .comments_allowed</span>
+
+<span class="sd">    .image_url</span>
+
+<span class="sd">    .created</span>
+
+<span class="sd">    .modified</span>
+
+<span class="sd">    .follower_count</span>
+
+<span class="sd">    .manager_count</span>
+<span class="sd">    </span>
+<span class="sd">    .project_count</span>
+
+<span class="sd">    .update() will update these attributes</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">entries</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;_session&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="n">headers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_headers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_cookies</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;Cookie&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span> <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">[</span><span class="s2">&quot;accept&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;application/json&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;application/json&quot;</span>
+
+<div class="viewcode-block" id="Studio.update"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates the attributes of the Studio object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">studio</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/studios/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;429&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">studio</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;429&quot;</span>
+        <span class="k">if</span> <span class="n">studio</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;{</span><span class="se">\n</span><span class="s1">  &quot;response&quot;: &quot;Too many requests&quot;</span><span class="se">\n</span><span class="s1">}&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;429&quot;</span>
+        <span class="n">studio</span> <span class="o">=</span> <span class="n">studio</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">studio</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_update_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">studio</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">studio</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">studio</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">studio</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">host_id</span> <span class="o">=</span> <span class="n">studio</span><span class="p">[</span><span class="s2">&quot;host&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">open_to_all</span> <span class="o">=</span> <span class="n">studio</span><span class="p">[</span><span class="s2">&quot;open_to_all&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comments_allowed</span> <span class="o">=</span> <span class="n">studio</span><span class="p">[</span><span class="s2">&quot;comments_allowed&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_url</span> <span class="o">=</span> <span class="n">studio</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">created</span> <span class="o">=</span> <span class="n">studio</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;created&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modified</span> <span class="o">=</span> <span class="n">studio</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;modified&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">follower_count</span> <span class="o">=</span> <span class="n">studio</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;followers&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager_count</span> <span class="o">=</span> <span class="n">studio</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;managers&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_count</span> <span class="o">=</span> <span class="n">studio</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;projects&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Studio.follow"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.follow">[docs]</a>    <span class="k">def</span> <span class="nf">follow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;       </span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/users/bookmarkers/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/add/?usernames=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Studio.unfollow"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.unfollow">[docs]</a>    <span class="k">def</span> <span class="nf">unfollow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;       </span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/users/bookmarkers/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/remove/?usernames=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Studio.comments"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.comments">[docs]</a>    <span class="k">def</span> <span class="nf">comments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the comments posted on the studio (except for replies. To get replies use :meth:`scratchattach.studio.Studio.get_comment_replies`).</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            page: The page of the comments that should be returned.</span>
+<span class="sd">            limit: Max. amount of returned comments.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;dict&gt;: A list containing the requested comments as dicts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">comments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/studios/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/comments/?limit=</span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">))</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">40</span><span class="p">:</span>
+                <span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span> <span class="o">+</span> <span class="n">r</span>
+                <span class="k">break</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="mi">40</span>
+            <span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span> <span class="o">+</span> <span class="n">r</span>
+        <span class="k">return</span> <span class="n">comments</span></div>
+
+<div class="viewcode-block" id="Studio.get_comment_replies"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.get_comment_replies">[docs]</a>    <span class="k">def</span> <span class="nf">get_comment_replies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">comment_id</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">comments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/studios/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/comments/</span><span class="si">{</span><span class="n">comment_id</span><span class="si">}</span><span class="s2">/replies?limit=</span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">))</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">40</span><span class="p">:</span>
+                <span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span> <span class="o">+</span> <span class="n">r</span>
+                <span class="k">break</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="mi">40</span>
+            <span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span> <span class="o">+</span> <span class="n">r</span>
+        <span class="k">return</span> <span class="n">comments</span></div>
+
+
+<div class="viewcode-block" id="Studio.post_comment"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.post_comment">[docs]</a>    <span class="k">def</span> <span class="nf">post_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">commentee_id</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posts a comment on the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            content: Content of the comment that should be posted</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            parent_id: ID of the comment you want to reply to. If you don&#39;t want to mention a user, don&#39;t put the argument.</span>
+<span class="sd">            commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don&#39;t want to mention a user, don&#39;t put the argument.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">_exceptions</span><span class="o">.</span><span class="n">Unauthenticated</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;commentee_id&quot;</span><span class="p">:</span> <span class="n">commentee_id</span><span class="p">,</span>
+            <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">content</span><span class="p">),</span>
+            <span class="s2">&quot;parent_id&quot;</span><span class="p">:</span> <span class="n">parent_id</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span>
+        <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;referer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;https://scratch.mit.edu/projects/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/comments/studio/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Studio.reply_comment"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.reply_comment">[docs]</a>    <span class="k">def</span> <span class="nf">reply_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">commentee_id</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posts a reply to a comment on the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            content: Content of the comment that should be posted</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            parent_id: ID of the comment you want to reply to</span>
+<span class="sd">            commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don&#39;t want to mention a user, don&#39;t put the argument.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">post_comment</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="n">parent_id</span><span class="p">,</span> <span class="n">commentee_id</span><span class="o">=</span><span class="n">commentee_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Studio.projects"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.projects">[docs]</a>    <span class="k">def</span> <span class="nf">projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the studio projects.</span>
+
+<span class="sd">        Keyword arguments:</span>
+<span class="sd">            limit (int): Max amount of returned projects (can&#39;t exceed 40).</span>
+<span class="sd">            offset (int): Offset of the first returned project.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;scratchattach.project.Project&gt;: A list containing the studio projects as Project objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/studios/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/projects/?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Studio.curators"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.curators">[docs]</a>    <span class="k">def</span> <span class="nf">curators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the studio curators.</span>
+
+<span class="sd">        Keyword arguments:</span>
+<span class="sd">            limit (int): Max amount of returned curators (can&#39;t exceed 40).</span>
+<span class="sd">            offset (int): Offset of the first returned curator.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;scratchattach.user.User&gt;: A list containing the studio curators as User objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">limit</span><span class="o">&gt;</span><span class="mi">40</span><span class="p">:</span>
+            <span class="n">limit</span><span class="o">=</span><span class="mi">40</span>
+        <span class="n">raw_curators</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/studios/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/curators/?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">curators</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">raw_curators</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">],</span> <span class="n">session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">)</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+            <span class="n">curators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">curators</span></div>
+
+
+<div class="viewcode-block" id="Studio.invite_curator"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.invite_curator">[docs]</a>    <span class="k">def</span> <span class="nf">invite_curator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">curator</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;       </span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/users/curators-in/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/invite_curator/?usernames=</span><span class="si">{</span><span class="n">curator</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+                <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">_exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Studio.promote_curator"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.promote_curator">[docs]</a>    <span class="k">def</span> <span class="nf">promote_curator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">curator</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;       </span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/users/curators-in/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/promote/?usernames=</span><span class="si">{</span><span class="n">curator</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+                <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">_exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Studio.remove_curator"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.remove_curator">[docs]</a>    <span class="k">def</span> <span class="nf">remove_curator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">curator</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;       </span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/users/curators-in/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/remove/?usernames=</span><span class="si">{</span><span class="n">curator</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+                <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">_exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Studio.leave"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.leave">[docs]</a>    <span class="k">def</span> <span class="nf">leave</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;       </span>
+<span class="sd">        Removes yourself from the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_curator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Studio.add_project"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.add_project">[docs]</a>    <span class="k">def</span> <span class="nf">add_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;       </span>
+<span class="sd">        Adds a project to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            project_id: Project id of the project that should be added</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/studios/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/project/</span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Studio.remove_project"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.remove_project">[docs]</a>    <span class="k">def</span> <span class="nf">remove_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;       </span>
+<span class="sd">        Removes a project from the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            project_id: Project id of the project that should be removed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/studios/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/project/</span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Studio.managers"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.managers">[docs]</a>    <span class="k">def</span> <span class="nf">managers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the studio managers.</span>
+
+<span class="sd">        Keyword arguments:</span>
+<span class="sd">            limit (int): Max amount of returned managers (can&#39;t exceed 40).</span>
+<span class="sd">            offset (int): Offset of the first returned manager.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;scratchattach.user.User&gt;: A list containing the studio managers as user objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">limit</span><span class="o">&gt;</span><span class="mi">40</span><span class="p">:</span>
+            <span class="n">limit</span><span class="o">=</span><span class="mi">40</span>
+        <span class="n">raw_m</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/studios/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/managers/?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">managers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">raw_m</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">],</span> <span class="n">_session</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">)</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+            <span class="n">managers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">managers</span></div>
+    
+<div class="viewcode-block" id="Studio.host"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.host">[docs]</a>    <span class="k">def</span> <span class="nf">host</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the studio host.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            scratchattach.user.User: An object representing the studio host.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">managers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">managers</span><span class="p">(</span><span class="n">limit</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">managers</span> <span class="o">!=</span> <span class="p">[]:</span>
+            <span class="k">return</span> <span class="n">managers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Studio.set_description"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.set_description">[docs]</a>    <span class="k">def</span> <span class="nf">set_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;       </span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/galleries/all/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;description&quot;</span><span class="p">:</span><span class="n">new</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">})</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Studio.set_title"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.set_title">[docs]</a>    <span class="k">def</span> <span class="nf">set_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;       </span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/galleries/all/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;title&quot;</span><span class="p">:</span><span class="n">new</span><span class="p">}))</span></div>
+
+<div class="viewcode-block" id="Studio.open_projects"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.open_projects">[docs]</a>    <span class="k">def</span> <span class="nf">open_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Changes the studio settings so everyone (including non-curators) is able to add projects to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/galleries/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/mark/open/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Studio.close_projects"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.close_projects">[docs]</a>    <span class="k">def</span> <span class="nf">close_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Changes the studio settings so only curators can add projects to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/galleries/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/mark/closed/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Studio.turn_off_commenting"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.turn_off_commenting">[docs]</a>    <span class="k">def</span> <span class="nf">turn_off_commenting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments_allowed</span><span class="p">:</span>
+            <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/comments/gallery/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/toggle-comments/&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+                <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comments_allowed</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments_allowed</span></div>
+
+<div class="viewcode-block" id="Studio.turn_on_commenting"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.turn_on_commenting">[docs]</a>    <span class="k">def</span> <span class="nf">turn_on_commenting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments_allowed</span><span class="p">:</span>
+            <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/comments/gallery/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/toggle-comments/&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+                <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comments_allowed</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments_allowed</span></div>
+
+<div class="viewcode-block" id="Studio.toggle_commenting"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.toggle_commenting">[docs]</a>    <span class="k">def</span> <span class="nf">toggle_commenting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/comments/gallery/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/toggle-comments/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comments_allowed</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments_allowed</span></div>
+
+<div class="viewcode-block" id="Studio.activity"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.Studio.activity">[docs]</a>    <span class="k">def</span> <span class="nf">activity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">limit</span><span class="o">&gt;</span><span class="mi">40</span><span class="p">:</span>
+            <span class="n">limit</span><span class="o">=</span><span class="mi">40</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/studios/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/activity/?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="get_studio"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.get_studio">[docs]</a><span class="k">def</span> <span class="nf">get_studio</span><span class="p">(</span><span class="n">studio_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a studio without logging in.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        studio_id (int): Studio id of the requested studio</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        scratchattach.studio.Studio: An object representing the requested studio</span>
+
+<span class="sd">    Warning:</span>
+<span class="sd">        All methods that require authentication (like studio.follow) will not work on the returned object.</span>
+<span class="sd">        </span>
+<span class="sd">        If you want to use these, get the studio with :meth:`scratchattach.session.Session.connect_studio` instead.    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">studio</span> <span class="o">=</span> <span class="n">Studio</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">studio_id</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">studio</span><span class="o">.</span><span class="n">update</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;429&quot;</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Response429</span><span class="p">(</span><span class="s2">&quot;Your network is blocked or rate-limited by Scratch.</span><span class="se">\n</span><span class="s2">If you&#39;re using an online IDE like replit.com, try running the code on your computer.&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">studio</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="search_studios"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.search_studios">[docs]</a><span class="k">def</span> <span class="nf">search_studios</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;trending&quot;</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">&quot;en&quot;</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/search/studios?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&amp;language=</span><span class="si">{</span><span class="n">language</span><span class="si">}</span><span class="s2">&amp;mode=</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&amp;q=</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="explore_studios"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.studio.explore_studios">[docs]</a><span class="k">def</span> <span class="nf">explore_studios</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;trending&quot;</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">&quot;en&quot;</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/explore/studios?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&amp;language=</span><span class="si">{</span><span class="n">language</span><span class="si">}</span><span class="s2">&amp;mode=</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&amp;q=</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, TimMcCool.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

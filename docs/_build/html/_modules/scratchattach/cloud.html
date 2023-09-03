@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scratchattach.cloud &mdash; scratchattach 1.3.7 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            scratchattach
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">scratchattach</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scratchattach</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../scratchattach.html">scratchattach</a></li>
+      <li class="breadcrumb-item active">scratchattach.cloud</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scratchattach.cloud</h1><div class="highlight"><pre>
+<span></span><span class="c1">#----- Cloud interactions</span>
+<span class="kn">import</span> <span class="nn">websocket</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exceptions</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="k">class</span> <span class="nc">_CloudMixin</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for a connection to a cloud variable server.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">project_id</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cloud_host</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_allow_non_numeric</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">_ws_timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">session_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_username</span> <span class="o">=</span> <span class="n">username</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> <span class="c1">#non-numeric project id (possible on turbowarp&#39;s cloud server)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ratelimited_until</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">#deals with the 0.1 second rate limit for cloud variable sets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connect_timestamp</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">#timestamp of when the cloud connection was opened</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ws_timeout</span> <span class="o">=</span> <span class="n">_ws_timeout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">websocket</span> <span class="o">=</span> <span class="n">websocket</span><span class="o">.</span><span class="n">WebSocket</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">(</span><span class="n">cloud_host</span><span class="o">=</span><span class="n">cloud_host</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_handshake</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cloud_host</span> <span class="o">=</span> <span class="n">cloud_host</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allow_non_numeric</span> <span class="o">=</span> <span class="n">_allow_non_numeric</span> <span class="c1">#TurboWarp only. If this is true, turbowarp cloud variables can be set to non-numeric values (if) the cloud_host wss allows it)</span>
+
+    <span class="k">def</span> <span class="nf">_send_packet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">packet</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">websocket</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">packet</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">websocket</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_handshake</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_send_packet</span><span class="p">(</span>
+                <span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;handshake&quot;</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="p">,</span> <span class="s2">&quot;project_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">(</span><span class="n">cloud_host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cloud_host</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_handshake</span><span class="p">()</span>
+
+    <span class="c1"># ---</span>
+
+    <span class="k">def</span> <span class="nf">get_cloud</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># DEPRECATED: On Scratch&#39;s cloud variables, this method of getting a cloud variable does not work. On TurboWarp&#39;s cloud variables it does work, but there&#39;s the scratchattach.get_tw_cloud function for that now</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: scratchattach.CloudConnection.get_cloud and scratchattach.TwCloudConnection.get_cloud are deprecated. Use scratchattach.get_cloud or scratchattach.get_tw_cloud instead&quot;</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;scratchattach.CloudConnection.get_cloud and scratchattach.TwCloudConnection.get_cloud are deprecated. Use scratchattach.get_cloud or scratchattach.get_tw_cloud instead&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">get_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">):</span>
+        <span class="c1"># DEPRECATED: On Scratch&#39;s cloud variables, this method of getting a cloud variable does not work. On TurboWarp&#39;s cloud variables it does work, but there&#39;s the scratchattach.get_tw_var function for that now</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: scratchattach.CloudConnection.get_var and scratchattach.TwCloudConnection.get_var are deprecated. Use scratchattach.get_var or scratchattach.get_tw_var instead&quot;</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;scratchattach.CloudConnection.get_var and scratchattach.TwCloudConnection.get_var are deprecated. Use scratchattach.get_var or scratchattach.get_tw_var instead&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="CloudConnection"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.CloudConnection">[docs]</a><span class="k">class</span> <span class="nc">CloudConnection</span><span class="p">(</span><span class="n">_CloudMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a connection to Scratch&#39;s cloud variable server.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    .websocket: The websocket connection (WebSocket object from the websocket-client library)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cloud_host</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">websocket</span> <span class="o">=</span> <span class="n">websocket</span><span class="o">.</span><span class="n">WebSocket</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">websocket</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                <span class="s2">&quot;wss://clouddata.scratch.mit.edu&quot;</span><span class="p">,</span>
+                <span class="n">cookie</span><span class="o">=</span><span class="s2">&quot;scratchsessionsid=&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">+</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span>
+                <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                <span class="n">enable_multithread</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ws_timeout</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">websocket</span> <span class="o">=</span> <span class="n">websocket</span><span class="o">.</span><span class="n">WebSocket</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">websocket</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                    <span class="s2">&quot;wss://clouddata.scratch.mit.edu&quot;</span><span class="p">,</span>
+                    <span class="n">cookie</span><span class="o">=</span><span class="s2">&quot;scratchsessionsid=&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">+</span> <span class="s2">&quot;;&quot;</span><span class="p">,</span>
+                    <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                    <span class="n">enable_multithread</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ws_timeout</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connect_timestamp</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CloudConnection.set_var"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.CloudConnection.set_var">[docs]</a>    <span class="k">def</span> <span class="nf">set_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets a cloud variable.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            variable (str): The name of the cloud variable that should be set (provided without the cloud emoji)</span>
+<span class="sd">            value (str): The value the cloud variable should be set to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">variable</span> <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;☁ &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">),</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)]):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">256</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;invalid cloud var (too long): &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="ne">Warning</span><span class="p">)</span>
+                <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidCloudValue</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;invalid cloud var (not numeric): &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="ne">Warning</span><span class="p">)</span>
+                <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidCloudValue</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ratelimited_until</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">&gt;=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">():</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_send_packet</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;set&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;☁ &quot;</span> <span class="o">+</span> <span class="n">variable</span><span class="p">,</span>
+                    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
+                    <span class="s2">&quot;user&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="p">,</span>
+                    <span class="s2">&quot;project_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_handshake</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">(</span><span class="n">cloud_host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cloud_host</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_handshake</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Connection lost while setting cloud variable.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_var</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ratelimited_until</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span></div></div>
+
+<div class="viewcode-block" id="TwCloudConnection"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.TwCloudConnection">[docs]</a><span class="k">class</span> <span class="nc">TwCloudConnection</span><span class="p">(</span><span class="n">_CloudMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a connection to TurboWarp&#39;s cloud variable server or a custom cloud variable server that behaves like TurboWarp&#39;s.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    .websocket: The websocket connection (WebSocket object from the websocket-client library)</span>
+<span class="sd">    .cloud_host: The websocket URL of the cloud variable server</span>
+<span class="sd">    .allow_non_numeric: Whether the cloud variables can be set to non-numeric values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cloud_host</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cloud_host</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">cloud_host</span> <span class="o">=</span> <span class="s2">&quot;wss://clouddata.turbowarp.org/&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cloud_host</span> <span class="o">=</span> <span class="s2">&quot;wss://clouddata.turbowarp.org/&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">websocket</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                <span class="n">cloud_host</span><span class="p">,</span>
+                <span class="n">enable_multithread</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ws_timeout</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connect_timestamp</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="TwCloudConnection.set_var"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.TwCloudConnection.set_var">[docs]</a>    <span class="k">def</span> <span class="nf">set_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets a cloud variable.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            variable (str): The name of the cloud variable that should be set (provided without the cloud emoji)</span>
+<span class="sd">            value (str): The value the cloud variable should be set to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">variable</span> <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;☁ &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">),</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)]):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_non_numeric</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                    <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidCloudValue</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ratelimited_until</span> <span class="o">+</span> <span class="mf">0.005</span> <span class="o">&gt;</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">():</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_send_packet</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;set&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;☁ &quot;</span> <span class="o">+</span> <span class="n">variable</span><span class="p">,</span>
+                    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
+                    <span class="s2">&quot;user&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="p">,</span>
+                    <span class="s2">&quot;project_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_handshake</span><span class="p">()</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_var</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_connect</span><span class="p">(</span><span class="n">cloud_host</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_handshake</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Connection lost while setting cloud variable.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_var</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ratelimited_until</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="CloudEvents"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.CloudEvents">[docs]</a><span class="k">class</span> <span class="nc">CloudEvents</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class that calls events on Scratch cloud variable updates.</span>
+<span class="sd">    </span>
+<span class="sd">    Data source: Scratch clouddata logs.</span>
+<span class="sd">    </span>
+<span class="sd">    The cloud event handler can be started with :meth:`scratchattach.cloud.CloudEvents.start`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="CloudEvents.Event"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.CloudEvents.Event">[docs]</a>    <span class="k">class</span> <span class="nc">Event</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Represents a received cloud event. When the cloud event handler calls a cloud event, an Event object is provided as attribute.</span>
+
+<span class="sd">        Attributes:</span>
+
+<span class="sd">        .user: The user who caused the cloud event (the user who added / set / deleted the cloud variable)</span>
+
+<span class="sd">        .var: The name of the cloud variable that was updated (specified without the cloud emoji)</span>
+
+<span class="sd">        .name: The name of the cloud variable that was updated (specified without the cloud emoji)</span>
+
+<span class="sd">        .timestamp: Then timestamp of when the action was performed</span>
+
+<span class="sd">        .value: If the cloud variable was set, then this attribute provides the value the cloud variable was set to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">entries</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_id</span><span class="p">,</span> <span class="o">**</span><span class="n">entries</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">get_cloud_logs</span><span class="p">(</span><span class="n">project_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span> <span class="n">limit</span> <span class="o">=</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_events</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cloud_log_limit</span> <span class="o">=</span> <span class="mi">15</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CloudEvents.start"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.CloudEvents.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">update_interval</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">thread</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Starts the cloud event handler.</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            update_interval (float): The clouddata log is continuosly checked for cloud updates. This argument provides the interval between these checks.</span>
+<span class="sd">            thread (boolean): Whether the event handler should be run in a thread.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span> <span class="o">=</span> <span class="n">update_interval</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="s2">&quot;on_ready&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">[</span><span class="s2">&quot;on_ready&quot;</span><span class="p">]()</span>
+            <span class="k">if</span> <span class="n">thread</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_update</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">running</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">get_cloud_logs</span><span class="p">(</span><span class="n">project_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span> <span class="n">limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cloud_log_limit</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">data</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">activity</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">activity</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                            <span class="k">break</span>
+                        <span class="k">if</span> <span class="s2">&quot;on_&quot;</span><span class="o">+</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;verb&quot;</span><span class="p">][:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">:</span>
+                            <span class="k">try</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">[</span><span class="s2">&quot;on_&quot;</span><span class="o">+</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;verb&quot;</span><span class="p">][:</span><span class="o">-</span><span class="mi">4</span><span class="p">]](</span><span class="bp">self</span><span class="o">.</span><span class="n">Event</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">],</span> <span class="n">var</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">:],</span> <span class="n">name</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">:],</span> <span class="n">value</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">timestamp</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]))</span>
+                            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: Caught error in cloud event - Full error below&quot;</span><span class="p">)</span>
+                                <span class="k">try</span><span class="p">:</span>
+                                    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+                                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                                    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CloudEvents.stop"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.CloudEvents.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Permanently stops the cloud event handler.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">project_id</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="CloudEvents.pause"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.CloudEvents.pause">[docs]</a>    <span class="k">def</span> <span class="nf">pause</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pauses the cloud event handler.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="CloudEvents.resume"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.CloudEvents.resume">[docs]</a>    <span class="k">def</span> <span class="nf">resume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resumes the cloud event handler.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">update_interval</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">update_interval</span><span class="p">,</span> <span class="n">thread</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CloudEvents.event"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.CloudEvents.event">[docs]</a>    <span class="k">def</span> <span class="nf">event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Decorator function. Adds a cloud event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">[</span><span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">function</span></div></div>
+
+<div class="viewcode-block" id="TwCloudEvents"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.TwCloudEvents">[docs]</a><span class="k">class</span> <span class="nc">TwCloudEvents</span><span class="p">(</span><span class="n">CloudEvents</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class that calls events on TurboWarp cloud variable updates.</span>
+<span class="sd">    </span>
+<span class="sd">    Data source: Turbowarp cloud websocket.</span>
+<span class="sd">    </span>
+<span class="sd">    The cloud event handler can be started with :meth:`scratchattach.cloud.TwCloudEvents.start`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_id</span><span class="p">,</span> <span class="o">**</span><span class="n">entries</span><span class="p">):</span>
+        <span class="n">cloud_connection</span> <span class="o">=</span> <span class="n">TwCloudConnection</span><span class="p">(</span><span class="n">project_id</span><span class="o">=</span><span class="n">project_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_events</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">cloud_connection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">websocket</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span> <span class="k">pass</span>
+                <span class="k">for</span> <span class="n">activity</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s2">&quot;on_&quot;</span><span class="o">+</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">[</span><span class="s2">&quot;on_&quot;</span><span class="o">+</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]](</span><span class="bp">self</span><span class="o">.</span><span class="n">Event</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">:],</span> <span class="n">name</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">:],</span> <span class="n">value</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">timestamp</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">*</span><span class="mi">10000</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">_connect</span><span class="p">(</span><span class="n">cloud_host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">cloud_host</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">_handshake</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s2">&quot;on_disconnect&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">[</span><span class="s2">&quot;on_disconnect&quot;</span><span class="p">]()</span></div>
+
+<div class="viewcode-block" id="WsCloudEvents"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.WsCloudEvents">[docs]</a><span class="k">class</span> <span class="nc">WsCloudEvents</span><span class="p">(</span><span class="n">CloudEvents</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class that calls events on Scratch or Turbowarp cloud variable updates.</span>
+<span class="sd">    </span>
+<span class="sd">    Data source: A provided CloudConnection or TwCloudConnection object.</span>
+<span class="sd">    </span>
+<span class="sd">    The cloud event handler can be started with :meth:`scratchattach.cloud.WsCloudEvents.start`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_id</span><span class="p">,</span> <span class="n">connection</span><span class="p">,</span> <span class="o">**</span><span class="n">entries</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thread</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_events</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">connection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="n">CloudConnection</span><span class="p">):</span>
+            <span class="n">log_data</span> <span class="o">=</span> <span class="n">get_cloud</span><span class="p">(</span><span class="n">project_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">project_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">websocket</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                <span class="k">for</span> <span class="n">activity</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s2">&quot;on_&quot;</span><span class="o">+</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">log_data</span><span class="p">[</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">:]]</span> <span class="o">==</span> <span class="n">activity</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]:</span>
+                            <span class="n">log_data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">:])</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">[</span><span class="s2">&quot;on_&quot;</span><span class="o">+</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]](</span><span class="bp">self</span><span class="o">.</span><span class="n">Event</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">:],</span> <span class="n">name</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">:],</span> <span class="n">value</span><span class="o">=</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">timestamp</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">*</span><span class="mi">10000</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">_connect</span><span class="p">(</span><span class="n">cloud_host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">cloud_host</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">_handshake</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="n">CloudConnection</span><span class="p">):</span>
+                        <span class="n">log_data</span> <span class="o">=</span> <span class="n">get_cloud</span><span class="p">(</span><span class="n">project_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">project_id</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">log_data</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s2">&quot;on_disconnect&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">[</span><span class="s2">&quot;on_disconnect&quot;</span><span class="p">]()</span></div>
+<span class="c1"># -----</span>
+
+
+<div class="viewcode-block" id="get_cloud"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.get_cloud">[docs]</a><span class="k">def</span> <span class="nf">get_cloud</span><span class="p">(</span><span class="n">project_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the clouddata of a Scratch cloud project from the clouddata log.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        project_id (str):</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: The values of the project&#39;s cloud variables</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://clouddata.scratch.mit.edu/logs?projectid=</span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">&amp;limit=100&amp;offset=0&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+        <span class="n">clouddata</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">activity</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="n">clouddata</span><span class="p">[</span><span class="n">activity</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">:]]</span> <span class="o">=</span> <span class="n">activity</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">clouddata</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="get_var"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.get_var">[docs]</a><span class="k">def</span> <span class="nf">get_var</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="n">variable</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the value of of a Scratch cloud variable from the clouddata log.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        project_id (str):</span>
+<span class="sd">        variable (str): The name of the cloud variable (specified without the cloud emoji)</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        str: The cloud variable&#39;s value</span>
+<span class="sd">    </span>
+<span class="sd">    If the value can&#39;t be fetched, the method returns None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://clouddata.scratch.mit.edu/logs?projectid=</span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">&amp;limit=100&amp;offset=0&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;☁ &quot;</span><span class="o">+</span><span class="n">variable</span><span class="p">,</span> <span class="n">response</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">response</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">response</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="get_tw_cloud"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.get_tw_cloud">[docs]</a><span class="k">def</span> <span class="nf">get_tw_cloud</span><span class="p">(</span><span class="n">project_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the clouddata of a TurboWarp cloud project from the TurboWarp&#39;s websoclet.</span>
+
+<span class="sd">    Warning:</span>
+<span class="sd">        Do not spam this method, it creates a new connection to the TurboWarp cloud server every time it is called.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        project_id (str):</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: The values of the project&#39;s cloud variables</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="n">TwCloudConnection</span><span class="p">(</span><span class="n">project_id</span><span class="o">=</span><span class="n">project_id</span><span class="p">,</span> <span class="n">_ws_timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">websocket</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span> <span class="k">pass</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">except</span> <span class="n">websocket</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">WebSocketTimeoutException</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">FetchError</span></div>
+
+<div class="viewcode-block" id="get_tw_var"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.get_tw_var">[docs]</a><span class="k">def</span> <span class="nf">get_tw_var</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="n">variable</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the value of of a TurboWarp cloud variable from TurboWarp&#39;s websocket.</span>
+
+<span class="sd">    Warning:</span>
+<span class="sd">        Do not spam this method, it creates a new connection to the TurboWarp cloud server every time it is called.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        project_id (str):</span>
+<span class="sd">        variable (str): The name of the cloud variable (specified without the cloud emoji)</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        str: The cloud variable&#39;s value</span>
+<span class="sd">    </span>
+<span class="sd">    If the value can&#39;t be fetched, the method returns None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">variable</span> <span class="o">=</span> <span class="s2">&quot;☁ &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">get_tw_cloud</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">variable</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">i</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">FetchError</span></div>
+
+<div class="viewcode-block" id="get_cloud_logs"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.get_cloud_logs">[docs]</a><span class="k">def</span> <span class="nf">get_cloud_logs</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">filter_by_var_named</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets Scratch&#39;s clouddata log for a project.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        project_id:</span>
+<span class="sd">    </span>
+<span class="sd">    Keyword Arguments:</span>
+<span class="sd">        filter_by_var_named (str or None): If you only want to get data for one cloud variable, set this argument to its name.</span>
+<span class="sd">        limit (int): Max. amount of returned activity.</span>
+<span class="sd">        offset (int): Offset of the first activity in the returned list.</span>
+<span class="sd">        log_url (str): If you want to get the clouddata from a cloud log API different to Scratch&#39;s normal cloud log API, set this argument to the URL of the API. Only set this argument if you know what you are doing. If you want to get the clouddata from the normal API, don&#39;t put this argument.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">log_url</span><span class="si">}</span><span class="s2">?projectid=</span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">&amp;limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">filter_by_var_named</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="k">return</span> <span class="n">response</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;☁ &quot;</span><span class="o">+</span><span class="n">filter_by_var_named</span><span class="p">,</span> <span class="n">response</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="connect_tw_cloud"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.connect_tw_cloud">[docs]</a><span class="k">def</span> <span class="nf">connect_tw_cloud</span><span class="p">(</span><span class="n">project_id_arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Connects to TurboWarp&#39;s cloud websocket.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        project_id (str)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        scratchattach.cloud.TwCloudConnection: An object that represents a connection to TurboWarp&#39;s cloud server</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">project_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">project_id</span> <span class="o">=</span> <span class="n">project_id_arg</span>
+    <span class="k">if</span> <span class="n">project_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">TwCloudConnection</span><span class="p">(</span><span class="n">project_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">project_id</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, TimMcCool.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

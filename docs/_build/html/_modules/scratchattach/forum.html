@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scratchattach.forum &mdash; scratchattach 1.3.7 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            scratchattach
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">scratchattach</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scratchattach</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../scratchattach.html">scratchattach</a></li>
+      <li class="breadcrumb-item active">scratchattach.forum</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scratchattach.forum</h1><div class="highlight"><pre>
+<span></span><span class="c1">#----- Getting forum topics and posts</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">user</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exceptions</span>
+
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+    <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<div class="viewcode-block" id="ForumTopic"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.ForumTopic">[docs]</a><span class="k">class</span> <span class="nc">ForumTopic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Represents a Scratch forum topic.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    .title</span>
+
+<span class="sd">    .category</span>
+
+<span class="sd">    .closed</span>
+
+<span class="sd">    .deleted</span>
+
+<span class="sd">    .post_count</span>
+<span class="sd">    </span>
+<span class="sd">    .update() will update these attributes</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">entries</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;_session&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="n">headers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_headers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_cookies</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;Cookie&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span> <span class="k">pass</span>
+
+<div class="viewcode-block" id="ForumTopic.update"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.ForumTopic.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates the attributes of the ForumTopic object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">topic</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/topic/info/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">topic</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_update_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topic</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">topic</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="n">topic</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">topic</span><span class="p">[</span><span class="s2">&quot;closed&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">topic</span><span class="p">[</span><span class="s2">&quot;deleted&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deleted</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deleted</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">post_count</span> <span class="o">=</span> <span class="n">topic</span><span class="p">[</span><span class="s2">&quot;post_count&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ForumTopic.activity"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.ForumTopic.activity">[docs]</a>    <span class="k">def</span> <span class="nf">activity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;dict&gt;: A list that contains the history of the forum topic (changes of topic title etc.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/topic/history/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ForumTopic.posts"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.ForumTopic.posts">[docs]</a>    <span class="k">def</span> <span class="nf">posts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;oldest&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            page (int): The page of the forum topic that should be returned.</span>
+<span class="sd">            order (str): Specifies the order of the returned posts. &quot;newest&quot; means the first returned post is the newest one, &quot;oldest&quot; means it is the oldest one.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;scratchattach.forum.ForumPost&gt;: A list containing the posts from the specified page of the forum topic </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/topic/posts/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">?o=</span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">return_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">ForumPost</span><span class="p">(</span><span class="nb">id</span> <span class="o">=</span> <span class="n">o</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">)</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+            <span class="n">return_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">return_data</span></div>
+
+<div class="viewcode-block" id="ForumTopic.first_post"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.ForumTopic.first_post">[docs]</a>    <span class="k">def</span> <span class="nf">first_post</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            scratchattach.forum.ForumPost: An object representing the first topic post </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/topic/posts/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/0?o=oldest&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">ForumPost</span><span class="p">(</span><span class="nb">id</span> <span class="o">=</span> <span class="n">o</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">)</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">a</span></div></div>
+
+
+<div class="viewcode-block" id="ForumPost"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.ForumPost">[docs]</a><span class="k">class</span> <span class="nc">ForumPost</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Represents a Scratch forum post that was made in a forum topic.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    .id</span>
+
+<span class="sd">    .author: The name of the user who created this post</span>
+
+<span class="sd">    .posted: The date the post was made</span>
+
+<span class="sd">    .edited: The date of the most recent post edit. If the post wasn&#39;t edited this is None</span>
+
+<span class="sd">    .edited_by: The name of the user who made the most recent edit. If the post wasn&#39;t edited this is None</span>
+
+<span class="sd">    .deleted: Whether the post was deleted</span>
+
+<span class="sd">    .html_content: Returns the content as HTML</span>
+
+<span class="sd">    .bb_content: Returns the content as BBCode</span>
+
+<span class="sd">    .topic_id: The id of the topic the post is in</span>
+
+<span class="sd">    .topic_name: The name of the topic the post is in</span>
+
+<span class="sd">    .topic_category: The name of the category the post topic is in</span>
+<span class="sd">        </span>
+<span class="sd">    .update() will update these attributes</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">entries</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;_session&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="n">headers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_headers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_cookies</span>
+
+
+<div class="viewcode-block" id="ForumPost.update"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.ForumPost.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates the attributes of the ForumPost object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">post</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/post/info/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">post</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_update_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">post</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">posted</span> <span class="o">=</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="s2">&quot;posted&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edited</span> <span class="o">=</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="s2">&quot;edited&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edited_by</span> <span class="o">=</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;editor&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;deleted&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deleted</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deleted</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">html_content</span> <span class="o">=</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">][</span><span class="s2">&quot;html&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bb_content</span> <span class="o">=</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">][</span><span class="s2">&quot;bb&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topic_id</span> <span class="o">=</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;topic&quot;</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topic_name</span> <span class="o">=</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;topic&quot;</span><span class="p">][</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topic_category</span> <span class="o">=</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;topic&quot;</span><span class="p">][</span><span class="s2">&quot;category&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ForumPost.get_topic"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.ForumPost.get_topic">[docs]</a>    <span class="k">def</span> <span class="nf">get_topic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            scratchattach.forum.ForumTopic: An object representing the forum topic this post is in.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">ForumTopic</span><span class="p">(</span><span class="nb">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">topic_id</span><span class="p">,</span> <span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">)</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">t</span></div>
+
+<div class="viewcode-block" id="ForumPost.ocular_reactions"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.ForumPost.ocular_reactions">[docs]</a>    <span class="k">def</span> <span class="nf">ocular_reactions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://my-ocular.jeffalo.net/api/reactions/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ForumPost.get_author"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.ForumPost.get_author">[docs]</a>    <span class="k">def</span> <span class="nf">get_author</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            scratchattach.user.User: An object representing the user who created this forum post.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">author</span><span class="p">,</span> <span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">)</span>
+        <span class="n">u</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">u</span></div>
+
+<div class="viewcode-block" id="ForumPost.edit"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.ForumPost.edit">[docs]</a>    <span class="k">def</span> <span class="nf">edit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_content</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Changes the content of the forum post.  You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_post` or through another method that requires authentication. You must own the forum post.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            new_content (str): The text that the forum post will be set to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span>
+        <span class="n">cookies</span><span class="p">[</span><span class="s2">&quot;accept&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9&quot;</span>
+        <span class="n">cookies</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;application/x-www-form-urlencoded&quot;</span>
+
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/discuss/post/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/edit/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;accept&quot;</span><span class="p">:</span> <span class="s2">&quot;text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;accept-language&quot;</span><span class="p">:</span> <span class="s2">&quot;de,en;q=0.9&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;cache-control&quot;</span><span class="p">:</span> <span class="s2">&quot;max-age=0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;content-type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/x-www-form-urlencoded&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;sec-ch-ua&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2"> Not A;Brand</span><span class="se">\&quot;</span><span class="s2">;v=</span><span class="se">\&quot;</span><span class="s2">99</span><span class="se">\&quot;</span><span class="s2">, </span><span class="se">\&quot;</span><span class="s2">Chromium</span><span class="se">\&quot;</span><span class="s2">;v=</span><span class="se">\&quot;</span><span class="s2">101</span><span class="se">\&quot;</span><span class="s2">, </span><span class="se">\&quot;</span><span class="s2">Google Chrome</span><span class="se">\&quot;</span><span class="s2">;v=</span><span class="se">\&quot;</span><span class="s2">101</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;sec-ch-ua-mobile&quot;</span><span class="p">:</span> <span class="s2">&quot;?0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;sec-ch-ua-platform&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">Windows</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;sec-fetch-dest&quot;</span><span class="p">:</span> <span class="s2">&quot;document&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;sec-fetch-mode&quot;</span><span class="p">:</span> <span class="s2">&quot;navigate&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;sec-fetch-site&quot;</span><span class="p">:</span> <span class="s2">&quot;same-origin&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;sec-fetch-user&quot;</span><span class="p">:</span> <span class="s2">&quot;?1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;upgrade-insecure-requests&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Referer&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/discuss/post/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/edit/&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span>
+            <span class="p">},</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="n">cookies</span><span class="p">,</span>
+            <span class="n">json</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;csrfmiddlewaretoken=a&amp;body=</span><span class="si">{</span><span class="n">new_content</span><span class="si">}</span><span class="s2">&amp;&quot;</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="get_topic"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.get_topic">[docs]</a><span class="k">def</span> <span class="nf">get_topic</span><span class="p">(</span><span class="n">topic_id</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a forum topic without logging in.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        topic_id (int): ID of the requested forum topic</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        scratchattach.forum.ForumTopic: An object representing the requested forum topic</span>
+
+<span class="sd">    Warning:</span>
+<span class="sd">        All methods that require authentication will not work on the returned object.</span>
+<span class="sd">        </span>
+<span class="sd">        If you want to use methods that require authentication, create the object with :meth:`scratchattach.session.Session.connect_topic` instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">topic</span> <span class="o">=</span> <span class="n">ForumTopic</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">topic_id</span><span class="p">))</span>
+        <span class="n">topic</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">topic</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="get_topic_list"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.get_topic_list">[docs]</a><span class="k">def</span> <span class="nf">get_topic_list</span><span class="p">(</span><span class="n">category_name</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">include_deleted</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the topics from a forum category without logging in. Data fetched from ScratchDB.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        category_name (str): Name of the forum category</span>
+<span class="sd">    </span>
+<span class="sd">    Keyword Arguments:</span>
+<span class="sd">        page (str): Page of the category topics that should be returned</span>
+<span class="sd">        include_deleted (boolean): Whether deleted topics should be returned too</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list&lt;scratchattach.forum.ForumTopic&gt;: A list containing the forum topics from the specified category</span>
+
+<span class="sd">    Warning:</span>
+<span class="sd">        All methods that require authentication will not work on the returned objects.</span>
+
+<span class="sd">        If you want to use methods that require authentication, get the forum topics with :meth:`scratchattach.session.Session.connect_topic_list` instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">category_name</span> <span class="o">=</span> <span class="n">category_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;%20&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">include_deleted</span><span class="p">:</span>
+        <span class="nb">filter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">filter</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/category/topics/</span><span class="si">{</span><span class="n">category_name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">?detail=1&amp;filter=</span><span class="si">{</span><span class="nb">filter</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">return_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">topic</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">ForumTopic</span><span class="p">(</span><span class="nb">id</span> <span class="o">=</span> <span class="n">topic</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+            <span class="n">t</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">topic</span><span class="p">)</span>
+            <span class="n">return_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">return_data</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="get_post"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.forum.get_post">[docs]</a><span class="k">def</span> <span class="nf">get_post</span><span class="p">(</span><span class="n">post_id</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a forum post without logging in. Data fetched from ScratchDB.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        post_id (int): ID of the requested forum post</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        scratchattach.forum.ForumPost: An object that represents the requested forum post</span>
+
+<span class="sd">    Warning:</span>
+<span class="sd">        All methods that require authentication (like post.edit) will not work on the returned object.</span>
+<span class="sd">         </span>
+<span class="sd">        If you want to use these methods, get the forum post with :meth:`scratchattach.session.Session.connect_post` instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">post</span> <span class="o">=</span> <span class="n">ForumPost</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">post_id</span><span class="p">))</span>
+        <span class="n">post</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">post</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, TimMcCool.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

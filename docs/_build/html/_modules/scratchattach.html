@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scratchattach &mdash; scratchattach 1.3.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            scratchattach
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">scratchattach</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">scratchattach</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">scratchattach</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scratchattach</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.cloud</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.user</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.session</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.project</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.studio</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.cloud_requests</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.forum</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.encoder</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="get_news"><a class="viewcode-back" href="../scratchattach.html#scratchattach.get_news">[docs]</a><span class="k">def</span> <span class="nf">get_news</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/news?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="featured_projects"><a class="viewcode-back" href="../scratchattach.html#scratchattach.featured_projects">[docs]</a><span class="k">def</span> <span class="nf">featured_projects</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/featured&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;community_featured_projects&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="featured_studios"><a class="viewcode-back" href="../scratchattach.html#scratchattach.featured_studios">[docs]</a><span class="k">def</span> <span class="nf">featured_studios</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/featured&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;community_featured_studios&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="top_loved"><a class="viewcode-back" href="../scratchattach.html#scratchattach.top_loved">[docs]</a><span class="k">def</span> <span class="nf">top_loved</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/featured&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;community_most_loved_projects&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="top_remixed"><a class="viewcode-back" href="../scratchattach.html#scratchattach.top_remixed">[docs]</a><span class="k">def</span> <span class="nf">top_remixed</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/featured&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;community_most_remixed_projects&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="newest_projects"><a class="viewcode-back" href="../scratchattach.html#scratchattach.newest_projects">[docs]</a><span class="k">def</span> <span class="nf">newest_projects</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/featured&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;community_newest_projects&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="curated_projects"><a class="viewcode-back" href="../scratchattach.html#scratchattach.curated_projects">[docs]</a><span class="k">def</span> <span class="nf">curated_projects</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/featured&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;curator_top_projects&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="design_studio_projects"><a class="viewcode-back" href="../scratchattach.html#scratchattach.design_studio_projects">[docs]</a><span class="k">def</span> <span class="nf">design_studio_projects</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.scratch.mit.edu/proxy/featured&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;scratch_design_studio&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="search_comments"><a class="viewcode-back" href="../scratchattach.html#scratchattach.search_comments">[docs]</a><span class="k">def</span> <span class="nf">search_comments</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: scratchattach.Session.search_comments does not work anymore&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{}</span></div>
+    <span class="c1">#return requests.get(f&quot;https://sd.sly-little-fox.ru/api/v1/search?q={query}&quot;).json()</span>
+
+<div class="viewcode-block" id="search_posts"><a class="viewcode-back" href="../scratchattach.html#scratchattach.search_posts">[docs]</a><span class="k">def</span> <span class="nf">search_posts</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;newest&quot;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/search?q=</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&amp;o=</span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2">&amp;page=</span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;posts&quot;</span><span class="p">]</span>
+        <span class="n">return_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">forum</span><span class="o">.</span><span class="n">ForumPost</span><span class="p">(</span><span class="nb">id</span> <span class="o">=</span> <span class="n">o</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+            <span class="n">return_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">return_data</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="total_site_stats"><a class="viewcode-back" href="../scratchattach.html#scratchattach.total_site_stats">[docs]</a><span class="k">def</span> <span class="nf">total_site_stats</span><span class="p">():</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://scratch.mit.edu/statistics/data/daily/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_TS&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="monthly_site_traffic"><a class="viewcode-back" href="../scratchattach.html#scratchattach.monthly_site_traffic">[docs]</a><span class="k">def</span> <span class="nf">monthly_site_traffic</span><span class="p">():</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://scratch.mit.edu/statistics/data/monthly-ga/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_TS&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="country_counts"><a class="viewcode-back" href="../scratchattach.html#scratchattach.country_counts">[docs]</a><span class="k">def</span> <span class="nf">country_counts</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://scratch.mit.edu/statistics/data/monthly/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;country_distribution&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="age_distribution"><a class="viewcode-back" href="../scratchattach.html#scratchattach.age_distribution">[docs]</a><span class="k">def</span> <span class="nf">age_distribution</span><span class="p">():</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://scratch.mit.edu/statistics/data/monthly/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;age_distribution_data&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;values&quot;</span><span class="p">]</span>
+    <span class="n">return_data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">return_data</span><span class="p">[</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">return_data</span></div>
+
+<div class="viewcode-block" id="get_health"><a class="viewcode-back" href="../scratchattach.html#scratchattach.get_health">[docs]</a><span class="k">def</span> <span class="nf">get_health</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://api.scratch.mit.edu/health&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="get_csrf_token"><a class="viewcode-back" href="../scratchattach.html#scratchattach.get_csrf_token">[docs]</a><span class="k">def</span> <span class="nf">get_csrf_token</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a csrf_token using Scratch&#39;s API.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: The generated csrf_token</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s2">&quot;https://scratch.mit.edu/csrf_token/&quot;</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;set-cookie&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)[</span><span class="mi">3</span><span class="p">][</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot; Path=/, scratchcsrftoken=&quot;</span><span class="p">):]</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, TimMcCool.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scratchattach.session &mdash; scratchattach 1.3.7 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            scratchattach
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">scratchattach</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scratchattach</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../scratchattach.html">scratchattach</a></li>
+      <li class="breadcrumb-item active">scratchattach.session</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scratchattach.session</h1><div class="highlight"><pre>
+<span></span><span class="c1">#----- Connecting to a Scratch account</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">user</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">cloud</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">project</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exceptions</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">studio</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">forum</span>
+
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+    <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<div class="viewcode-block" id="Session"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session">[docs]</a><span class="k">class</span> <span class="nc">Session</span><span class="p">():</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Represents a Scratch log in / session. Stores authentication data (session id and xtoken).</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    session.session_id: The session id associated with the login</span>
+
+<span class="sd">    session.xtoken: The xtoken associated with the login</span>
+
+<span class="sd">    session.email: The email address associated with the logged in account</span>
+
+<span class="sd">    session.new_scratcher: Returns True if the associated account is a Scratcher</span>
+
+<span class="sd">    session.mute_status: Information about commenting restrictions of the associated account</span>
+
+<span class="sd">    session.banned: Returns True if the associated account is banned</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_username</span> <span class="o">=</span> <span class="n">username</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="n">headers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;scratchsessionsid&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+            <span class="s2">&quot;scratchcsrftoken&quot;</span> <span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;scratchlanguage&quot;</span> <span class="p">:</span> <span class="s2">&quot;en&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;accept&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_xtoken</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;Cookie&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span> <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_get_csrftoken</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;https://scratch.mit.edu/csrf_token/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">headers</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="n">csrftoken</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;Set-Cookie&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;scratchcsrftoken=&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">[</span><span class="s2">&quot;x-csrftoken&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">csrftoken</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">[</span><span class="s2">&quot;scratchcsrftoken&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">csrftoken</span>
+
+    <span class="k">def</span> <span class="nf">_get_xtoken</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># this will fetch the account token</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+                <span class="s2">&quot;https://scratch.mit.edu/session&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+                    <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="n">cookies</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;scratchsessionsid&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+                    <span class="s2">&quot;scratchcsrftoken&quot;</span> <span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;scratchlanguage&quot;</span> <span class="p">:</span> <span class="s2">&quot;en&quot;</span>
+                <span class="p">}</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">xtoken</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">][</span><span class="s1">&#39;token&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">[</span><span class="s2">&quot;X-Token&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xtoken</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">][</span><span class="s2">&quot;email&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">new_scratcher</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;permissions&quot;</span><span class="p">][</span><span class="s2">&quot;new_scratcher&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mute_status</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;permissions&quot;</span><span class="p">][</span><span class="s2">&quot;mute_status&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_username</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">][</span><span class="s2">&quot;username&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">banned</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">][</span><span class="s2">&quot;banned&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">banned</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: The account </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2"> you logged in to is BANNED. Some features may not work properly.&quot;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_username</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: Logged in, but couldn&#39;t fetch XToken.</span><span class="se">\n</span><span class="s2">Some features (including cloud variables) will not work properly. To get cloud variables to work, provide a username argument: Session(&#39;session_id&#39;, username=&#39;username&#39;)</span><span class="se">\n</span><span class="s2">If you&#39;re using an online IDE (like replit.com) Scratch possibly banned its IP adress.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Logged in as </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">, but couldn&#39;t fetch XToken. Cloud variables will still work, but other features may not work properly.</span><span class="se">\n</span><span class="s2">If you&#39;re using an online IDE (like replit.com) Scratch possibly banned its IP adress.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xtoken</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+<div class="viewcode-block" id="Session.get_linked_user"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.get_linked_user">[docs]</a>    <span class="k">def</span> <span class="nf">get_linked_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Gets the user associated with the log in / session.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            scratchattach.user.User: Object representing the user associated with the log in / session.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="s2">&quot;_user&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect_user</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user</span></div>
+
+<div class="viewcode-block" id="Session.mystuff_projects"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.mystuff_projects">[docs]</a>    <span class="k">def</span> <span class="nf">mystuff_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ordering</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sort_by</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Gets the projects from the &quot;My stuff&quot; page.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ordering (str): Possible values for this parameter are &quot;all&quot;, &quot;shared&quot;, &quot;unshared&quot; and &quot;trashed&quot;</span>
+<span class="sd">        </span>
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            page (int): The page of the &quot;My Stuff&quot; projects that should be returned</span>
+<span class="sd">            sort_by (str): The key the projects should be sorted based on. Possible values for this parameter are &quot;&quot; (then the projects are sorted based on last modified), &quot;view_count&quot;, love_count&quot;, &quot;remixers_count&quot; (then the projects are sorted based on remix count) and &quot;title&quot; (then the projects are sorted based on title)</span>
+<span class="sd">            descending (boolean): Determines if the element with the highest key value (the key is specified in the sort_by argument) should be returned first. Defaults to True.</span>
+<span class="sd">      </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;dict&gt;: A list with the projects from the &quot;My Stuff&quot; page, each project is represented by a dict.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">descending</span><span class="p">:</span>
+            <span class="n">ascsort</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">descsort</span> <span class="o">=</span> <span class="n">sort_by</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ascsort</span> <span class="o">=</span> <span class="n">sort_by</span>
+            <span class="n">descsort</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/projects/</span><span class="si">{</span><span class="n">ordering</span><span class="si">}</span><span class="s2">/?page=</span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">&amp;ascsort=</span><span class="si">{</span><span class="n">ascsort</span><span class="si">}</span><span class="s2">&amp;descsort=</span><span class="si">{</span><span class="n">descsort</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+                <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="n">projects</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+                <span class="n">projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="nb">dict</span><span class="p">(</span>
+                        <span class="n">author</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="p">,</span>
+                        <span class="n">created</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;datetime_created&quot;</span><span class="p">],</span>
+                        <span class="n">last_modified</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;datetime_modified&quot;</span><span class="p">],</span>
+                        <span class="n">share_date</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;datetime_shared&quot;</span><span class="p">],</span>
+                        <span class="n">shared</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;isPublished&quot;</span><span class="p">],</span>
+                        <span class="nb">id</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;pk&quot;</span><span class="p">],</span>
+                        <span class="n">thumbnail_url</span> <span class="o">=</span> <span class="s2">&quot;https://uploads.scratch.mit.edu&quot;</span><span class="o">+</span><span class="n">target</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;uncached_thumbnail_url&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:],</span>
+                        <span class="n">favorites</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;favorite_count&quot;</span><span class="p">],</span>
+                        <span class="n">loves</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;love_count&quot;</span><span class="p">],</span>
+                        <span class="n">remixes</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;remixers_count&quot;</span><span class="p">],</span>
+                        <span class="n">views</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;view_count&quot;</span><span class="p">],</span>
+                        <span class="n">thumbnail_name</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">],</span>
+                        <span class="n">title</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;title&quot;</span><span class="p">],</span>
+                        <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://scratch.mit.edu/projects/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">target</span><span class="p">[</span><span class="s2">&quot;pk&quot;</span><span class="p">]),</span>
+                        <span class="n">comment_count</span> <span class="o">=</span> <span class="n">target</span><span class="p">[</span><span class="s2">&quot;fields&quot;</span><span class="p">][</span><span class="s2">&quot;commenters_count&quot;</span><span class="p">],</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">projects</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">FetchError</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Session.get_mystuff_projects"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.get_mystuff_projects">[docs]</a>    <span class="k">def</span> <span class="nf">get_mystuff_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ordering</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sort_by</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Alternate name for :meth:`scratchattach.session.Session.mystuff_projects`. See the documentation of this function.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mystuff_projects</span><span class="p">(</span><span class="n">ordering</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="n">page</span><span class="p">,</span> <span class="n">sort_by</span><span class="o">=</span><span class="n">sort_by</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="n">descending</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Session.messages"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.messages">[docs]</a>    <span class="k">def</span> <span class="nf">messages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns the messages.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;dict&gt;: List that contains all messages as dicts.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">/messages?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Session.clear_messages"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.clear_messages">[docs]</a>    <span class="k">def</span> <span class="nf">clear_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Clears all messages.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="s2">&quot;https://scratch.mit.edu/site-api/messages/messages-clear/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">text</span></div>
+
+<div class="viewcode-block" id="Session.message_count"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.message_count">[docs]</a>    <span class="k">def</span> <span class="nf">message_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns the message count.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: message count</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">/messages/count/&quot;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,})</span><span class="o">.</span><span class="n">text</span><span class="p">)[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Session.get_feed"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.get_feed">[docs]</a>    <span class="k">def</span> <span class="nf">get_feed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns the &quot;What&#39;s happening&quot; section (frontpage).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;dict&gt;: List that contains all &quot;What&#39;s happening&quot; entries as dicts</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">/following/users/activity?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;def create_project(self): # not working</span>
+
+<span class="sd">        try:</span>
+
+<span class="sd">            return self.connect_project(requests.post(</span>
+<span class="sd">                &quot;https://projects.scratch.mit.edu/&quot;,</span>
+<span class="sd">                headers = headers,</span>
+<span class="sd">                cookies = self._cookies</span>
+<span class="sd">            ).json()[&quot;content-name&quot;])</span>
+<span class="sd">        except Exception:</span>
+<span class="sd">            raise(exceptions.FetchError)</span>
+<span class="sd">    &#39;&#39;&#39;</span> 
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; # these APIs are always empty</span>
+<span class="sd">    def created_by_followed_users(self, *, limit=40, offset=0):</span>
+<span class="sd">        r = requests.get(</span>
+<span class="sd">            f&quot;https://api.scratch.mit.edu/users/{self._username}/following/users/projects?limit={limit}&amp;offset={offset}&quot;,</span>
+<span class="sd">            headers = self._headers,</span>
+<span class="sd">            cookies = self._cookies</span>
+<span class="sd">        ).json()</span>
+<span class="sd">        projects = []</span>
+
+<span class="sd">        for project in r:</span>
+<span class="sd">            p = project.Project()</span>
+<span class="sd">            p._update_from_dict(project)</span>
+<span class="sd">            projects.append(p)</span>
+<span class="sd">        return projects</span>
+
+<span class="sd">    def added_to_followed_studios(self, *, limit=40, offset=0):</span>
+<span class="sd">        r = requests.get(</span>
+<span class="sd">            f&quot;https://api.scratch.mit.edu/users/{self._username}/following/studios/projects?limit={limit}&amp;offset={offset}&quot;,</span>
+<span class="sd">            headers = self._headers,</span>
+<span class="sd">            cookies = self._cookies</span>
+<span class="sd">        ).json()</span>
+<span class="sd">        projects = []</span>
+
+<span class="sd">        for project in r:</span>
+<span class="sd">            p = project.Project()</span>
+<span class="sd">            p._update_from_dict(project)</span>
+<span class="sd">            projects.append(p)</span>
+<span class="sd">        return projects</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="Session.loved_by_followed_users"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.loved_by_followed_users">[docs]</a>    <span class="k">def</span> <span class="nf">loved_by_followed_users</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns the &quot;Projects loved by Scratchers I&#39;m following&quot; section (frontpage).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;scratchattach.project.Project&gt;: List that contains all &quot;Projects loved by Scratchers I&#39;m following&quot; entries as Project objects</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">/following/users/loves?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">projects</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+            <span class="n">projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">projects</span></div>
+
+<div class="viewcode-block" id="Session.search_projects"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.search_projects">[docs]</a>    <span class="k">def</span> <span class="nf">search_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;trending&quot;</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">&quot;en&quot;</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Uses the Scratch search to search projects.</span>
+
+<span class="sd">        Keyword arguments:</span>
+<span class="sd">            query (str): The query that will be searched.</span>
+<span class="sd">            mode (str): Has to be one of these values: &quot;trending&quot;, &quot;popular&quot; or &quot;recent&quot;. Defaults to &quot;trending&quot;.</span>
+<span class="sd">            language (str): A language abbreviation, defaults to &quot;en&quot;. (Depending on the language used on the Scratch website, Scratch displays you different results.)</span>
+<span class="sd">            limit (int): Max. amount of returned projects.</span>
+<span class="sd">            offset (int): Offset of the first returned project.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;scratchattach.project.Project&gt;: List that contains the search results.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/search/projects?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&amp;language=</span><span class="si">{</span><span class="n">language</span><span class="si">}</span><span class="s2">&amp;mode=</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&amp;q=</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">projects</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+            <span class="n">projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">projects</span></div>
+<div class="viewcode-block" id="Session.explore_projects"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.explore_projects">[docs]</a>    <span class="k">def</span> <span class="nf">explore_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;trending&quot;</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="s2">&quot;en&quot;</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Gets projects from the explore page.</span>
+
+<span class="sd">        Keyword arguments:</span>
+<span class="sd">            query (str): Specifies the tag of the explore page. To get the projects from the &quot;All&quot; tag, set this argument to &quot;*&quot;.</span>
+<span class="sd">            mode (str): Has to be one of these values: &quot;trending&quot;, &quot;popular&quot; or &quot;recent&quot;. Defaults to &quot;trending&quot;.</span>
+<span class="sd">            language (str): A language abbreviation, defaults to &quot;en&quot;. (Depending on the language used on the Scratch website, Scratch displays you different explore pages.)</span>
+<span class="sd">            limit (int): Max. amount of returned projects.</span>
+<span class="sd">            offset (int): Offset of the first returned project.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;scratchattach.project.Project&gt;: List that contains the explore page projects.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/explore/projects?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&amp;language=</span><span class="si">{</span><span class="n">language</span><span class="si">}</span><span class="s2">&amp;mode=</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&amp;q=</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">projects</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+            <span class="n">projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">projects</span></div>
+
+
+<div class="viewcode-block" id="Session.backpack"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.backpack">[docs]</a>    <span class="k">def</span> <span class="nf">backpack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">limit</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Lists the assets that are in the backpack of the user associated to the sesion.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;dict&gt;: List that contains the backpack items as dicts</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://backpack.scratch.mit.edu/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Session.delete_from_backpack"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.delete_from_backpack">[docs]</a>    <span class="k">def</span> <span class="nf">delete_from_backpack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Deletes an asset from the backpack.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            asset_id: ID of the asset that will be deleted.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://backpack.scratch.mit.edu/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">asset_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Session.connect_cloud"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.connect_cloud">[docs]</a>    <span class="k">def</span> <span class="nf">connect_cloud</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_id_arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Connects to the cloud variables of a project.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            project_id (str): ID of the project that will be connected to.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            scratchattach.cloud.CloudConnection: An object that represents the created connection and allows you to set cloud variables</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">project_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">project_id</span> <span class="o">=</span> <span class="n">project_id_arg</span>
+        <span class="k">if</span> <span class="n">project_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">cloud</span><span class="o">.</span><span class="n">CloudConnection</span><span class="p">(</span><span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_username</span><span class="p">,</span> <span class="n">session_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">project_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">project_id</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Session.connect_user"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.connect_user">[docs]</a>    <span class="k">def</span> <span class="nf">connect_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets a user.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            username (str): Username of the requested user</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">,</span> <span class="n">_session</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">update</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;429&quot;</span><span class="p">:</span>
+                <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Response429</span><span class="p">(</span><span class="s2">&quot;Your network is blocked or rate-limited by Scratch.</span><span class="se">\n</span><span class="s2">If you&#39;re using an online IDE like replit.com, try running the code on your computer.&quot;</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">user</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Session.connect_project"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.connect_project">[docs]</a>    <span class="k">def</span> <span class="nf">connect_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets a project.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            project_id (int): ID of the requested project</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            scratchattach.project.Project: An object that represents the requested project and allows you to perform actions on the project (like project.love)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">project</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span> <span class="n">_session</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">u</span> <span class="o">==</span> <span class="s2">&quot;429&quot;</span><span class="p">:</span>
+                <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Response429</span><span class="p">(</span><span class="s2">&quot;Your network is blocked or rate-limited by Scratch.</span><span class="se">\n</span><span class="s2">If you&#39;re using an online IDE like replit.com, try running the code on your computer.&quot;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+                <span class="n">project</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">PartialProject</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">project_id</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">project</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Session.connect_studio"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.connect_studio">[docs]</a>    <span class="k">def</span> <span class="nf">connect_studio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">studio_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets a studio.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            studio_id (int): ID of the requested studio</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            scratchattach.studio.Studio: An object that represents the requested studio and allows you to perform actions on the studio (like studio.follow)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">studio</span> <span class="o">=</span> <span class="n">studio</span><span class="o">.</span><span class="n">Studio</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">studio_id</span><span class="p">),</span> <span class="n">_session</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">studio</span><span class="o">.</span><span class="n">update</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;429&quot;</span><span class="p">:</span>
+                <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Response429</span><span class="p">(</span><span class="s2">&quot;Your network is blocked or rate-limited by Scratch.</span><span class="se">\n</span><span class="s2">If you&#39;re using an online IDE like replit.com, try running the code on your computer.&quot;</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">studio</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Session.connect_topic"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.connect_topic">[docs]</a>    <span class="k">def</span> <span class="nf">connect_topic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topic_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets a forum topic. Data fetched from ScratchDB.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            topic_id (int): ID of the requested forum topic (can be found in the browser URL bar)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            scratchattach.forum.ForumTopic: An object that represents the requested forum topic</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">topic</span> <span class="o">=</span> <span class="n">forum</span><span class="o">.</span><span class="n">ForumTopic</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">topic_id</span><span class="p">),</span> <span class="n">_session</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">topic</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">topic</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Session.connect_topic_list"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.connect_topic_list">[docs]</a>    <span class="k">def</span> <span class="nf">connect_topic_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category_name</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">include_deleted</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the topics from a forum category. Data fetched from ScratchDB.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            category_name (str): Name of the forum category</span>
+<span class="sd">        </span>
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            page (str): Page of the category topics that should be returned</span>
+<span class="sd">            include_deleted (boolean): Whether deleted topics should be returned too</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;scratchattach.forum.ForumTopic&gt;: A list containing the forum topics from the specified category</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">category_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;%20&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">include_deleted</span><span class="p">:</span>
+            <span class="nb">filter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">filter</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/category/topics/</span><span class="si">{</span><span class="n">category_name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">?detail=1&amp;filter=</span><span class="si">{</span><span class="nb">filter</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="n">return_data</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">topic</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">forum</span><span class="o">.</span><span class="n">ForumTopic</span><span class="p">(</span><span class="nb">id</span> <span class="o">=</span> <span class="n">topic</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">_session</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+                <span class="n">t</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">topic</span><span class="p">)</span>
+                <span class="n">return_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">return_data</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Session.connect_post"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.connect_post">[docs]</a>    <span class="k">def</span> <span class="nf">connect_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">post_id</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets a forum post. Data fetched from ScratchDB.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            post_id (int): ID of the requested forum post</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            scratchattach.forum.ForumPost: An object that represents the requested forum post</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">post</span> <span class="o">=</span> <span class="n">forum</span><span class="o">.</span><span class="n">ForumPost</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">post_id</span><span class="p">),</span> <span class="n">_session</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">post</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">post</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Session.search_posts"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.search_posts">[docs]</a>    <span class="k">def</span> <span class="nf">search_posts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;newest&quot;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/search?q=</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&amp;o=</span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2">&amp;page=</span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;posts&quot;</span><span class="p">]</span>
+            <span class="n">return_data</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">forum</span><span class="o">.</span><span class="n">ForumPost</span><span class="p">(</span><span class="nb">id</span> <span class="o">=</span> <span class="n">o</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">)</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+                <span class="n">return_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">return_data</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span></div></div>
+
+<span class="c1"># ------ #</span>
+
+<div class="viewcode-block" id="login"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.login">[docs]</a><span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a session / log in to the Scratch website with the specified username and password. </span>
+
+<span class="sd">    This method will first create a session id, then it will fetch the xtoken and other information using the created session id.</span>
+<span class="sd">    If the log in fails, it will raise scratchattach.exceptions.LoginFailure.</span>
+<span class="sd">    If the login succeeds but fetching the xtoken fails, it will not raise an exception but display a warning. If the accout logged in to is banned, it will also display a warning.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        username (str)</span>
+<span class="sd">        password (str)</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        scratchattach.session.Session: An object that represents the created log in / session</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="n">username</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="n">password</span><span class="p">})</span>
+    <span class="n">_headers</span> <span class="o">=</span> <span class="n">headers</span>
+    <span class="n">_headers</span><span class="p">[</span><span class="s2">&quot;Cookie&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span>
+    <span class="n">request</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+        <span class="s2">&quot;https://scratch.mit.edu/login/&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">_headers</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">session_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;&quot;(.*)&quot;&#39;</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Set-Cookie&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">group</span><span class="p">())</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">LoginFailure</span><span class="p">(</span><span class="s2">&quot;Either the provided authentication data is wrong or your network is banned from Scratch.</span><span class="se">\n\n</span><span class="s2">If you&#39;re using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach#logging-in--scratch3session&quot;</span><span class="p">)</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">Session</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">session</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, TimMcCool.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scratchattach.user &mdash; scratchattach 1.3.7 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            scratchattach
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">scratchattach</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">scratchattach</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../scratchattach.html">scratchattach</a></li>
+      <li class="breadcrumb-item active">scratchattach.user</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scratchattach.user</h1><div class="highlight"><pre>
+<span></span><span class="c1">#----- Getting users</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">project</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exceptions</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">forum</span>
+<span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
+
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+    <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<div class="viewcode-block" id="User"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User">[docs]</a><span class="k">class</span> <span class="nc">User</span><span class="p">:</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Represents a Scratch user.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    .join_date</span>
+
+<span class="sd">    .about_me</span>
+
+<span class="sd">    .wiwo: Returns the user&#39;s &#39;What I&#39;m working on&#39; section</span>
+<span class="sd">    </span>
+<span class="sd">    .country: Returns the country from the user profile</span>
+<span class="sd">    </span>
+<span class="sd">    .icon_url: Returns the link to the user&#39;s pfp (90x90)</span>
+<span class="sd">   </span>
+<span class="sd">    .id: Returns the id of the user</span>
+<span class="sd">   </span>
+<span class="sd">    .scratchteam: Retuns True if the user is in the Scratch team</span>
+<span class="sd">    </span>
+<span class="sd">    .update() will update these attributes</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">entries</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;bio&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">about_me</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bio</span>
+        <span class="k">if</span> <span class="s2">&quot;status&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wiwo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span>
+
+        <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="s2">&quot;username&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span>
+
+        <span class="k">if</span> <span class="s2">&quot;_session&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="n">headers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_headers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_cookies</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;Cookie&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span> <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">[</span><span class="s2">&quot;accept&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;application/json&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">[</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;application/json&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+
+<div class="viewcode-block" id="User.update"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates the attributes of the User object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;429&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;429&quot;</span>
+        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;{</span><span class="se">\n</span><span class="s1">  &quot;response&quot;: &quot;Too many requests&quot;</span><span class="se">\n</span><span class="s1">}&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;429&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_update_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">UserNotFound</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scratchteam</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;scratchteam&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">join_date</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;joined&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">about_me</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">][</span><span class="s2">&quot;bio&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wiwo</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">][</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">country</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">][</span><span class="s2">&quot;country&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">icon_url</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">][</span><span class="s2">&quot;images&quot;</span><span class="p">][</span><span class="s2">&quot;90x90&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="User.message_count"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.message_count">[docs]</a>    <span class="k">def</span> <span class="nf">message_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/messages/count/&quot;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,})</span><span class="o">.</span><span class="n">text</span><span class="p">)[</span><span class="s2">&quot;count&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="User.featured_data"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.featured_data">[docs]</a>    <span class="k">def</span> <span class="nf">featured_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;           </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Gets info on the user&#39;s featured project and featured label (like &quot;Featured project&quot;, &quot;My favorite things&quot;, etc.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/users/all/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;label&quot;</span><span class="p">:</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;featured_project_label_name&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;project&quot;</span><span class="p">:</span>
+                        <span class="nb">dict</span><span class="p">(</span>
+                            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;featured_project_data&quot;</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">]),</span>
+                            <span class="n">author</span><span class="o">=</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;featured_project_data&quot;</span><span class="p">][</span><span class="s2">&quot;creator&quot;</span><span class="p">],</span>
+                            <span class="n">thumbnail_url</span><span class="o">=</span><span class="s2">&quot;https://&quot;</span><span class="o">+</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;featured_project_data&quot;</span><span class="p">][</span><span class="s2">&quot;thumbnail_url&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">:],</span>
+                            <span class="n">title</span><span class="o">=</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;featured_project_data&quot;</span><span class="p">][</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
+                        <span class="p">)</span>
+                    <span class="p">}</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="User.follower_count"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.follower_count">[docs]</a>    <span class="k">def</span> <span class="nf">follower_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># follower count</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/followers/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;Followers (&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.following_count"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.following_count">[docs]</a>    <span class="k">def</span> <span class="nf">following_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># following count</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/following/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;Following (&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.followers"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.followers">[docs]</a>    <span class="k">def</span> <span class="nf">followers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">limit</span><span class="o">&gt;</span><span class="mi">40</span><span class="p">:</span>
+            <span class="n">limit</span><span class="o">=</span><span class="mi">40</span>
+        <span class="n">followers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/followers/?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">follower</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">followers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">User</span><span class="p">(</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">],</span>
+                    <span class="n">scratchteam</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;scratchteam&quot;</span><span class="p">],</span>
+                    <span class="n">join_date</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;joined&quot;</span><span class="p">],</span>
+                    <span class="n">icon_url</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">][</span><span class="s2">&quot;images&quot;</span><span class="p">][</span><span class="s2">&quot;90x90&quot;</span><span class="p">],</span>
+                    <span class="n">status</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">][</span><span class="s2">&quot;status&quot;</span><span class="p">],</span>
+                    <span class="n">bio</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">][</span><span class="s2">&quot;bio&quot;</span><span class="p">],</span>
+                    <span class="n">country</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">][</span><span class="s2">&quot;country&quot;</span><span class="p">]</span>
+                <span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Failed to parse &quot;</span><span class="p">,</span> <span class="n">follower</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">followers</span></div>
+
+<div class="viewcode-block" id="User.follower_names"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.follower_names">[docs]</a>    <span class="k">def</span> <span class="nf">follower_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">followers</span><span class="p">(</span><span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="User.following"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.following">[docs]</a>    <span class="k">def</span> <span class="nf">following</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">limit</span><span class="o">&gt;</span><span class="mi">40</span><span class="p">:</span>
+            <span class="n">limit</span><span class="o">=</span><span class="mi">40</span>
+        <span class="n">followers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/following/?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">follower</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">followers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">User</span><span class="p">(</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">],</span>
+                    <span class="n">scratchteam</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;scratchteam&quot;</span><span class="p">],</span>
+                    <span class="n">join_date</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;joined&quot;</span><span class="p">],</span>
+                    <span class="n">icon_url</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">][</span><span class="s2">&quot;images&quot;</span><span class="p">][</span><span class="s2">&quot;90x90&quot;</span><span class="p">],</span>
+                    <span class="n">status</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">][</span><span class="s2">&quot;status&quot;</span><span class="p">],</span>
+                    <span class="n">bio</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">][</span><span class="s2">&quot;bio&quot;</span><span class="p">],</span>
+                    <span class="n">country</span> <span class="o">=</span> <span class="n">follower</span><span class="p">[</span><span class="s2">&quot;profile&quot;</span><span class="p">][</span><span class="s2">&quot;country&quot;</span><span class="p">]</span>
+                <span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Failed to parse &quot;</span><span class="p">,</span> <span class="n">follower</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">followers</span></div>
+
+<div class="viewcode-block" id="User.following_names"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.following_names">[docs]</a>    <span class="k">def</span> <span class="nf">following_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">following</span><span class="p">(</span><span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="User.is_following"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.is_following">[docs]</a>    <span class="k">def</span> <span class="nf">is_following</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;http://explodingstar.pythonanywhere.com/api/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/?following=</span><span class="si">{</span><span class="n">user</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;following&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="User.is_followed_by"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.is_followed_by">[docs]</a>    <span class="k">def</span> <span class="nf">is_followed_by</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;http://explodingstar.pythonanywhere.com/api/</span><span class="si">{</span><span class="n">user</span><span class="si">}</span><span class="s2">/?following=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;following&quot;</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">project_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/projects/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;Shared Projects (&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+<div class="viewcode-block" id="User.project_count"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.project_count">[docs]</a>    <span class="k">def</span> <span class="nf">project_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/projects/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;Shared Projects (&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.studio_count"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.studio_count">[docs]</a>    <span class="k">def</span> <span class="nf">studio_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/studios/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;Studios I Curate (&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.studios_following_count"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.studios_following_count">[docs]</a>    <span class="k">def</span> <span class="nf">studios_following_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/studios/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;Studios I Follow (&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.studios"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.studios">[docs]</a>    <span class="k">def</span> <span class="nf">studios</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/studios/curate?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="User.projects"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.projects">[docs]</a>    <span class="k">def</span> <span class="nf">projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_projects</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/projects/?offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                    <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_projects</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/projects/?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                    <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">projects</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">_projects</span><span class="p">:</span>
+            <span class="n">projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span>
+                <span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span>
+                <span class="n">author</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+                <span class="n">comments_allowed</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;comments_allowed&quot;</span><span class="p">],</span>
+                <span class="n">description</span><span class="o">=</span><span class="n">project</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">],</span>
+                <span class="n">created</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;created&quot;</span><span class="p">],</span>
+                <span class="n">last_modified</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;modified&quot;</span><span class="p">],</span>
+                <span class="n">share_date</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;shared&quot;</span><span class="p">],</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                <span class="n">thumbnail_url</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">],</span>
+                <span class="n">instructions</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;instructions&quot;</span><span class="p">],</span>
+                <span class="n">remix_parent</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;remix&quot;</span><span class="p">][</span><span class="s2">&quot;parent&quot;</span><span class="p">],</span>
+                <span class="n">remix_root</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;remix&quot;</span><span class="p">][</span><span class="s2">&quot;root&quot;</span><span class="p">],</span>
+                <span class="n">favorites</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;favorites&quot;</span><span class="p">],</span>
+                <span class="n">loves</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;loves&quot;</span><span class="p">],</span>
+                <span class="n">remixes</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;remixes&quot;</span><span class="p">],</span>
+                <span class="n">views</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;views&quot;</span><span class="p">],</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">],</span>
+                <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://scratch.mit.edu/projects/&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+            <span class="p">))</span>
+        <span class="k">return</span> <span class="n">projects</span></div>
+
+<div class="viewcode-block" id="User.favorites"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.favorites">[docs]</a>    <span class="k">def</span> <span class="nf">favorites</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_projects</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/favorites/?offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                    <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_projects</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/favorites/?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                    <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">projects</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">_projects</span><span class="p">:</span>
+            <span class="n">projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span>
+                <span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span>
+                <span class="n">author</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+                <span class="n">comments_allowed</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;comments_allowed&quot;</span><span class="p">],</span>
+                <span class="n">description</span><span class="o">=</span><span class="n">project</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">],</span>
+                <span class="n">created</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;created&quot;</span><span class="p">],</span>
+                <span class="n">last_modified</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;modified&quot;</span><span class="p">],</span>
+                <span class="n">share_date</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;shared&quot;</span><span class="p">],</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                <span class="n">thumbnail_url</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">],</span>
+                <span class="n">instructions</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;instructions&quot;</span><span class="p">],</span>
+                <span class="n">remix_parent</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;remix&quot;</span><span class="p">][</span><span class="s2">&quot;parent&quot;</span><span class="p">],</span>
+                <span class="n">remix_root</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;remix&quot;</span><span class="p">][</span><span class="s2">&quot;root&quot;</span><span class="p">],</span>
+                <span class="n">favorites</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;favorites&quot;</span><span class="p">],</span>
+                <span class="n">loves</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;loves&quot;</span><span class="p">],</span>
+                <span class="n">remixes</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;remixes&quot;</span><span class="p">],</span>
+                <span class="n">views</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;views&quot;</span><span class="p">],</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">],</span>
+                <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://scratch.mit.edu/projects/&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+            <span class="p">))</span>
+        <span class="k">return</span> <span class="n">projects</span></div>
+
+<div class="viewcode-block" id="User.favorites_count"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.favorites_count">[docs]</a>    <span class="k">def</span> <span class="nf">favorites_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/favorites/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;x-csrftoken&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;x-requested-with&quot;</span><span class="p">:</span> <span class="s2">&quot;XMLHttpRequest&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Cookie&quot;</span><span class="p">:</span> <span class="s2">&quot;scratchcsrftoken=a;scratchlanguage=en;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;referer&quot;</span><span class="p">:</span> <span class="s2">&quot;https://scratch.mit.edu&quot;</span><span class="p">,</span>
+                <span class="s1">&#39;user-agent&#39;</span><span class="p">:</span> <span class="s1">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;Favorites (&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.toggle_commenting"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.toggle_commenting">[docs]</a>    <span class="k">def</span> <span class="nf">toggle_commenting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/comments/user/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/toggle-comments/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.viewed_projects"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.viewed_projects">[docs]</a>    <span class="k">def</span> <span class="nf">viewed_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_projects</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://api.scratch.mit.edu/users/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/projects/recentlyviewed?limit=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&amp;offset=</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="n">projects</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">_projects</span><span class="p">:</span>
+                <span class="n">projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span>
+                    <span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span>
+                    <span class="n">author</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+                    <span class="n">comments_allowed</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;comments_allowed&quot;</span><span class="p">],</span>
+                    <span class="n">description</span><span class="o">=</span><span class="n">project</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">],</span>
+                    <span class="n">created</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;created&quot;</span><span class="p">],</span>
+                    <span class="n">last_modified</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;modified&quot;</span><span class="p">],</span>
+                    <span class="n">share_date</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">][</span><span class="s2">&quot;shared&quot;</span><span class="p">],</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                    <span class="n">thumbnail_url</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">],</span>
+                    <span class="n">instructions</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;instructions&quot;</span><span class="p">],</span>
+                    <span class="n">remix_parent</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;remix&quot;</span><span class="p">][</span><span class="s2">&quot;parent&quot;</span><span class="p">],</span>
+                    <span class="n">remix_root</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;remix&quot;</span><span class="p">][</span><span class="s2">&quot;root&quot;</span><span class="p">],</span>
+                    <span class="n">favorites</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;favorites&quot;</span><span class="p">],</span>
+                    <span class="n">loves</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;loves&quot;</span><span class="p">],</span>
+                    <span class="n">remixes</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;remixes&quot;</span><span class="p">],</span>
+                    <span class="n">views</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;stats&quot;</span><span class="p">][</span><span class="s2">&quot;views&quot;</span><span class="p">],</span>
+                    <span class="n">title</span> <span class="o">=</span> <span class="n">project</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">],</span>
+                    <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://scratch.mit.edu/projects/&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+                <span class="p">))</span>
+            <span class="k">return</span> <span class="n">projects</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Unauthorized</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="User.set_bio"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.set_bio">[docs]</a>    <span class="k">def</span> <span class="nf">set_bio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/users/all/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="n">comments_allowed</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+                <span class="n">bio</span> <span class="o">=</span> <span class="n">text</span><span class="p">,</span>
+                <span class="n">thumbnail_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">icon_url</span><span class="p">,</span>
+                <span class="n">userId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span>
+            <span class="p">))</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.set_wiwo"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.set_wiwo">[docs]</a>    <span class="k">def</span> <span class="nf">set_wiwo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/users/all/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="n">comments_allowed</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+                <span class="n">status</span> <span class="o">=</span> <span class="n">text</span><span class="p">,</span>
+                <span class="n">thumbnail_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">icon_url</span><span class="p">,</span>
+                <span class="n">userId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span>
+            <span class="p">))</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.set_featured"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.set_featured">[docs]</a>    <span class="k">def</span> <span class="nf">set_featured</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_id</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the user&#39;s featured project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user` </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            project_id: Project id of the project that should be set as featured</span>
+
+<span class="sd">        Keyword Args:</span>
+<span class="sd">            label: The label that should appear above the featured project on the user&#39;s profile (Like &quot;Featured project&quot;, &quot;Featured tutorial&quot;, &quot;My favorite things&quot;, etc.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/users/all/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_json_headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;featured_project&quot;</span><span class="p">:</span><span class="nb">int</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span><span class="s2">&quot;featured_project_label&quot;</span><span class="p">:</span><span class="n">label</span><span class="p">})</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="User.post_comment"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.post_comment">[docs]</a>    <span class="k">def</span> <span class="nf">post_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">commentee_id</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posts a comment on the user&#39;s profile. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            content: Content of the comment that should be posted</span>
+<span class="sd">        </span>
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            parent_id: ID of the comment you want to reply to. If you don&#39;t want to mention a user, don&#39;t put the argument.</span>
+<span class="sd">            commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don&#39;t want to mention a user, don&#39;t put the argument.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;commentee_id&quot;</span><span class="p">:</span> <span class="n">commentee_id</span><span class="p">,</span>
+        <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">content</span><span class="p">),</span>
+        <span class="s2">&quot;parent_id&quot;</span><span class="p">:</span> <span class="n">parent_id</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/comments/user/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/add/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">CommentPostFailure</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">text</span></div>
+
+<div class="viewcode-block" id="User.reply_comment"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.reply_comment">[docs]</a>    <span class="k">def</span> <span class="nf">reply_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">commentee_id</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posts a reply to a comment on the user&#39;s profile. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            content: Content of the comment that should be posted</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            parent_id: ID of the comment you want to reply to</span>
+<span class="sd">            commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don&#39;t want to mention a user, don&#39;t put the argument.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">post_comment</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="n">parent_id</span><span class="p">,</span> <span class="n">commentee_id</span><span class="o">=</span><span class="n">commentee_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.activity_html"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.activity_html">[docs]</a>    <span class="k">def</span> <span class="nf">activity_html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/messages/ajax/user-activity/?user=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">&amp;max=</span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span></div>
+
+
+<div class="viewcode-block" id="User.follow"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.follow">[docs]</a>    <span class="k">def</span> <span class="nf">follow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Follows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/users/followers/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/add/?usernames=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.unfollow"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.unfollow">[docs]</a>    <span class="k">def</span> <span class="nf">unfollow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unfollows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/users/followers/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/remove/?usernames=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.delete_comment"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.delete_comment">[docs]</a>    <span class="k">def</span> <span class="nf">delete_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">comment_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deletes a comment. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            comment_id: The id of the comment that should be deleted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/comments/user/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/del/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="nb">str</span><span class="p">(</span><span class="n">comment_id</span><span class="p">)})</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.report_comment"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.report_comment">[docs]</a>    <span class="k">def</span> <span class="nf">report_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">comment_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reports a comment to the Scratch team. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            comment_id: The id of the comment that should be reported</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/comments/user/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/rep/&quot;</span><span class="p">,</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span>
+            <span class="n">cookies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cookies</span><span class="p">,</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;id&quot;</span><span class="p">:</span><span class="nb">str</span><span class="p">(</span><span class="n">comment_id</span><span class="p">)})</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_comments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">URL</span><span class="p">):</span>
+        <span class="n">DATA</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">page_contents</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">URL</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
+
+        <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">page_contents</span><span class="p">,</span> <span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
+
+        <span class="n">comments</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;li&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;top-level-reply&quot;</span><span class="p">})</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">comment</span> <span class="ow">in</span> <span class="n">comments</span><span class="p">:</span>
+            <span class="n">comment_id</span> <span class="o">=</span> <span class="n">comment</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;comment&quot;</span><span class="p">})[</span><span class="s1">&#39;data-comment-id&#39;</span><span class="p">]</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">comment</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;comment-user&quot;</span><span class="p">})[</span><span class="s1">&#39;data-comment-user&#39;</span><span class="p">]</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">comment</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;content&quot;</span><span class="p">})</span><span class="o">.</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">time</span> <span class="o">=</span> <span class="n">comment</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;span&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;time&quot;</span><span class="p">})[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>
+
+            <span class="n">ALL_REPLIES</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">replies</span> <span class="o">=</span> <span class="n">comment</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;li&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;reply&quot;</span><span class="p">})</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">replies</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">hasReplies</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">hasReplies</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">reply</span> <span class="ow">in</span> <span class="n">replies</span><span class="p">:</span>
+                <span class="n">r_comment_id</span> <span class="o">=</span> <span class="n">reply</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;comment&quot;</span><span class="p">})[</span><span class="s1">&#39;data-comment-id&#39;</span><span class="p">]</span>
+                <span class="n">r_user</span> <span class="o">=</span> <span class="n">reply</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;comment-user&quot;</span><span class="p">})[</span><span class="s1">&#39;data-comment-user&#39;</span><span class="p">]</span>
+                <span class="n">r_content</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">reply</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;content&quot;</span><span class="p">})</span><span class="o">.</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                    <span class="s2">&quot;                    &quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
+                <span class="n">r_time</span> <span class="o">=</span> <span class="n">reply</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;span&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="p">:</span> <span class="s2">&quot;time&quot;</span><span class="p">})[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>
+                <span class="n">reply_data</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;CommentID&#39;</span><span class="p">:</span> <span class="n">r_comment_id</span><span class="p">,</span>
+                    <span class="s1">&#39;User&#39;</span><span class="p">:</span> <span class="n">r_user</span><span class="p">,</span>
+                    <span class="s1">&#39;Content&#39;</span><span class="p">:</span> <span class="n">r_content</span><span class="p">,</span>
+                    <span class="s1">&#39;Timestamp&#39;</span><span class="p">:</span> <span class="n">r_time</span>
+                <span class="p">}</span>
+                <span class="n">ALL_REPLIES</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reply_data</span><span class="p">)</span>
+
+            <span class="n">main_comment</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;CommentID&#39;</span><span class="p">:</span> <span class="n">comment_id</span><span class="p">,</span>
+                <span class="s1">&#39;User&#39;</span><span class="p">:</span> <span class="n">user</span><span class="p">,</span>
+                <span class="s1">&#39;Content&#39;</span><span class="p">:</span> <span class="n">content</span><span class="p">,</span>
+                <span class="s1">&#39;Timestamp&#39;</span><span class="p">:</span> <span class="n">time</span><span class="p">,</span>
+                <span class="s1">&#39;hasReplies?&#39;</span><span class="p">:</span> <span class="n">hasReplies</span><span class="p">,</span>
+                <span class="s1">&#39;Replies&#39;</span><span class="p">:</span> <span class="n">ALL_REPLIES</span>
+            <span class="p">}</span>
+            <span class="n">DATA</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">main_comment</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DATA</span>
+
+
+<div class="viewcode-block" id="User.comments"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.comments">[docs]</a>    <span class="k">def</span> <span class="nf">comments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the comments posted on the user&#39;s profile (with replies).</span>
+
+<span class="sd">        Keyword Arguments:</span>
+<span class="sd">            page: The page of the comments that should be returned.</span>
+<span class="sd">            limit: Max. amount of returned comments.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;dict&gt;: A list containing the requested comments as dicts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">URL</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://scratch.mit.edu/site-api/comments/user/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/?page=</span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_comments</span><span class="p">(</span><span class="n">URL</span><span class="p">)[:</span><span class="n">limit</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="User.stats"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.stats">[docs]</a>    <span class="k">def</span> <span class="nf">stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets information about the user&#39;s stats. Fetched from ScratchDB.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: A dict containing the user&#39;s stats. If the stats aren&#39;t available, all values will be -1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">stats</span><span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/user/info/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;statistics&quot;</span><span class="p">]</span>
+            <span class="n">stats</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;ranks&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">stats</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;loves&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;favorites&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;comments&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;views&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;followers&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="s2">&quot;following&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">stats</span></div>
+
+<div class="viewcode-block" id="User.ranks"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.ranks">[docs]</a>    <span class="k">def</span> <span class="nf">ranks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets information about the user&#39;s ranks. Fetched from ScratchDB.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: A dict containing the user&#39;s ranks. If the ranks aren&#39;t available, all values will be -1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/user/info/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;statistics&quot;</span><span class="p">][</span><span class="s2">&quot;ranks&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;country&quot;</span><span class="p">:{</span><span class="s2">&quot;loves&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;favorites&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;comments&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;views&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;followers&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;following&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},</span><span class="s2">&quot;loves&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;favorites&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;comments&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;views&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;followers&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;following&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="User.followers_over_time"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.followers_over_time">[docs]</a>    <span class="k">def</span> <span class="nf">followers_over_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">segment</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets information about the user&#39;s follower count history. Fetched from ScratchDB.</span>
+
+<span class="sd">        Keyword Args:</span>
+<span class="sd">            segment (int): Offset for the first returned element.</span>
+<span class="sd">            range (int): Amount of returned elements.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;dict&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/user/graph/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/followers?segment=</span><span class="si">{</span><span class="n">segment</span><span class="si">}</span><span class="s2">&amp;range=</span><span class="si">{</span><span class="nb">range</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="User.forum_counts"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.forum_counts">[docs]</a>    <span class="k">def</span> <span class="nf">forum_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/user/info/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;counts&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">FetchError</span></div>
+
+<div class="viewcode-block" id="User.forum_posts_over_time"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.forum_posts_over_time">[docs]</a>    <span class="k">def</span> <span class="nf">forum_posts_over_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/user/info/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;history&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">FetchError</span></div>
+
+<div class="viewcode-block" id="User.forum_signature"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.forum_signature">[docs]</a>    <span class="k">def</span> <span class="nf">forum_signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/user/info/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;signature&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">FetchError</span></div>
+
+<div class="viewcode-block" id="User.forum_signature_history"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.forum_signature_history">[docs]</a>    <span class="k">def</span> <span class="nf">forum_signature_history</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/user/history/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="User.ocular_status"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.ocular_status">[docs]</a>    <span class="k">def</span> <span class="nf">ocular_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets information about the user&#39;s ocular status. Ocular is a website developed by jeffalo: https://ocular.jeffalo.net/</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://my-ocular.jeffalo.net/api/user/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="User.forum_posts"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.User.forum_posts">[docs]</a>    <span class="k">def</span> <span class="nf">forum_posts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;newest&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the forum posts associated with the user.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            username (str): Username of the requested user</span>
+
+<span class="sd">        Keyword Args:</span>
+<span class="sd">            page (int): Search the page of the results that should be returned.</span>
+<span class="sd">            order (str): Specifies the order of the returned posts. &quot;newest&quot; means the first returned post is the newest one, &quot;oldest&quot; means it is the oldest one.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list&lt;scratchattach.forum.ForumPost&gt;: A list that contains the forum posts associated with the user.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://scratchdb.lefty.one/v3/forum/user/posts/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">?o=</span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="n">return_data</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">forum</span><span class="o">.</span><span class="n">ForumPost</span><span class="p">(</span><span class="nb">id</span> <span class="o">=</span> <span class="n">o</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">)</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">_update_from_dict</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+                <span class="n">return_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">return_data</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span></div></div>
+
+<span class="c1"># ------ #</span>
+
+<div class="viewcode-block" id="get_user"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.user.get_user">[docs]</a><span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="n">username</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a user without logging in.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        username (str): Username of the requested user</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        scratchattach.user.User: An object representing the requested user</span>
+
+<span class="sd">    Warning:</span>
+<span class="sd">        All methods that require authentication (like user.follow) will not work on the returned object.</span>
+<span class="sd">        </span>
+<span class="sd">        If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_user` instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">update</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;429&quot;</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">Response429</span><span class="p">(</span><span class="s2">&quot;Your network is blocked or rate-limited by Scratch.</span><span class="se">\n</span><span class="s2">If you&#39;re using an online IDE like replit.com, try running the code on your computer.&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">user</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, TimMcCool.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
