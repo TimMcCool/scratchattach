@@ -28,36 +28,35 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 - See the GitHub repository for full list of contributors.
 - Create a pull request to contribute code yourself.
 
+# logging-in--scratch3session
+
+How to log in with a session id: [https://github.com/TimMcCool/scratchattach/wiki#logging-in](https://github.com/TimMcCool/scratchattach/wiki#logging-in)
+
 # Support
 
 If you need help with your code, leave a comment in the [official forum topic](https://scratch.mit.edu/discuss/topic/603418/
 ) on [TimMcCool's Scratch
 profile](https://scratch.mit.edu/users/TimMcCool/) or open an issue on the github repo
 
-# logging-in--scratch3session
+.
 
-How to log in with a session id: [https://github.com/TimMcCool/scratchattach/wiki#logging-in](https://github.com/TimMcCool/scratchattach/wiki#logging-in)
+.
 
+.
 
+.
 
+.
 
+.
 
+.
 
+.
 
+.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+.
 
 
 
