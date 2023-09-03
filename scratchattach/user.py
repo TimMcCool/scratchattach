@@ -745,7 +745,7 @@ def get_user(username):
         scratchattach.user.User: An object representing the requested user
 
     Warning:
-        All methods that require authentication (like user.follow) will not work on the returned object.
+        Any methods that require authentication (like user.follow) will not work on the returned object.
         
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_user` instead.
     """

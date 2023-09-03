@@ -237,7 +237,7 @@ def get_topic(topic_id):
         scratchattach.forum.ForumTopic: An object representing the requested forum topic
 
     Warning:
-        All methods that require authentication will not work on the returned object.
+        Any methods that require authentication will not work on the returned object.
         
         If you want to use methods that require authentication, create the object with :meth:`scratchattach.session.Session.connect_topic` instead.
     """
@@ -266,7 +266,7 @@ def get_topic_list(category_name, *, page=0, include_deleted=False):
         list<scratchattach.forum.ForumTopic>: A list containing the forum topics from the specified category
 
     Warning:
-        All methods that require authentication will not work on the returned objects.
+        Any methods that require authentication will not work on the returned objects.
 
         If you want to use methods that require authentication, get the forum topics with :meth:`scratchattach.session.Session.connect_topic_list` instead.
     """
@@ -299,7 +299,7 @@ def get_post(post_id):
         scratchattach.forum.ForumPost: An object that represents the requested forum post
 
     Warning:
-        All methods that require authentication (like post.edit) will not work on the returned object.
+        Any methods that require authentication (like post.edit) will not work on the returned object.
          
         If you want to use these methods, get the forum post with :meth:`scratchattach.session.Session.connect_post` instead.
     """

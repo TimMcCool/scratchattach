@@ -429,7 +429,7 @@ def get_studio(studio_id):
         scratchattach.studio.Studio: An object representing the requested studio
 
     Warning:
-        All methods that require authentication (like studio.follow) will not work on the returned object.
+        Any methods that authentication (like studio.follow) will not work on the returned object.
         
         If you want to use these, get the studio with :meth:`scratchattach.session.Session.connect_studio` instead.    
     """

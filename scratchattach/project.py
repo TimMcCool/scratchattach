@@ -658,7 +658,7 @@ def get_project(project_id):
         scratchattach.project.Project: An object representing the requested project.
     
     Warning:
-        All methods that require authentication (like project.love) will not work on the returned object.
+        Any methods that require authentication (like project.love) will not work on the returned object.
         
         If you want to use these methods, get the project with :meth:`scratchattach.session.Session.connect_project` instead.
     """
@@ -691,7 +691,7 @@ def explore_projects(*, query="*", mode="trending", language="en", limit=40, off
         list<scratchattach.project.Project>: List that contains the explore page projects
     
     Warning:
-        All methods that require authentication (like project.love) will not work on the returned objects.
+        Any methods that require authentication (like project.love) will not work on the returned objects.
         
         If you want to use these methods, get the explore page projects with :meth:`scratchattach.session.Session.search_projects` instead.
     '''
@@ -720,7 +720,7 @@ def search_projects(*, query="", mode="trending", language="en", limit=40, offse
         list<scratchattach.project.Project>: List that contains the search results
 
     Warning:
-        All methods that require authentication (like project.love) will not work on the returned objects.
+        Any methods that require authentication (like project.love) will not work on the returned objects.
         
         If you want to use these methods, perform the search with :meth:`scratchattach.session.Session.search_projects` instead.
     '''
