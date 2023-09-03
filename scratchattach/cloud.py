@@ -451,7 +451,7 @@ def get_var(project_id, variable):
 
 def get_tw_cloud(project_id):
     """
-    Gets the clouddata of a TurboWarp cloud project from the TurboWarp's websoclet.
+    Gets the clouddata of a TurboWarp cloud project from TurboWarp's websocket.
 
     Warning:
         Do not spam this method, it creates a new connection to the TurboWarp cloud server every time it is called.
