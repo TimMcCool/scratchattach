@@ -408,7 +408,7 @@ class WsCloudEvents(CloudEvents):
 
 def get_cloud(project_id):
     """
-    Gets the clouddata of a Scratch cloud project from the clouddata log.
+    Gets the clouddata of a Scratch cloud project.
 
     Args:
         project_id (str):
@@ -428,7 +428,7 @@ def get_cloud(project_id):
 
 def get_var(project_id, variable):
     """
-    Gets the value of of a Scratch cloud variable from the clouddata log.
+    Gets the value of of a Scratch cloud variable.
     
     Args:
         project_id (str):
@@ -451,7 +451,7 @@ def get_var(project_id, variable):
 
 def get_tw_cloud(project_id):
     """
-    Gets the clouddata of a TurboWarp cloud project from TurboWarp's websocket.
+    Gets the clouddata of a TurboWarp cloud project.
 
     Warning:
         Do not spam this method, it creates a new connection to the TurboWarp cloud server every time it is called.
@@ -481,7 +481,7 @@ def get_tw_cloud(project_id):
 
 def get_tw_var(project_id, variable):
     """
-    Gets the value of of a TurboWarp cloud variable from TurboWarp's websocket.
+    Gets the value of of a TurboWarp cloud variable.
 
     Warning:
         Do not spam this method, it creates a new connection to the TurboWarp cloud server every time it is called.
