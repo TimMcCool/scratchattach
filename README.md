@@ -30,7 +30,7 @@ conn.set_var("variable", value)
 ```
 
 **Cloud event handler:**
-```
+```py
 import scratchattach as scratch3
 events = scratch3.CloudEvents("project_id")
 
@@ -62,7 +62,7 @@ user = session.get_linked_user()
 while True:
     follower_count = user.follower_count()
     user.set_bio(f"My follower count: {follower_count}")
-    time.sleep(1000)
+    time.sleep(60) # The follower count is updated every 60 seconds
 ```
 
 # Contributors
