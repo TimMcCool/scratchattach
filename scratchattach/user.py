@@ -427,7 +427,7 @@ class User:
 
     def set_bio(self, text):
         """
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Updates the user's "About me" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
@@ -445,7 +445,7 @@ class User:
 
     def set_wiwo(self, text):
         """
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Updates the user's "What I'm working on" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
