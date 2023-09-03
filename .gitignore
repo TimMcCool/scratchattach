@@ -3,3 +3,4 @@ dist/
 scratchattach.egg-info/
 __pycache__/
 README.md
+setup.py
