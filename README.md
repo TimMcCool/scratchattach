@@ -17,7 +17,11 @@ The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 [![PyPI version shields.io](https://img.shields.io/pypi/v/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
 [![GitHub license](https://badgen.net/github/license/TimMcCool/scratchattach)](https://github.com/TimMcCool/scratchattach/blob/master/LICENSE)
 
-Better documentation coming soon
+# Useful links
+
+[Documentation](https://github.com/TimMcCool/scratchattach/wiki)
+[Extended documentation (WIP)]()
+[Community-created projects](https://scratch.mit.edu/studios/31478892/)
 
 # Installation
 
