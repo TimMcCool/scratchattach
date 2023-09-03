@@ -147,7 +147,9 @@ class TwCloudConnection(_CloudMixin):
     Attributes:
 
     .websocket: The websocket connection (WebSocket object from the websocket-client library)
+
     .cloud_host: The websocket URL of the cloud variable server
+    
     .allow_non_numeric: Whether the cloud variables can be set to non-numeric values
     """
 
