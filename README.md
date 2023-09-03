@@ -20,7 +20,6 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 - **[Documentation](https://github.com/TimMcCool/scratchattach/wiki)**
 - [Extended documentation (WIP)]()
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
-)
 
 # Contributors
 
