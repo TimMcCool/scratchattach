@@ -6,8 +6,6 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 **You also need to have the coding language Python installed on your device.**
 *Download Python here if you don't have it: https://www.python.org/downloads/*
 
-The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
-
 <p align="left">
   <img width="160" height="133" src="https://github.com/TimMcCool/scratchattach/blob/main/logos/logo_dark_transparent_eyes.svg">
 </p>
@@ -20,7 +18,9 @@ The project is maintained by TimMcCool: https://scratch.mit.edu/users/TimMcCool/
 # Useful links
 
 [Documentation](https://github.com/TimMcCool/scratchattach/wiki)
+
 [Extended documentation (WIP)]()
+
 [Community-created projects](https://scratch.mit.edu/studios/31478892/)
 
 # Installation
