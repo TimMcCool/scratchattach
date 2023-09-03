@@ -323,7 +323,7 @@ class Session():
 
     def backpack(self,limit=20, offset=0):
         '''
-        Lists the assets that are in the backpack of the user associated to the sesion.
+        Lists the assets that are in the backpack of the user associated with the session.
 
         Returns:
             list<dict>: List that contains the backpack items as dicts
