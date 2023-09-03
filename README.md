@@ -22,6 +22,53 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 - [Extended documentation (WIP)](https://scratchattach.readthedocs.io/en/latest/)
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
 
+# Examples
+Setting a cloud var with scratchattach:
+```py
+import scratchattach as scratch3
+
+session = scratch3.login("username", "password")
+conn = session.connect_cloud("project_id")
+
+conn.set_var("variable", value)
+```
+
+Cloud event handler:
+```
+import scratchattach as scratch3
+events = scratch3.CloudEvents("project_id")
+
+@events.event
+def on_set(event): #Called when a cloud var is set
+    print(f"{event.user} set the variable {event.var} to the valuee {event.value} at {event.timestamp}")
+
+events.start()
+```
+
+**Comment on a project:**
+```py
+import scratchattach as scratch3
+
+session = scratch3.login("username", "password")
+project = session.connect_project("project_id")
+
+project.post_comment("Hi guys!")
+```
+
+**Automatically update your profile with your follower count:**
+```py
+import scratchattach as scratch3
+import time
+
+session = scratch3.login("username", "password")
+user = session.get_linked_user()
+
+while True:
+    follower_count = user.follower_count()
+    user.set_bio(f"My follower count: {follower_count}")
+    time.sleep(1000)
+```
+
 # Contributors
 
 - Allmost all code by TimMcCool.
