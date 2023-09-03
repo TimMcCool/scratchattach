@@ -68,7 +68,7 @@ class CloudConnection(_CloudMixin):
 
     Attributes:
 
-    .websocket: The websocket connection (WebSocket object from the websocket-client library)
+    :.websocket: The websocket connection (WebSocket object from the websocket-client library)
     """
 
     def _connect(self, *, cloud_host):
@@ -146,11 +146,11 @@ class TwCloudConnection(_CloudMixin):
 
     Attributes:
 
-    .websocket: The websocket connection (WebSocket object from the websocket-client library)
+    :.websocket: The websocket connection (WebSocket object from the websocket-client library)
 
-    .cloud_host: The websocket URL of the cloud variable server
+    :.cloud_host: The websocket URL of the cloud variable server
     
-    .allow_non_numeric: Whether the cloud variables can be set to non-numeric values
+    :.allow_non_numeric: Whether the cloud variables can be set to non-numeric values
     """
 
     def _connect(self, *, cloud_host, timeout=None):
@@ -216,11 +216,7 @@ class TwCloudConnection(_CloudMixin):
 
 class CloudEvents:
     """
-    Class that calls events on Scratch cloud variable updates.
-    
-    Data source: Scratch clouddata logs.
-    
-    The cloud event handler can be started with :meth:`scratchattach.cloud.CloudEvents.start`.
+    Class that calls events on Scratch cloud variable updates. Data fetched from Scratch's clouddata logs.
     """
     class Event:
         """
@@ -323,11 +319,7 @@ class CloudEvents:
 
 class TwCloudEvents(CloudEvents):
     """
-    Class that calls events on TurboWarp cloud variable updates.
-    
-    Data source: Turbowarp cloud websocket.
-    
-    The cloud event handler can be started with :meth:`scratchattach.cloud.TwCloudEvents.start`.
+    Class that calls events on TurboWarp cloud variable updates. Data fetched from Turbowarp cloud websocket.
     """
     def __init__(self, project_id, **entries):
         cloud_connection = TwCloudConnection(project_id=project_id)
@@ -360,11 +352,7 @@ class TwCloudEvents(CloudEvents):
 
 class WsCloudEvents(CloudEvents):
     """
-    Class that calls events on Scratch or Turbowarp cloud variable updates.
-    
-    Data source: A provided CloudConnection or TwCloudConnection object.
-    
-    The cloud event handler can be started with :meth:`scratchattach.cloud.WsCloudEvents.start`.
+    Class that calls events on Scratch or Turbowarp cloud variable updates. Data fetched using the provided CloudConnection or TwCloudConnection object.
     """
     def __init__(self, project_id, connection, **entries):
         self.data = []

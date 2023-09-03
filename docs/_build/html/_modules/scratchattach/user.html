@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scratchattach.user &mdash; scratchattach 1.3.7 documentation</title>
+  <title>scratchattach.user &mdash; scratchattach 1.4.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -92,21 +92,21 @@
 
 <span class="sd">    Attributes:</span>
 
-<span class="sd">    .join_date</span>
+<span class="sd">    :.join_date:</span>
 
-<span class="sd">    .about_me</span>
+<span class="sd">    :.about_me:</span>
 
-<span class="sd">    .wiwo: Returns the user&#39;s &#39;What I&#39;m working on&#39; section</span>
+<span class="sd">    :.wiwo: Returns the user&#39;s &#39;What I&#39;m working on&#39; section</span>
 <span class="sd">    </span>
-<span class="sd">    .country: Returns the country from the user profile</span>
+<span class="sd">    :.country: Returns the country from the user profile</span>
 <span class="sd">    </span>
-<span class="sd">    .icon_url: Returns the link to the user&#39;s pfp (90x90)</span>
+<span class="sd">    :.icon_url: Returns the link to the user&#39;s pfp (90x90)</span>
 <span class="sd">   </span>
-<span class="sd">    .id: Returns the id of the user</span>
+<span class="sd">    :.id: Returns the id of the user</span>
 <span class="sd">   </span>
-<span class="sd">    .scratchteam: Retuns True if the user is in the Scratch team</span>
+<span class="sd">    :.scratchteam: Retuns True if the user is in the Scratch team</span>
 <span class="sd">    </span>
-<span class="sd">    .update() will update these attributes</span>
+<span class="sd">    :.update(): Updates the attributes</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">entries</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
@@ -816,7 +816,7 @@
 <span class="sd">        scratchattach.user.User: An object representing the requested user</span>
 
 <span class="sd">    Warning:</span>
-<span class="sd">        All methods that require authentication (like user.follow) will not work on the returned object.</span>
+<span class="sd">        Any methods that require authentication (like user.follow) will not work on the returned object.</span>
 <span class="sd">        </span>
 <span class="sd">        If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_user` instead.</span>
 <span class="sd">    &quot;&quot;&quot;</span>

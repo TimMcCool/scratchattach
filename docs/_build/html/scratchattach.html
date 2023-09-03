@@ -182,9 +182,9 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">scratchattach.cloud._CloudMixin</span></code></p>
 <p>Represents a connection to TurboWarp’s cloud variable server or a custom cloud variable server that behaves like TurboWarp’s.</p>
 <p>Attributes:</p>
-<p>.websocket: The websocket connection (WebSocket object from the websocket-client library)
-.cloud_host: The websocket URL of the cloud variable server
-.allow_non_numeric: Whether the cloud variables can be set to non-numeric values</p>
+<p>.websocket: The websocket connection (WebSocket object from the websocket-client library)</p>
+<p>.cloud_host: The websocket URL of the cloud variable server</p>
+<p>.allow_non_numeric: Whether the cloud variables can be set to non-numeric values</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="scratchattach.cloud.TwCloudConnection.set_var">
 <span class="sig-name descname"><span class="pre">set_var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scratchattach/cloud.html#TwCloudConnection.set_var"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scratchattach.cloud.TwCloudConnection.set_var" title="Permalink to this definition"></a></dt>
@@ -239,7 +239,7 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="scratchattach.cloud.get_cloud">
 <span class="sig-prename descclassname"><span class="pre">scratchattach.cloud.</span></span><span class="sig-name descname"><span class="pre">get_cloud</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scratchattach/cloud.html#get_cloud"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scratchattach.cloud.get_cloud" title="Permalink to this definition"></a></dt>
-<dd><p>Gets the clouddata of a Scratch cloud project from the clouddata log.</p>
+<dd><p>Gets the clouddata of a Scratch cloud project.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>project_id</strong> (<em>str</em>) – </p>
@@ -275,7 +275,7 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="scratchattach.cloud.get_tw_cloud">
 <span class="sig-prename descclassname"><span class="pre">scratchattach.cloud.</span></span><span class="sig-name descname"><span class="pre">get_tw_cloud</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scratchattach/cloud.html#get_tw_cloud"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scratchattach.cloud.get_tw_cloud" title="Permalink to this definition"></a></dt>
-<dd><p>Gets the clouddata of a TurboWarp cloud project from the TurboWarp’s websoclet.</p>
+<dd><p>Gets the clouddata of a TurboWarp cloud project.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Do not spam this method, it creates a new connection to the TurboWarp cloud server every time it is called.</p>
@@ -296,7 +296,7 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="scratchattach.cloud.get_tw_var">
 <span class="sig-prename descclassname"><span class="pre">scratchattach.cloud.</span></span><span class="sig-name descname"><span class="pre">get_tw_var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scratchattach/cloud.html#get_tw_var"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scratchattach.cloud.get_tw_var" title="Permalink to this definition"></a></dt>
-<dd><p>Gets the value of of a TurboWarp cloud variable from TurboWarp’s websocket.</p>
+<dd><p>Gets the value of of a TurboWarp cloud variable.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Do not spam this method, it creates a new connection to the TurboWarp cloud server every time it is called.</p>
@@ -321,7 +321,7 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="scratchattach.cloud.get_var">
 <span class="sig-prename descclassname"><span class="pre">scratchattach.cloud.</span></span><span class="sig-name descname"><span class="pre">get_var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scratchattach/cloud.html#get_var"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scratchattach.cloud.get_var" title="Permalink to this definition"></a></dt>
-<dd><p>Gets the value of of a Scratch cloud variable from the clouddata log.</p>
+<dd><p>Gets the value of of a Scratch cloud variable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -768,7 +768,7 @@
 </dl>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>All methods that require authentication (like post.edit) will not work on the returned object.</p>
+<p>Any methods that require authentication (like post.edit) will not work on the returned object.</p>
 <p>If you want to use these methods, get the forum post with <a class="reference internal" href="#scratchattach.session.Session.connect_post" title="scratchattach.session.Session.connect_post"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scratchattach.session.Session.connect_post()</span></code></a> instead.</p>
 </div>
 </dd></dl>
@@ -790,7 +790,7 @@
 </dl>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>All methods that require authentication will not work on the returned object.</p>
+<p>Any methods that require authentication will not work on the returned object.</p>
 <p>If you want to use methods that require authentication, create the object with <a class="reference internal" href="#scratchattach.session.Session.connect_topic" title="scratchattach.session.Session.connect_topic"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scratchattach.session.Session.connect_topic()</span></code></a> instead.</p>
 </div>
 </dd></dl>
@@ -818,7 +818,7 @@
 </dl>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>All methods that require authentication will not work on the returned objects.</p>
+<p>Any methods that require authentication will not work on the returned objects.</p>
 <p>If you want to use methods that require authentication, get the forum topics with <a class="reference internal" href="#scratchattach.session.Session.connect_topic_list" title="scratchattach.session.Session.connect_topic_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scratchattach.session.Session.connect_topic_list()</span></code></a> instead.</p>
 </div>
 </dd></dl>
@@ -852,25 +852,59 @@
 <dd><p>Bases: <a class="reference internal" href="#scratchattach.project.PartialProject" title="scratchattach.project.PartialProject"><code class="xref py py-class docutils literal notranslate"><span class="pre">scratchattach.project.PartialProject</span></code></a></p>
 <p>Represents a Scratch project.</p>
 <p>Attributes:</p>
-<p>.id: The project id</p>
-<p>.url: The project url</p>
-<p>.title</p>
-<p>.author: The username of the author</p>
-<p>.comments_allowed: boolean that is True if comments are enabled</p>
-<p>.instructions</p>
-<p>.notes: The ‘Notes and Credits’ section</p>
-<p>.created: The date of the project creation</p>
-<p>.last_modified: The date when the project was modified the last time</p>
-<p>.share_date</p>
-<p>.thumbnail_url</p>
-<p>.remix_parent</p>
-<p>.remix_root</p>
-<p>.loves: The project’s love count</p>
-<p>.favorites: The project’s favorite count</p>
-<p>.remix_count: The number of remixes</p>
-<p>.views: The view count</p>
-<p>.project_token: The project token (required to access the project json)</p>
-<p>.update() will update these attributes</p>
+<dl class="field-list simple">
+<dt class="field-odd">.id</dt>
+<dd class="field-odd"><p>The project id</p>
+</dd>
+<dt class="field-even">.url</dt>
+<dd class="field-even"><p>The project url</p>
+</dd>
+<dt class="field-odd">.title</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">.author</dt>
+<dd class="field-even"><p>The username of the author</p>
+</dd>
+<dt class="field-odd">.comments_allowed</dt>
+<dd class="field-odd"><p>boolean that is True if comments are enabled</p>
+</dd>
+<dt class="field-even">.instructions</dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">.notes</dt>
+<dd class="field-odd"><p>The ‘Notes and Credits’ section</p>
+</dd>
+<dt class="field-even">.created</dt>
+<dd class="field-even"><p>The date of the project creation</p>
+</dd>
+<dt class="field-odd">.last_modified</dt>
+<dd class="field-odd"><p>The date when the project was modified the last time</p>
+</dd>
+<dt class="field-even">.share_date</dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">.thumbnail_url</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">.remix_parent</dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">.remix_root</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">.loves</dt>
+<dd class="field-even"><p>The project’s love count</p>
+</dd>
+<dt class="field-odd">.favorites</dt>
+<dd class="field-odd"><p>The project’s favorite count</p>
+</dd>
+<dt class="field-even">.remix_count</dt>
+<dd class="field-even"><p>The number of remixes</p>
+</dd>
+<dt class="field-odd">.views</dt>
+<dd class="field-odd"><p>The view count</p>
+</dd>
+<dt class="field-even">.project_token</dt>
+<dd class="field-even"><p>The project token (required to access the project json)</p>
+</dd>
+<dt class="field-odd">.update()</dt>
+<dd class="field-odd"><p>Updates the attributes</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="scratchattach.project.Project.comments">
 <span class="sig-name descname"><span class="pre">comments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scratchattach/project.html#Project.comments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scratchattach.project.Project.comments" title="Permalink to this definition"></a></dt>
@@ -1168,7 +1202,7 @@
 </dl>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>All methods that require authentication (like project.love) will not work on the returned objects.</p>
+<p>Any methods that require authentication (like project.love) will not work on the returned objects.</p>
 <p>If you want to use these methods, get the explore page projects with <a class="reference internal" href="#scratchattach.session.Session.search_projects" title="scratchattach.session.Session.search_projects"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scratchattach.session.Session.search_projects()</span></code></a> instead.</p>
 </div>
 </dd></dl>
@@ -1190,7 +1224,7 @@
 </dl>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>All methods that require authentication (like project.love) will not work on the returned object.</p>
+<p>Any methods that require authentication (like project.love) will not work on the returned object.</p>
 <p>If you want to use these methods, get the project with <a class="reference internal" href="#scratchattach.session.Session.connect_project" title="scratchattach.session.Session.connect_project"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scratchattach.session.Session.connect_project()</span></code></a> instead.</p>
 </div>
 </dd></dl>
@@ -1218,7 +1252,7 @@
 </dl>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>All methods that require authentication (like project.love) will not work on the returned objects.</p>
+<p>Any methods that require authentication (like project.love) will not work on the returned objects.</p>
 <p>If you want to use these methods, perform the search with <a class="reference internal" href="#scratchattach.session.Session.search_projects" title="scratchattach.session.Session.search_projects"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scratchattach.session.Session.search_projects()</span></code></a> instead.</p>
 </div>
 </dd></dl>
@@ -1232,16 +1266,30 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Represents a Scratch log in / session. Stores authentication data (session id and xtoken).</p>
 <p>Attributes:</p>
-<p>session.session_id: The session id associated with the login</p>
-<p>session.xtoken: The xtoken associated with the login</p>
-<p>session.email: The email address associated with the logged in account</p>
-<p>session.new_scratcher: Returns True if the associated account is a Scratcher</p>
-<p>session.mute_status: Information about commenting restrictions of the associated account</p>
-<p>session.banned: Returns True if the associated account is banned</p>
+<dl class="field-list simple">
+<dt class="field-odd">.session_id</dt>
+<dd class="field-odd"><p>The session id associated with the login</p>
+</dd>
+<dt class="field-even">.xtoken</dt>
+<dd class="field-even"><p>The xtoken associated with the login</p>
+</dd>
+<dt class="field-odd">.email</dt>
+<dd class="field-odd"><p>The email address associated with the logged in account</p>
+</dd>
+<dt class="field-even">.new_scratcher</dt>
+<dd class="field-even"><p>Returns True if the associated account is a Scratcher</p>
+</dd>
+<dt class="field-odd">.mute_status</dt>
+<dd class="field-odd"><p>Information about commenting restrictions of the associated account</p>
+</dd>
+<dt class="field-even">.banned</dt>
+<dd class="field-even"><p>Returns True if the associated account is banned</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="scratchattach.session.Session.backpack">
 <span class="sig-name descname"><span class="pre">backpack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scratchattach/session.html#Session.backpack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scratchattach.session.Session.backpack" title="Permalink to this definition"></a></dt>
-<dd><p>Lists the assets that are in the backpack of the user associated to the sesion.</p>
+<dd><p>Lists the assets that are in the backpack of the user associated with the session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>List that contains the backpack items as dicts</p>
@@ -1579,19 +1627,37 @@ If the login succeeds but fetching the xtoken fails, it will not raise an except
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Represents a Scratch studio.</p>
 <p>Attributes:</p>
-<p>.id</p>
-<p>.title</p>
-<p>.description</p>
-<p>.host_id: The user id of the studio host</p>
-<p>.open_to_all: Whether everyone is allowed to add projects</p>
-<p>.comments_allowed</p>
-<p>.image_url</p>
-<p>.created</p>
-<p>.modified</p>
-<p>.follower_count</p>
-<p>.manager_count</p>
-<p>.project_count</p>
-<p>.update() will update these attributes</p>
+<dl class="field-list simple">
+<dt class="field-odd">.id</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">.title</dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">.description</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">.host_id</dt>
+<dd class="field-even"><p>The user id of the studio host</p>
+</dd>
+<dt class="field-odd">.open_to_all</dt>
+<dd class="field-odd"><p>Whether everyone is allowed to add projects</p>
+</dd>
+<dt class="field-even">.comments_allowed</dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">.image_url</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">.created</dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">.modified</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">.follower_count</dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">.manager_count</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">.project_count</dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">.update()</dt>
+<dd class="field-odd"><p>Updates the attributes</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="scratchattach.studio.Studio.activity">
 <span class="sig-name descname"><span class="pre">activity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scratchattach/studio.html#Studio.activity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scratchattach.studio.Studio.activity" title="Permalink to this definition"></a></dt>
@@ -1860,7 +1926,7 @@ If the login succeeds but fetching the xtoken fails, it will not raise an except
 </dl>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>All methods that require authentication (like studio.follow) will not work on the returned object.</p>
+<p>Any methods that authentication (like studio.follow) will not work on the returned object.</p>
 <p>If you want to use these, get the studio with <a class="reference internal" href="#scratchattach.session.Session.connect_studio" title="scratchattach.session.Session.connect_studio"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scratchattach.session.Session.connect_studio()</span></code></a> instead.</p>
 </div>
 </dd></dl>
@@ -1879,14 +1945,30 @@ If the login succeeds but fetching the xtoken fails, it will not raise an except
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Represents a Scratch user.</p>
 <p>Attributes:</p>
-<p>.join_date</p>
-<p>.about_me</p>
-<p>.wiwo: Returns the user’s ‘What I’m working on’ section</p>
-<p>.country: Returns the country from the user profile</p>
-<p>.icon_url: Returns the link to the user’s pfp (90x90)</p>
-<p>.id: Returns the id of the user</p>
-<p>.scratchteam: Retuns True if the user is in the Scratch team</p>
-<p>.update() will update these attributes</p>
+<dl class="field-list simple">
+<dt class="field-odd">.join_date</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">.about_me</dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">.wiwo</dt>
+<dd class="field-odd"><p>Returns the user’s ‘What I’m working on’ section</p>
+</dd>
+<dt class="field-even">.country</dt>
+<dd class="field-even"><p>Returns the country from the user profile</p>
+</dd>
+<dt class="field-odd">.icon_url</dt>
+<dd class="field-odd"><p>Returns the link to the user’s pfp (90x90)</p>
+</dd>
+<dt class="field-even">.id</dt>
+<dd class="field-even"><p>Returns the id of the user</p>
+</dd>
+<dt class="field-odd">.scratchteam</dt>
+<dd class="field-odd"><p>Retuns True if the user is in the Scratch team</p>
+</dd>
+<dt class="field-even">.update()</dt>
+<dd class="field-even"><p>Updates the attributes</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="scratchattach.user.User.activity_html">
 <span class="sig-name descname"><span class="pre">activity_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scratchattach/user.html#User.activity_html"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scratchattach.user.User.activity_html" title="Permalink to this definition"></a></dt>
@@ -2235,7 +2317,7 @@ If the login succeeds but fetching the xtoken fails, it will not raise an except
 </dl>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>All methods that require authentication (like user.follow) will not work on the returned object.</p>
+<p>Any methods that require authentication (like user.follow) will not work on the returned object.</p>
 <p>If you want to use these, get the user with <a class="reference internal" href="#scratchattach.session.Session.connect_user" title="scratchattach.session.Session.connect_user"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scratchattach.session.Session.connect_user()</span></code></a> instead.</p>
 </div>
 </dd></dl>

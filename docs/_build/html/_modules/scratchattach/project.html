@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scratchattach.project &mdash; scratchattach 1.3.7 documentation</title>
+  <title>scratchattach.project &mdash; scratchattach 1.4.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -173,43 +173,43 @@
 
 <span class="sd">    Attributes:</span>
 
-<span class="sd">    .id: The project id</span>
+<span class="sd">    :.id: The project id</span>
 
-<span class="sd">    .url: The project url</span>
+<span class="sd">    :.url: The project url</span>
 
-<span class="sd">    .title</span>
+<span class="sd">    :.title:</span>
 
-<span class="sd">    .author: The username of the author</span>
+<span class="sd">    :.author: The username of the author</span>
 
-<span class="sd">    .comments_allowed: boolean that is True if comments are enabled</span>
+<span class="sd">    :.comments_allowed: boolean that is True if comments are enabled</span>
 
-<span class="sd">    .instructions</span>
+<span class="sd">    :.instructions:</span>
 
-<span class="sd">    .notes: The &#39;Notes and Credits&#39; section</span>
+<span class="sd">    :.notes: The &#39;Notes and Credits&#39; section</span>
 
-<span class="sd">    .created: The date of the project creation</span>
+<span class="sd">    :.created: The date of the project creation</span>
 
-<span class="sd">    .last_modified: The date when the project was modified the last time</span>
+<span class="sd">    :.last_modified: The date when the project was modified the last time</span>
 
-<span class="sd">    .share_date</span>
+<span class="sd">    :.share_date:</span>
 
-<span class="sd">    .thumbnail_url</span>
+<span class="sd">    :.thumbnail_url:</span>
 
-<span class="sd">    .remix_parent</span>
+<span class="sd">    :.remix_parent:</span>
 
-<span class="sd">    .remix_root</span>
+<span class="sd">    :.remix_root:</span>
 
-<span class="sd">    .loves: The project&#39;s love count</span>
+<span class="sd">    :.loves: The project&#39;s love count</span>
 
-<span class="sd">    .favorites: The project&#39;s favorite count</span>
+<span class="sd">    :.favorites: The project&#39;s favorite count</span>
 
-<span class="sd">    .remix_count: The number of remixes</span>
+<span class="sd">    :.remix_count: The number of remixes</span>
 
-<span class="sd">    .views: The view count</span>
+<span class="sd">    :.views: The view count</span>
 
-<span class="sd">    .project_token: The project token (required to access the project json)</span>
+<span class="sd">    :.project_token: The project token (required to access the project json)</span>
 
-<span class="sd">    .update() will update these attributes</span>
+<span class="sd">    :.update(): Updates the attributes</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -729,7 +729,7 @@
 <span class="sd">        scratchattach.project.Project: An object representing the requested project.</span>
 <span class="sd">    </span>
 <span class="sd">    Warning:</span>
-<span class="sd">        All methods that require authentication (like project.love) will not work on the returned object.</span>
+<span class="sd">        Any methods that require authentication (like project.love) will not work on the returned object.</span>
 <span class="sd">        </span>
 <span class="sd">        If you want to use these methods, get the project with :meth:`scratchattach.session.Session.connect_project` instead.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -762,7 +762,7 @@
 <span class="sd">        list&lt;scratchattach.project.Project&gt;: List that contains the explore page projects</span>
 <span class="sd">    </span>
 <span class="sd">    Warning:</span>
-<span class="sd">        All methods that require authentication (like project.love) will not work on the returned objects.</span>
+<span class="sd">        Any methods that require authentication (like project.love) will not work on the returned objects.</span>
 <span class="sd">        </span>
 <span class="sd">        If you want to use these methods, get the explore page projects with :meth:`scratchattach.session.Session.search_projects` instead.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -791,7 +791,7 @@
 <span class="sd">        list&lt;scratchattach.project.Project&gt;: List that contains the search results</span>
 
 <span class="sd">    Warning:</span>
-<span class="sd">        All methods that require authentication (like project.love) will not work on the returned objects.</span>
+<span class="sd">        Any methods that require authentication (like project.love) will not work on the returned objects.</span>
 <span class="sd">        </span>
 <span class="sd">        If you want to use these methods, perform the search with :meth:`scratchattach.session.Session.search_projects` instead.</span>
 <span class="sd">    &#39;&#39;&#39;</span>

@@ -26,17 +26,17 @@ class Session():
 
     Attributes:
 
-    session.session_id: The session id associated with the login
+    :.session_id: The session id associated with the login
 
-    session.xtoken: The xtoken associated with the login
+    :.xtoken: The xtoken associated with the login
 
-    session.email: The email address associated with the logged in account
+    :.email: The email address associated with the logged in account
 
-    session.new_scratcher: Returns True if the associated account is a Scratcher
+    :.new_scratcher: Returns True if the associated account is a Scratcher
 
-    session.mute_status: Information about commenting restrictions of the associated account
+    :.mute_status: Information about commenting restrictions of the associated account
 
-    session.banned: Returns True if the associated account is banned
+    :.banned: Returns True if the associated account is banned
     '''
     
     def __init__(self, session_id, *, username=None):

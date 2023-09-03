@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scratchattach.cloud &mdash; scratchattach 1.3.7 documentation</title>
+  <title>scratchattach.cloud &mdash; scratchattach 1.4.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -218,7 +218,9 @@
 <span class="sd">    Attributes:</span>
 
 <span class="sd">    .websocket: The websocket connection (WebSocket object from the websocket-client library)</span>
+
 <span class="sd">    .cloud_host: The websocket URL of the cloud variable server</span>
+<span class="sd">    </span>
 <span class="sd">    .allow_non_numeric: Whether the cloud variables can be set to non-numeric values</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -479,7 +481,7 @@
 
 <div class="viewcode-block" id="get_cloud"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.get_cloud">[docs]</a><span class="k">def</span> <span class="nf">get_cloud</span><span class="p">(</span><span class="n">project_id</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Gets the clouddata of a Scratch cloud project from the clouddata log.</span>
+<span class="sd">    Gets the clouddata of a Scratch cloud project.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        project_id (str):</span>
@@ -499,7 +501,7 @@
 
 <div class="viewcode-block" id="get_var"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.get_var">[docs]</a><span class="k">def</span> <span class="nf">get_var</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="n">variable</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Gets the value of of a Scratch cloud variable from the clouddata log.</span>
+<span class="sd">    Gets the value of of a Scratch cloud variable.</span>
 <span class="sd">    </span>
 <span class="sd">    Args:</span>
 <span class="sd">        project_id (str):</span>
@@ -522,7 +524,7 @@
 
 <div class="viewcode-block" id="get_tw_cloud"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.get_tw_cloud">[docs]</a><span class="k">def</span> <span class="nf">get_tw_cloud</span><span class="p">(</span><span class="n">project_id</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Gets the clouddata of a TurboWarp cloud project from the TurboWarp&#39;s websoclet.</span>
+<span class="sd">    Gets the clouddata of a TurboWarp cloud project.</span>
 
 <span class="sd">    Warning:</span>
 <span class="sd">        Do not spam this method, it creates a new connection to the TurboWarp cloud server every time it is called.</span>
@@ -552,7 +554,7 @@
 
 <div class="viewcode-block" id="get_tw_var"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.cloud.get_tw_var">[docs]</a><span class="k">def</span> <span class="nf">get_tw_var</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="n">variable</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Gets the value of of a TurboWarp cloud variable from TurboWarp&#39;s websocket.</span>
+<span class="sd">    Gets the value of of a TurboWarp cloud variable.</span>
 
 <span class="sd">    Warning:</span>
 <span class="sd">        Do not spam this method, it creates a new connection to the TurboWarp cloud server every time it is called.</span>

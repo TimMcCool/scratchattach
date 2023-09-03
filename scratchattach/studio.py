@@ -17,31 +17,31 @@ class Studio:
 
     Attributes:
 
-    .id
+    :.id:
 
-    .title
+    :.title:
 
-    .description
+    :.description:
 
-    .host_id: The user id of the studio host
+    :.host_id: The user id of the studio host
 
-    .open_to_all: Whether everyone is allowed to add projects
+    :.open_to_all: Whether everyone is allowed to add projects
 
-    .comments_allowed
+    :.comments_allowed:
 
-    .image_url
+    :.image_url:
 
-    .created
+    :.created:
 
-    .modified
+    :.modified:
 
-    .follower_count
+    :.follower_count:
 
-    .manager_count
+    :.manager_count:
     
-    .project_count
+    :.project_count:
 
-    .update() will update these attributes
+    :.update(): Updates the attributes
 
     '''
 

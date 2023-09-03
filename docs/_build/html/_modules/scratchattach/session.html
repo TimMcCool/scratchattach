@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scratchattach.session &mdash; scratchattach 1.3.7 documentation</title>
+  <title>scratchattach.session &mdash; scratchattach 1.4.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -97,17 +97,17 @@
 
 <span class="sd">    Attributes:</span>
 
-<span class="sd">    session.session_id: The session id associated with the login</span>
+<span class="sd">    :.session_id: The session id associated with the login</span>
 
-<span class="sd">    session.xtoken: The xtoken associated with the login</span>
+<span class="sd">    :.xtoken: The xtoken associated with the login</span>
 
-<span class="sd">    session.email: The email address associated with the logged in account</span>
+<span class="sd">    :.email: The email address associated with the logged in account</span>
 
-<span class="sd">    session.new_scratcher: Returns True if the associated account is a Scratcher</span>
+<span class="sd">    :.new_scratcher: Returns True if the associated account is a Scratcher</span>
 
-<span class="sd">    session.mute_status: Information about commenting restrictions of the associated account</span>
+<span class="sd">    :.mute_status: Information about commenting restrictions of the associated account</span>
 
-<span class="sd">    session.banned: Returns True if the associated account is banned</span>
+<span class="sd">    :.banned: Returns True if the associated account is banned</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -394,7 +394,7 @@
 
 <div class="viewcode-block" id="Session.backpack"><a class="viewcode-back" href="../../scratchattach.html#scratchattach.session.Session.backpack">[docs]</a>    <span class="k">def</span> <span class="nf">backpack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">limit</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Lists the assets that are in the backpack of the user associated to the sesion.</span>
+<span class="sd">        Lists the assets that are in the backpack of the user associated with the session.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            list&lt;dict&gt;: List that contains the backpack items as dicts</span>

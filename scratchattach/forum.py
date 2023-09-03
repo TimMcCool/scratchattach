@@ -18,17 +18,17 @@ class ForumTopic:
 
     Attributes:
 
-    .title
+    :.title:
 
-    .category
+    :.category:
 
-    .closed
+    :.closed:
 
-    .deleted
+    :.deleted:
 
-    .post_count
+    :.post_count:
     
-    .update() will update these attributes
+    :.update(): Updates the attributes
     '''
     def __init__(self, **entries):
 
@@ -108,29 +108,29 @@ class ForumPost:
 
     Attributes:
 
-    .id
+    :.id:
 
-    .author: The name of the user who created this post
+    :.author: The name of the user who created this post
 
-    .posted: The date the post was made
+    :.posted: The date the post was made
 
-    .edited: The date of the most recent post edit. If the post wasn't edited this is None
+    :.edited: The date of the most recent post edit. If the post wasn't edited this is None
 
-    .edited_by: The name of the user who made the most recent edit. If the post wasn't edited this is None
+    :.edited_by: The name of the user who made the most recent edit. If the post wasn't edited this is None
 
-    .deleted: Whether the post was deleted
+    :.deleted: Whether the post was deleted
 
-    .html_content: Returns the content as HTML
+    :.html_content: Returns the content as HTML
 
-    .bb_content: Returns the content as BBCode
+    :.bb_content: Returns the content as BBCode
 
-    .topic_id: The id of the topic the post is in
+    :.topic_id: The id of the topic the post is in
 
-    .topic_name: The name of the topic the post is in
+    :.topic_name: The name of the topic the post is in
 
-    .topic_category: The name of the category the post topic is in
+    :.topic_category: The name of the category the post topic is in
         
-    .update() will update these attributes
+    :.update(): Updates the attributes
     '''
 
     def __init__(self, **entries):

@@ -21,21 +21,21 @@ class User:
 
     Attributes:
 
-    .join_date
+    :.join_date:
 
-    .about_me
+    :.about_me:
 
-    .wiwo: Returns the user's 'What I'm working on' section
+    :.wiwo: Returns the user's 'What I'm working on' section
     
-    .country: Returns the country from the user profile
+    :.country: Returns the country from the user profile
     
-    .icon_url: Returns the link to the user's pfp (90x90)
+    :.icon_url: Returns the link to the user's pfp (90x90)
    
-    .id: Returns the id of the user
+    :.id: Returns the id of the user
    
-    .scratchteam: Retuns True if the user is in the Scratch team
+    :.scratchteam: Retuns True if the user is in the Scratch team
     
-    .update() will update these attributes
+    :.update(): Updates the attributes
     '''
     def __init__(self, **entries):
         self.__dict__.update(entries)

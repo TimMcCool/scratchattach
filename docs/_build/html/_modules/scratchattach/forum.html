@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scratchattach.forum &mdash; scratchattach 1.3.7 documentation</title>
+  <title>scratchattach.forum &mdash; scratchattach 1.4.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -308,7 +308,7 @@
 <span class="sd">        scratchattach.forum.ForumTopic: An object representing the requested forum topic</span>
 
 <span class="sd">    Warning:</span>
-<span class="sd">        All methods that require authentication will not work on the returned object.</span>
+<span class="sd">        Any methods that require authentication will not work on the returned object.</span>
 <span class="sd">        </span>
 <span class="sd">        If you want to use methods that require authentication, create the object with :meth:`scratchattach.session.Session.connect_topic` instead.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -337,7 +337,7 @@
 <span class="sd">        list&lt;scratchattach.forum.ForumTopic&gt;: A list containing the forum topics from the specified category</span>
 
 <span class="sd">    Warning:</span>
-<span class="sd">        All methods that require authentication will not work on the returned objects.</span>
+<span class="sd">        Any methods that require authentication will not work on the returned objects.</span>
 
 <span class="sd">        If you want to use methods that require authentication, get the forum topics with :meth:`scratchattach.session.Session.connect_topic_list` instead.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -370,7 +370,7 @@
 <span class="sd">        scratchattach.forum.ForumPost: An object that represents the requested forum post</span>
 
 <span class="sd">    Warning:</span>
-<span class="sd">        All methods that require authentication (like post.edit) will not work on the returned object.</span>
+<span class="sd">        Any methods that require authentication (like post.edit) will not work on the returned object.</span>
 <span class="sd">         </span>
 <span class="sd">        If you want to use these methods, get the forum post with :meth:`scratchattach.session.Session.connect_post` instead.</span>
 <span class="sd">    &quot;&quot;&quot;</span>

@@ -102,43 +102,43 @@ class Project(PartialProject):
 
     Attributes:
 
-    .id: The project id
+    :.id: The project id
 
-    .url: The project url
+    :.url: The project url
 
-    .title
+    :.title:
 
-    .author: The username of the author
+    :.author: The username of the author
 
-    .comments_allowed: boolean that is True if comments are enabled
+    :.comments_allowed: boolean that is True if comments are enabled
 
-    .instructions
+    :.instructions:
 
-    .notes: The 'Notes and Credits' section
+    :.notes: The 'Notes and Credits' section
 
-    .created: The date of the project creation
+    :.created: The date of the project creation
 
-    .last_modified: The date when the project was modified the last time
+    :.last_modified: The date when the project was modified the last time
 
-    .share_date
+    :.share_date:
 
-    .thumbnail_url
+    :.thumbnail_url:
 
-    .remix_parent
+    :.remix_parent:
 
-    .remix_root
+    :.remix_root:
 
-    .loves: The project's love count
+    :.loves: The project's love count
 
-    .favorites: The project's favorite count
+    :.favorites: The project's favorite count
 
-    .remix_count: The number of remixes
+    :.remix_count: The number of remixes
 
-    .views: The view count
+    :.views: The view count
 
-    .project_token: The project token (required to access the project json)
+    :.project_token: The project token (required to access the project json)
 
-    .update() will update these attributes
+    :.update(): Updates the attributes
     '''
 
     def __str__(self):
