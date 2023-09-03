@@ -55,21 +55,3 @@ profile](https://scratch.mit.edu/users/TimMcCool/) or open an issue on the githu
 # logging-in--scratch3session
 
 This section was moved to a new link: [https://github.com/TimMcCool/scratchattach/wiki#logging-in](https://github.com/TimMcCool/scratchattach/wiki#logging-in)
-
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
