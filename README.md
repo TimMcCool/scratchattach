@@ -21,6 +21,8 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 
 [Extended documentation (WIP)]()
 
+[Change log]()
+
 [Community-created projects](https://scratch.mit.edu/studios/31478892/)
 
 [Official forum topic](https://scratch.mit.edu/discuss/topic/603418/
