@@ -49,7 +49,3 @@ This section was moved to a new link: [https://github.com/TimMcCool/scratchattac
 <br/><br/>
 <br/><br/>
 <br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
