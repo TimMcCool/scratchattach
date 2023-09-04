@@ -48,7 +48,7 @@ import os
 os.system("pip install -U scratchattach")
 ```
 
-# Logging in
+# Logging in `scratch3.Session`
 
 **Logging in with username / password:**
 
@@ -69,4 +69,4 @@ import scratchattach as scratch3
 session = scratch3.Session("sessionId", username="username") #The username field is case sensitive
 ```
 
-All scratchattach features are documented in the [**documentation**](https://github.com/TimMcCool/scratchattach/wiki#logging-in).
+**All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki#logging-in).**
