@@ -17,6 +17,7 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 - **[Documentation](https://github.com/TimMcCool/scratchattach/wiki)**
 - [Extended documentation (WIP)](https://scratchattach.readthedocs.io/en/latest/)
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
+- [Examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)
 
 # Contributors
 
@@ -68,4 +69,4 @@ import scratchattach as scratch3
 session = scratch3.Session("sessionId", username="username") #The username field is case sensitive
 ```
 
-More can be found in the documentation: https://github.com/TimMcCool/scratchattach/wiki#logging-in
+All scratchattach features are documented in the [**documentation**](https://github.com/TimMcCool/scratchattach/wiki#logging-in).
