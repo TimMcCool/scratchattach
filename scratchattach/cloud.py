@@ -464,7 +464,7 @@ def get_tw_cloud(project_id):
                 result.append(json.loads(i))
             except Exception: pass
         return result
-    except websocket.exceptions.WebSocketTimeoutException:
+    except websocket._exceptions.WebSocketTimeoutException:
         return []
     except Exception:
         raise exceptions.FetchError
