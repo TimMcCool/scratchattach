@@ -343,6 +343,7 @@ project.set_title("new title")
 project.set_instructions("new instructions")
 project.set_notes("new notes and credits")  #Sets the notes and credits section of the project
 project.set_thumbnail(file="filename.png") #File must be .png and fit Scratch's thumbnail guidelines
+project.set_json(json_data) #Sets the project JSON. Can be used to upload projects. json_data must be a dict or an encoded JSON object with the project JSON.
 project.share()
 project.unshare()
 
@@ -354,7 +355,7 @@ project.remixes(limit=None, offset=0) #Returns the remixes as list of scratch3.P
 project.studios(limit=None, offset=0) #Returns the studios the project is in as list of dicts
 
 project.download(filename="project_name.sb3", dir="") #Downloads the project to your computer. The downloaded file will only work in the online editor
-project.get_raw_json() #Returns the json of the project content as dict
+project.get_raw_json() #Returns the JSON of the project content as dict
 project.get_creator_agent() #Returns the user-agent of the user who created the project (with information about their browser and OS)
 ```
 
@@ -411,6 +412,7 @@ studio.remove_project("project_id")
 
 studio.set_description("new description")
 studio.set_title("new title")
+studio.set_thumbnail(file="filename.png") # New in v1.4.5
 studio.open_projects() #Allows everyone to add projects
 studio.close_projects()
 

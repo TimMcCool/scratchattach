@@ -179,14 +179,16 @@ class Studio:
 
     def set_thumbnail(self, *, file):
         """
-        Sets the project thumbnail
+        Sets the studio thumbnail. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
 
         Positional Arguments:
             file: The path to the image file
 
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
+        Returns:
+            str: Scratch cdn link to the set thumbnail
         """
         #"multipart/form-data; boundary=----WebKitFormBoundaryhKZwFjoxAyUTMlSh"
+        #multipart/form-data; boundary=----WebKitFormBoundaryqhfwZe4EG6BlJoAK
         if self._headers is None:
             raise(exceptions.Unauthenticated)
             return
@@ -200,12 +202,13 @@ class Studio:
 
         file_type = filename.split(".").pop()
 
-        print(filename, file_type)
+        payload1 = f"------WebKitFormBoundaryhKZwFjoxAyUTMlSh\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{filename}\"\r\nContent-Type: image/{file_type}\r\n\r\n"
+        payload1 = payload1.encode("utf-8")
+        payload2 = b"\r\n------WebKitFormBoundaryhKZwFjoxAyUTMlSh--\r\n"
+        payload = b''.join([payload1, thumbnail, payload2])
 
-        payload = f"------WebKitFormBoundaryhKZwFjoxAyUTMlSh\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{filename}\"\r\nContent-Type: image/{file_type}\r\n\r\n\r\n------WebKitFormBoundaryhKZwFjoxAyUTMlSh--\r\n"
         r = requests.post(
             f"https://scratch.mit.edu/site-api/galleries/all/{self.id}/",
-            data = thumbnail,
             headers = {
                 "accept": "*/",
                 "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryhKZwFjoxAyUTMlSh",
@@ -213,10 +216,14 @@ class Studio:
                 "x-csrftoken": "a",
                 "x-requested-with": "XMLHttpRequest"
             },
-            #data = payload,
+            data = payload,
             cookies = self._cookies,
-        )
-        print(r.text, r)
+        ).json()
+
+        if "errors" in r:
+            raise(exceptions.BadRequest(", ".join(r["errors"])))
+        else:
+            return r["thumbnail_url"]
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """

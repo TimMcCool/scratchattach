@@ -21,7 +21,7 @@ copyright = '2023, TimMcCool'
 author = 'TimMcCool'
 
 # The full version, including alpha/beta/rc tags
-release = '1.4.2'
+release = '1.4.5'
 
 
 # -- General configuration ---------------------------------------------------

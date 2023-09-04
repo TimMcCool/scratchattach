@@ -194,7 +194,7 @@ class Project(PartialProject):
     def get_raw_json(self):
         """
         Method only works for project created with Scratch 3.
-        
+
         Returns:
             dict: The project JSON
         """
@@ -207,7 +207,7 @@ class Project(PartialProject):
     def get_creator_agent(self):
         """
         Method only works for project created with Scratch 3.
-        
+
         Returns:
             str: The user agent of the browser that this project was saved with.
         """
@@ -305,9 +305,9 @@ class Project(PartialProject):
 
     def love(self):
         """
-        Posts a love on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Posts a love on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         r = requests.post(
@@ -320,9 +320,9 @@ class Project(PartialProject):
 
     def unlove(self):
         """
-        Removes the love from this project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Removes the love from this project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         return requests.delete(
@@ -335,9 +335,9 @@ class Project(PartialProject):
 
     def favorite(self):
         """
-        Posts a favorite on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Posts a favorite on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         return requests.post(
@@ -350,9 +350,9 @@ class Project(PartialProject):
 
     def unfavorite(self):
         """
-        Removes the favorite from this project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Removes the favorite from this project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         return requests.delete(
@@ -375,9 +375,9 @@ class Project(PartialProject):
 
     def turn_off_commenting(self):
         """
-        Disables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Disables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
@@ -395,9 +395,9 @@ class Project(PartialProject):
 
     def turn_on_commenting(self):
         """
-        Enables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Enables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
@@ -417,9 +417,9 @@ class Project(PartialProject):
 
     def toggle_commenting(self):
         """
-        Switches commenting on / off on the project (If comments are on, they will be turned off, else they will be turned on). You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Switches commenting on / off on the project (If comments are on, they will be turned off, else they will be turned on). You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
@@ -437,9 +437,9 @@ class Project(PartialProject):
 
     def share(self):
         """
-        Shares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Shares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
@@ -453,9 +453,9 @@ class Project(PartialProject):
 
     def unshare(self):
         """
-        Unshares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Unshares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
@@ -469,9 +469,9 @@ class Project(PartialProject):
 
     def set_thumbnail(self, *, file):
         """
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project` 
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
@@ -488,12 +488,12 @@ class Project(PartialProject):
 
     def delete_comment(self, *, comment_id):
         """
-        Deletes a comment. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Deletes a comment. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
 
         Args:
             comment_id: The id of the comment that should be deleted
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
@@ -507,12 +507,12 @@ class Project(PartialProject):
 
     def report_comment(self, *, comment_id):
         """
-        Reports a comment to the Scratch team. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Reports a comment to the Scratch team. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
 
         Args:
             comment_id: The id of the comment that should be reported
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         return requests.delete(
@@ -523,16 +523,16 @@ class Project(PartialProject):
 
     def post_comment(self, content, *, parent_id="", commentee_id=""):
         """
-        Posts a comment on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Posts a comment on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
 
         Args:
             content: Content of the comment that should be posted
-        
+
         Keyword Arguments:
             parent_id: ID of the comment you want to reply to. If you don't want to mention a user, don't put the argument.
             commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         data = {
@@ -552,7 +552,7 @@ class Project(PartialProject):
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """
-        Posts a reply to a comment on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`  
+        Posts a reply to a comment on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
 
         Args:
             content: Content of the comment that should be posted
@@ -563,12 +563,37 @@ class Project(PartialProject):
         """
         return self.post_comment(content, parent_id=parent_id, commentee_id=commentee_id)
 
+    def set_json(self, json_data):
+        """
+        Sets the project json. You can use this to upload projects to the Scratch website.
+
+        Args:
+            json_data (dict or JSON): The new project JSON as encoded JSON object or as dict
+        """
+
+        if not isinstance(json_data, dict):
+            json_data = json.loads(json_data)
+
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
+            return
+        if self._session._username != self.author:
+            raise(exceptions.Unauthorized("You must be the project owner to do this."))
+            return
+
+        r = requests.put(
+            f"https://projects.scratch.mit.edu/{self.id}",
+            headers = self._headers,
+            cookies = self._cookies,
+            json=json_data,
+        ).json()
+        print(r)
 
     def set_title(self, text):
         """
-        Changes the projects title. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project` 
+        Changes the projects title. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
@@ -582,9 +607,9 @@ class Project(PartialProject):
 
     def set_instructions(self, text):
         """
-        Changes the projects instructions. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project` 
+        Changes the projects instructions. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
@@ -598,9 +623,9 @@ class Project(PartialProject):
 
     def set_notes(self, text):
         """
-        Changes the projects notes and credits. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project` 
+        Changes the projects notes and credits. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
@@ -624,7 +649,7 @@ class Project(PartialProject):
     def moderation_status(self):
         """
         Gets information about the project's moderation status. Fetched from jeffalo's API.
-        
+
         Returns:
             str: The moderation status of the project.
 
@@ -633,9 +658,9 @@ class Project(PartialProject):
         safe: The project was reviewed by the Scratch team and was considered safe for everyone.
 
         notsafe: The project was reviewed by the Scratch team and was considered not safe for everyone (nfe). It can't appear in search results, on the explore page and on the front page.
-        
+
         notreviewed: The project hasn't been reviewed yet.
-        
+
         no_remixes: Unable to fetch the project's moderation status.
         """
         try:
@@ -656,10 +681,10 @@ def get_project(project_id):
 
     Returns:
         scratchattach.project.Project: An object representing the requested project.
-    
+
     Warning:
         Any methods that require authentication (like project.love) will not work on the returned object.
-        
+
         If you want to use these methods, get the project with :meth:`scratchattach.session.Session.connect_project` instead.
     """
     try:
@@ -689,13 +714,13 @@ def explore_projects(*, query="*", mode="trending", language="en", limit=40, off
 
     Returns:
         list<scratchattach.project.Project>: List that contains the explore page projects
-    
+
     Warning:
         Any methods that require authentication (like project.love) will not work on the returned objects.
-        
+
         If you want to use these methods, get the explore page projects with :meth:`scratchattach.session.Session.search_projects` instead.
     '''
-    
+
     r = requests.get(f"https://api.scratch.mit.edu/explore/projects?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
     projects = []
 
@@ -721,7 +746,7 @@ def search_projects(*, query="", mode="trending", language="en", limit=40, offse
 
     Warning:
         Any methods that require authentication (like project.love) will not work on the returned objects.
-        
+
         If you want to use these methods, perform the search with :meth:`scratchattach.session.Session.search_projects` instead.
     '''
     r = requests.get(f"https://api.scratch.mit.edu/search/projects?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()

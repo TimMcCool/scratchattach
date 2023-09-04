@@ -505,6 +505,18 @@ class Session():
         except Exception:
             return []
 
+    def upload_asset(asset):
+        data = asset if isinstance(asset, bytes) else open(asset, "rb").read()
+
+        if isinstance(asset, str):
+            file_ext = pathlib.Path(asset).suffix
+
+        requests.post(
+            f"https://assets.scratch.mit.edu/{hashlib.md5(data).hexdigest()}.{file_ext}",
+            headers=self._headers,
+            data=data,
+        )
+    
 # ------ #
 
 def login(username, password):
