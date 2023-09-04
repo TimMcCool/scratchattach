@@ -38,7 +38,7 @@ class Studio:
     :.follower_count:
 
     :.manager_count:
-    
+
     :.project_count:
 
     :.update(): Updates the attributes
@@ -93,8 +93,8 @@ class Studio:
 
 
     def follow(self):
-        """       
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        """
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         requests.put(
             f"https://scratch.mit.edu/site-api/users/bookmarkers/{self.id}/add/?usernames={self._session._username}",
@@ -103,8 +103,8 @@ class Studio:
         )
 
     def unfollow(self):
-        """       
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        """
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         requests.put(
             f"https://scratch.mit.edu/site-api/users/bookmarkers/{self.id}/remove/?usernames={self._session._username}",
@@ -151,7 +151,7 @@ class Studio:
 
     def post_comment(self, content, *, parent_id="", commentee_id=""):
         """
-        Posts a comment on the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        Posts a comment on the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
 
         Args:
             content: Content of the comment that should be posted
@@ -177,10 +177,50 @@ class Studio:
             data=json.dumps(data),
         ).json()
 
+    def set_thumbnail(self, *, file):
+        """
+        Sets the project thumbnail
+
+        Positional Arguments:
+            file: The path to the image file
+
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
+        """
+        #"multipart/form-data; boundary=----WebKitFormBoundaryhKZwFjoxAyUTMlSh"
+        if self._headers is None:
+            raise(exceptions.Unauthenticated)
+            return
+        with open(file, "rb") as f:
+            thumbnail = f.read()
+
+        filename = file.replace("\\","/")
+        if filename.endswith("/"):
+            filename = filename[:-1]
+        filename = filename.split("/").pop()
+
+        file_type = filename.split(".").pop()
+
+        print(filename, file_type)
+
+        payload = f"------WebKitFormBoundaryhKZwFjoxAyUTMlSh\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{filename}\"\r\nContent-Type: image/{file_type}\r\n\r\n\r\n------WebKitFormBoundaryhKZwFjoxAyUTMlSh--\r\n"
+        r = requests.post(
+            f"https://scratch.mit.edu/site-api/galleries/all/{self.id}/",
+            data = thumbnail,
+            headers = {
+                "accept": "*/",
+                "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryhKZwFjoxAyUTMlSh",
+                "Referer": f"https://scratch.mit.edu/",
+                "x-csrftoken": "a",
+                "x-requested-with": "XMLHttpRequest"
+            },
+            #data = payload,
+            cookies = self._cookies,
+        )
+        print(r.text, r)
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """
-        Posts a reply to a comment on the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        Posts a reply to a comment on the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
 
         Args:
             content: Content of the comment that should be posted
@@ -227,8 +267,8 @@ class Studio:
 
 
     def invite_curator(self, curator):
-        """       
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        """
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         try:
             return requests.put(
@@ -240,8 +280,8 @@ class Studio:
             raise(_exceptions.Unauthorized)
 
     def promote_curator(self, curator):
-        """       
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        """
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         try:
             return requests.put(
@@ -254,8 +294,8 @@ class Studio:
 
 
     def remove_curator(self, curator):
-        """       
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        """
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         try:
             return requests.put(
@@ -267,15 +307,15 @@ class Studio:
             raise(_exceptions.Unauthorized)
 
     def leave(self):
-        """       
-        Removes yourself from the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        """
+        Removes yourself from the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         return self.remove_curator(self._session._username)
 
     def add_project(self, project_id):
-        """       
+        """
         Adds a project to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
-        
+
         Args:
             project_id: Project id of the project that should be added
         """
@@ -285,9 +325,9 @@ class Studio:
         ).json()
 
     def remove_project(self, project_id):
-        """       
+        """
         Removes a project from the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
-        
+
         Args:
             project_id: Project id of the project that should be removed
         """
@@ -316,7 +356,7 @@ class Studio:
             u._update_from_dict(c)
             managers.append(u)
         return managers
-    
+
     def host(self):
         """
         Gets the studio host.
@@ -331,8 +371,8 @@ class Studio:
             return None
 
     def set_description(self, new):
-        """       
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        """
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         requests.put(
             f"https://scratch.mit.edu/site-api/galleries/all/{self.id}/",
@@ -342,8 +382,8 @@ class Studio:
         )
 
     def set_title(self, new):
-        """       
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        """
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         requests.put(
             f"https://scratch.mit.edu/site-api/galleries/all/{self.id}/",
@@ -353,7 +393,7 @@ class Studio:
 
     def open_projects(self):
         """
-        Changes the studio settings so everyone (including non-curators) is able to add projects to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        Changes the studio settings so everyone (including non-curators) is able to add projects to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         requests.put(
             f"https://scratch.mit.edu/site-api/galleries/{self.id}/mark/open/",
@@ -364,7 +404,7 @@ class Studio:
 
     def close_projects(self):
         """
-        Changes the studio settings so only curators can add projects to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        Changes the studio settings so only curators can add projects to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         requests.put(
             f"https://scratch.mit.edu/site-api/galleries/{self.id}/mark/closed/",
@@ -374,7 +414,7 @@ class Studio:
 
     def turn_off_commenting(self):
         """
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         if self.comments_allowed:
             requests.post(
@@ -387,7 +427,7 @@ class Studio:
 
     def turn_on_commenting(self):
         """
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         if not self.comments_allowed:
             requests.post(
@@ -400,7 +440,7 @@ class Studio:
 
     def toggle_commenting(self):
         """
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`  
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         requests.post(
             f"https://scratch.mit.edu/site-api/comments/gallery/{self.id}/toggle-comments/",
@@ -430,8 +470,8 @@ def get_studio(studio_id):
 
     Warning:
         Any methods that authentication (like studio.follow) will not work on the returned object.
-        
-        If you want to use these, get the studio with :meth:`scratchattach.session.Session.connect_studio` instead.    
+
+        If you want to use these, get the studio with :meth:`scratchattach.session.Session.connect_studio` instead.
     """
     try:
         studio = Studio(id=int(studio_id))

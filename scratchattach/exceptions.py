@@ -1,4 +1,7 @@
-class Unauthorized(Exception):
+class Unauthenticated(Exception):
+    def __init__(self, message=""):
+        self.message = "You can't perform this action because you're not logged in. The object on which the method was called wasn't created with a session. More information: https://scratchattach.readthedocs.io/en/latest/scratchattach.html#scratchattach.exceptions.Unauthenticated"
+        super().__init__(self.message)
     """
     Raised when an action that requires a log in / session is performed on an object that wasn't created with a session.
 
@@ -8,7 +11,10 @@ class Unauthorized(Exception):
     """
     pass
 
-class Unauthenticated(Exception):
+class Unauthorized(Exception):
+    def __init__(self, message=""):
+        self.message = "You are not authorized to perform this action."
+        super().__init__(self.message)
     """
     Raised when an action is performed that the user associated with the session that the object was created with is not allowed to do.
     

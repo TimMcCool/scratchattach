@@ -374,10 +374,10 @@ class Session():
             scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
         """
         try:
-            user = user.User(username=username, _session=self)
-            if user.update() == "429":
+            _user = user.User(username=username, _session=self)
+            if _user.update() == "429":
                 raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-            return user
+            return _user
         except KeyError:
             return None
         except Exception as e:
@@ -394,13 +394,13 @@ class Session():
             scratchattach.project.Project: An object that represents the requested project and allows you to perform actions on the project (like project.love)
         """
         try:
-            project = project.Project(id=int(project_id), _session=self)
-            u = project.update()
+            _project = project.Project(id=int(project_id), _session=self)
+            u = _project.update()
             if u == "429":
                 raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
             if not u:
-                project = project.PartialProject(id=int(project_id))
-            return project
+                _project = project.PartialProject(id=int(project_id))
+            return _project
         except KeyError:
             return None
         except Exception as e:
@@ -417,10 +417,10 @@ class Session():
             scratchattach.studio.Studio: An object that represents the requested studio and allows you to perform actions on the studio (like studio.follow)
         """
         try:
-            studio = studio.Studio(id=int(studio_id), _session=self)
-            if studio.update() == "429":
+            _studio = studio.Studio(id=int(studio_id), _session=self)
+            if _studio.update() == "429":
                 raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-            return studio
+            return _studio
         except KeyError:
             return None
         except Exception as e:
