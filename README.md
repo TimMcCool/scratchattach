@@ -71,7 +71,7 @@ session = scratch3.Session("sessionId", username="username") #The username field
 
 **All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki#logging-in).**
 
-# Cloud variables
+# Cloud variables  `scratch3.CloudConnection`
 
 **Connect to the Scratch cloud:**
 
