@@ -30,24 +30,42 @@ If you need help with your code, leave a comment in the [official forum topic](h
 ) on [TimMcCool's Scratch
 profile](https://scratch.mit.edu/users/TimMcCool/) or open an issue on the github repo
 
-# logging-in--scratch3session
+# Installation
 
-This section was moved to a new link: [https://github.com/TimMcCool/scratchattach/wiki#logging-in](https://github.com/TimMcCool/scratchattach/wiki#logging-in)
+Run the following command in your command prompt
+/ shell:
+```
+pip install -U scratchattach
+```
 
+**OR**
 
+Add this to your Python code:
+```python
+import os
 
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
+os.system("pip install -U scratchattach")
+```
+
+# Logging in
+
+**Logging in with username / password:**
+
+```python
+import scratchattach as scratch3
+
+session = scratch3.login("username", "password")
+```
+
+`login()` returns a `Session` object that saves your login
+
+**Logging in with a sessionId:**
+*You can get your session id from your browser's cookies. [More information](https://github.com/TimMcCool/scratchattach/wiki/Get-your-session-id)*
+
+```python
+import scratchattach as scratch3
+
+session = scratch3.Session("sessionId", username="username") #The username field is case sensitive
+```
+
+More can be found in the documentation: https://github.com/TimMcCool/scratchattach/wiki#logging-in
