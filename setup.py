@@ -11,7 +11,7 @@ setup(
     name="scratchattach",
     version=VERSION,
     author="TimMcCool",
-    author_email="timmccool.scratch@gmail.com",
+    author_email="",
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
     long_description=open('README.md').read(),
