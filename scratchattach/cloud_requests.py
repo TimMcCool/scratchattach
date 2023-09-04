@@ -156,6 +156,18 @@ class CloudRequests:
                      new_name=None,
                      new_function=None,
                      thread=None):
+        """
+        Edits an existing request.
+        
+        Args:
+            name (str): Current name of the request that should be edited
+        
+        Keyword Arguments (optional):
+            enabled (boolean): Whether the request should be set as enabled
+            new_name (str): New name that should be given to the request
+            new_function (Callable): Function that should be called when the request is received
+            thread (boolean): Whether the request should be run in a thread
+        """
         if name not in self.requests:
             raise (exceptions.RequestNotFound(name))
         if enabled is not None:
@@ -299,6 +311,10 @@ class CloudRequests:
     def call_event(self, event, args=[]):
         """
         Calls an event. Called by the request handler when it detects an event.
+        
+        
+        Returns:
+            boolean: True if the called event is defined, else False
         """
         events = list(filter(lambda k: k.__name__ == event, self.events))
         if events == []:

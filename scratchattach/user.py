@@ -152,7 +152,10 @@ class User:
         return int(text)
 
     def followers(self, *, limit=40, offset=0):
-
+        """
+        Returns:
+            list<scratchattach.user.User>: The user's followers as list of scratchattach.user.User objects
+        """
         if limit>40:
             limit=40
         followers = []
@@ -175,9 +178,17 @@ class User:
         return followers
 
     def follower_names(self, *, limit=40, offset=0):
+        """
+        Returns:
+            list<str>: The usernames of the user's followers
+        """
         return [i.name for i in self.followers(limit=limit, offset=offset)]
 
     def following(self, *, limit=40, offset=0):
+        """
+        Returns:
+            list<scratchattach.user.User>: The users that the user is following as list of scratchattach.user.User objects
+        """
         if limit>40:
             limit=40
         followers = []
@@ -200,12 +211,24 @@ class User:
         return followers
 
     def following_names(self, *, limit=40, offset=0):
+        """
+        Returns:
+            list<str>: The usernames of the users the user is following
+        """
         return [i.name for i in self.following(limit=limit, offset=offset)]
 
     def is_following(self, user):
+        """
+        Returns:
+            boolean: Whether the user is following the user provided as argument
+        """
         return requests.get(f"http://explodingstar.pythonanywhere.com/api/{self.username}/?following={user}").json()["following"]
 
     def is_followed_by(self, user):
+        """
+        Returns:
+            boolean: Whether the user is followed by the user provided as argument
+        """
         return requests.get(f"http://explodingstar.pythonanywhere.com/api/{user}/?following={self.username}").json()["following"]
 
     def project_count(self):
@@ -272,6 +295,10 @@ class User:
         return requests.get(f"https://api.scratch.mit.edu/users/{self.username}/studios/curate?limit={limit}&offset={offset}").json()
 
     def projects(self, *, limit=None, offset=0):
+        """
+        Returns:
+            list<projects.projects.Project>: The user's shared projects
+        """
         if limit is None:
             _projects = json.loads(requests.get(
                 f"https://api.scratch.mit.edu/users/{self.username}/projects/?offset={offset}",
@@ -319,6 +346,10 @@ class User:
         return projects
 
     def favorites(self, *, limit=None, offset=0):
+        """
+        Returns:
+            list<projects.projects.Project>: The user's favorite projects
+        """
         if limit is None:
             _projects = json.loads(requests.get(
                 f"https://api.scratch.mit.edu/users/{self.username}/favorites/?offset={offset}",
@@ -391,6 +422,9 @@ class User:
 
     def viewed_projects(self, limit=24, offset=0):
         """
+        Returns:
+            list<projects.projects.Project>: The user's recently viewed projects
+
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
         try:
