@@ -16,54 +16,8 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 
 - **[Documentation](https://github.com/TimMcCool/scratchattach/wiki)**
 - [Extended documentation (WIP)](https://scratchattach.readthedocs.io/en/latest/)
+- [Examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
-
-# Examples
-**Set a cloud var with scratchattach:**
-```py
-import scratchattach as scratch3
-
-session = scratch3.login("username", "password")
-conn = session.connect_cloud("project_id")
-
-conn.set_var("variable", value)
-```
-
-**Cloud event handler:**
-```py
-import scratchattach as scratch3
-events = scratch3.CloudEvents("project_id")
-
-@events.event
-def on_set(event): #Called when a cloud var is set
-    print(f"{event.user} set the variable {event.var} to the valuee {event.value} at {event.timestamp}")
-
-events.start()
-```
-
-**Comment on a project:**
-```py
-import scratchattach as scratch3
-
-session = scratch3.login("username", "password")
-project = session.connect_project("project_id")
-
-project.post_comment("Hi guys!")
-```
-
-**Automatically update your profile with your follower count:**
-```py
-import scratchattach as scratch3
-import time
-
-session = scratch3.login("username", "password")
-user = session.get_linked_user()
-
-while True:
-    follower_count = user.follower_count()
-    user.set_bio(f"My follower count: {follower_count}")
-    time.sleep(60) # The follower count is updated every 60 seconds
-```
 
 # Contributors
 
@@ -77,44 +31,59 @@ If you need help with your code, leave a comment in the [official forum topic](h
 ) on [TimMcCool's Scratch
 profile](https://scratch.mit.edu/users/TimMcCool/) or open an issue on the github repo
 
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
+# Installation
 
-# logging-in--scratch3session
+Run the following command in your command prompt
+/ shell:
+```
+pip install -U scratchattach
+```
 
-This section was moved to a new link: [https://github.com/TimMcCool/scratchattach/wiki#logging-in](https://github.com/TimMcCool/scratchattach/wiki#logging-in)
+**OR**
 
+Add this to your Python code:
+```python
+import os
 
+os.system("pip install -U scratchattach")
+```
 
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
-<br/><br/>
+# Logging in  `scratch3.Session`
+
+**Logging in with username / password:**
+
+```python
+import scratchattach as scratch3
+
+session = scratch3.login("username", "password")
+```
+
+`login()` returns a `Session` object that saves your login
+
+**Logging in with a sessionId:**
+*You can get your session id from your browser's cookies. [More information](https://github.com/TimMcCool/scratchattach/wiki/Get-your-session-id)*
+
+```python
+import scratchattach as scratch3
+
+session = scratch3.Session("sessionId", username="username") #The username field is case sensitive
+```
+
+**All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki#logging-in).**
+
+# Cloud variables  `scratch3.CloudConnection`
+
+**Connect to the Scratch cloud:**
+
+```python
+conn = session.connect_cloud("project_id")
+```
+
+**Get / Set a cloud var:**
+
+```python
+value = scratch3.get_var("project_id", "variable")
+conn.set_var("variable", "value") #the variable name is specified without the cloud emoji
+```
+
+**All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki/#cloud-variables).**
