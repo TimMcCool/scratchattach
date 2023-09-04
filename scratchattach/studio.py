@@ -181,7 +181,7 @@ class Studio:
         """
         Sets the studio thumbnail. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
 
-        Positional Arguments:
+        Keyword Arguments:
             file: The path to the image file
 
         Returns:
