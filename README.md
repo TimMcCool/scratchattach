@@ -48,7 +48,7 @@ import os
 os.system("pip install -U scratchattach")
 ```
 
-# Logging in `scratch3.Session`
+# Logging in  `scratch3.Session`
 
 **Logging in with username / password:**
 
