@@ -104,7 +104,7 @@ class ForumTopic:
 
 class ForumPost:
     '''
-    Represents a Scratch forum post that was made in a forum topic.
+    Represents a Scratch forum post.
 
     Attributes:
 
