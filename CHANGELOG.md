@@ -1,3 +1,7 @@
+# 1.4.6
+
+- Fixed `project.studios()` function
+
 # 1.4.5
 
 - Added `studio.set_thumbnail(file="filename")` method
