@@ -265,7 +265,8 @@ class Project(PartialProject):
             list<dict>: A list containing the studios this project is in, each studio is represented by a dict.
         """
         data = requests.get(f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/studios?limit={limit}&offset={offset}").json()
-
+        return data
+    
     def comments(self, *, limit=40, offset=0):
         """
         Returns the comments posted on the project (except for replies. To get replies use :meth:`scratchattach.project.Project.get_comment_replies`).
