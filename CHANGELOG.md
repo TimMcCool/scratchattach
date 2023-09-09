@@ -1,3 +1,7 @@
+# 1.4.7
+
+- Fixed `scratchattach.get_cloud_logs` function (has been broken since v1.4.0)
+
 # 1.4.6
 
 - Fixed `project.studios()` function

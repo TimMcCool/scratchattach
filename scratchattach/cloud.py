@@ -513,7 +513,7 @@ def get_cloud_logs(project_id, *, filter_by_var_named =None, limit=25, offset=0)
         log_url (str): If you want to get the clouddata from a cloud log API different to Scratch's normal cloud log API, set this argument to the URL of the API. Only set this argument if you know what you are doing. If you want to get the clouddata from the normal API, don't put this argument.
     """
     try:
-        response = json.loads(requests.get(f"{log_url}?projectid={project_id}&limit={limit}&offset={offset}").text)
+        response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit={limit}&offset={offset}").text)
         if filter_by_var_named is None: return response
         else:
             return list(filter(lambda k: k["name"] == "☁ "+filter_by_var_named, response))
