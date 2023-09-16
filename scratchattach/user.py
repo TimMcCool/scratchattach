@@ -322,26 +322,26 @@ class User:
                 }
             ).json()
         projects = []
-        for project in _projects:
+        for project_dict in _projects:
             projects.append(project.Project(
                 _session = self._session,
                 author = self.username,
-                comments_allowed = project["comments_allowed"],
-                description=project["description"],
-                created = project["history"]["created"],
-                last_modified = project["history"]["modified"],
-                share_date = project["history"]["shared"],
-                id = project["id"],
-                thumbnail_url = project["image"],
-                instructions = project["instructions"],
-                remix_parent = project["remix"]["parent"],
-                remix_root = project["remix"]["root"],
-                favorites = project["stats"]["favorites"],
-                loves = project["stats"]["loves"],
-                remixes = project["stats"]["remixes"],
-                views = project["stats"]["views"],
-                title = project["title"],
-                url = "https://scratch.mit.edu/projects/"+str(project["id"])
+                comments_allowed = project_dict["comments_allowed"],
+                description=project_dict["description"],
+                created = project_dict["history"]["created"],
+                last_modified = project_dict["history"]["modified"],
+                share_date = project_dict["history"]["shared"],
+                id = project_dict["id"],
+                thumbnail_url = project_dict["image"],
+                instructions = project_dict["instructions"],
+                remix_parent = project_dict["remix"]["parent"],
+                remix_root = project_dict["remix"]["root"],
+                favorites = project_dict["stats"]["favorites"],
+                loves = project_dict["stats"]["loves"],
+                remixes = project_dict["stats"]["remixes"],
+                views = project_dict["stats"]["views"],
+                title = project_dict["title"],
+                url = "https://scratch.mit.edu/projects/"+str(project_dict["id"])
             ))
         return projects
 
@@ -373,26 +373,26 @@ class User:
                 }
             ).json()
         projects = []
-        for project in _projects:
+        for project_dict in _projects:
             projects.append(project.Project(
                 _session = self._session,
                 author = self.username,
-                comments_allowed = project["comments_allowed"],
-                description=project["description"],
-                created = project["history"]["created"],
-                last_modified = project["history"]["modified"],
-                share_date = project["history"]["shared"],
-                id = project["id"],
-                thumbnail_url = project["image"],
-                instructions = project["instructions"],
-                remix_parent = project["remix"]["parent"],
-                remix_root = project["remix"]["root"],
-                favorites = project["stats"]["favorites"],
-                loves = project["stats"]["loves"],
-                remixes = project["stats"]["remixes"],
-                views = project["stats"]["views"],
-                title = project["title"],
-                url = "https://scratch.mit.edu/projects/"+str(project["id"])
+                comments_allowed = project_dict["comments_allowed"],
+                description=project_dict["description"],
+                created = project_dict["history"]["created"],
+                last_modified = project_dict["history"]["modified"],
+                share_date = project_dict["history"]["shared"],
+                id = project_dict["id"],
+                thumbnail_url = project_dict["image"],
+                instructions = project_dict["instructions"],
+                remix_parent = project_dict["remix"]["parent"],
+                remix_root = project_dict["remix"]["root"],
+                favorites = project_dict["stats"]["favorites"],
+                loves = project_dict["stats"]["loves"],
+                remixes = project_dict["stats"]["remixes"],
+                views = project_dict["stats"]["views"],
+                title = project_dict["title"],
+                url = "https://scratch.mit.edu/projects/"+str(project_dict["id"])
             ))
         return projects
 
@@ -433,26 +433,26 @@ class User:
                 headers = self._headers
             ).json()
             projects = []
-            for project in _projects:
+            for project_dict in _projects:
                 projects.append(project.Project(
                     _session = self._session,
                     author = self.username,
-                    comments_allowed = project["comments_allowed"],
-                    description=project["description"],
-                    created = project["history"]["created"],
-                    last_modified = project["history"]["modified"],
-                    share_date = project["history"]["shared"],
-                    id = project["id"],
-                    thumbnail_url = project["image"],
-                    instructions = project["instructions"],
-                    remix_parent = project["remix"]["parent"],
-                    remix_root = project["remix"]["root"],
-                    favorites = project["stats"]["favorites"],
-                    loves = project["stats"]["loves"],
-                    remixes = project["stats"]["remixes"],
-                    views = project["stats"]["views"],
-                    title = project["title"],
-                    url = "https://scratch.mit.edu/projects/"+str(project["id"])
+                    comments_allowed = project_dict["comments_allowed"],
+                    description=project_dict["description"],
+                    created = project_dict["history"]["created"],
+                    last_modified = project_dict["history"]["modified"],
+                    share_date = project_dict["history"]["shared"],
+                    id = project_dict["id"],
+                    thumbnail_url = project_dict["image"],
+                    instructions = project_dict["instructions"],
+                    remix_parent = project_dict["remix"]["parent"],
+                    remix_root = project_dict["remix"]["root"],
+                    favorites = project_dict["stats"]["favorites"],
+                    loves = project_dict["stats"]["loves"],
+                    remixes = project_dict["stats"]["remixes"],
+                    views = project_dict["stats"]["views"],
+                    title = project_dict["title"],
+                    url = "https://scratch.mit.edu/projects/"+str(project_dict["id"])
                 ))
             return projects
         except Exception:

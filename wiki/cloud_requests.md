@@ -166,6 +166,9 @@ You can use this decorator to customize your requests!
 *Run request in thread*
 
 Put this decorator above a request to run it in a thread (makes it possible to run multiple request simultaneously):
+
+Warning: This feature is currently very unoptimized and will be improved soon.
+
 ```py
 @client.request(thread=True)
 ```

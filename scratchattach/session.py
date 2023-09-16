@@ -269,9 +269,9 @@ class Session():
         ).json()
         projects = []
 
-        for project in r:
+        for project_dict in r:
             p = project.Project(_session = self)
-            p._update_from_dict(project)
+            p._update_from_dict(project_dict)
             projects.append(p)
         return projects
 
@@ -292,9 +292,9 @@ class Session():
         r = requests.get(f"https://api.scratch.mit.edu/search/projects?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
         projects = []
 
-        for project in r:
+        for project_dict in r:
             p = project.Project(_session = self)
-            p._update_from_dict(project)
+            p._update_from_dict(project_dict)
             projects.append(p)
         return projects
     def explore_projects(self, *, query="*", mode="trending", language="en", limit=40, offset=0):
@@ -314,9 +314,9 @@ class Session():
         r = requests.get(f"https://api.scratch.mit.edu/explore/projects?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
         projects = []
 
-        for project in r:
+        for project_dict in r:
             p = project.Project(_session = self)
-            p._update_from_dict(project)
+            p._update_from_dict(project_dict)
             projects.append(p)
         return projects
 

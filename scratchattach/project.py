@@ -326,7 +326,7 @@ class Project(PartialProject):
         if self._session is None:
             raise(exceptions.Unauthenticated)
             return
-        return requests.delete(
+        r = requests.delete(
             f"https://api.scratch.mit.edu/proxy/projects/{self.id}/loves/user/{self._session._username}",
             headers = self._headers,
             cookies = self._cookies,
@@ -341,7 +341,7 @@ class Project(PartialProject):
         if self._session is None:
             raise(exceptions.Unauthenticated)
             return
-        return requests.post(
+        r = requests.post(
             f"https://api.scratch.mit.edu/proxy/projects/{self.id}/favorites/user/{self._session._username}",
             headers = self._headers,
             cookies = self._cookies,
@@ -356,7 +356,7 @@ class Project(PartialProject):
         if self._session is None:
             raise(exceptions.Unauthenticated)
             return
-        return requests.delete(
+        r = requests.delete(
             f"https://api.scratch.mit.edu/proxy/projects/{self.id}/favorites/user/{self._session._username}",
             headers = self._headers,
             cookies = self._cookies,
@@ -588,7 +588,6 @@ class Project(PartialProject):
             cookies = self._cookies,
             json=json_data,
         ).json()
-        print(r)
 
     def set_title(self, text):
         """
@@ -726,7 +725,7 @@ def explore_projects(*, query="*", mode="trending", language="en", limit=40, off
     projects = []
 
     for project in r:
-        p = project.Project()
+        p = Project()
         p._update_from_dict(project)
         projects.append(p)
     return projects
@@ -754,7 +753,7 @@ def search_projects(*, query="", mode="trending", language="en", limit=40, offse
     projects = []
 
     for project in r:
-        p = project.Project()
+        p = Project()
         p._update_from_dict(project)
         projects.append(p)
     return projects

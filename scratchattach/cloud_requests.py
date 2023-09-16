@@ -38,7 +38,7 @@ class CloudRequests:
                  *,
                  used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
                  ignore_exceptions=True,
-                 force_reconnect=True,
+                 _force_reconnect = False, # this argument is no longer used and only exists for backwards compatibility
                  _log_url="https://clouddata.scratch.mit.edu/logs",
                  _packet_length=245):
         print(
@@ -68,6 +68,7 @@ class CloudRequests:
         Decorator function. Adds a request to the request handler.
         """
         def inner(function):
+            # called if the decorator provides arguments
             if thread:
                 self.respond_in_thread = True
             self.requests[function.__name__ if name is None else name] = {
@@ -78,8 +79,10 @@ class CloudRequests:
             }
 
         if function is None:
+            # => the decorator provides arguments
             return inner
         else:
+            # => the decorator doesn't provide arguments
             self.requests[function.__name__] = {
                 "name": function.__name__,
                 "enabled": True,
@@ -89,11 +92,11 @@ class CloudRequests:
 
     def call_request(self, request_id, req_obj, arguments):
         """
-        Calls a request. Called by the request handler when it detects a request.
+        Calls a request. Called by the request handler when it detects a request. If the request should be run in a thread, this function is called in a thread.
         """
         request = req_obj["name"]
         try:
-            if not req_obj["enabled"]:
+            if not req_obj["enabled"]: # Checks if the request is disabled
                 print(
                     f"Warning: Client received the disabled request '{request}'"
                 )
@@ -104,17 +107,21 @@ class CloudRequests:
                                  timestamp=self.last_timestamp,
                                  arguments=arguments,
                                  request_id=request_id)
-                ])
+                ]) # If the request is disabled, the event is called
                 return None
-            output = req_obj["on_call"](*arguments)
+            output = req_obj["on_call"](*arguments) # Calls the request function and saves the function's returned data in the output variable
+            
             if req_obj["thread"]:
+                # If this function is running in a thread, the output is saved in the self.outputs list and parsed by the main request handler
                 self.outputs[request_id] = {
                     "output": output,
                     "request": req_obj
                 }
             else:
+                # If this function is not running in a thread, the output is returned directly 
                 self._parse_output(output, request, req_obj, request_id)
         except Exception as e:
+            # Handles errors: Calls the on_error event, prints the traceback and sends back the error message to the Scratch project
             self.call_event("on_error", [
                 self.Request(name=request,
                              request=request,
@@ -223,6 +230,9 @@ class CloudRequests:
             return None
 
     def _respond(self, request_id, response, limit, *, validation=2222):
+        """
+        Sends back the request response to the Scratch project
+        """
 
         if self.idle_since + 8 < time.time() or self.force_reconnect:
             self.connection._connect(cloud_host=self.connection.cloud_host)
@@ -324,6 +334,9 @@ class CloudRequests:
             return True
 
     def _parse_output(self, output, request, req_obj, request_id):
+        """
+        Prepares the transmission of the request output to the Scratch project
+        """
         if len(str(output)) > 3000:
             print(
                 f"Warning: Output of request '{request}' is longer than 3000 characters (length: {len(str(output))} characters). Responding the request will take >4 seconds."
@@ -364,6 +377,8 @@ class CloudRequests:
 
     def _run(self, events, data_from_websocket=True):
         self.ws_data = []
+    	
+        # Prepares the cloud events:
 
         def on_set(event):
             if event.name == "TO_HOST":
@@ -391,6 +406,7 @@ class CloudRequests:
         self.call_event("on_ready")  #Calls the on_ready event
 
         if data_from_websocket is False:
+            # If the data shouldn't be fetched from the cloud websocket, it prepares the cloud log events
             old_clouddata = cloud.get_cloud_logs(self.project_id, filter_by_var_named="TO_HOST", limit=100)
             try:
                 self.last_timestamp = old_clouddata[0]["timestamp"]
@@ -402,6 +418,7 @@ class CloudRequests:
             time.sleep(0.001)
 
             if data_from_websocket is False:
+                # If the data shouldn't be fetched from the cloud websocket, it fetches the cloud logs to get data
                 clouddata = cloud.get_cloud_logs(
                     self.project_id, filter_by_var_named="TO_HOST", limit=100)
                 if clouddata == old_clouddata:
@@ -417,19 +434,24 @@ class CloudRequests:
                                                  value=activity["value"],
                                                  timestamp=activity["timestamp"]))
 
-            while self.ws_data != []:
-                event = self.ws_data.pop(0)
+            current_ws_data = list(self.ws_data)
+            self.ws_data = []
+            while current_ws_data != []:
+                event = current_ws_data.pop(0)
 
                 try:
+                    # Parsing the received requests
                     raw_request, request_id = event.value.split(".")
 
                     if event.value[0] == "-":
+                        # => The received request is actually part of a bigger request
                         if not request_id in self.request_parts:
                             self.request_parts[request_id] = []
                         self.request_parts[request_id].append(raw_request[1:])
-                        continue
+                        continue # If the end of the request was not received yet, continue with the next received request
 
                     if request_id in self.responded_request_ids:
+                        # Detecting if a request with the same id was parsed before to prevent double responses
                         continue
                     else:
                         self.responded_request_ids.insert(0, request_id)
@@ -440,6 +462,7 @@ class CloudRequests:
                 self.last_requester = event.user
                 self.last_timestamp = event.timestamp
 
+                # If the request consists of multiple parts: Putting together the parts to get the whole raw request string
                 _raw_request = ""
                 if request_id in self.request_parts:
                     data = self.request_parts[request_id]
@@ -448,9 +471,12 @@ class CloudRequests:
                     self.request_parts.pop(request_id)
                 raw_request = _raw_request + raw_request
 
+                # Decode request and parse arguemtns:
                 request = Encoding.decode(raw_request)
                 arguments = request.split("&")
                 request = arguments.pop(0)
+
+                # Call on_request event:
                 self.call_event("on_request", [
                     self.Request(name=request,
                                  request=request,
@@ -460,8 +486,9 @@ class CloudRequests:
                                  request_id=request_id,
                                  id=request_id)
                 ])
-                output = ""
+                output = "" # initialize the output variable
 
+                # Check if the request is unknown:
                 if request not in self.requests:
                     print(
                         f"Warning: Client received an unknown request called '{request}'"
@@ -476,15 +503,19 @@ class CloudRequests:
                     ])
                     continue
                 else:
+                    # If the request is not unknown, it is called
                     req_obj = self.requests[request]
                     self.last_request_id = request_id
                     if req_obj["thread"]:
+                        # => Call request in a thread
                         Thread(target=self.call_request,
                                args=(request_id, req_obj, arguments)).start()
                     else:
+                        # => Call request directly
                         self.call_request(request_id, req_obj, arguments)
 
-            #Send outputs
+            #Send outputs from request that were run in threads and still need to be returned
+            # There's still room for improvement here: While the requests that were run in threads are returned or non-threaded requests are running, no new threaded requests will be run. Will be improved in a future scratchattach version.
             while len(list(self.outputs.keys())) > 0:
                 output_ids = list(self.outputs.keys())
                 for request_id in output_ids:
@@ -503,7 +534,7 @@ class TwCloudRequests(CloudRequests):
                  *,
                  used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
                  ignore_exceptions=True,
-                 force_reconnect=True,
+                 _force_reconnect = False, # this argument is no longer used and only exists for backwards compatibility
                  _packet_length=98800):
         print(
             "\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m"

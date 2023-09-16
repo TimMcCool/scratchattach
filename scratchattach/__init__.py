@@ -31,11 +31,6 @@ def curated_projects():
 def design_studio_projects():
     return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["scratch_design_studio"]
 
-def search_comments(*, query=""):
-    print("WARNING: scratchattach.Session.search_comments does not work anymore")
-    return {}
-    #return requests.get(f"https://sd.sly-little-fox.ru/api/v1/search?q={query}").json()
-
 def search_posts(*, query, order="newest", page=0):
     try:
         data = requests.get(f"https://scratchdb.lefty.one/v3/forum/search?q={query}&o={order}&page={page}").json()["posts"]
@@ -73,10 +68,10 @@ def get_health():
 
 def get_csrf_token():
     """
-    Generates a csrf_token using Scratch's API.
+    Generates a scratchcsrftoken using Scratch's API.
 
     Returns:
-        str: The generated csrf_token
+        str: The generated scratchcsrftoken
     """
     return requests.get(
         "https://scratch.mit.edu/csrf_token/"

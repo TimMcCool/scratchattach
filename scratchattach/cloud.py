@@ -104,7 +104,7 @@ class CloudConnection(_CloudMixin):
             value (str): The value the cloud variable should be set to
         """
         variable = variable.replace("☁ ", "")
-        if not (value is True or value is False or value in [float('inf'), -float('inf')]):
+        if not (value in [True, False, float('inf'), -float('inf')]):
             value = str(value)
             if len(value) > 256:
                 warnings.warn("invalid cloud var (too long): "+str(value), Warning)
@@ -153,11 +153,11 @@ class TwCloudConnection(_CloudMixin):
     :.allow_non_numeric: Whether the cloud variables can be set to non-numeric values
     """
 
-    def _connect(self, *, cloud_host, timeout=None):
+    def _connect(self, *, cloud_host=None, timeout=None):
         try:
             if cloud_host is None:
                 cloud_host = "wss://clouddata.turbowarp.org/"
-                self.cloud_host = "wss://clouddata.turbowarp.org/"
+                self.cloud_host = cloud_host
             self.websocket.connect(
                 cloud_host,
                 enable_multithread=True,
