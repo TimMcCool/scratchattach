@@ -40,7 +40,9 @@ class CloudRequests:
                  ignore_exceptions=True,
                  _force_reconnect = False, # this argument is no longer used and only exists for backwards compatibility
                  _log_url="https://clouddata.scratch.mit.edu/logs",
-                 _packet_length=245):
+                 _packet_length=245,
+                 **kwargs
+                 ):
         print(
             "\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m"
         )
