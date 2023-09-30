@@ -1,3 +1,7 @@
+# 1.5.0
+
+- Fixed an issue with `WsCloudEvents`, updating is highly recommended
+
 # 1.4.8
 
 - Fixed `scratchattach.search_projects`, `scratchattach.User.projects`, `scratchattach.User.favorites` and `scratchattach.User.viewed_projects` (these broke in v1.4.0 due to changing the module names)

@@ -378,10 +378,7 @@ class WsCloudEvents(CloudEvents):
                         pass
                 for activity in result:
                     if "on_"+activity["method"] in self._events:
-                        if log_data[activity["name"][2:]] == activity["value"]:
-                            log_data.pop(activity["name"][2:])
-                        else:
-                            self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=time.time()*10000))
+                        self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=time.time()*10000))
             except Exception:
                 try:
                     self.connection._connect(cloud_host=self.connection.cloud_host)
