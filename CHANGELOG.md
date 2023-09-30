@@ -1,3 +1,7 @@
+# 1.5.1
+
+- Added `session.connect_tw_cloud` function which was mentioned in the documentation but missing in the code
+
 # 1.5.0
 
 - Fixed an issue with `WsCloudEvents`, updating is highly recommended
