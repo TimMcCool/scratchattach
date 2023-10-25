@@ -4,7 +4,7 @@ class Unauthenticated(Exception):
 
     Example: If the :meth:`scratchattach.project.Project.love` function is called on a Project object created with :meth:`scratchattach.project.get_project`, it will raise this error.
     
-    If Project / Studio / User objects are created using :meth:`scratchattach.get_project` / :meth:`scratchattach.get_studio` / :meth:`scratchattach.get_user`, they can't be used to perform action that require a session. Use :meth:`scratchattach.Session.get_project` / :meth:`scratchattach.Session.get_user` / :meth:`scratchattach.Session.get_studio` instead.
+    If Project / Studio / User objects are created using :meth:`scratchattach.get_project` / :meth:`scratchattach.get_studio` / :meth:`scratchattach.get_user`, they can't be used to perform action that require a session. Use :meth:`scratchattach.Session.connect_project` / :meth:`scratchattach.Session.connect_user` / :meth:`scratchattach.Session.connect_studio` instead.
     """
     def __init__(self, message=""):
         self.message = "You can't perform this action because you're not logged in. The object on which the method was called wasn't created with a session. More information: https://scratchattach.readthedocs.io/en/latest/scratchattach.html#scratchattach.exceptions.Unauthenticated"
