@@ -332,7 +332,7 @@ class Project(PartialProject):
             cookies = self._cookies,
         ).json()
         if r['userLove'] is True:
-            self.love()
+            self.unlove()
 
     def favorite(self):
         """
@@ -347,7 +347,7 @@ class Project(PartialProject):
             cookies = self._cookies,
         ).json()
         if r['userFavorite'] is False:
-            self.love()
+            self.favorite()
 
     def unfavorite(self):
         """
@@ -361,8 +361,8 @@ class Project(PartialProject):
             headers = self._headers,
             cookies = self._cookies,
         ).json()
-        if r['userFavorite'] is False:
-            self.love()
+        if r['userFavorite'] is True:
+            self.unfavorite()
 
 
     def post_view(self):
