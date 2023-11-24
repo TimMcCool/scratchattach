@@ -4,7 +4,7 @@ Cloud Requests Framework (inspired by discord.py) that allows Scratch projects a
 
 **Add Cloud Requests to your Scratch project:**
 
-Download this project file to your computer: https://scratch3-assets.1tim.repl.co/CloudRequests_Template.sb3
+Download this project file to your computer: https://github.com/TimMcCool/scratchattach/raw/main/assets/CloudRequests_Template.sb3
 
 Then, go to the Scratch website, create a new project and upload the project file from above.
 
@@ -37,12 +37,12 @@ Then, run the code.
 
 Now go to the Scratch project. In the `Cloud Requests` sprite, you will find this block:
 
-![image](https://scratch3-assets.1tim.repl.co/pypi_docs/tutorial.png/)
+![image](https://github.com/TimMcCool/scratchattach/blob/main/wiki/images/cr_tut_block.png)
 
 When active, it sends a "ping" request to the Python client. This will call the `ping()` function. The data returned by the function will be sent back to the project.
 Try it out by clicking the block!
 
-![image](https://scratch3-assets.1tim.repl.co/pypi_docs/tutorial_result.png/)
+![image](https://github.com/TimMcCool/scratchattach/blob/main/wiki/images/cr_tut_restult.png)
 
 **How to use with TurboWarp:**
 
@@ -61,7 +61,7 @@ client = scratch3.TwCloudRequests(conn)
 
 Scratch code:
 
-![image](https://scratch3-assets.1tim.repl.co/pypi_docs/example1.png/)
+![image](https://github.com/TimMcCool/scratchattach/blob/main/wiki/images/cr_tut_example1.png)
 
 Python code (add this to the code from above, but make sure `client.run()` stays at the bottom of the file):
 
@@ -79,7 +79,7 @@ The arguments you specify in the Scratch code are given to the Python function.
 
 Scratch code:
 
-![image](https://scratch3-assets.1tim.repl.co/pypi_docs/example3.png/)
+![image](https://github.com/TimMcCool/scratchattach/blob/main/wiki/images/cr_tut_example3.png)
 
 Python code:
 
