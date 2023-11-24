@@ -584,7 +584,7 @@ class User:
         return self._parse_activity(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text)
 
 
-    def activity_html(self, *, limi=1000):
+    def activity_html(self, *, limit=1000):
         """
         Returns:
             str: The raw user activity HTML data
