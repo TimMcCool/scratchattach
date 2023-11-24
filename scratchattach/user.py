@@ -94,6 +94,30 @@ class User:
         self.wiwo = response["profile"]["status"]
         self.country = response["profile"]["country"]
         self.icon_url = response["profile"]["images"]["90x90"]
+    
+    def _parse(htm):
+        
+        soup = BeautifulSoup(htm, 'html.parser')
+                
+        activity = []
+        source = soup.find_all("li")
+                
+        for data in source:
+                
+            time=data.find('div').find('span').findNext().findNext().text.strip()
+                
+            if '\xa0' in time:
+                while '\xa0' in time: time=time.replace('\xa0', ' ')
+                
+            user=(data.find('div').find('span').text)
+                
+            operation=data.find('div').find_all('span')[0].next_sibling.strip()
+                
+            result=(data.find('div').find('span').findNext().text)
+                    
+            activity.append(user+' '+operation+' '+result+' ; '+time)
+        
+        return activity
 
     def message_count(self):
 
@@ -553,7 +577,7 @@ class User:
         return self.post_comment(content, parent_id=parent_id, commentee_id=commentee_id)
 
     def activity_html(self, *, limit=1000):
-        return requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text
+        return _parse(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text)
 
 
     def follow(self):
