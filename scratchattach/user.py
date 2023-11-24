@@ -95,7 +95,7 @@ class User:
         self.country = response["profile"]["country"]
         self.icon_url = response["profile"]["images"]["90x90"]
     
-    def _parse_activity(htm):
+    def _parse_activity(self, htm):
         
         soup = BeautifulSoup(htm, 'html.parser')
                 
