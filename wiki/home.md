@@ -368,6 +368,7 @@ When connecting / getting a project that you can't access, a `PartialProject` ob
 **Most attributes and most functions don't work for such projects. However, these still work:**
 ```python
 project.remixes(limit=None, offset=0)
+project.is_shared() # Will always return False for PartialProject objects
 ```
 
 # Studios

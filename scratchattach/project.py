@@ -93,7 +93,16 @@ class PartialProject:
             ))
         return projects
 
-
+    def is_shared(self):
+        """
+        Returns:
+            boolean: Returns whether the project is currently shared
+        """
+        p = get_project(self.id)
+        if isinstance(p, PartialProject):
+            return False
+        else:
+            return True
 
 class Project(PartialProject):
 
@@ -257,18 +266,6 @@ class Project(PartialProject):
             return self._session.connect_user(self.author)
         except AttributeError:
             return user.get_user(self.author)
-
-    def is_shared(self):
-        """
-        Returns:
-            boolean: Returns whether the project is currently shared
-        """
-        try:
-            get_project(self.id)
-        except exceptions.ProjectNotFound:
-            return False
-        else:
-            return True
 
     def studios(self, *, limit=40, offset=0):
         """
