@@ -95,7 +95,7 @@ class User:
         self.country = response["profile"]["country"]
         self.icon_url = response["profile"]["images"]["90x90"]
     
-    def _parse(htm):
+    def _parse_activity(htm):
         
         soup = BeautifulSoup(htm, 'html.parser')
                 
@@ -576,8 +576,20 @@ class User:
         """
         return self.post_comment(content, parent_id=parent_id, commentee_id=commentee_id)
 
-    def activity_html(self, *, limit=1000):
-        return _parse(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text)
+    def activity(self, *, limit=1000):
+        """
+        Returns:
+            list<dict>: The user's activity data as parsed list
+        """
+        return self._parse_activity(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text)
+
+
+    def activity_html(self, *, limi=1000):
+        """
+        Returns:
+            str: The raw user activity HTML data
+        """
+        return requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text
 
 
     def follow(self):
