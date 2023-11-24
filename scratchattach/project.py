@@ -99,10 +99,7 @@ class PartialProject:
             boolean: Returns whether the project is currently shared
         """
         p = get_project(self.id)
-        if isinstance(p, PartialProject):
-            return False
-        else:
-            return True
+        return isinstance(p, Project)
 
 class Project(PartialProject):
 
