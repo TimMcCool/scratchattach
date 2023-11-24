@@ -347,6 +347,7 @@ project.set_thumbnail(file="filename.png") #File must be .png and fit Scratch's 
 project.set_json(json_data) #Sets the project JSON. Can be used to upload projects. json_data must be a dict or an encoded JSON object with the project JSON.
 project.share()
 project.unshare()
+project.is_shared() #Returns True if the project is currently shared
 
 project.turn_off_commenting()
 project.turn_on_commenting()

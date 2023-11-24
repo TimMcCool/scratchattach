@@ -258,6 +258,17 @@ class Project(PartialProject):
         except AttributeError:
             return user.get_user(self.author)
 
+    def is_shared(self):
+        """
+        Returns:
+            boolean: Returns whether the project is currently shared
+        """
+        try:
+            get_project(self.id)
+        except exceptions.ProjectNotFound:
+            return False
+        else:
+            return True
 
     def studios(self, *, limit=40, offset=0):
         """
