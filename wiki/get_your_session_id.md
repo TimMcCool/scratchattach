@@ -5,7 +5,7 @@
 3. Go to the "Application" tab, then go to "Cookies" > "https://scratch.mit.edu"
 4. Then find a cookie named  `scratchsessionid`. The value of this cookie is your Scratch session id 
 
-![](https://scratch3-assets.1tim.repl.co/template/cookies_new.png)
+![](https://github.com/TimMcCool/scratchattach/blob/main/wiki/images/cookies_tut_1.png)
 
 **There's an alternative way to do it:**
 
@@ -15,4 +15,4 @@
 2. Click the 🔒 icon in the URL bar, then click "Cookies"
 3. Then find a cookie called `scratchsessionid` (in the "scratch.mit.edu" » "Cookies" folder). The content of this cookie is your Scratch session id
 
-![](https://scratch3-assets.1tim.repl.co/template/cookies.png)
+![](https://github.com/TimMcCool/scratchattach/blob/main/wiki/images/cookies_tut_2.png)
