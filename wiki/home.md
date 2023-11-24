@@ -253,7 +253,8 @@ user.favorites(limit=None, offset=0) #Returns the projects the user has favorite
 user.studios(limit=None, offset=0) #Returns the studios the user is curating as list of dicts
 
 user.viewed_projects(limit=24, offset=0) #To use this you need to be logged in as the user. Returns the projects the user has recently viewed as list of scratch3.Project objects
-user.activity_html(limit=1000) #Returns the user's activity as HTML document
+user.activity(limit=1000) # Returns the user's activity as parsed list of dicts
+user.activity_html(limit=1000) #Returns the user's activity as raw HTML document
 
 user.follow()
 user.unfollow()
