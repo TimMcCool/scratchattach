@@ -113,7 +113,7 @@ conn.disconnect()
 
 # Encoding / Decoding
 
-Scratchattach has a built in encoder. Scratch sprite to decode texts encoded with scratchattach: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
+Scratchattach has a built in encoder. Scratch sprite to decode texts encoded with scratchattach (click the link to download it): https://github.com/TimMcCool/scratchattach/blob/main/assets/Encoder.sprite3
 
 ```python
 from scratchattach import Encoding
@@ -213,9 +213,9 @@ Get the user that you are logged in with:
 session.get_linked_user()
 ```
 
-You can also get users without logging in: (but then you can't use any functions that require a login, like user.follow(), user.post_comment(), ...)
+You can also get users without logging in: (but then you can't use any methods that require a login, like user.follow(), user.post_comment(), ...)
 ```python
-user = scratch3.get_user("username")
+user = scratch3.get_user("username") # Warning: Any methods that require authentication will not work on the returned object
 ```
 
 **Attributes:**
@@ -293,7 +293,7 @@ project = session.connect_project("project_id")
 
 You can also get projects without logging in: (but then you can't use any functions that require a login, and you can't get your unshared projects)
 ```python
-project = scratch3.get_project("project_id")
+project = scratch3.get_project("project_id") # Warning: Any methods that require authentication will not work on the returned object
 ```
 
 **Attributes:**
@@ -376,7 +376,7 @@ studio = session.connect_studio("studio_id")
 ```
 You can also get studios without logging in: (But then you can't use any functions that require a login, like studio.follow(), studio.add_project(), ...)
 ```python
-studio = scratch3.get_studio("studio_id")
+studio = scratch3.get_studio("studio_id") # Warning: Any methods that require authentication will not work on the returned object
 ```
 
 **Attributes:**
@@ -412,7 +412,7 @@ studio.remove_project("project_id")
 
 studio.set_description("new description")
 studio.set_title("new title")
-studio.set_thumbnail(file="filename.png") # New in v1.4.5
+studio.set_thumbnail(file="filename.png") # New in v1.4.5. File must fit Scratch's thumbnail guidelines. Returns a link to the uploaded thumbnail.
 studio.open_projects() #Allows everyone to add projects
 studio.close_projects()
 
@@ -490,7 +490,7 @@ topic = session.connect_topic("topic_id")
 ```
 You can also get topics without logging in:
 ```python
-topic = scratch3.get_topic("topic_id")
+topic = scratch3.get_topic("topic_id") # Warning: Any methods that require authentication will not work on the returned object
 ```
 
 **Get a list of the topics in a category:**
@@ -499,7 +499,7 @@ topic_list = session.connect_topic_list("category_name", page=0)
 ```
 You can also do this without logging in:
 ```python
-topic_list = scratch3.get_topic_list("category_name", page=0)
+topic_list = scratch3.get_topic_list("category_name", page=0) # Warning: Any methods that require authentication will not work on the returned objects
 ```
 
 **Attributes:**
@@ -535,7 +535,7 @@ post = session.connect_post("post_id")
 ```
 You can also get posts without logging in:
 ```python
-post = scratch3.get_post("post_id")
+post = scratch3.get_post("post_id")  # Warning: Any methods that require authentication will not work on the returned object
 ```
 
 **Search for forum posts:**
