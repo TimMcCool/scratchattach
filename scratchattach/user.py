@@ -115,7 +115,7 @@ class User:
                 
             result=(data.find('div').find('span').findNext().text)
                     
-            activity.append(user+' '+operation+' '+result+' ; '+time)
+            activity.append({"user":user, "operation":operation, "result":result, "time":time})
         
         return activity
 
@@ -579,7 +579,7 @@ class User:
     def activity(self, *, limit=1000):
         """
         Returns:
-            list<dict>: The user's activity data as parsed list
+            list<dict>: The user's activity data as parsed list of dicts
         """
         return self._parse_activity(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text)
 
