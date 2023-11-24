@@ -113,7 +113,7 @@ conn.disconnect()
 
 # Encoding / Decoding
 
-Scratchattach has a built in encoder. Scratch sprite to decode texts encoded with scratchattach (click the link to download it): https://github.com/TimMcCool/scratchattach/blob/main/assets/Encoder.sprite3
+Scratchattach has a built in encoder. Scratch sprite to decode texts encoded with scratchattach (click the link to download it): https://github.com/TimMcCool/scratchattach/raw/main/assets/Encoder.sprite3
 
 ```python
 from scratchattach import Encoding
