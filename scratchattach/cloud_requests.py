@@ -207,7 +207,7 @@ class CloudRequests:
         """
         Can be used inside a request to get the username that performed the request.
         """
-
+        log.warning("get_requester is Non-Functional due to Scratch incident with cloud logging")
         if self.last_requester is None:
             logs = cloud.get_cloud_logs(self.project_id,
                                          filter_by_var_named="TO_HOST")
