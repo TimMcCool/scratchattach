@@ -1,6 +1,7 @@
 #----- Getting projects
 
 import json
+import random
 import requests
 from . import user
 from . import exceptions
@@ -287,7 +288,7 @@ class Project(PartialProject):
         comments = []
         while len(comments) < limit:
             r = requests.get(
-                f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/?limit={min(40, limit-len(comments))}&offset={offset}"
+                f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/?limit={min(40, limit-len(comments))}&offset={offset}&cachebust={random.randint(0,9999)}"
             ).json()
             if len(r) != 40:
                 comments = comments + r
@@ -300,7 +301,7 @@ class Project(PartialProject):
         comments = []
         while len(comments) < limit:
             r = requests.get(
-                f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}/replies?limit={min(40, limit-len(comments))}&offset={offset}"
+                f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}/replies?limit={min(40, limit-len(comments))}&offset={offset}&cachebust=&cachebust={random.randint(0,9999)}"
             ).json()
             if len(r) != 40:
                 comments = comments + r
