@@ -11,6 +11,7 @@ from . import project
 from . import exceptions
 from . import studio
 from . import forum
+from .logger import log
 
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
@@ -40,7 +41,8 @@ class Session():
     '''
     
     def __init__(self, session_id, *, username=None):
-
+        
+        log.info("Starting session",process="Session")
         self.session_id = str(session_id)
         self._username = username
         self._headers = headers
@@ -55,16 +57,19 @@ class Session():
         try:
             self._headers.pop("Cookie")
         except Exception: pass
+        
+        log.info('Session created (Logged in as )',process='Session')
 
     def _get_csrftoken(self):
+        log.info('Collecting CSRF_TOKEN',process='CSRF_TOKEN')
         r = requests.get("https://scratch.mit.edu/csrf_token/").headers
         print(r)
         csrftoken = r["Set-Cookie"].split("scratchcsrftoken=")[1].split(";")[0]
         self._headers["x-csrftoken"] = csrftoken
         self._cookies["scratchcsrftoken"] = csrftoken
+        log.info('Collected CSRF_TOKEN',process='CSRF_TOKEN')
 
     def _get_xtoken(self):
-
         # this will fetch the account token
         try:
             response = json.loads(requests.post(
@@ -90,13 +95,13 @@ class Session():
             self._username = response["user"]["username"]
             self.banned = response["user"]["banned"]
             if self.banned:
-                warnings.warn(f"Warning: The account {self._username} you logged in to is BANNED. Some features may not work properly.")
+                log.warning(f"The account {self._username} you logged in to is \033[1m BANNED. \033[0m Some features may not work properly.",process='Session')
 
         except Exception:
             if self._username is None:
-                print("Warning: Logged in, but couldn't fetch XToken.\nSome features (including cloud variables) will not work properly. To get cloud variables to work, provide a username argument: Session('session_id', username='username')\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
+                log.warning("Logged in, but couldn't fetch XToken.\nSome features (including cloud variables) will not work properly. To get cloud variables to work, provide a username argument: Session('session_id', username='username')\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address.",process='Session')
             else:
-                print(f"Warning: Logged in as {self._username}, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
+                log.warning(f"Logged in as {self._username}, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address.",process='Session')
             self.xtoken = ""
 
     def get_linked_user(self):

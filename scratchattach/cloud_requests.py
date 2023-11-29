@@ -8,6 +8,7 @@ import json
 import traceback
 import warnings
 from . import exceptions
+from .logger import log
 
 class CloudRequests:
     """
@@ -34,36 +35,42 @@ class CloudRequests:
         self.force_reconnect = False
 
     def __init__(self,
-                 cloud_connection: cloud.CloudConnection,
-                 *,
-                 used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-                 ignore_exceptions=True,
-                 _force_reconnect = False, # this argument is no longer used and only exists for backwards compatibility
-                 _log_url="https://clouddata.scratch.mit.edu/logs",
-                 _packet_length=245,
-                 **kwargs
-                 ):
-        print(
-            "\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m"
-        )
+        cloud_connection: cloud.CloudConnection,
+        *,
+        used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        ignore_exceptions=True,
+        error_return='Error: Check the Python console',
+        _force_reconnect = False, # this argument is no longer used and only exists for backwards compatibility
+        _log_url="https://clouddata.scratch.mit.edu/logs",
+        _packet_length=245,
+        **kwargs):
+        log.info("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool and mas6y6!\033[0m",process='CloudRequest')
+        log.info("Starting CloudRequest",process='CloudRequest')
+        
         if _log_url != "https://clouddata.scratch.mit.edu/logs":
-            warnings.warn(
-                "Log URL isn't the URL of Scratch's clouddata logs. Don't use the _log_url parameter unless you know what you are doing",
-                RuntimeWarning)
+            log.warning("Log URL isn't the URL of Scratch's clouddata logs. Don't use the _log_url parameter unless you know what you are doing",process='CloudRequest')
         if _packet_length > 245:
-            warnings.warn(
-                "The packet length was set to a value higher than default (245). Your project most likely won't work on Scratch.",
-                RuntimeWarning)
-
+            log.warning("The packet length was set to a value higher than default (245). Your project most likely won't work on Scratch.",process='CloudRequest')
+        
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id
-
+        
+        if len(error_return) == 0:
+            log.error('The argument \"error_return\" length is 0',process='CloudRequests')
+            self.er = 'Error: Check the Python console'
+        elif error_return == None:
+            log.error('The argument \"error_return\" is NoneType',process='CloudRequests')
+            self.er = self.er = 'Error: Check the Python console'
+        else:
+            self.er = error_return
+            
         self.ignore_exceptions = ignore_exceptions
         self.log_url = _log_url
         self.packet_length = _packet_length
 
         self.init_attributes()
+        log.success("CloudRequest Started",process='CloudRequests')
 
     def request(self, function=None, *, enabled=True, name=None, thread=False):
         """
@@ -99,8 +106,8 @@ class CloudRequests:
         request = req_obj["name"]
         try:
             if not req_obj["enabled"]: # Checks if the request is disabled
-                print(
-                    f"Warning: Client received the disabled request '{request}'"
+                log.warning(
+                    f"Client received the disabled request \"{request}\"",process='CloudRequest'
                 )
                 self.call_event("on_disabled_request", [
                     self.Request(name=request,
@@ -133,23 +140,24 @@ class CloudRequests:
                              request_id=request_id), e
             ])
             if self.ignore_exceptions:
-                print(
-                    f"Warning: Caught error in request '{request}' - Full error below"
+                log.warning(
+                    f"Caught error in request \"{request}\" - Full error below",
+                    process='Client'
                 )
                 try:
                     traceback.print_exc()
                 except Exception:
                     print(e)
             else:
-                print(f"Warning: Exception in request '{request}':")
+                log.error(f"Warning: Exception in request \"{request}\":")
                 raise (e)
             if req_obj["thread"]:
                 self.outputs[request_id] = {
-                    "output": f"Error: Check the Python console",
+                    "output": self.er,
                     "request": req_obj
                 }
             else:
-                self._parse_output("Error: Check the Python console", request,
+                self._parse_output(self.er, request,
                                    req_obj, request_id)
 
     def add_request(self, function, *, enabled=True, name=None):
@@ -178,6 +186,7 @@ class CloudRequests:
             thread (boolean): Whether the request should be run in a thread
         """
         if name not in self.requests:
+            log.fatul(f"The Request \"{name}\" was not found. Maybe that you forgot to add the code",process='CloudRequest')
             raise (exceptions.RequestNotFound(name))
         if enabled is not None:
             self.requests[name]["enabled"] = enabled
@@ -340,9 +349,7 @@ class CloudRequests:
         Prepares the transmission of the request output to the Scratch project
         """
         if len(str(output)) > 3000:
-            print(
-                f"Warning: Output of request '{request}' is longer than 3000 characters (length: {len(str(output))} characters). Responding the request will take >4 seconds."
-            )
+            log.warning(f"Warning: Output of request \"{request}\" is longer than 3000 characters (length: {len(str(output))} characters). Responding the request will take >4 seconds.",process='RequestHandler')
 
         if str(request_id).endswith("0"):
             try:
@@ -355,7 +362,7 @@ class CloudRequests:
             send_as_integer = False
 
         if output is None:
-            print(f"Warning: Request '{request}' didn't return anything.")
+            log.warning(f"Warning: Request '{request}' didn't return anything.",process='RequestHandler')
             return
         elif send_as_integer:
             output = str(output)
@@ -380,6 +387,7 @@ class CloudRequests:
     def _run(self, events, data_from_websocket=True):
         self.ws_data = []
     	
+        log.info("Starting RequestHandler",process='RequestHandler')
         # Prepares the cloud events:
 
         def on_set(event):
@@ -396,7 +404,7 @@ class CloudRequests:
         self.responded_request_ids = []
 
         if self.requests == []:
-            warnings.warn("You haven't added any requests!", RuntimeWarning)
+            log.warning("You haven't added any requests!",process='RequestHandler')
 
         while events != []:
             event_handler = events.pop()
@@ -415,10 +423,13 @@ class CloudRequests:
             except Exception:
                 self.last_timestamp = 0
 
+        log.success("Request handler has now started",process='RequestHandler')
         while True:
-
-            time.sleep(0.001)
-
+            try:
+                time.sleep(0.001)
+            except KeyboardInterrupt:
+                log.info("Shutdown command received. Shutting down",process="RequestHandler")
+                quit(0)
             if data_from_websocket is False:
                 # If the data shouldn't be fetched from the cloud websocket, it fetches the cloud logs to get data
                 clouddata = cloud.get_cloud_logs(
@@ -458,6 +469,7 @@ class CloudRequests:
                     else:
                         self.responded_request_ids.insert(0, request_id)
                         self.responded_request_ids = self.responded_request_ids[:15]
+                
                 except Exception:
                     continue
 
@@ -492,8 +504,8 @@ class CloudRequests:
 
                 # Check if the request is unknown:
                 if request not in self.requests:
-                    print(
-                        f"Warning: Client received an unknown request called '{request}'"
+                    log.warning(
+                        f"Client received an unknown request called \"{request}\"",process='CloudRequest'
                     )
                     self.call_event("on_unknown_request", [
                         self.Request(name=request,
@@ -538,13 +550,14 @@ class TwCloudRequests(CloudRequests):
                  ignore_exceptions=True,
                  _force_reconnect = False, # this argument is no longer used and only exists for backwards compatibility
                  _packet_length=98800):
+        log.info("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool and mas6y6!\033[0m",process='TwCloudRequests')
+        log.info("Starting CloudRequest",process='TwCloudRequests')
         print(
             "\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m"
         )
         if _packet_length > 98800:
-            warnings.warn(
-                "The packet length was set to a value higher than TurboWarp's default (98800).",
-                RuntimeWarning)
+            log.warning(
+                "The packet length was set to a value higher than TurboWarp's default (98800).",process="TwCloudRequests")
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id

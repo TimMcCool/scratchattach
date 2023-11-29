@@ -7,6 +7,7 @@ import time
 from . import exceptions
 import traceback
 import warnings
+from .logger import log
 
 class _CloudMixin:
     """
@@ -28,12 +29,14 @@ class _CloudMixin:
         self._handshake()
         self.cloud_host = cloud_host
         self.allow_non_numeric = _allow_non_numeric #TurboWarp only. If this is true, turbowarp cloud variables can be set to non-numeric values (if) the cloud_host wss allows it)
-
+        
     def _send_packet(self, packet):
         self.websocket.send(json.dumps(packet) + "\n")
 
     def disconnect(self):
+        log.info("Closing websocket connection",process='CloudMixin')
         self.websocket.close()
+        log.success("Websocket connection closed",process='CloudMixin')
 
     def _handshake(self):
         try:
@@ -48,21 +51,20 @@ class _CloudMixin:
 
     def get_cloud(self):
         # DEPRECATED: On Scratch's cloud variables, this method of getting a cloud variable does not work. On TurboWarp's cloud variables it does work, but there's the scratchattach.get_tw_cloud function for that now
-        print("Warning: scratchattach.CloudConnection.get_cloud and scratchattach.TwCloudConnection.get_cloud are deprecated. Use scratchattach.get_cloud or scratchattach.get_tw_cloud instead")
-        warnings.warn(
-            "scratchattach.CloudConnection.get_cloud and scratchattach.TwCloudConnection.get_cloud are deprecated. Use scratchattach.get_cloud or scratchattach.get_tw_cloud instead", DeprecationWarning
+        log.error(
+            "scratchattach.CloudConnection.get_cloud and scratchattach.TwCloudConnection.get_cloud are deprecated. Use scratchattach.get_cloud or scratchattach.get_tw_cloud instead", process='CloudMixin'
         )
         return []
 
     def get_var(self, variable):
         # DEPRECATED: On Scratch's cloud variables, this method of getting a cloud variable does not work. On TurboWarp's cloud variables it does work, but there's the scratchattach.get_tw_var function for that now
-        print("Warning: scratchattach.CloudConnection.get_var and scratchattach.TwCloudConnection.get_var are deprecated. Use scratchattach.get_var or scratchattach.get_tw_var instead")
-        warnings.warn(
-            "scratchattach.CloudConnection.get_var and scratchattach.TwCloudConnection.get_var are deprecated. Use scratchattach.get_var or scratchattach.get_tw_var instead", DeprecationWarning
+        log.error(
+            "scratchattach.CloudConnection.get_var and scratchattach.TwCloudConnection.get_var are deprecated. Use scratchattach.get_var or scratchattach.get_tw_var instead", process='CloudMixin'
         )
         return None
 
 class CloudConnection(_CloudMixin):
+    log.info("Starting Websocket connection",process='CloudConnection')
     """
     Represents a connection to Scratch's cloud variable server.
 
@@ -92,8 +94,10 @@ class CloudConnection(_CloudMixin):
                     timeout=self._ws_timeout
                 )
             except Exception:
+                log.fatul("An error occurred when trying to connect to scratch (exceptions.ConnectionError)",process="CloudConnection")
                 raise(exceptions.ConnectionError)
         self._connect_timestamp = time.time()
+        log.info("Websocket connection established",process='CloudConnection')
 
     def set_var(self, variable, value):
         """
@@ -107,12 +111,12 @@ class CloudConnection(_CloudMixin):
         if not (value in [True, False, float('inf'), -float('inf')]):
             value = str(value)
             if len(value) > 256:
-                warnings.warn("invalid cloud var (too long): "+str(value), Warning)
+                log.error(f"invalid cloud var (too long):{str(value)}")
                 raise(exceptions.InvalidCloudValue)
             x = value.replace(".", "")
             x = x.replace("-", "")
             if not x.isnumeric():
-                warnings.warn("invalid cloud var (not numeric): "+str(value), Warning)
+                log.error(f"invalid cloud var (not numeric):{str(value)}")
                 raise(exceptions.InvalidCloudValue)
         while self._ratelimited_until + 0.1 >= time.time():
             pass
@@ -134,6 +138,7 @@ class CloudConnection(_CloudMixin):
                     self._connect(cloud_host=self.cloud_host)
                     self._handshake()
                 except Exception as e:
+                    log.error("Connection lost while setting cloud variable.",process="CloudConnection")
                     raise exceptions.ConnectionError("Connection lost while setting cloud variable.", str(e))
 
             time.sleep(0.1)
@@ -164,6 +169,7 @@ class TwCloudConnection(_CloudMixin):
                 timeout = self._ws_timeout
             )
         except Exception:
+            log.fatul("An unexpected connection error occurred. (exceptions.ConnectionError)")
             raise(exceptions.ConnectionError)
         self._connect_timestamp = time.time()
 
@@ -207,6 +213,7 @@ class TwCloudConnection(_CloudMixin):
                     self._connect(cloud_host=None)
                     self._handshake()
                 except Exception as e:
+                    log.error("","Tw")
                     raise exceptions.ConnectionError("Connection lost while setting cloud variable.", str(e))
 
             time.sleep(0.1)
@@ -261,6 +268,7 @@ class CloudEvents:
                 self._events["on_ready"]()
             if thread:
                 self._thread = Thread(target=self._update, args=())
+                log.info("Started event handler",process='CloudEvents')
                 self._thread.start()
             else:
                 self._thread = None
@@ -278,17 +286,19 @@ class CloudEvents:
                             try:
                                 self._events["on_"+activity["verb"][:-4]](self.Event(user=activity["user"], var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=activity["timestamp"]))
                             except Exception as e:
-                                print("Warning: Caught error in cloud event - Full error below")
+                                log.error("Warning: Caught error in cloud event - Full error below",process="CloudEvents")
                                 try:
                                     traceback.print_exc()
                                 except Exception:
-                                    print(e)
+                                    log.error("Unable to print full trackback")
+                                    log.error(e)
                 self.data = data
             else:
                 return
             time.sleep(self.update_interval)
 
     def stop(self):
+        log.info("Stopping event handler",process='CloudEvents')
         """
         Permanently stops the cloud event handler.
         """
@@ -299,12 +309,14 @@ class CloudEvents:
             self._thread = None
 
     def pause(self):
+        log.info("Event handler paused",process='CloudEvents')
         """
         Pauses the cloud event handler.
         """
         self.running = False
 
     def resume(self):
+        log.info("Event handler resumed",process='CloudEvents')
         """
         Resumes the cloud event handler.
         """
