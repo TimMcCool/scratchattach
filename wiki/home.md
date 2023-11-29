@@ -594,3 +594,16 @@ scratch3.get_health() #Returns Scratch's health data
 session.backpack(limit=20, offset=0) #Returns the contents of your backpack as dictionary
 session.delete_from_backpack("asset id") #Deletes an asset from your backpack
 ```
+
+# Logger
+
+**Functions:**
+```python
+scratch3.log.config(use_24_hour=False) #Configures logger
+
+scratch3.log.info("Text",process="Process") #Prints info
+scratch3.log.warning("Text",process="Process") #Prints warning
+scratch3.log.error("Text",process="Process") #Prints error
+scratch3.log.fatul("Text",process="Process") #Prints fatul
+scratch3.log.success("Text",process="Process") #Prints success
+```

@@ -6,6 +6,7 @@ from .studio import *
 from .cloud_requests import *
 from .forum import *
 from .encoder import *
+from .logger import log
 
 def get_news(*, limit=10, offset=0):
     return requests.get(f"https://api.scratch.mit.edu/news?limit={limit}&offset={offset}").json()

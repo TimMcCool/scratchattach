@@ -1,8 +1,55 @@
-from .textcolors import textcolors
 from datetime import datetime
+import io
+import sys
 
-istime24hour = True
+istime24hour = False
 
+"""
+This logging system was made by mas6y6
+
+To import logger use (from .logger import log)
+
+Functions:
+
+log.info(<TEXT>,process=<CHILD_PROCESS>)
+
+log.warning(<TEXT>,process=<CHILD_PROCESS>)
+
+log.error(<TEXT>,process=<CHILD_PROCESS>)
+
+log.fatul(<TEXT>,process=<CHILD_PROCESS>)
+
+log.success(<TEXT>,process=<CHILD_PROCESS>)
+"""
+
+class textcolors:
+    """ANSI color codes"""
+
+    BLACK = "\033[30m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    BROWN = "\033[33m"
+    BLUE = "\033[34m"
+    PURPLE = "\033[35m"
+    CYAN = "\033[36m"
+    YELLOW = "\033[33m"
+    LIGHT_GRAY = "\033[0;37m"
+    DARK_GRAY = "\033[1;30m"
+    LIGHT_RED = "\033[1;31m"
+    LIGHT_GREEN = "\033[1;32m"
+    LIGHT_YELLOW = "\033[1;33m"
+    LIGHT_BLUE = "\033[1;34m"
+    LIGHT_PURPLE = "\033[1;35m"
+    LIGHT_CYAN = "\033[1;36m"
+    LIGHT_WHITE = "\033[1;37m"
+    BOLD = "\033[1m"
+    FAINT = "\033[2m"
+    ITALIC = "\033[3m"
+    UNDERLINE = "\033[4m"
+    BLINK = "\033[5m"
+    NEGATIVE = "\033[7m"
+    CROSSED = "\033[9m"
+    END = "\033[0m"
 
 def _gettime():
     global istime24hour
@@ -15,9 +62,13 @@ def _gettime():
             return (
                 f"{datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}"
             )
-
+            
 
 class log:
+    def config(use_24_hour=False):
+        global istime24hour
+        istime24hour = use_24_hour
+    
     def fatul(text, process=None):
         if process == None:
             processname = "UNKNOWN"

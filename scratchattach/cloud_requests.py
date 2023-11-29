@@ -44,13 +44,13 @@ class CloudRequests:
         _log_url="https://clouddata.scratch.mit.edu/logs",
         _packet_length=245,
         **kwargs):
-        log.info("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool and mas6y6!\033[0m",process='CloudRequest')
-        log.info("Starting CloudRequest",process='CloudRequest')
+        log.info("\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m",process='CloudRequest')
+        log.info("Starting CloudRequest",process='CloudRequests')
         
         if _log_url != "https://clouddata.scratch.mit.edu/logs":
-            log.warning("Log URL isn't the URL of Scratch's clouddata logs. Don't use the _log_url parameter unless you know what you are doing",process='CloudRequest')
+            log.warning("Log URL isn't the URL of Scratch's clouddata logs. Don't use the _log_url parameter unless you know what you are doing",process='CloudRequests')
         if _packet_length > 245:
-            log.warning("The packet length was set to a value higher than default (245). Your project most likely won't work on Scratch.",process='CloudRequest')
+            log.warning("The packet length was set to a value higher than default (245). Your project most likely won't work on Scratch.",process='CloudRequests')
         
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
@@ -107,7 +107,7 @@ class CloudRequests:
         try:
             if not req_obj["enabled"]: # Checks if the request is disabled
                 log.warning(
-                    f"Client received the disabled request \"{request}\"",process='CloudRequest'
+                    f"Client received the disabled request \"{request}\"",process='CloudRequests'
                 )
                 self.call_event("on_disabled_request", [
                     self.Request(name=request,
@@ -140,16 +140,16 @@ class CloudRequests:
                              request_id=request_id), e
             ])
             if self.ignore_exceptions:
-                log.warning(
+                log.error(
                     f"Caught error in request \"{request}\" - Full error below",
-                    process='Client'
+                    process='RequestHandler'
                 )
                 try:
                     traceback.print_exc()
                 except Exception:
                     print(e)
             else:
-                log.error(f"Warning: Exception in request \"{request}\":")
+                log.warning(f"Exception in request \"{request}\":",process="RequestHandler")
                 raise (e)
             if req_obj["thread"]:
                 self.outputs[request_id] = {
@@ -186,7 +186,7 @@ class CloudRequests:
             thread (boolean): Whether the request should be run in a thread
         """
         if name not in self.requests:
-            log.fatul(f"The Request \"{name}\" was not found. Maybe that you forgot to add the code",process='CloudRequest')
+            log.fatul(f"The Request \"{name}\" was not found. Maybe that you forgot to add the code",process='CloudRequests')
             raise (exceptions.RequestNotFound(name))
         if enabled is not None:
             self.requests[name]["enabled"] = enabled
@@ -290,7 +290,7 @@ class CloudRequests:
                 time.sleep(0.1)
 
         self.idle_since = time.time()
-
+    
     def run(self,
             thread=False,
             data_from_websocket=True,

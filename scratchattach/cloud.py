@@ -34,9 +34,8 @@ class _CloudMixin:
         self.websocket.send(json.dumps(packet) + "\n")
 
     def disconnect(self):
-        log.info("Closing websocket connection",process='CloudMixin')
+        log.info("Closed websocket",process='CloudMixin')
         self.websocket.close()
-        log.success("Websocket connection closed",process='CloudMixin')
 
     def _handshake(self):
         try:
@@ -64,7 +63,6 @@ class _CloudMixin:
         return None
 
 class CloudConnection(_CloudMixin):
-    log.info("Starting Websocket connection",process='CloudConnection')
     """
     Represents a connection to Scratch's cloud variable server.
 
@@ -74,6 +72,7 @@ class CloudConnection(_CloudMixin):
     """
 
     def _connect(self, *, cloud_host):
+        log.info("Starting Websocket connection",process='CloudConnection')
         try:
             self.websocket = websocket.WebSocket()
             self.websocket.connect(
