@@ -186,7 +186,11 @@ class CloudRequests:
             thread (boolean): Whether the request should be run in a thread
         """
         if name not in self.requests:
+<<<<<<< HEAD
             log.fatul(f"The Request \"{name}\" was not found. Maybe that you forgot to add the code",process='CloudRequests')
+=======
+            log.fatul(f"The Request \"{name}\" was not found.",process='CloudRequests')
+>>>>>>> 9041c66 (Updated)
             raise (exceptions.RequestNotFound(name))
         if enabled is not None:
             self.requests[name]["enabled"] = enabled

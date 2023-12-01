@@ -6,6 +6,10 @@ from . import project
 from . import exceptions
 from . import forum
 from bs4 import BeautifulSoup
+<<<<<<< HEAD
+=======
+from .logger import log
+>>>>>>> 9041c66 (Updated)
 
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
@@ -822,6 +826,10 @@ def get_user(username):
     try:
         user = User(username=username)
         if user.update() == "429":
+<<<<<<< HEAD
+=======
+            log.error("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer.",process="scratchattach.get_user")
+>>>>>>> 9041c66 (Updated)
             raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
         return user
     except KeyError:
