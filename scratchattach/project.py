@@ -6,10 +6,7 @@ import requests
 from . import user
 from . import exceptions
 from . import studio
-<<<<<<< HEAD
-=======
 from .logger import log
->>>>>>> 9041c66 (Updated)
 
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
@@ -200,10 +197,7 @@ class Project(PartialProject):
             filename = filename.replace(".sb3", "")
             open(f"{dir}{filename}.sb3", 'wb').write(response.content)
         except Exception:
-<<<<<<< HEAD
-=======
             log.error("Method only works for projects created with Scratch 3",process="scratchattach.Project.download")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.FetchError("Method only works for projects created with Scratch 3"))
 
     def get_raw_json(self):
@@ -217,10 +211,7 @@ class Project(PartialProject):
             self.update()
             return requests.get(f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}").json()
         except Exception:
-<<<<<<< HEAD
-=======
             log.error("Method only works for projects created with Scratch 3",process="scratchattach.Project.get_raw_json")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.FetchError("Method only works for projects created with Scratch 3"))
 
     def get_creator_agent(self):
@@ -234,10 +225,7 @@ class Project(PartialProject):
             self.update()
             return requests.get(f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}").json()["meta"]["agent"]
         except Exception:
-<<<<<<< HEAD
-=======
             log.error("Method only works for projects created with Scratch 3",process="scratchattach.Project.get_creator_agent")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.FetchError("Method only works for projects created with Scratch 3"))
 
     def _update_from_dict(self, project):
