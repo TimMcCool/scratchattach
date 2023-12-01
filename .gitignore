@@ -5,3 +5,4 @@ __pycache__/
 README.md
 setup.py
 scratchattach.code-workspace
+.vscode
