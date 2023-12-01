@@ -319,10 +319,7 @@ class Project(PartialProject):
         Posts a love on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.love")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthenticated)
             return
         r = requests.post(
@@ -338,10 +335,7 @@ class Project(PartialProject):
         Removes the love from this project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.unlove")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthenticated)
             return
         r = requests.delete(
@@ -357,10 +351,7 @@ class Project(PartialProject):
         Posts a favorite on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.favorite")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthenticated)
             return
         r = requests.post(
@@ -376,10 +367,7 @@ class Project(PartialProject):
         Removes the favorite from this project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.unfavorite")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthenticated)
             return
         r = requests.delete(
@@ -405,17 +393,15 @@ class Project(PartialProject):
         Disables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Project.turn_off_commenting")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.turn_off_commenting")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
             log.error("You are Unauthorized to run this action",process="scratchattach.Project.turn_off_commenting")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthorized)
             return
         data = {
@@ -433,17 +419,15 @@ class Project(PartialProject):
         Enables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Project.turn_on_commenting")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.turn_on_commenting")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
             log.error("You are Unauthorized to run this action",process="scratchattach.Project.turn_on_commenting")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthorized)
             return
         data = {
@@ -463,17 +447,15 @@ class Project(PartialProject):
         Switches commenting on / off on the project (If comments are on, they will be turned off, else they will be turned on). You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Project.toggle_commenting")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.toggle_commenting")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
             log.error("You are Unauthorized to run this action",process="scratchattach.Project.toggle_commenting")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthorized)
             return
         data = {
@@ -491,17 +473,15 @@ class Project(PartialProject):
         Shares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Project.share")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.share")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
             log.error("You are Unauthorized to run this action",process="scratchattach.Project.share")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthorized)
             return
         if self.shared is not True:
@@ -515,17 +495,15 @@ class Project(PartialProject):
         Unshares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Project.unshare")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.unshare")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
             log.error("You are Unauthorized to run this action",process="scratchattach.Project.unshare")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthorized)
             return
         if self.shared is not False:
@@ -539,17 +517,15 @@ class Project(PartialProject):
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Project.set_thumbnail")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.set_thumbnail")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
             log.error("You are Unauthorized to run this action",process="scratchattach.Project.set_thumbnail")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthorized)
             return
         with open(file, "rb") as f:
@@ -569,17 +545,15 @@ class Project(PartialProject):
             comment_id: The id of the comment that should be deleted
         """
         if self._session is None:
-<<<<<<< HEAD
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Project.delete_comment")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.delete_comment")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
             log.error("You are Unauthorized to run this action",process="scratchattach.Project.delete_comment")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthorized)
             return
         return requests.delete(
@@ -596,10 +570,7 @@ class Project(PartialProject):
             comment_id: The id of the comment that should be reported
         """
         if self._session is None:
-<<<<<<< HEAD
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.report_comment")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthenticated)
             return
         return requests.delete(
@@ -620,10 +591,7 @@ class Project(PartialProject):
             commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
         """
         if self._session is None:
-<<<<<<< HEAD
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.post_comment")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthenticated)
             return
         data = {
@@ -666,17 +634,15 @@ class Project(PartialProject):
             json_data = json.loads(json_data)
 
         if self._session is None:
-<<<<<<< HEAD
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Project.set_json")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.set_json")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
             log.error("You must be the project owner to do this.",process="scratchattach.Project.set_json")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthorized("You must be the project owner to do this."))
             return
 
@@ -692,17 +658,15 @@ class Project(PartialProject):
         Changes the projects title. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Project.set_title")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.set_title")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
             log.error("You must be the project owner to do this.",process="scratchattach.Project.set_title")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthorized("You must be the project owner to do this."))
             return
         r = requests.put(f"https://api.scratch.mit.edu/projects/{self.id}",
@@ -716,17 +680,15 @@ class Project(PartialProject):
         Changes the projects instructions. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Project.set_instructions")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.set_instructions")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
             log.error("You must be the project owner to do this.",process="scratchattach.Project.set_instructions")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthorized("You must be the project owner to do this."))
             return
         r = requests.put(f"https://api.scratch.mit.edu/projects/{self.id}",
@@ -740,17 +702,15 @@ class Project(PartialProject):
         Changes the projects notes and credits. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         if self._session is None:
-<<<<<<< HEAD
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Project.set_notes")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
-=======
             log.error("You are Unauthenticated to run this action",process="scratchattach.Project.set_notes")
             raise(exceptions.Unauthenticated)
             return
         if self._session._username != self.author:
             log.error("You must be the project owner to do this.",process="scratchattach.Project.set_notes")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Unauthorized("You must be the project owner to do this."))
             return
         r = requests.put(f"https://api.scratch.mit.edu/projects/{self.id}",
@@ -788,10 +748,7 @@ class Project(PartialProject):
         try:
             return requests.get(f"https://jeffalo.net/api/nfe/?project={self.id}").json()["status"]
         except Exception:
-<<<<<<< HEAD
-=======
             log.error("Unable to fetch data",process="scratchattach.Project.moderation_status")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.FetchError)
 
 
@@ -817,10 +774,7 @@ def get_project(project_id):
         project = Project(id=int(project_id))
         u = project.update()
         if u == "429":
-<<<<<<< HEAD
-=======
             log.error("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer.",process="scratchattach.get_project")
->>>>>>> 9041c66 (Updated)
             raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
         if not u:
             project = PartialProject(id=int(project_id), author=None, title=None, shared=False, instructions=None, notes=None, loves=None, views=None, favorites=None)
