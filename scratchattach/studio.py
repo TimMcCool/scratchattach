@@ -5,6 +5,7 @@ import requests
 import random
 from . import user
 from . import exceptions
+from .logger import log
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
     "x-csrftoken": "a",
@@ -162,7 +163,8 @@ class Studio:
             commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
         """
         if self._headers is None:
-            raise(_exceptions.Unauthenticated)
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Studio.post_comment")
+            raise(exceptions.Unauthenticated)
             return
         data = {
             "commentee_id": commentee_id,
@@ -191,6 +193,7 @@ class Studio:
         #"multipart/form-data; boundary=----WebKitFormBoundaryhKZwFjoxAyUTMlSh"
         #multipart/form-data; boundary=----WebKitFormBoundaryqhfwZe4EG6BlJoAK
         if self._headers is None:
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Studio.set_thumbnail")
             raise(exceptions.Unauthenticated)
             return
         with open(file, "rb") as f:
@@ -285,7 +288,8 @@ class Studio:
                 cookies = self._cookies,
             ).json()
         except Exception:
-            raise(_exceptions.Unauthorized)
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Studio.invite_curator")
+            raise(exceptions.Unauthorized)
 
     def promote_curator(self, curator):
         """
@@ -298,7 +302,8 @@ class Studio:
                 cookies = self._cookies
             ).json()
         except Exception:
-            raise(_exceptions.Unauthorized)
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Studio.promote_curator")
+            raise(exceptions.Unauthorized)
 
 
     def remove_curator(self, curator):
@@ -312,7 +317,8 @@ class Studio:
                 cookies = self._cookies
             ).json()
         except Exception:
-            raise(_exceptions.Unauthorized)
+            log.error("You are Unauthenticated to run this action",process="scratchattach.Studio.remove_curator")
+            raise(exceptions.Unauthorized)
 
     def leave(self):
         """
@@ -484,14 +490,17 @@ def get_studio(studio_id):
     try:
         studio = Studio(id=int(studio_id))
         if studio.update() == "429":
+            log.error("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer.",process="scratchattach.get_studio")
             raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
         return studio
     except KeyError:
         return None
     except Exception as e:
+        log.error("An error occured",process="scratchattach.get_studio")
         raise(e)
 
 def search_studios(*, query="", mode="trending", language="en", limit=40, offset=0):
     return requests.get(f"https://api.scratch.mit.edu/search/studios?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
 
 def explore_studios(*, query="", mode="trending", language="en", limit=40, offset=0):
+    return requests.get(f"https://api.scratch.mit.edu/explore/studios?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
