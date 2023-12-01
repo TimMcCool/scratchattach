@@ -58,7 +58,7 @@ class Session():
             self._headers.pop("Cookie")
         except Exception: pass
         
-        log.info('Session created (Logged in as )',process='Session')
+        log.info(f'Session created (Logged in as {username})',process='Session')
 
     def _get_csrftoken(self):
         log.info('Collecting CSRF_TOKEN',process='CSRF_TOKEN')
@@ -383,6 +383,7 @@ class Session():
         try:
             _user = user.User(username=username, _session=self)
             if _user.update() == "429":
+                log.error("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer.",process="Session")
                 raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
             return _user
         except KeyError:
