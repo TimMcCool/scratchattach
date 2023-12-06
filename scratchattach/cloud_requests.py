@@ -36,6 +36,7 @@ class CloudRequests:
     def __init__(self,
                  cloud_connection: cloud.CloudConnection,
                  *,
+                 error_return="Error: Check the Python console",
                  used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
                  ignore_exceptions=True,
                  _force_reconnect = False, # this argument is no longer used and only exists for backwards compatibility
@@ -58,6 +59,14 @@ class CloudRequests:
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id
+        if self.error_return == None:
+            print("error_return is nonetype")
+            self.error_return = "Error: Check the Python console"
+        elif self.error_return == "":
+            print("error_return is \"\"")
+            self.error_return = "Error: Check the Python console"
+        else:
+            self.error_return = error_return
 
         self.ignore_exceptions = ignore_exceptions
         self.log_url = _log_url
@@ -145,11 +154,11 @@ class CloudRequests:
                 raise (e)
             if req_obj["thread"]:
                 self.outputs[request_id] = {
-                    "output": f"Error: Check the Python console",
+                    "output": self.error_return,
                     "request": req_obj
                 }
             else:
-                self._parse_output("Error: Check the Python console", request,
+                self._parse_output(self.error_return, request,
                                    req_obj, request_id)
 
     def add_request(self, function, *, enabled=True, name=None):
