@@ -37,6 +37,7 @@ class CloudRequests:
                  cloud_connection: cloud.CloudConnection,
                  *,
                  used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+                 error_return="Error: Check the Python console"
                  ignore_exceptions=True,
                  _force_reconnect = False, # this argument is no longer used and only exists for backwards compatibility
                  _log_url="https://clouddata.scratch.mit.edu/logs",
@@ -54,7 +55,14 @@ class CloudRequests:
             warnings.warn(
                 "The packet length was set to a value higher than default (245). Your project most likely won't work on Scratch.",
                 RuntimeWarning)
-
+        if error_return == None:
+            print("There is no error return")
+            self.error_return="Error: Check the Python console"
+        elif error_return == "":
+            print("There is no error return")
+            self.error_return="Error: Check the Python console"
+        else:
+            self.error_return = error_return
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id
@@ -145,11 +153,11 @@ class CloudRequests:
                 raise (e)
             if req_obj["thread"]:
                 self.outputs[request_id] = {
-                    "output": f"Error: Check the Python console",
+                    "output": self.error_return,
                     "request": req_obj
                 }
             else:
-                self._parse_output("Error: Check the Python console", request,
+                self._parse_output(self.error_return, request,
                                    req_obj, request_id)
 
     def add_request(self, function, *, enabled=True, name=None):
