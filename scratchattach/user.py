@@ -103,9 +103,9 @@ class User:
         source = soup.find_all("li")
                 
         for data in source:
-                
+
             time=data.find('div').find('span').findNext().findNext().text.strip()
-                
+
             if '\xa0' in time:
                 while '\xa0' in time: time=time.replace('\xa0', ' ')
                 
@@ -308,7 +308,7 @@ class User:
                 "x-requested-with": "XMLHttpRequest",
                 "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
                 "referer": "https://scratch.mit.edu",
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+                'user-agent': 'Mozilla/f5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
             }
         ).text
         text = text.split("Studios I Follow (")[1]
@@ -316,7 +316,14 @@ class User:
         return int(text)
 
     def studios(self, *, limit=40, offset=0):
-        return requests.get(f"https://api.scratch.mit.edu/users/{self.username}/studios/curate?limit={limit}&offset={offset}").json()
+        """
+        Returns:
+            list<scratchattach.studio.Studio>: The user's curated studios
+        """
+        from . import Studio
+        
+        response = requests.get(f"https://api.scratch.mit.edu/users/{self.username}/studios/curate?limit={limit}&offset={offset}").json()
+        return [Studio(**studio) for studio in response]
 
     def projects(self, *, limit=None, offset=0):
         """

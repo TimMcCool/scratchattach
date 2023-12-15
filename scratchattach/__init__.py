@@ -10,26 +10,45 @@ from .encoder import *
 def get_news(*, limit=10, offset=0):
     return requests.get(f"https://api.scratch.mit.edu/news?limit={limit}&offset={offset}").json()
 
-def featured_projects():
-    return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_featured_projects"]
+def featured_projects(json=False):
+    response = requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_featured_projects"]
+    if json:
+        return response
+    return [Project(**project) for project in response]
 
-def featured_studios():
-    return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_featured_studios"]
+def featured_studios(json=False):
+    response = requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_featured_studios"]
+    if json:
+        return response
+    return [Studio(**studio) for studio in response]
 
-def top_loved():
-    return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_most_loved_projects"]
+def top_loved(json=False):
+    response = requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_most_loved_projects"]
+    if json:
+        return response
+    return [Project(**project) for project in response]
 
-def top_remixed():
-    return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_most_remixed_projects"]
+def top_remixed(json=False):
+    response = requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_most_remixed_projects"]
+    if json:
+        return response
+    return [Project(**project) for project in response]
 
-def newest_projects():
-    return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_newest_projects"]
+def newest_projects(json=False):
+    response = requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_newest_projects"]
+    if json:
+        return response
+    return [Project(**project) for project in response]
 
-def curated_projects():
-    return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["curator_top_projects"]
+def curated_projects(json=False):
+    response = requests.get("https://api.scratch.mit.edu/proxy/featured").json()["curator_top_projects"]
+    return [Project(**project) for project in response]
 
-def design_studio_projects():
-    return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["scratch_design_studio"]
+def design_studio_projects(json=False):
+    response = requests.get("https://api.scratch.mit.edu/proxy/featured").json()["scratch_design_studio"]
+    if json:
+        return response
+    return [Project(**project) for project in response]
 
 def search_posts(*, query, order="newest", page=0):
     try:

@@ -149,7 +149,12 @@ class Project(PartialProject):
     '''
 
     def __str__(self):
-        return self.title
+        author = getattr(self, "author", None)
+        return self.title + (f" by {author}" if author else "") + f" ({self.id})"
+
+    def __repr__(self):
+        author = getattr(self, "author", None)
+        return self.title + (f" by {author}" if author else "") + f" ({self.id})"
 
     def update(self):
         """

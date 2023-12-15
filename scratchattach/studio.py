@@ -66,6 +66,12 @@ class Studio:
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
+    def __str__(self):
+        return f"{self.title} ({self.id})"
+
+    def __repr__(self):
+        return f"{self.title} ({self.id})"
+
     def update(self):
         """
         Updates the attributes of the Studio object
@@ -491,8 +497,14 @@ def get_studio(studio_id):
     except Exception as e:
         raise(e)
 
-def search_studios(*, query="", mode="trending", language="en", limit=40, offset=0):
-    return requests.get(f"https://api.scratch.mit.edu/search/studios?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
+def search_studios(*, query="", mode="trending", language="en", limit=40, offset=0, json=False):
+    response = requests.get(f"https://api.scratch.mit.edu/search/studios?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
+    if json:
+        return response
+    return [Studio(**studio) for studio in response]
 
-def explore_studios(*, query="", mode="trending", language="en", limit=40, offset=0):
-    return requests.get(f"https://api.scratch.mit.edu/explore/studios?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
+def explore_studios(*, query="", mode="trending", language="en", limit=40, offset=0, json=False):
+    response = requests.get(f"https://api.scratch.mit.edu/explore/studios?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
+    if json:
+        return response
+    return [Studio(**studio) for studio in response]
