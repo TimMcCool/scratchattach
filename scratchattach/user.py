@@ -308,7 +308,7 @@ class User:
                 "x-requested-with": "XMLHttpRequest",
                 "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
                 "referer": "https://scratch.mit.edu",
-                'user-agent': 'Mozilla/f5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
             }
         ).text
         text = text.split("Studios I Follow (")[1]
