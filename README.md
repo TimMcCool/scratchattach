@@ -82,7 +82,7 @@ conn = session.connect_cloud("project_id")
 **Get / Set a cloud var:**
 
 ```python
-value = scratch3.get_var("project_id", "variable") #⚠️ Currently NOT WORKING because Scratch's clouddata logs are down ⚠️
+value = scratch3.get_var("project_id", "variable")
 conn.set_var("variable", "value") #the variable name is specified without the cloud emoji
 ```
 
