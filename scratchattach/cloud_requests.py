@@ -110,6 +110,15 @@ class CloudRequests:
                                  arguments=arguments,
                                  request_id=request_id)
                 ]) # If the request is disabled, the event is called
+                if req_obj["thread"]:
+                # If this function is running in a thread, the output is saved in the self.outputs list and parsed by the main request handler
+                    self.outputs[request_id] = {
+                        "output": "Error: Client received disabled request!",
+                        "request": req_obj
+                    }
+                else:
+                    # If this function is not running in a thread, the output is returned directly 
+                    self._parse_output("Error: Client received disabled request!", request, req_obj, request_id)
                 return None
             output = req_obj["on_call"](*arguments) # Calls the request function and saves the function's returned data in the output variable
             
@@ -503,8 +512,14 @@ class CloudRequests:
                                      arguments=arguments,
                                      request_id=request_id)
                     ])
-                    continue
-                else:
+                    if self.respond_in_thread: #mas6y6: I did not know how to use this but I used it
+                        self.outputs[request_id] = {
+                            "output": "Error: Client did not find that request!",
+                            "request": None
+                        }
+                    else:
+                        self._parse_output("Error: Client did not find that request!", request, None, request_id)
+                        continue
                     # If the request is not unknown, it is called
                     req_obj = self.requests[request]
                     self.last_request_id = request_id
