@@ -465,7 +465,15 @@ class Studio:
             headers = headers
         ).json()
 
-
+    def accept_invite(self):
+        if self._headers is None:
+            raise(exceptions.Unauthenticated)
+        return requests.put(
+            f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/add/?usernames={self._session._username}",
+            headers=headers,
+            cookies = self._cookies,
+        ).json()
+    
 def get_studio(studio_id):
     """
     Gets a studio without logging in.
