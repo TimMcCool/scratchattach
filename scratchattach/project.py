@@ -75,7 +75,7 @@ class PartialProject:
             projects.append(Project(
                 author = project["author"]["username"],
                 comments_allowed = project["comments_allowed"],
-                description=project["description"],
+                notes=project["description"],
                 created = project["history"]["created"],
                 last_modified = project["history"]["modified"],
                 share_date = project["history"]["shared"],
