@@ -145,3 +145,9 @@ class Encoding:
             else:
                 outp += str(letters.index(" "))
         return outp
+
+    def replace_char(old_char, new_char):
+        global letters
+        i = letters.index(old_char)
+        letters[i] = new_char
+        
