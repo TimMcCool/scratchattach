@@ -147,6 +147,10 @@ class Encoding:
         return outp
 
     def replace_char(old_char, new_char):
+        """
+        Replaces a character in the list that the encoder uses to encode / decode values.
+        You can access this list using `scratchattach.encoder.letters`
+        """
         global letters
         i = letters.index(old_char)
         letters[i] = new_char
