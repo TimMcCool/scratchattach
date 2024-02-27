@@ -2,8 +2,8 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = '1.6.0'
-DESCRIPTION = 'An Scratch API Wrapper for scra tch.mit.edu'
+VERSION = '1.6.1'
+DESCRIPTION = 'An Scratch API Wrapper for scratch.mit.edu'
 LONG_DESCRIPTION = DESCRIPTION
 
 # Setting up
