@@ -594,6 +594,16 @@ class Project(PartialProject):
             cookies = self._cookies,
             json=json_data,
         ).json()
+    
+    def upload_json_from(self, project_id):
+        """
+        Uploads the project json from the project with the given to the project represented by this Project object
+        """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
+            return
+        other_project = self._session.connect_project(project_id)
+        self.set_json(other_project.get_raw_json())
 
     def set_title(self, text):
         """
