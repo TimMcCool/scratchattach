@@ -737,9 +737,20 @@ def explore_projects(*, query="*", mode="trending", language="en", limit=40, off
         If you want to use these methods, get the explore page projects with :meth:`scratchattach.session.Session.search_projects` instead.
     '''
 
-    r = requests.get(f"https://api.scratch.mit.edu/explore/projects?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
     projects = []
 
+    limit2 = limit+offset
+    while (limit2 % 40) != 0:
+        limit2+=1
+    limit2 //= 40
+    offs = 0
+    resp = []
+    for i in range(limit2):
+        resp2 = requests.get(f"https://api.scratch.mit.edu/explore/projects?limit=40&offset={offs}&language={language}&mode={mode}&q={query}").json()
+        if not resp2 == {"code":"BadRequest","message":""}:
+            resp += resp2
+        offs+=40
+    r = resp[offset:][:limit]
     for project in r:
         p = Project()
         p._update_from_dict(project)
@@ -765,9 +776,20 @@ def search_projects(*, query="", mode="trending", language="en", limit=40, offse
 
         If you want to use these methods, perform the search with :meth:`scratchattach.session.Session.search_projects` instead.
     '''
-    r = requests.get(f"https://api.scratch.mit.edu/search/projects?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
     projects = []
 
+    limit2 = limit+offset
+    while (limit2 % 40) != 0:
+        limit2+=1
+    limit2 //= 40
+    offs = 0
+    resp = []
+    for i in range(limit2):
+        resp2 = requests.get(f"https://api.scratch.mit.edu/search/projects?limit=40&offset={offs}&language={language}&mode={mode}&q={query}").json()
+        if not resp2 == {"code":"BadRequest","message":""}:
+            resp += resp2
+        offs+=40
+    r = resp[offset:][:limit]
     for project in r:
         p = Project()
         p._update_from_dict(project)
