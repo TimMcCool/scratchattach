@@ -528,7 +528,17 @@ def get_studio(studio_id):
         raise(e)
 
 def search_studios(*, query="", mode="trending", language="en", limit=40, offset=0):
-    return requests.get(f"https://api.scratch.mit.edu/search/studios?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
-
+    limit2 = limit+offset
+    while (limit2 % 40) != 0:
+        limit2+=1
+    limit2 //= 40
+    offs = 0
+    resp = []
+    for i in range(limit2):
+        resp2 = requests.get(f"https://api.scratch.mit.edu/search/studios?limit=40&offset={offs}&language={language}&mode={mode}&q={query}").json()
+        if not resp2 == {"code":"BadRequest","message":""}:
+            resp += resp2
+        offs+=40
+    return resp[offset:][:limit]
 def explore_studios(*, query="", mode="trending", language="en", limit=40, offset=0):
     return requests.get(f"https://api.scratch.mit.edu/explore/studios?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
