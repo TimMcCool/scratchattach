@@ -162,7 +162,7 @@ class TwCloudConnection(_CloudMixin):
                 cloud_host,
                 enable_multithread=True,
                 timeout = self._ws_timeout,
-                headers = {"User-Agent":"scratchattach/1.6.0"}
+                headers = {"User-Agent":"scratchattach/1.6.3"}
             )
         except Exception:
             raise(exceptions.ConnectionError)
