@@ -97,6 +97,8 @@ class Studio:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         requests.put(
             f"https://scratch.mit.edu/site-api/users/bookmarkers/{self.id}/add/?usernames={self._session._username}",
             headers = headers,
@@ -107,6 +109,8 @@ class Studio:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         requests.put(
             f"https://scratch.mit.edu/site-api/users/bookmarkers/{self.id}/remove/?usernames={self._session._username}",
             headers = headers,
@@ -161,9 +165,8 @@ class Studio:
             parent_id: ID of the comment you want to reply to. If you don't want to mention a user, don't put the argument.
             commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
         """
-        if self._headers is None:
-            raise(_exceptions.Unauthenticated)
-            return
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         data = {
             "commentee_id": commentee_id,
             "content": str(content),
@@ -190,9 +193,8 @@ class Studio:
         """
         #"multipart/form-data; boundary=----WebKitFormBoundaryhKZwFjoxAyUTMlSh"
         #multipart/form-data; boundary=----WebKitFormBoundaryqhfwZe4EG6BlJoAK
-        if self._headers is None:
+        if self._session is None:
             raise(exceptions.Unauthenticated)
-            return
         with open(file, "rb") as f:
             thumbnail = f.read()
 
@@ -278,6 +280,8 @@ class Studio:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         try:
             return requests.put(
                 f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/invite_curator/?usernames={curator}",
@@ -291,6 +295,8 @@ class Studio:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         try:
             return requests.put(
                 f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/promote/?usernames={curator}",
@@ -305,6 +311,8 @@ class Studio:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         try:
             return requests.put(
                 f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/remove/?usernames={curator}",
@@ -318,6 +326,8 @@ class Studio:
         """
         Removes yourself from the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         return self.remove_curator(self._session._username)
 
     def add_project(self, project_id):
@@ -327,6 +337,8 @@ class Studio:
         Args:
             project_id: Project id of the project that should be added
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         return requests.post(
             f"https://api.scratch.mit.edu/studios/{self.id}/project/{project_id}",
             headers = self._headers
@@ -339,6 +351,8 @@ class Studio:
         Args:
             project_id: Project id of the project that should be removed
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         return requests.delete(
             f"https://api.scratch.mit.edu/studios/{self.id}/project/{project_id}",
             headers = self._headers
@@ -382,6 +396,8 @@ class Studio:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         requests.put(
             f"https://scratch.mit.edu/site-api/galleries/all/{self.id}/",
             headers = headers,
@@ -393,6 +409,8 @@ class Studio:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         requests.put(
             f"https://scratch.mit.edu/site-api/galleries/all/{self.id}/",
             headers = headers,
@@ -403,6 +421,8 @@ class Studio:
         """
         Changes the studio settings so everyone (including non-curators) is able to add projects to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         requests.put(
             f"https://scratch.mit.edu/site-api/galleries/{self.id}/mark/open/",
             headers = headers,
@@ -414,6 +434,8 @@ class Studio:
         """
         Changes the studio settings so only curators can add projects to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         requests.put(
             f"https://scratch.mit.edu/site-api/galleries/{self.id}/mark/closed/",
             headers = headers,
@@ -424,6 +446,8 @@ class Studio:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         if self.comments_allowed:
             requests.post(
                 f"https://scratch.mit.edu/site-api/comments/gallery/{self.id}/toggle-comments/",
@@ -437,6 +461,8 @@ class Studio:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         if not self.comments_allowed:
             requests.post(
                 f"https://scratch.mit.edu/site-api/comments/gallery/{self.id}/toggle-comments/",
@@ -450,6 +476,8 @@ class Studio:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
         requests.post(
             f"https://scratch.mit.edu/site-api/comments/gallery/{self.id}/toggle-comments/",
             headers = headers,
@@ -465,7 +493,15 @@ class Studio:
             headers = headers
         ).json()
 
-
+    def accept_invite(self):
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
+        return requests.put(
+            f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/add/?usernames={self._session._username}",
+            headers=headers,
+            cookies = self._cookies,
+        ).json()
+    
 def get_studio(studio_id):
     """
     Gets a studio without logging in.

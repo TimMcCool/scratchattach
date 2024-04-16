@@ -532,4 +532,4 @@ def connect_tw_cloud(project_id_arg=None, *, project_id=None):
     if project_id is None:
         return None
 
-    return TwCloudConnection(project_id = int(project_id))
+    return TwCloudConnection(project_id = project_id)

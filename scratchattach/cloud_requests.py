@@ -32,6 +32,8 @@ class CloudRequests:
         self.current_var = 0
         self.idle_since = 0
         self.force_reconnect = False
+        self.cloud_events = []
+        self.kill_signal = False
 
     def __init__(self,
                  cloud_connection: cloud.CloudConnection,
@@ -285,7 +287,8 @@ class CloudRequests:
     def run(self,
             thread=False,
             data_from_websocket=True,
-            no_packet_loss=False):
+            no_packet_loss=False,
+            daemon=False):
         '''
         Starts the request handler.
         
@@ -311,14 +314,26 @@ class CloudRequests:
             ]
         else:
             events = []
+        self.cloud_events = events
         if thread:
             thread = Thread(
                 target=self._run,
                 args=[events],
-                kwargs={"data_from_websocket": data_from_websocket})
+                kwargs={"data_from_websocket": data_from_websocket},
+                daemon=daemon
+            )
             thread.start()
         else:
             self._run(events, data_from_websocket=data_from_websocket)
+    
+    def stop(self):
+        """
+        Permanently stops the cloud request handler and all background threads with cloud events.
+        Only works if cloud requests were run with thread=True
+        """
+        self.kill_signal = True
+        for event in self.cloud_events:
+            event.stop()
 
     def call_event(self, event, args=[]):
         """
@@ -418,7 +433,8 @@ class CloudRequests:
         while True:
 
             time.sleep(0.001)
-
+            if self.kill_signal:
+                return
             if data_from_websocket is False:
                 # If the data shouldn't be fetched from the cloud websocket, it fetches the cloud logs to get data
                 clouddata = cloud.get_cloud_logs(
@@ -439,6 +455,8 @@ class CloudRequests:
             current_ws_data = list(self.ws_data)
             self.ws_data = []
             while current_ws_data != []:
+                if self.kill_signal:
+                    return
                 event = current_ws_data.pop(0)
 
                 try:
@@ -521,6 +539,8 @@ class CloudRequests:
             while len(list(self.outputs.keys())) > 0:
                 output_ids = list(self.outputs.keys())
                 for request_id in output_ids:
+                    if self.kill_signal:
+                        return
                     output = self.outputs[request_id]["output"]
                     request = self.outputs[request_id]["request"]["name"]
                     req_obj = self.outputs[request_id]["request"]
@@ -560,7 +580,8 @@ class TwCloudRequests(CloudRequests):
     def run(self,
             thread=False,
             data_from_websocket=True,
-            no_packet_loss=False):
+            no_packet_loss=False,
+            daemon=False):
         '''
         Starts the request handler.
         
@@ -571,8 +592,9 @@ class TwCloudRequests(CloudRequests):
         '''
         self.force_reconnect = no_packet_loss
         events = [cloud.TwCloudEvents(self.project_id, update_interval=0)]
+        self.cloud_events = events
         if thread:
-            thread = Thread(target=self._run, args=[events])
+            thread = Thread(target=self._run, args=[events], daemon=daemon)
             thread.start()
         else:
             self._run(events)
