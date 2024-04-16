@@ -111,7 +111,7 @@ class CloudConnection(_CloudMixin):
                 raise(exceptions.InvalidCloudValue)
             x = value.replace(".", "")
             x = x.replace("-", "")
-            if not x.isnumeric():
+            if not (x.isnumeric() or x == ""):
                 warnings.warn("invalid cloud var (not numeric): "+str(value), Warning)
                 raise(exceptions.InvalidCloudValue)
         while self._ratelimited_until + 0.1 >= time.time():
@@ -161,7 +161,8 @@ class TwCloudConnection(_CloudMixin):
             self.websocket.connect(
                 cloud_host,
                 enable_multithread=True,
-                timeout = self._ws_timeout
+                timeout = self._ws_timeout,
+                headers = {"User-Agent":"scratchattach/1.6.0"}
             )
         except Exception:
             raise(exceptions.ConnectionError)
@@ -181,7 +182,7 @@ class TwCloudConnection(_CloudMixin):
             value = str(value)
             x = value.replace(".", "")
             x = x.replace("-", "")
-            if not x.isnumeric():
+            if not (x.isnumeric() or x == ""):
                 if self.allow_non_numeric is False:
                     raise(exceptions.InvalidCloudValue)
 
