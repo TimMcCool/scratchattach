@@ -161,6 +161,8 @@ class Project(PartialProject):
                 headers = {
                     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36",
                     "x-token": self._session.xtoken,
+                    "Pragma" : "no-cache",
+                    "Cache-Control" : "no-cache"
                 }
             )
             if "429" in str(project):
@@ -169,7 +171,13 @@ class Project(PartialProject):
                 return "429"
             project = project.json()
         else:
-            project = requests.get(f"https://api.scratch.mit.edu/projects/{self.id}")
+            project = requests.get(f"https://api.scratch.mit.edu/projects/{self.id}",
+                headers = {
+                    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36",
+                    "Pragma" : "no-cache",
+                    "Cache-Control" : "no-cache"
+                }
+            )
             if "429" in str(project):
                 return "429"
             if project.text == '{\n  "response": "Too many requests"\n}':
