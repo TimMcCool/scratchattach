@@ -287,7 +287,8 @@ class CloudRequests:
     def run(self,
             thread=False,
             data_from_websocket=True,
-            no_packet_loss=False):
+            no_packet_loss=False,
+            daemon=False):
         '''
         Starts the request handler.
         
@@ -318,7 +319,9 @@ class CloudRequests:
             thread = Thread(
                 target=self._run,
                 args=[events],
-                kwargs={"data_from_websocket": data_from_websocket})
+                kwargs={"data_from_websocket": data_from_websocket},
+                daemon=daemon
+            )
             thread.start()
         else:
             self._run(events, data_from_websocket=data_from_websocket)
