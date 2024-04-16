@@ -13,7 +13,7 @@ class _CloudMixin:
     Base class for a connection to a cloud variable server.
     """
 
-    def __init__(self, *, project_id, username="python", session_id=None, cloud_host=None, _allow_non_numeric=False, _ws_timeout=None):
+    def __init__(self, *, project_id, username="scratchattach", session_id=None, cloud_host=None, _allow_non_numeric=False, _ws_timeout=None):
         self._session_id = session_id
         self._username = username
         try:
@@ -162,7 +162,7 @@ class TwCloudConnection(_CloudMixin):
                 cloud_host,
                 enable_multithread=True,
                 timeout = self._ws_timeout,
-                header = {"User-Agent":"scratchattach/1.6.4"}
+                header = {"User-Agent":"scratchattach/1.6.4" if timeout is None else "scratchattach/1.6.4 short-term connection (for get_cloud method)"}
             )
         except Exception:
             raise(exceptions.ConnectionError)
