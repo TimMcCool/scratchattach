@@ -556,6 +556,8 @@ class TwCloudRequests(CloudRequests):
                  *,
                  used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
                  ignore_exceptions=True,
+                 purpose="",
+                 contact="",
                  _force_reconnect = False, # this argument is no longer used and only exists for backwards compatibility
                  _packet_length=98800):
         print(
@@ -572,6 +574,10 @@ class TwCloudRequests(CloudRequests):
         self.ignore_exceptions = ignore_exceptions
         self.packet_length = _packet_length
 
+        # user agent data
+        self.purpose = purpose
+        self.contact = contact
+
         self.init_attributes()
 
     def get_requester(self):
@@ -581,7 +587,8 @@ class TwCloudRequests(CloudRequests):
             thread=False,
             data_from_websocket=True,
             no_packet_loss=False,
-            daemon=False):
+            daemon=False
+            ):
         '''
         Starts the request handler.
         
@@ -591,7 +598,7 @@ class TwCloudRequests(CloudRequests):
             no_packet_loss: Whether the request handler should reconnect to the cloud websocket before responding to a request, this can help to avoid packet loss.
         '''
         self.force_reconnect = no_packet_loss
-        events = [cloud.TwCloudEvents(self.project_id, update_interval=0)]
+        events = [cloud.TwCloudEvents(self.project_id, update_interval=0, purpose=self.purpose, contact=self.contact)]
         self.cloud_events = events
         if thread:
             thread = Thread(target=self._run, args=[events], daemon=daemon)

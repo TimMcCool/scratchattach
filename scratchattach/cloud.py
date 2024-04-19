@@ -13,7 +13,7 @@ class _CloudMixin:
     Base class for a connection to a cloud variable server.
     """
 
-    def __init__(self, *, project_id, username="scratchattach", session_id=None, cloud_host=None, _allow_non_numeric=False, _ws_timeout=None):
+    def __init__(self, *, project_id, username="scratchattach", purpose="", contact="", session_id=None, cloud_host=None, _allow_non_numeric=False, _ws_timeout=None):
         self._session_id = session_id
         self._username = username
         try:
@@ -27,7 +27,11 @@ class _CloudMixin:
         self._connect(cloud_host=cloud_host)
         self._handshake()
         self.cloud_host = cloud_host
-        self.allow_non_numeric = _allow_non_numeric #TurboWarp only. If this is true, turbowarp cloud variables can be set to non-numeric values (if) the cloud_host wss allows it)
+        self.allow_non_numeric = _allow_non_numeric #TurboWarp only. If this is true, turbowarp cloud variables can be set to non-numeric values (if the cloud_host wss allows it)
+
+        # user agent information (for connecting to TurboWarp's cloud servers)
+        self.user_agent_purpose = purpose
+        self.user_agent_contact = contact
 
     def _send_packet(self, packet):
         self.websocket.send(json.dumps(packet) + "\n")
@@ -153,16 +157,19 @@ class TwCloudConnection(_CloudMixin):
     :.allow_non_numeric: Whether the cloud variables can be set to non-numeric values
     """
 
-    def _connect(self, *, cloud_host=None, timeout=None):
+    def _connect(self, *, cloud_host=None):
         try:
             if cloud_host is None:
                 cloud_host = "wss://clouddata.turbowarp.org/"
                 self.cloud_host = cloud_host
+            purpose_string = ""
+            if self.user_agent_purpose != "" or self.user_agent_contact != "":
+                purpose_string = f" (Purpose:{self.user_agent_purpose}; Contact:{self.user_agent_contact})"
             self.websocket.connect(
                 cloud_host,
                 enable_multithread=True,
                 timeout = self._ws_timeout,
-                header = {"User-Agent":"scratchattach/1.6.4" if timeout is None else "scratchattach/1.6.4 short-term connection (for get_cloud method)"}
+                header = {"User-Agent":f"scratchattach/1.6.6{purpose_string}" if self._ws_timeout is None else f"scratchattach/1.6.6 (short-term connection){purpose_string}"}
             )
         except Exception:
             raise(exceptions.ConnectionError)
@@ -323,13 +330,17 @@ class TwCloudEvents(CloudEvents):
     Class that calls events on TurboWarp cloud variable updates. Data fetched from Turbowarp cloud websocket.
     """
     def __init__(self, project_id, **entries):
-        cloud_connection = TwCloudConnection(project_id=project_id)
+        self.__dict__.update(entries)
+        if not "purpose" in entries:
+            self.purpose = ""
+        if not "contact" in entries:
+            self.contact = ""
+        cloud_connection = TwCloudConnection(project_id=project_id, purpose=self.purpose, contact=self.contact)
         self.data = []
         self._thread = None
         self.running = False
         self._events = {}
         self.connection = cloud_connection
-        self.__dict__.update(entries)
 
     def _update(self):
         while True:
@@ -437,7 +448,7 @@ def get_var(project_id, variable):
     except Exception:
         return None
 
-def get_tw_cloud(project_id):
+def get_tw_cloud(project_id, *, purpose="", contact=""):
     """
     Gets the clouddata of a TurboWarp cloud project.
 
@@ -446,13 +457,17 @@ def get_tw_cloud(project_id):
 
     Args:
         project_id (str):
-    
+
+    Keyword Arguments:
+        purpose (str): (optional) Provide information about what you're using TurboWarp's cloud server for
+        contact (str): (optional) Provide an email address or another way you can be contacted
+
     Returns:
         dict: The values of the project's cloud variables
     """
 
     try:
-        conn = TwCloudConnection(project_id=project_id, _ws_timeout=1)
+        conn = TwCloudConnection(project_id=project_id, _ws_timeout=1, purpose=purpose, contact=contact)
         data = conn.websocket.recv().split("\n")
         conn.disconnect()
 
@@ -467,7 +482,7 @@ def get_tw_cloud(project_id):
     except Exception:
         raise exceptions.FetchError
 
-def get_tw_var(project_id, variable):
+def get_tw_var(project_id, variable, *, purpose="", contact=""):
     """
     Gets the value of of a TurboWarp cloud variable.
 
@@ -477,7 +492,11 @@ def get_tw_var(project_id, variable):
     Args:
         project_id (str):
         variable (str): The name of the cloud variable (specified without the cloud emoji)
-    
+
+    Keyword Arguments:
+        purpose (str): (optional) Provide information about what you're using TurboWarp's cloud server for
+        contact (str): (optional) Provide an email address or another way you can be contacted
+
     Returns:
         str: The cloud variable's value
     
@@ -485,7 +504,7 @@ def get_tw_var(project_id, variable):
     """
     try:
         variable = "☁ " + str(variable)
-        result = get_tw_cloud(project_id)
+        result = get_tw_cloud(project_id, purpose=purpose, contact=contact)
         if result == []:
             return None
         else:
@@ -518,12 +537,16 @@ def get_cloud_logs(project_id, *, filter_by_var_named =None, limit=25, offset=0)
     except Exception:
         return []
 
-def connect_tw_cloud(project_id_arg=None, *, project_id=None):
+def connect_tw_cloud(project_id_arg=None, *, project_id=None, purpose="", contact=""):
     """
     Connects to TurboWarp's cloud websocket.
 
     Args:
         project_id (str)
+    
+    Keyword Arguments:
+        purpose (str): (optional) Provide information about what you're using TurboWarp's cloud server for
+        contact (str): (optional) Provide an email address or another way you can be contacted
 
     Returns:
         scratchattach.cloud.TwCloudConnection: An object that represents a connection to TurboWarp's cloud server
@@ -533,4 +556,4 @@ def connect_tw_cloud(project_id_arg=None, *, project_id=None):
     if project_id is None:
         return None
 
-    return TwCloudConnection(project_id = project_id)
+    return TwCloudConnection(project_id = project_id, purpose=purpose, contact=contact)

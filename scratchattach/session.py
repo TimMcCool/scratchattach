@@ -362,8 +362,8 @@ class Session():
 
         return cloud.CloudConnection(username = self._username, session_id = self.session_id, project_id = int(project_id))
 
-    def connect_tw_cloud(self, project_id_arg=None, *, project_id=None):
-        return cloud.connect_tw_cloud(project_id_arg, project_id=project_id)
+    def connect_tw_cloud(self, project_id_arg=None, *, project_id=None, purpose="", contact=""):
+        return cloud.connect_tw_cloud(project_id_arg, project_id=project_id, purpose=purpose, contact=contact)
 
     def connect_user(self, username):
         """
