@@ -35,7 +35,7 @@ conn.set_var("variable", value)
 
 **[More examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)**
 
-# Basic instructions
+# Getting started
 
 **Installation:** Run the following command in your command prompt
 
@@ -63,7 +63,7 @@ import scratchattach as scratch3
 session = scratch3.Session("sessionId", username="username") #The username field is case sensitive
 ```
 
-**All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki#logging-in).**
+**All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki#logging-in)**
 
 **Connect to the Scratch cloud:**
 
@@ -78,7 +78,7 @@ value = scratch3.get_var("project_id", "variable")
 conn.set_var("variable", "value") #the variable name is specified without the cloud emoji
 ```
 
-**All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki/#cloud-variables).**
+**All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki/#cloud-variables)**
 
 # Contributors
 
