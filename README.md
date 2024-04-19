@@ -33,7 +33,7 @@ conn = session.connect_cloud("project_id")
 conn.set_var("variable", value)
 ```
 
-**[More examples](https://github.com/TimMcCool/scratchattach/wiki/Examples).**
+**[More examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)**
 
 # Basic instructions
 
