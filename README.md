@@ -20,8 +20,7 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
 
 Report bugs by opening an issue on this repository. If you need help or guideance, leave a comment in the [official forum topic](https://scratch.mit.edu/discuss/topic/603418/
-) on [TimMcCool's Scratch
-profile](https://scratch.mit.edu/users/TimMcCool/).
+).
 
 # Example usage
 
