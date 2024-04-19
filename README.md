@@ -75,6 +75,15 @@ value = scratch3.get_var("project_id", "variable")
 conn.set_var("variable", "value") #the variable name is specified without the cloud emoji
 ```
 
+**Follow a user / love a project:**
+
+```python
+user_to_follow = session.connect_user("username")
+user_to_follow.follow()
+project_to_love = session.connect_project("project_id")
+project_to_love.love()
+```
+
 **All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki/#cloud-variables).**
 
 # Contributors
