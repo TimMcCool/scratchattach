@@ -13,7 +13,7 @@ class _CloudMixin:
     Base class for a connection to a cloud variable server.
     """
 
-    def __init__(self, *, project_id, username="scratchattach", purpose="", contact="", session_id=None, cloud_host=None, _allow_non_numeric=False, _ws_timeout=None):
+    def __init__(self, *, project_id, username="scratchattach", session_id=None, cloud_host=None, purpose="", contact="", _allow_non_numeric=False, _ws_timeout=None):
         self._session_id = session_id
         self._username = username
         try:
@@ -23,15 +23,16 @@ class _CloudMixin:
         self._ratelimited_until = 0 #deals with the 0.1 second rate limit for cloud variable sets
         self._connect_timestamp = 0 #timestamp of when the cloud connection was opened
         self._ws_timeout = _ws_timeout
+
+        # user agent information (for connecting to TurboWarp's cloud servers)
+        self.user_agent_purpose = purpose
+        self.user_agent_contact = contact
+
         self.websocket = websocket.WebSocket()
         self._connect(cloud_host=cloud_host)
         self._handshake()
         self.cloud_host = cloud_host
         self.allow_non_numeric = _allow_non_numeric #TurboWarp only. If this is true, turbowarp cloud variables can be set to non-numeric values (if the cloud_host wss allows it)
-
-        # user agent information (for connecting to TurboWarp's cloud servers)
-        self.user_agent_purpose = purpose
-        self.user_agent_contact = contact
 
     def _send_packet(self, packet):
         self.websocket.send(json.dumps(packet) + "\n")
