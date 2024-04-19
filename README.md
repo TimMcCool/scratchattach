@@ -19,36 +19,31 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 - [Examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
 
-# Contributors
-
-- Allmost all code by TimMcCool.
-- See the GitHub repository for full list of contributors.
-- Create a pull request to contribute code yourself.
-
-# Support
-
-If you need help with your code, leave a comment in the [official forum topic](https://scratch.mit.edu/discuss/topic/603418/
+Report bugs by opening an issue on this repo. If you need help or guideance, leave a comment in the [official forum topic](https://scratch.mit.edu/discuss/topic/603418/
 ) on [TimMcCool's Scratch
 profile](https://scratch.mit.edu/users/TimMcCool/) or open an issue on the github repo
 
-# Installation
+# Example usage
 
-Run the following command in your command prompt
+```py
+import scratchattach as scratch3
+
+session = scratch3.login("username", "password")
+conn = session.connect_cloud("project_id")
+
+conn.set_var("variable", value)
+```
+
+**[More examples](https://github.com/TimMcCool/scratchattach/wiki/Examples).**
+
+# Basic instructions
+
+**Installation:** Run the following command in your command prompt
+
 / shell:
 ```
 pip install -U scratchattach
 ```
-
-**OR**
-
-Add this to your Python code:
-```python
-import os
-
-os.system("pip install -U scratchattach")
-```
-
-# Logging in  `scratch3.Session`
 
 **Logging in with username / password:**
 
@@ -71,8 +66,6 @@ session = scratch3.Session("sessionId", username="username") #The username field
 
 **All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki#logging-in).**
 
-# Cloud variables  `scratch3.CloudConnection`
-
 **Connect to the Scratch cloud:**
 
 ```python
@@ -87,3 +80,9 @@ conn.set_var("variable", "value") #the variable name is specified without the cl
 ```
 
 **All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki/#cloud-variables).**
+
+# Contributors
+
+- Allmost all code by TimMcCool.
+- See the GitHub repository for full list of contributors.
+- Create a pull request to contribute code yourself.
