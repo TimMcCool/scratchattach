@@ -37,14 +37,15 @@ conn.set_var("variable", value)
 
 # Getting started
 
-**Installation:** Run the following command in your command prompt
+**Installation:**
 
-/ shell:
+Run the following command in your command prompt / shell:
+
 ```
 pip install -U scratchattach
 ```
 
-**Logging in with username / password:** `login()` returns a `Session` object that saves your login
+**Logging in with username / password:**
 
 ```python
 import scratchattach as scratch3
@@ -52,9 +53,11 @@ import scratchattach as scratch3
 session = scratch3.login("username", "password")
 ```
 
-**Logging in with a sessionId:**
-*You can get your session id from your browser's cookies. [More information](https://github.com/TimMcCool/scratchattach/wiki/Get-your-session-id)*
+`login()` returns a `Session` object that saves your login.
 
+**Logging in with a sessionId:**
+
+You can get your session id from your browser's cookies. [More information](https://github.com/TimMcCool/scratchattach/wiki/Get-your-session-id)*
 ```python
 import scratchattach as scratch3
 
