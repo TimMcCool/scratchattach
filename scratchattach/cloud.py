@@ -336,6 +336,7 @@ class TwCloudEvents(CloudEvents):
             self.purpose = ""
         if not "contact" in entries:
             self.contact = ""
+            print("Warning: You connected to TurboWarp's cloud without giving the `contact` argument.\nTurboWarp would like to you to identify yourself by providing a way you can be contacted (like your Scratch account for example): TwCloudEvents('project_id', contact='your_contact_info')\nThis is optional at the moment, but it helps TurboWarp to understand who is using their cloud service.")
         cloud_connection = TwCloudConnection(project_id=project_id, purpose=self.purpose, contact=self.contact)
         self.data = []
         self._thread = None
@@ -547,7 +548,7 @@ def connect_tw_cloud(project_id_arg=None, *, project_id=None, purpose="", contac
     
     Keyword Arguments:
         purpose (str): (optional) Provide information about what you're using TurboWarp's cloud server for
-        contact (str): (optional) Provide an email address or another way you can be contacted
+        contact (str): (optional) Provide your Scratch account or another way you can be contacted
 
     Returns:
         scratchattach.cloud.TwCloudConnection: An object that represents a connection to TurboWarp's cloud server
@@ -556,5 +557,8 @@ def connect_tw_cloud(project_id_arg=None, *, project_id=None, purpose="", contac
         project_id = project_id_arg
     if project_id is None:
         return None
+
+    if contact == "":
+        print("Warning: You connected to TurboWarp's cloud without giving the `contact` argument.\nTurboWarp would like to you to identify yourself by providing a way you can be contacted (like your Scratch account for example): connect_tw_cloud('project_id', contact='your_contact_info')\nThis is optional at the moment, but it helps TurboWarp to understand who is using their cloud service.")
 
     return TwCloudConnection(project_id = project_id, purpose=purpose, contact=contact)

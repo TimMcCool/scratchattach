@@ -556,8 +556,6 @@ class TwCloudRequests(CloudRequests):
                  *,
                  used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
                  ignore_exceptions=True,
-                 purpose="",
-                 contact="",
                  _force_reconnect = False, # this argument is no longer used and only exists for backwards compatibility
                  _packet_length=98800):
         print(
@@ -575,8 +573,12 @@ class TwCloudRequests(CloudRequests):
         self.packet_length = _packet_length
 
         # user agent data
-        self.purpose = purpose
-        self.contact = contact
+        if isinstance(cloud_connection, cloud.TwCloudConnection):
+            self.purpose = cloud_connection.purpose
+            self.contact = cloud_connection.contact
+        else:
+            self.purpose = ""
+            self.contact = ""
 
         self.init_attributes()
 
