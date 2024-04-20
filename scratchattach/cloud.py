@@ -215,7 +215,6 @@ class TwCloudConnection(_CloudMixin):
             try:
                 self._handshake()
                 time.sleep(0.1)
-                self.set_var(variable, value)
             except Exception:
                 try:
                     self._connect(cloud_host=None)
