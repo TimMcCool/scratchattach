@@ -240,7 +240,7 @@ class CloudRequests:
 
         if (self.idle_since + 8 < time.time() and not isinstance(self.connection, cloud.TwCloudConnection)
             ) or self.force_reconnect:
-            self.connection.close()
+            self.connection.disconnect()
             self.connection._connect(cloud_host=self.connection.cloud_host)
             self.connection._handshake()
 
