@@ -25,8 +25,8 @@ class _CloudMixin:
         self._ws_timeout = _ws_timeout
 
         # user agent information (for connecting to TurboWarp's cloud servers)
-        self.user_agent_purpose = purpose
-        self.user_agent_contact = contact
+        self.purpose = purpose
+        self.contact = contact
 
         self.websocket = websocket.WebSocket()
         self._connect(cloud_host=cloud_host)
@@ -168,8 +168,8 @@ class TwCloudConnection(_CloudMixin):
                 cloud_host = "wss://clouddata.turbowarp.org/"
                 self.cloud_host = cloud_host
             purpose_string = ""
-            if self.user_agent_purpose != "" or self.user_agent_contact != "":
-                purpose_string = f" (Purpose:{self.user_agent_purpose}; Contact:{self.user_agent_contact})"
+            if self.purpose != "" or self.contact != "":
+                purpose_string = f" (Purpose:{self.purpose}; Contact:{self.contact})"
             self.websocket.connect(
                 cloud_host,
                 enable_multithread=True,
