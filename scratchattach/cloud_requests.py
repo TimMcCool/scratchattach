@@ -402,8 +402,9 @@ class CloudRequests:
                 self.ws_data.append(event)
 
         try:
-            self.connection._connect(cloud_host=self.connection.cloud_host)
-            self.connection._handshake()
+            if self.connection.is_closed:
+                self.connection._connect(cloud_host=self.connection.cloud_host)
+                self.connection._handshake()
         except Exception:
             self.call_event("on_disconnect")
 

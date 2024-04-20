@@ -34,10 +34,13 @@ class _CloudMixin:
         self.cloud_host = cloud_host
         self.allow_non_numeric = _allow_non_numeric #TurboWarp only. If this is true, turbowarp cloud variables can be set to non-numeric values (if the cloud_host wss allows it)
 
+        self.is_closed = False # set to True after self.disconnect() is called
+
     def _send_packet(self, packet):
         self.websocket.send(json.dumps(packet) + "\n")
 
     def disconnect(self):
+        self.is_closed = True
         self.websocket.close()
 
     def _handshake(self):
@@ -143,6 +146,7 @@ class CloudConnection(_CloudMixin):
 
             time.sleep(0.1)
             self.set_var(variable, value)
+        self.is_closed = False
         self._ratelimited_until = time.time()
 
 class TwCloudConnection(_CloudMixin):
@@ -174,6 +178,7 @@ class TwCloudConnection(_CloudMixin):
             )
         except Exception:
             raise(exceptions.ConnectionError)
+        self.is_closed = False
         self._connect_timestamp = time.time()
 
 
