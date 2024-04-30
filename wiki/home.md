@@ -328,6 +328,7 @@ project.ranks()  #Returns the project's ranks. Fetched from ScratchDB
 project.moderation_status() #Returns the project's moderation status (either "safe" or "notsafe" (nfe)). New in v0.5.4. Fetched from jeffalo.net
 
 project.comments(limit=40, offset=0)  #Fetches all project comments except for comment replies
+project.get_comment(comment_id="comment_id") #Gets a specific comment by its ID
 project.get_comment_replies(comment_id="comment_id", limit=40, offset=0)  #Fetches the replies to a specific comment
 project.post_comment(content="comment content")  #Returns the info of the posted commented.
 project.reply_comment(content="comment content", parent_id="parent_id", commentee_id="commentee_id")  #Returns the info of the posted commented.
@@ -406,6 +407,7 @@ studio.follow()
 studio.unfollow()
 
 studio.comments(limit=40, offset=0)  #Fetches all project comments except for comment replies
+studio.get_comment(comment_id="comment_id") #Gets a specific comment by its ID
 studio.get_comment_replies(comment_id="comment_id", limit=40, offset=0)  #Fetches the replies to a specific comment
 studio.post_comment(content="comment content")  #Returns the info of the posted commented.
 studio.reply_comment(content="comment content", parent_id="parent_id", commentee_id="commentee_id")  #Returns the info of the posted commented.

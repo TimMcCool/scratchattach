@@ -153,7 +153,11 @@ class Studio:
             comments = comments + r
         return comments
 
-
+    def get_comment(self, comment_id):
+        r = requests.get(
+            f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}"
+        ).json()
+        return r
     def post_comment(self, content, *, parent_id="", commentee_id=""):
         """
         Posts a comment on the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
