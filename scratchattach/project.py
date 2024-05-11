@@ -6,7 +6,7 @@ import requests
 from . import user
 from . import exceptions
 from . import studio
-from .commons import api_iterative_data
+from .commons import api_iterative_data, api_iterative_simple
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
@@ -291,17 +291,9 @@ class Project(PartialProject):
             list<dict>: A list containing the studios this project is in, each studio is represented by a dict.
         """
 
-        def fetch(o, l):
-            resp = requests.get(
-                f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/studios?limit={l}&offset={o}"
-            ).json()
-            if resp == {"code": "BadRequest", "message": ""}:
-                return None
-            return resp
+        url = f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/studios"
 
-        api_data = api_iterative_data(
-            fetch, limit, offset, max_req_limit=20, unpack=True
-        )
+        api_data = api_iterative_simple(url, limit, offset, max_req_limit=20)
         return api_data
 
     def comments(self, *, limit=None, offset=0):
@@ -316,30 +308,27 @@ class Project(PartialProject):
             list<dict>: A list containing the requested comments as dicts.
         """
 
-        def fetch(o, l):
-            resp = requests.get(
-                f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/?limit={l}&offset={o}&cachebust={random.randint(0,9999)}"
-            ).json()
-            if not resp:
-                return None
-            return resp
+        url = f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments"
 
-        api_data = api_iterative_data(
-            fetch, limit, offset, max_req_limit=20, unpack=True
+        api_data = api_iterative_simple(
+            url,
+            limit,
+            offset,
+            max_req_limit=20,
+            add_params=f"&cachebust={random.randint(0,9999)}",
         )
         return api_data
 
     def get_comment_replies(self, *, comment_id, limit=None, offset=0):
-        def fetch(o, l):
-            resp = requests.get(
-                f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}/replies?limit={l}&offset={o}&cachebust=&cachebust={random.randint(0,9999)}"
-            ).json()
-            if not resp:
-                return None
-            return resp
 
-        api_data = api_iterative_data(
-            fetch, limit, offset, max_req_limit=25, unpack=True
+        url = f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}/replies"
+
+        api_data = api_iterative_simple(
+            url,
+            limit,
+            offset,
+            max_req_limit=25,
+            add_params=f"&cachebust={random.randint(0,9999)}",
         )
         return api_data
 
@@ -798,15 +787,15 @@ def explore_projects(
         If you want to use these methods, get the explore page projects with :meth:`scratchattach.session.Session.search_projects` instead.
     """
 
-    def fetch(o, l):
-        resp = requests.get(
-            f"https://api.scratch.mit.edu/explore/projects?limit={l}&offset={o}&language={language}&mode={mode}&q={query}"
-        ).json()
-        if resp == {"code": "BadRequest", "message": ""}:
-            return None
-        return resp
+    url = f"https://api.scratch.mit.edu/explore/projects"
 
-    api_data = api_iterative_data(fetch, limit, offset, max_req_limit=40, unpack=True)
+    api_data = api_iterative_simple(
+        url,
+        limit,
+        offset,
+        max_req_limit=40,
+        add_params=f"&language={language}&mode={mode}&q={query}",
+    )
 
     projects = []
     for project in api_data:
@@ -835,17 +824,17 @@ def search_projects(*, query="", mode="trending", language="en", limit=None, off
 
         If you want to use these methods, perform the search with :meth:`scratchattach.session.Session.search_projects` instead.
     """
-    projects = []
 
-    def fetch(o, l):
-        resp = requests.get(
-            f"https://api.scratch.mit.edu/search/projects?limit={l}&offset={o}&language={language}&mode={mode}&q={query}"
-        ).json()
-        if resp == {"code": "BadRequest", "message": ""}:
-            return None
-        return resp
+    url = f"https://api.scratch.mit.edu/search/projects"
 
-    api_data = api_iterative_data(fetch, limit, offset, max_req_limit=40, unpack=True)
+    api_data = api_iterative_simple(
+        url,
+        limit,
+        offset,
+        max_req_limit=40,
+        add_params=f"&language={language}&mode={mode}&q={query}",
+    )
+
     projects = []
     for project in api_data:
         p = Project()
