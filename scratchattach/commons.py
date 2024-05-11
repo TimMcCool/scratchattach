@@ -2,6 +2,13 @@
 
 import requests
 
+headers = {
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
+    "x-csrftoken": "a",
+    "x-requested-with": "XMLHttpRequest",
+    "referer": "https://scratch.mit.edu",
+}
+
 
 def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True):
     """
@@ -32,9 +39,13 @@ def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True)
     return api_data
 
 
-def api_iterative_simple(url, limit, offset, max_req_limit=40, add_params=""):
+def api_iterative_simple(
+    url, limit, offset, max_req_limit=40, add_params="", headers=headers
+):
     def fetch(o, l):
-        resp = requests.get(f"{url}?limit={l}&offset={o}{add_params}").json()
+        resp = requests.get(
+            f"{url}?limit={l}&offset={o}{add_params}", headers=headers
+        ).json()
         if not resp or resp == {"code": "BadRequest", "message": ""}:
             return None
         return resp

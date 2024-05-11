@@ -6,14 +6,7 @@ import requests
 from . import user
 from . import exceptions
 from . import studio
-from .commons import api_iterative_data, api_iterative_simple
-
-headers = {
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
-    "x-csrftoken": "a",
-    "x-requested-with": "XMLHttpRequest",
-    "referer": "https://scratch.mit.edu",
-}
+from .commons import api_iterative_data, api_iterative_simple, headers
 
 
 class PartialProject:
@@ -67,7 +60,7 @@ class PartialProject:
             return resp
 
         api_data = api_iterative_data(
-            fetch, limit, offset, max_req_limit=20, unpack=True
+            fetch, limit, offset, max_req_limit=40, unpack=True
         )
 
         projects = []
@@ -293,7 +286,7 @@ class Project(PartialProject):
 
         url = f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/studios"
 
-        api_data = api_iterative_simple(url, limit, offset, max_req_limit=20)
+        api_data = api_iterative_simple(url, limit, offset, max_req_limit=40)
         return api_data
 
     def comments(self, *, limit=None, offset=0):
@@ -314,7 +307,7 @@ class Project(PartialProject):
             url,
             limit,
             offset,
-            max_req_limit=20,
+            max_req_limit=40,
             add_params=f"&cachebust={random.randint(0,9999)}",
         )
         return api_data
@@ -327,7 +320,7 @@ class Project(PartialProject):
             url,
             limit,
             offset,
-            max_req_limit=25,
+            max_req_limit=40,
             add_params=f"&cachebust={random.randint(0,9999)}",
         )
         return api_data
@@ -824,6 +817,8 @@ def search_projects(*, query="", mode="trending", language="en", limit=None, off
 
         If you want to use these methods, perform the search with :meth:`scratchattach.session.Session.search_projects` instead.
     """
+    if not query:
+        raise ValueError("The query can't be empty for search")
 
     url = f"https://api.scratch.mit.edu/search/projects"
 
