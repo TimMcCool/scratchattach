@@ -301,7 +301,7 @@ class Studio:
                 cookies=self._cookies,
             ).json()
         except Exception:
-            raise (_exceptions.Unauthorized)
+            raise(exceptions.Unauthorized)
 
     def promote_curator(self, curator):
         """
@@ -316,7 +316,7 @@ class Studio:
                 cookies=self._cookies,
             ).json()
         except Exception:
-            raise (_exceptions.Unauthorized)
+            raise(exceptions.Unauthorized)
 
     def remove_curator(self, curator):
         """
@@ -331,7 +331,7 @@ class Studio:
                 cookies=self._cookies,
             ).json()
         except Exception:
-            raise (_exceptions.Unauthorized)
+            raise(exceptions.Unauthorized)
 
     def leave(self):
         """

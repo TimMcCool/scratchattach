@@ -19,36 +19,31 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 - [Examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
 
-# Contributors
+Report bugs by opening an issue on this repository. If you need help or guideance, leave a comment in the [official forum topic](https://scratch.mit.edu/discuss/topic/603418/
+). Projects made using scratchattach can be added to [this Scratch studio](https://scratch.mit.edu/studios/31478892/).
 
-- Allmost all code by TimMcCool.
-- See the GitHub repository for full list of contributors.
-- Create a pull request to contribute code yourself.
+# Example usage
 
-# Support
+```py
+import scratchattach as scratch3
 
-If you need help with your code, leave a comment in the [official forum topic](https://scratch.mit.edu/discuss/topic/603418/
-) on [TimMcCool's Scratch
-profile](https://scratch.mit.edu/users/TimMcCool/) or open an issue on the github repo
+session = scratch3.login("username", "password")
+conn = session.connect_cloud("project_id")
 
-# Installation
+conn.set_var("variable", value)
+```
 
-Run the following command in your command prompt
-/ shell:
+**[More examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)**
+
+# Getting started
+
+**Installation:**
+
+Run the following command in your command prompt / shell:
+
 ```
 pip install -U scratchattach
 ```
-
-**OR**
-
-Add this to your Python code:
-```python
-import os
-
-os.system("pip install -U scratchattach")
-```
-
-# Logging in  `scratch3.Session`
 
 **Logging in with username / password:**
 
@@ -58,20 +53,14 @@ import scratchattach as scratch3
 session = scratch3.login("username", "password")
 ```
 
-`login()` returns a `Session` object that saves your login
+`login()` returns a `Session` object that saves your login.
 
-**Logging in with a sessionId:**
-*You can get your session id from your browser's cookies. [More information](https://github.com/TimMcCool/scratchattach/wiki/Get-your-session-id)*
-
+**Logging in with a sessionId:** *You can get your session id from your browser's cookies. [More information](https://github.com/TimMcCool/scratchattach/wiki/Get-your-session-id)*
 ```python
 import scratchattach as scratch3
 
 session = scratch3.Session("sessionId", username="username") #The username field is case sensitive
 ```
-
-**All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki#logging-in).**
-
-# Cloud variables  `scratch3.CloudConnection`
 
 **Connect to the Scratch cloud:**
 
@@ -86,4 +75,19 @@ value = scratch3.get_var("project_id", "variable")
 conn.set_var("variable", "value") #the variable name is specified without the cloud emoji
 ```
 
+**Follow a user / love a project:**
+
+```python
+user_to_follow = session.connect_user("username")
+user_to_follow.follow()
+project_to_love = session.connect_project("project_id")
+project_to_love.love()
+```
+
 **All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki/#cloud-variables).**
+
+# Contributors
+
+- Allmost all code by TimMcCool.
+- See the GitHub repository for full list of contributors.
+- Create a pull request to contribute code yourself.

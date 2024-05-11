@@ -238,7 +238,9 @@ class CloudRequests:
         Sends back the request response to the Scratch project
         """
 
-        if self.idle_since + 8 < time.time() or self.force_reconnect:
+        if (self.idle_since + 8 < time.time() #and not isinstance(self.connection, cloud.TwCloudConnection)
+            ) or self.force_reconnect:
+            self.connection.disconnect()
             self.connection._connect(cloud_host=self.connection.cloud_host)
             self.connection._handshake()
 
@@ -287,7 +289,8 @@ class CloudRequests:
     def run(self,
             thread=False,
             data_from_websocket=True,
-            no_packet_loss=False):
+            no_packet_loss=False,
+            daemon=False):
         '''
         Starts the request handler.
         
@@ -318,7 +321,9 @@ class CloudRequests:
             thread = Thread(
                 target=self._run,
                 args=[events],
-                kwargs={"data_from_websocket": data_from_websocket})
+                kwargs={"data_from_websocket": data_from_websocket},
+                daemon=daemon
+            )
             thread.start()
         else:
             self._run(events, data_from_websocket=data_from_websocket)
@@ -399,8 +404,9 @@ class CloudRequests:
                 self.ws_data.append(event)
 
         try:
-            self.connection._connect(cloud_host=self.connection.cloud_host)
-            self.connection._handshake()
+            if self.connection.is_closed:
+                self.connection._connect(cloud_host=self.connection.cloud_host)
+                self.connection._handshake()
         except Exception:
             self.call_event("on_disconnect")
 
@@ -569,6 +575,14 @@ class TwCloudRequests(CloudRequests):
         self.ignore_exceptions = ignore_exceptions
         self.packet_length = _packet_length
 
+        # user agent data
+        if isinstance(cloud_connection, cloud.TwCloudConnection):
+            self.purpose = cloud_connection.purpose
+            self.contact = cloud_connection.contact
+        else:
+            self.purpose = ""
+            self.contact = ""
+
         self.init_attributes()
 
     def get_requester(self):
@@ -578,7 +592,8 @@ class TwCloudRequests(CloudRequests):
             thread=False,
             data_from_websocket=True,
             no_packet_loss=False,
-            daemon=False):
+            daemon=False
+            ):
         '''
         Starts the request handler.
         
@@ -588,7 +603,7 @@ class TwCloudRequests(CloudRequests):
             no_packet_loss: Whether the request handler should reconnect to the cloud websocket before responding to a request, this can help to avoid packet loss.
         '''
         self.force_reconnect = no_packet_loss
-        events = [cloud.TwCloudEvents(self.project_id, update_interval=0)]
+        events = [cloud.TwCloudEvents(self.project_id, update_interval=0, purpose=self.purpose, contact=self.contact)]
         self.cloud_events = events
         if thread:
             thread = Thread(target=self._run, args=[events], daemon=daemon)
