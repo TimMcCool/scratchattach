@@ -322,6 +322,13 @@ class Project(PartialProject):
             comments = comments + r
         return comments
 
+    def get_comment(self, comment_id):
+        r = requests.get(
+            f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}",
+            headers=self._headers,
+            cookies=self._cookies
+        ).json()
+        return r
     def love(self):
         """
         Posts a love on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
