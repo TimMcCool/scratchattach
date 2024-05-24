@@ -3,7 +3,7 @@ import codecs
 import os
 
 VERSION = '1.7.3'
-DESCRIPTION = 'An Scratch API Wrapper for scra tch.mit.edu'
+DESCRIPTION = 'An Scratch API Wrapper for scratch.mit.edu'
 LONG_DESCRIPTION = DESCRIPTION
 
 # Setting up
@@ -11,7 +11,7 @@ setup(
     name="scratchattach",
     version=VERSION,
     author="TimMcCool",
-    author_email="timkrome2006@gmail.com",
+    author_email="timmccool.scratch@gmail.com",
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
     long_description=open('README.md').read(),
