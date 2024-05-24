@@ -4,7 +4,7 @@ Cloud Requests Framework (inspired by discord.py) that allows Scratch projects a
 
 **Add Cloud Requests to your Scratch project:**
 
-Download this project file to your computer: https://github.com/TimMcCool/scratchattach/raw/main/assets/CloudRequests_Template.sb3
+Download this project file to your computer (click the link to download it): https://github.com/TimMcCool/scratchattach/raw/main/assets/CloudRequests_Template.sb3
 
 Then, go to the Scratch website, create a new project and upload the project file from above.
 
@@ -49,7 +49,7 @@ Try it out by clicking the block!
 ```python
 import scratchattach as scratch3
 
-conn = scratch3.TwCloudConnection(project_id="project_id") #replace with your project id
+conn = scratch3.TwCloudConnection(project_id="project_id", purpose="your use case (optional)", contact="your Scratch account or other contact info (optional)") #replace with your project id
 client = scratch3.TwCloudRequests(conn)
 
 ...
@@ -128,9 +128,9 @@ client.get_exact_timestamp() #Returns the exact timestamp of when the request wa
 
 By default, this is disabled. How to enable:
 ```py
-client.run(thread=True)
+client.run(thread=True, daemon=False) #set daemon to True to run the request handler in a daemon thread
 ```
-If enabled, you can put code below the client.run function.
+If enabled, you can put code below the client.run function, and you can use `client.stop()` to stop a running cloud requests instance.
 
 **Change what "FROM_HOST_" cloud vars are used:**
 ```py
@@ -153,6 +153,12 @@ The seperator used to join the different arguments is "&". To send more than thr
 
 ```py
 client = scratch3.CloudRequests(conn, _log_url="https://clouddata.scratch.mit.edu/logs", _packet_length=220)
+```
+
+**Change data source** (not recommended)
+
+```py
+client.run(data_from_websocket=False) #to fetch data from the clouddata logs instead
 ```
 
 # Advanced requests

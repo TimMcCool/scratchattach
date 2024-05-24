@@ -69,15 +69,18 @@ conn = scratch3.CloudConnection(project_id = "project_id", username="username", 
 **Connect to the TurboWarp cloud:**
 
 ```python
-conn = scratch3.connect_tw_cloud("project_id")
+conn = scratch3.connect_tw_cloud("project_id", purpose="(optional) your use case", contact="(optional) your Scratch account or other contact info")
+# Optional arguments: purpose and contact
+# Providing these arguments allows TurboWarp to understand what you're using their cloud server for.
+# Warning: TurboWarp may block bots that cause excessive cloud traffic without providing their purpose
 ```
 
 Alternative ways to do connect to the TurboWarp cloud:
 
 ```py
 conn = session.connect_tw_cloud("project_id")
-conn = scratch3.TwCloudConnection(project_id = "project_id", username="username")  
-# Optional argument: cloud_host="wss://clouddata.turbowarp.org"
+conn = scratch3.TwCloudConnection(project_id = "project_id", username="username", cloud_host="wss://clouddata.turbowarp.org")  
+# Optional argument: cloud_host (for connecting to custom websockets)
 # To connect to forkphorus's cloud server, use cloud_host="wss://stratus.turbowarp.org"
 ```
 
@@ -89,8 +92,7 @@ conn.set_var("variable", "value") #the variable name is specified without the cl
 
 **Get a cloud var:**
 
-Get Scratch cloud variables:
-
+Get Scratch cloud variables: 
 ```python
 value = scratch3.get_var("project_id", "variable")
 variables = scratch3.get_cloud("project_id") #Returns a dict with all cloud var values
@@ -101,8 +103,8 @@ Get TurboWarp cloud variables:
 *Do not spam these methods, they create a new cloud connection everytime they are called*
 
 ```python
-value = scratch3.get_tw_var("project_id", "variable")
-variables = scratch3.get_tw_cloud("project_id")
+value = scratch3.get_tw_var("project_id", "variable", purpose="your use case (optional)", contact="your Scratch account or other contact info (optional)")
+variables = scratch3.get_tw_cloud("project_id", purpose="your use case (optional)", contact="your Scratch account or other contact info (optional)")
 ```
 
 **Close the cloud connection:**
@@ -120,8 +122,10 @@ from scratchattach import Encoding
 
 Encoding.encode("input") #will return the encoded text
 Encoding.decode("encoded") #will decode an encoded text
-```
 
+scratch3.encoder.letters #returns the list with letters used by the encoder. You can set indices of this list to add / remove letters. The indices of the letters in this list correspond to the indices of costumes in the Scratch sprite
+Encoding.replace_char("old_char", "new_char") #replaces a character in the above list. Don't forget to replace the character in the customes of the Scratch sprite too.
+```
 # Cloud events
 
 *Cloud events allow reacting to cloud events in real time. If a Scratcher
@@ -161,7 +165,7 @@ events.start()
 ```python
 import scratchattach as scratch3
 
-events = scratch3.TwCloudEvents("project_id")
+events = scratch3.TwCloudEvents("project_id", purpose="your use case (optional)", contact="your Scratch account or other contact info (optional)")
 
 ...
 ```
@@ -359,6 +363,7 @@ project.studios(limit=None, offset=0) #Returns the studios the project is in as 
 project.download(filename="project_name.sb3", dir="") #Downloads the project to your computer. The downloaded file will only work in the online editor
 project.get_raw_json() #Returns the JSON of the project content as dict
 project.get_creator_agent() #Returns the user-agent of the user who created the project (with information about their browser and OS)
+project.upload_json_from("project_id") #Uploads the project json from the project with the given to the project represented by this Project object. New in v1.6.2
 ```
 
 # Unshared projects
@@ -426,6 +431,7 @@ studio.toggle_commenting()
 studio.invite_curator("username")
 studio.promote_curator("username")
 studio.remove_curator("username")
+studio.accept_invite() #If there is a pending invite for you, this function will accept it
 studio.leave() #Removes yourself from the studio
 
 studio.projects(limit=40, offset=0)
