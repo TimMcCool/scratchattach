@@ -15,12 +15,11 @@ class PartialProject:
     """
 
     def __init__(self, **entries):
-
         self.shared = None
         self.project_token = None
         self.__dict__.update(entries)
 
-        if "_session" not in self.__dict__.keys():
+        if not hasattr(self, "_session"):
             self._session = None
         if self._session is None:
             self._headers = headers
@@ -156,9 +155,9 @@ class Project(PartialProject):
                 headers={
                     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36",
                     "x-token": self._session.xtoken,
-                    "Pragma" : "no-cache",
-                    "Cache-Control" : "no-cache"
-                }
+                    "Pragma": "no-cache",
+                    "Cache-Control": "no-cache",
+                },
             )
             if "429" in str(project):
                 return "429"
@@ -166,12 +165,13 @@ class Project(PartialProject):
                 return "429"
             project = project.json()
         else:
-            project = requests.get(f"https://api.scratch.mit.edu/projects/{self.id}",
-                headers = {
+            project = requests.get(
+                f"https://api.scratch.mit.edu/projects/{self.id}",
+                headers={
                     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36",
-                    "Pragma" : "no-cache",
-                    "Cache-Control" : "no-cache"
-                }
+                    "Pragma": "no-cache",
+                    "Cache-Control": "no-cache",
+                },
             )
             if "429" in str(project):
                 return "429"
@@ -317,11 +317,12 @@ class Project(PartialProject):
             offset,
             max_req_limit=40,
             add_params=f"&cachebust={random.randint(0,9999)}",
+            headers=self._headers,
+            cookies=self._cookies,
         )
         return api_data
 
     def get_comment_replies(self, *, comment_id, limit=None, offset=0):
-
         url = f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}/replies"
 
         api_data = api_iterative_simple(
@@ -330,6 +331,8 @@ class Project(PartialProject):
             offset,
             max_req_limit=40,
             add_params=f"&cachebust={random.randint(0,9999)}",
+            headers=self._headers,
+            cookies=self._cookies,
         )
         return api_data
 

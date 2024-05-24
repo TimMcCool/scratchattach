@@ -43,10 +43,9 @@ class Studio:
     """
 
     def __init__(self, **entries):
-
         self.__dict__.update(entries)
 
-        if "_session" not in self.__dict__.keys():
+        if not hasattr(self, "_session"):
             self._session = None
         if self._session is None:
             self._headers = headers
@@ -137,7 +136,6 @@ class Studio:
         return api_data
 
     def get_comment_replies(self, *, comment_id, limit=None, offset=0):
-
         url = f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}/replies"
 
         api_data = api_iterative_simple(
@@ -301,7 +299,7 @@ class Studio:
                 cookies=self._cookies,
             ).json()
         except Exception:
-            raise(exceptions.Unauthorized)
+            raise (exceptions.Unauthorized)
 
     def promote_curator(self, curator):
         """
@@ -316,7 +314,7 @@ class Studio:
                 cookies=self._cookies,
             ).json()
         except Exception:
-            raise(exceptions.Unauthorized)
+            raise (exceptions.Unauthorized)
 
     def remove_curator(self, curator):
         """
@@ -331,7 +329,7 @@ class Studio:
                 cookies=self._cookies,
             ).json()
         except Exception:
-            raise(exceptions.Unauthorized)
+            raise (exceptions.Unauthorized)
 
     def leave(self):
         """
@@ -501,7 +499,6 @@ class Studio:
         self.comments_allowed = not self.comments_allowed
 
     def activity(self, *, limit=None, offset=0):
-
         url = f"https://api.scratch.mit.edu/studios/{self.id}/activity"
 
         api_data = api_iterative_simple(
@@ -569,7 +566,6 @@ def search_studios(*, query="", mode="trending", language="en", limit=None, offs
 
 
 def explore_studios(*, query="", mode="trending", language="en", limit=None, offset=0):
-
     url = f"https://api.scratch.mit.edu/explore/studios"
 
     api_data = api_iterative_simple(

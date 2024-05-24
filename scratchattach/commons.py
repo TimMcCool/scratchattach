@@ -40,11 +40,11 @@ def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True)
 
 
 def api_iterative_simple(
-    url, limit, offset, max_req_limit=40, add_params="", headers=headers
+    url, limit, offset, max_req_limit=40, add_params="", headers=headers, cookies={}
 ):
     def fetch(o, l):
         resp = requests.get(
-            f"{url}?limit={l}&offset={o}{add_params}", headers=headers
+            f"{url}?limit={l}&offset={o}{add_params}", headers=headers, cookies=cookies
         ).json()
         if not resp or resp == {"code": "BadRequest", "message": ""}:
             return None

@@ -29,7 +29,7 @@ class ForumTopic:
 
         self.__dict__.update(entries)
 
-        if "_session" not in self.__dict__.keys():
+        if not hasattr(self, "_session"):
             self._session = None
         if self._session is None:
             self._headers = headers
@@ -132,7 +132,7 @@ class ForumPost:
 
         self.__dict__.update(entries)
 
-        if "_session" not in self.__dict__.keys():
+        if not hasattr(self, "_session"):
             self._session = None
         if self._session is None:
             self._headers = headers

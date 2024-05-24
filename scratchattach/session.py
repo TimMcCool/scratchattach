@@ -101,7 +101,7 @@ class Session():
         Returns:
             scratchattach.user.User: Object representing the user associated with the log in / session.
         '''
-        if not "_user" in self.__dict__:
+        if not hasattr(self, "_user"):
             self._user = self.connect_user(self._username)
         return self._user
 
