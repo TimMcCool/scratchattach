@@ -84,9 +84,12 @@ class User:
         Returns:
             boolean : True if the user has the New Scratcher status, else False
         """
-        res = requests.get(f"https://scratch.mit.edu/users/{self.username}/").text
-        group=res[res.rindex('<span class="group">'):][:70]
-        return "new scratcher" in group.lower()
+        try:
+            res = requests.get(f"https://scratch.mit.edu/users/{self.username}/").text
+            group=res[res.rindex('<span class="group">'):][:70]
+            return "new scratcher" in group.lower()
+        except Exception:
+            return None
 
     def update(self):
         """
