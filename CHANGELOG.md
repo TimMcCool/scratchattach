@@ -1,3 +1,9 @@
+# 1.7.3
+
+- Added `project.get_comment` and `studio.get_comment` functions (allow getting a comment by id)
+- Added `user.does_exist()` and `user.is_new_scratcher()` functions
+- Added `user.set_forum_signature("new_signature")` function - allows setting forum signature of logged in user
+
 # 1.6.2
 
 - Added `client.stop()` to cloud requests (will stop cloud request handler and all background event handlers)
