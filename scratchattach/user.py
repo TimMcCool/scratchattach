@@ -63,6 +63,28 @@ class User:
 
     def __str__(self):
         return str(self.username)
+    
+    def does_exist(self):
+        """
+        Returns:
+            boolean : True if the user exists, False if the user is deleted, None if an error occured
+        """
+        if requests.get(f"https://scratch.mit.edu/users/{self.username}/").status_code == 200:
+            return True
+        if requests.get(f"https://scratch.mit.edu/users/{self.username}/").status_code == 404:
+            return False
+
+    def is_new_scratcher(self):
+        """
+        Returns:
+            boolean : True if the user has the New Scratcher status, else False
+        """
+        try:
+            res = requests.get(f"https://scratch.mit.edu/users/{self.username}/").text
+            group=res[res.rindex('<span class="group">'):][:70]
+            return "new scratcher" in group.lower()
+        except Exception:
+            return None
 
     def update(self):
         """
@@ -482,6 +504,12 @@ class User:
         """
         Sets the user's "About me" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
+            return
+        if self._session._username != self.username:
+            raise(exceptions.Unauthorized)
+            return
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
             headers = self._json_headers,
@@ -500,6 +528,12 @@ class User:
         """
         Sets the user's "What I'm working on" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
+            return
+        if self._session._username != self.username:
+            raise(exceptions.Unauthorized)
+            return
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
             headers = self._json_headers,
@@ -524,6 +558,12 @@ class User:
         Keyword Args:
             label: The label that should appear above the featured project on the user's profile (Like "Featured project", "Featured tutorial", "My favorite things", etc.)
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
+            return
+        if self._session._username != self.username:
+            raise(exceptions.Unauthorized)
+            return
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
             headers = self._json_headers,
@@ -531,6 +571,29 @@ class User:
             data = json.dumps({"featured_project":int(project_id),"featured_project_label":label})
         )
 
+    def set_forum_signature(self, text):
+        """
+        Sets the user's discuss forum signature. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
+            return
+        if self._session._username != self.username:
+            raise(exceptions.Unauthorized)
+            return
+        headers = {
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'content-type': 'application/x-www-form-urlencoded',
+            'origin': 'https://scratch.mit.edu',
+            'referer': 'https://scratch.mit.edu/discuss/settings/TimMcCool/',
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        }
+        data = {
+            'csrfmiddlewaretoken': 'a',
+            'signature': text,
+            'update': '',
+        }
+        response = requests.post(f'https://scratch.mit.edu/discuss/settings/{self.username}/', cookies=self._cookies, headers=headers, data=data)
 
     def post_comment(self, content, *, parent_id="", commentee_id=""):
         """
@@ -543,6 +606,9 @@ class User:
             parent_id: ID of the comment you want to reply to. If you don't want to mention a user, don't put the argument.
             commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
+            return
         data = {
         "commentee_id": commentee_id,
         "content": str(content),
@@ -591,6 +657,9 @@ class User:
         """
         Follows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
+            return
         requests.put(
             f"https://scratch.mit.edu/site-api/users/followers/{self.username}/add/?usernames={self._session._username}",
             headers = headers,
@@ -601,6 +670,9 @@ class User:
         """
         Unfollows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
+            return
         requests.put(
             f"https://scratch.mit.edu/site-api/users/followers/{self.username}/remove/?usernames={self._session._username}",
             headers = headers,
@@ -614,6 +686,9 @@ class User:
         Args:
             comment_id: The id of the comment that should be deleted
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
+            return
         return requests.post(
             f"https://scratch.mit.edu/site-api/comments/user/{self.username}/del/",
             headers = headers,
@@ -628,6 +703,9 @@ class User:
         Args:
             comment_id: The id of the comment that should be reported
         """
+        if self._session is None:
+            raise(exceptions.Unauthenticated)
+            return
         return requests.post(
             f"https://scratch.mit.edu/site-api/comments/user/{self.username}/rep/",
             headers = headers,

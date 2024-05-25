@@ -4,4 +4,5 @@ scratchattach.egg-info/
 __pycache__/
 README.md
 setup.py
+scratchattach/test.py
 scratchattach.code-workspace
