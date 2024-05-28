@@ -26,9 +26,6 @@ class CloudRequests:
             description = (str(p.instructions) + str(p.notes)).lower()
             if not ("timmccool" in description or "timmcool" in description or "timccool" in description or "timcool" in description):
                 print("It was detected that no credit was given in the project description! Please credit TimMcCool when using CloudRequests.")
-                requests.post(f"https://backends7-wwzhvgq4.b4a.run/scratchattach/report_abuse/{self.project_id}/")
-                print("Because you didn't give credit, the program won't be executed and an automated report has been sent to our monitoring server. The report only contains the project id of your project, no personal data / ids have been sent or stored.")
-                exit()
             else:
                 print("Thanks for giving credit for CloudRequests!")
         except Exception:
