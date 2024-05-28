@@ -378,7 +378,7 @@ class CloudRequests:
             except Exception:
                 send_as_integer = False
             else:
-                send_as_integer = not "-" in str(output)
+                send_as_integer = not ("-" in str(output)) and not (type(output)==bool)
         else:
             send_as_integer = False
 
