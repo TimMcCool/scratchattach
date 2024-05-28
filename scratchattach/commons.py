@@ -22,7 +22,6 @@ def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True)
     end = offset + limit
     api_data = []
     for offs in range(offset, end, max_req_limit):
-        print(offs, max_req_limit)
         d = fetch_func(
             offs, max_req_limit
         )  # Mimick actual scratch by only requesting the max amount
