@@ -2,12 +2,14 @@
 from . import cloud
 import time
 from .encoder import *
+from . import project
 import math
 from threading import Thread
 import json
 import traceback
 import warnings
 from . import exceptions
+import requests
 
 class CloudRequests:
     """
@@ -17,6 +19,20 @@ class CloudRequests:
         def __init__(self, **entries):
             self.__dict__.update(entries)
             self.id = self.request_id
+    
+    def credit_check(self):
+        try:
+            p = project.get_project(self.project_id)
+            description = (str(p.instructions) + str(p.notes)).lower()
+            if not ("timmccool" in description or "timmcool" in description or "timccool" in description or "timcool" in description):
+                print("It was detected that no credit was given in the project description! Please credit TimMcCool when using CloudRequests.")
+                requests.post(f"https://backends7-wwzhvgq4.b4a.run/scratchattach/report_abuse/{self.project_id}/")
+                print("Because you didn't give credit, the program won't be executed and an automated report has been sent to our monitoring server. The report only contains the project id of your project, no personal data / ids have been sent or stored.")
+                exit()
+            else:
+                print("Thanks for giving credit for CloudRequests!")
+        except Exception:
+            print("If you use CloudRequests, please credit TimMcCool!")
 
     def init_attributes(self):
         self.last_requester = None
@@ -45,9 +61,6 @@ class CloudRequests:
                  _packet_length=245,
                  **kwargs
                  ):
-        print(
-            "\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m"
-        )
         if _log_url != "https://clouddata.scratch.mit.edu/logs":
             warnings.warn(
                 "Log URL isn't the URL of Scratch's clouddata logs. Don't use the _log_url parameter unless you know what you are doing",
@@ -60,6 +73,7 @@ class CloudRequests:
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id
+        self.credit_check()
 
         self.ignore_exceptions = ignore_exceptions
         self.log_url = _log_url
@@ -561,9 +575,6 @@ class TwCloudRequests(CloudRequests):
                  ignore_exceptions=True,
                  _force_reconnect = False, # this argument is no longer used and only exists for backwards compatibility
                  _packet_length=98800):
-        print(
-            "\033[1mIf you use CloudRequests in your Scratch project, please credit TimMcCool!\033[0m"
-        )
         if _packet_length > 98800:
             warnings.warn(
                 "The packet length was set to a value higher than TurboWarp's default (98800).",
@@ -571,6 +582,7 @@ class TwCloudRequests(CloudRequests):
         self.used_cloud_vars = used_cloud_vars
         self.connection = cloud_connection
         self.project_id = cloud_connection.project_id
+        self.credit_check()
 
         self.ignore_exceptions = ignore_exceptions
         self.packet_length = _packet_length

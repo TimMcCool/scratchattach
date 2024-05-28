@@ -507,7 +507,7 @@ class Session():
         except Exception:
             return []
 
-    def upload_asset(asset):
+    def upload_asset(self, asset):
         data = asset if isinstance(asset, bytes) else open(asset, "rb").read()
 
         if isinstance(asset, str):
