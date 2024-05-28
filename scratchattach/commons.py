@@ -1,6 +1,7 @@
 """Common functions used by various internal modules"""
 
 import requests
+from . import exceptions
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
@@ -17,8 +18,6 @@ def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True)
     """
     if limit is None:
         limit = max_req_limit
-    assert offset >= 0
-    assert limit >= 0
     end = offset + limit
     api_data = []
     for offs in range(offset, end, max_req_limit):
@@ -34,19 +33,24 @@ def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True)
         if len(d) < max_req_limit:
             break
     api_data = api_data[:limit]
-    assert len(api_data) <= limit
     return api_data
 
 
 def api_iterative_simple(
     url, limit, offset, max_req_limit=40, add_params="", headers=headers, cookies={}
 ):
+    if offset < 0:
+        raise exceptions.BadRequest("offset parameter must be >= 0")
+    if limit < 0:
+        raise exceptions.BadRequest("limit parameter must be >= 0")
     def fetch(o, l):
         resp = requests.get(
             f"{url}?limit={l}&offset={o}{add_params}", headers=headers, cookies=cookies
         ).json()
-        if not resp or resp == {"code": "BadRequest", "message": ""}:
+        if not resp:
             return None
+        if resp == {"code": "BadRequest", "message": ""}:
+            raise exceptions.BadRequest("the passed arguments are invalid")
         return resp
 
     api_data = api_iterative_data(
