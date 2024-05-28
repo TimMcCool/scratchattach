@@ -4,13 +4,8 @@ import json
 import requests
 from . import user
 from . import exceptions
+from .commons import api_iterative_data, api_iterative_simple, headers
 
-headers = {
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-    "x-csrftoken": "a",
-    "x-requested-with": "XMLHttpRequest",
-    "referer": "https://scratch.mit.edu",
-}
 
 class ForumTopic:
     '''
@@ -34,7 +29,7 @@ class ForumTopic:
 
         self.__dict__.update(entries)
 
-        if "_session" not in self.__dict__.keys():
+        if not hasattr(self, "_session"):
             self._session = None
         if self._session is None:
             self._headers = headers
@@ -137,7 +132,7 @@ class ForumPost:
 
         self.__dict__.update(entries)
 
-        if "_session" not in self.__dict__.keys():
+        if not hasattr(self, "_session"):
             self._session = None
         if self._session is None:
             self._headers = headers
