@@ -3,6 +3,7 @@
 *Download Python here if you don't have it: https://www.python.org/downloads/*
 
 # Installation
+
 Run the following command in your command prompt
 / shell:
 ```
