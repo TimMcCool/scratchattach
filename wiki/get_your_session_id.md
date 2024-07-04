@@ -18,6 +18,6 @@ For Firefox/DuckDuckGo:
 
 1. Open scratch.mit.edu in your browser
 2. Click the 🔒 icon in the URL bar, then click "Cookies"
-3. Then find a cookie called `scratchsessionid` (in the "scratch.mit.edu" » "Cookies" folder). The content of this cookie is your Scratch session id
+3. Then find a cookie called `scratchsessionsid` (in the "scratch.mit.edu" » "Cookies" folder). The content of this cookie is your Scratch session id
 
 ![](https://github.com/TimMcCool/scratchattach/blob/main/wiki/images/cookies_tut_2.png)
