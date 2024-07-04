@@ -3,6 +3,7 @@
 *Download Python here if you don't have it: https://www.python.org/downloads/*
 
 # Installation
+The scratchattach library can be installed using pip (the python package manager). To do this, either:
 
 Run the following command in your command prompt
 / shell:
