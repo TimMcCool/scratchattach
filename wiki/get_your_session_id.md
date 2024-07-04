@@ -1,4 +1,4 @@
-# How to get your session id from your browser's cookies:
+# How to get scratchsessionid from your browser's cookies:
 
 __*If you use Safari, you will not be able to find your session id using cookies. Download another browser, such as [Google Chrome](https://www.google.com/chrome/), to be able to view your session id.*__
 
