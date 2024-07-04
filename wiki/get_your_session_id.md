@@ -7,13 +7,14 @@ __*If you use Safari, you will not be able to find your session id using cookies
 3. Go to the "Application" tab (in Firefox & DuckDuckGo the "Storage" tab), then go to "Cookies" > "https://scratch.mit.edu"
 4. Then find a cookie named  `scratchsessionid`. The value of this cookie is your Scratch session id 
 
-![](https://github.com/JackAttack365/scratchattach/blob/main/wiki/images/cookies_tut_1.png)  
-(for Firefox)  
+![](https://github.com/JackAttack365/scratchattach/blob/main/wiki/images/cookies_tut_1.png) 
+   
+For Firefox/DuckDuckGo:  
 ![](https://github.com/JackAttack365/scratchattach/blob/main/wiki/images/cookies_tut_3.png)  
 
 **There's an alternative way to do it:**
 
-*As of 2024 this only works on Microsoft Edge.*
+*As of July 2024 this only works on Microsoft Edge*
 
 1. Open scratch.mit.edu in your browser
 2. Click the 🔒 icon in the URL bar, then click "Cookies"
