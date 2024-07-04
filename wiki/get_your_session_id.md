@@ -5,7 +5,7 @@ __*If you use Safari, you will not be able to find your session id using cookies
 1. Open scratch.mit.edu in your browser
 2. Open the developer tools by pressing fn+F12 or F12.
 3. Go to the "Application" tab (in Firefox & DuckDuckGo the "Storage" tab), then go to "Cookies" > "https://scratch.mit.edu"
-4. Then find a cookie named  `scratchsessionid`. The value of this cookie is your Scratch session id 
+4. Then find a cookie named  `scratchsessionsid`. The value of this cookie is your Scratch session id 
 
 ![](https://github.com/TimMcCool/scratchattach/blob/main/wiki/images/cookies_tut_1.png) 
    
