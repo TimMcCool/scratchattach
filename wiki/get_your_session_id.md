@@ -7,9 +7,9 @@ __*If you use the browser Safari, you will not be able to find your session id u
 3. Go to the "Application" tab (in Firefox "Storage"), then go to "Cookies" > "https://scratch.mit.edu"
 4. Then find a cookie named  `scratchsessionid`. The value of this cookie is your Scratch session id 
 
-![](https://github.com/TimMcCool/scratchattach/blob/main/wiki/images/cookies_tut_1.png)
+![](https://github.com/JackAttack365/scratchattach/blob/main/wiki/images/cookies_tut_1.png)
 (for Firefox)
-![](https://github.com/TimMcCool/scratchattach/blob/main/wiki/images/cookies_tut_3.png)
+![](https://github.com/JackAttack365/scratchattach/blob/main/wiki/images/cookies_tut_3.png)
 
 **There's an alternative way to do it:**
 
