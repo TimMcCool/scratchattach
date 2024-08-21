@@ -454,7 +454,7 @@ def get_var(project_id, variable):
     except Exception:
         return None
 
-def get_tw_cloud(project_id, *, purpose="", contact=""):
+def get_tw_cloud(project_id, *, purpose="", contact="", cloud_host=""):
     """
     Gets the clouddata of a TurboWarp cloud project.
 
@@ -467,13 +467,17 @@ def get_tw_cloud(project_id, *, purpose="", contact=""):
     Keyword Arguments:
         purpose (str): (optional) Provide information about what you're using TurboWarp's cloud server for
         contact (str): (optional) Provide an email address or another way you can be contacted
+        cloud_host (str): (optional) Use another cloud server instead of clouddata.turbowarp.org
 
     Returns:
         dict: The values of the project's cloud variables
     """
 
+    if cloud_host == "":
+        cloud_host = "wss://clouddata.turbowarp.org"
+        
     try:
-        conn = TwCloudConnection(project_id=project_id, _ws_timeout=1, purpose=purpose, contact=contact)
+        conn = TwCloudConnection(project_id=project_id, _ws_timeout=1, purpose=purpose, contact=contact, cloud_host=cloud_host)
         data = conn.websocket.recv().split("\n")
         conn.disconnect()
 
@@ -488,7 +492,7 @@ def get_tw_cloud(project_id, *, purpose="", contact=""):
     except Exception:
         raise exceptions.FetchError
 
-def get_tw_var(project_id, variable, *, purpose="", contact=""):
+def get_tw_var(project_id, variable, *, purpose="", contact="", cloud_host=""):
     """
     Gets the value of of a TurboWarp cloud variable.
 
@@ -502,15 +506,20 @@ def get_tw_var(project_id, variable, *, purpose="", contact=""):
     Keyword Arguments:
         purpose (str): (optional) Provide information about what you're using TurboWarp's cloud server for
         contact (str): (optional) Provide an email address or another way you can be contacted
+        cloud_host (str): (optional) Use another cloud server instead of clouddata.turbowarp.org
 
     Returns:
         str: The cloud variable's value
     
     If the value can't be fetched, the method returns None.
     """
+
+    if cloud_host == "":
+        cloud_host = "wss://clouddata.turbowarp.org"
+
     try:
         variable = "☁ " + str(variable)
-        result = get_tw_cloud(project_id, purpose=purpose, contact=contact)
+        result = get_tw_cloud(project_id, purpose=purpose, contact=contact, cloud_host=cloud_host)
         if result == []:
             return None
         else:
