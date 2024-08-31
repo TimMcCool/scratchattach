@@ -17,6 +17,7 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 - **[Documentation](https://github.com/TimMcCool/scratchattach/wiki)**
 - [Extended documentation (WIP)](https://scratchattach.readthedocs.io/en/latest/)
 - [Examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)
+- [Hosting]([http](https://github.com/TimMcCool/scratchattach/wiki/Hosting)
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
 
 Report bugs by opening an issue on this repository. If you need help or guideance, leave a comment in the [official forum topic](https://scratch.mit.edu/discuss/topic/603418/
