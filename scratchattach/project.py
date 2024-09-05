@@ -5,7 +5,6 @@ import random
 import requests
 from . import user
 from . import exceptions
-from . import studio
 from .commons import api_iterative_data, api_iterative_simple, headers
 
 
@@ -18,6 +17,9 @@ class PartialProject:
         self.shared = None
         self.project_token = None
         self.__dict__.update(entries)
+        
+        if not hasattr(self, "id"):
+            self.id = 0
 
         if not hasattr(self, "_session"):
             self._session = None
@@ -53,6 +55,7 @@ class PartialProject:
                     "referer": "https://scratch.mit.edu",
                     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
                 },
+                timeout=10,
             ).json()
             if not resp:
                 return None
@@ -158,6 +161,7 @@ class Project(PartialProject):
                     "Pragma": "no-cache",
                     "Cache-Control": "no-cache",
                 },
+                timeout=10,
             )
             if "429" in str(project):
                 return "429"
@@ -172,6 +176,7 @@ class Project(PartialProject):
                     "Pragma": "no-cache",
                     "Cache-Control": "no-cache",
                 },
+                timeout=10,
             )
             if "429" in str(project):
                 return "429"
@@ -196,7 +201,8 @@ class Project(PartialProject):
                 filename = str(self.id)
             self.update()
             response = requests.get(
-                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}"
+                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
+                timeout=10,
             )
             filename = filename.replace(".sb3", "")
             open(f"{dir}{filename}.sb3", "wb").write(response.content)
@@ -217,7 +223,8 @@ class Project(PartialProject):
         try:
             self.update()
             return requests.get(
-                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}"
+                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
+                timeout=10,
             ).json()
         except Exception:
             raise (
@@ -236,7 +243,8 @@ class Project(PartialProject):
         try:
             self.update()
             return requests.get(
-                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}"
+                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
+                timeout=10,
             ).json()["meta"]["agent"]
         except Exception:
             raise (

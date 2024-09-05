@@ -4,6 +4,8 @@ import json
 import re
 import requests
 import warnings
+import pathlib
+import hashlib
 
 from . import user
 from . import cloud
@@ -11,7 +13,7 @@ from . import project
 from . import exceptions
 from . import studio
 from . import forum
-from .commons import api_iterative_data, api_iterative_simple, headers
+from .commons import headers
 
 
 class Session():
@@ -51,8 +53,8 @@ class Session():
             self._headers.pop("Cookie")
         except Exception: pass
 
-    def _get_csrftoken(self):
-        r = requests.get("https://scratch.mit.edu/csrf_token/").headers
+    def _get_csrftoken(self): # CSRF Token could always be "a" afaik
+        r = requests.get("https://scratch.mit.edu/csrf_token/", timeout=10).headers
         print(r)
         csrftoken = r["Set-Cookie"].split("scratchcsrftoken=")[1].split(";")[0]
         self._headers["x-csrftoken"] = csrftoken
@@ -74,7 +76,7 @@ class Session():
                     "scratchsessionsid" : self.session_id,
                     "scratchcsrftoken" : "a",
                     "scratchlanguage" : "en"
-                }
+                }, timeout=10
             ).text)
 
             self.xtoken = response['user']['token']
@@ -131,6 +133,7 @@ class Session():
                 f"https://scratch.mit.edu/site-api/projects/{ordering}/?page={page}&ascsort={ascsort}&descsort={descsort}",
                 headers = headers,
                 cookies = self._cookies,
+                timeout = 10,
             ).json()
             projects = []
             for target in targets:
@@ -174,6 +177,7 @@ class Session():
             f"https://api.scratch.mit.edu/users/{self._username}/messages?limit={limit}&offset={offset}",
             headers = self._headers,
             cookies = self._cookies,
+            timeout = 10,
         ).json()
 
     def clear_messages(self):
@@ -184,6 +188,7 @@ class Session():
             "https://scratch.mit.edu/site-api/messages/messages-clear/",
             headers = self._headers,
             cookies = self._cookies,
+            timeout = 10,
         ).text
 
     def message_count(self):
@@ -193,7 +198,13 @@ class Session():
         Returns:
             int: message count
         '''
-        return json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self._username}/messages/count/", headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',}).text)["count"]
+        return json.loads(requests.get(
+            f"https://api.scratch.mit.edu/users/{self._username}/messages/count/",
+            headers = {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
+            },
+            timeout = 10,
+        ).text)["count"]
 
     def get_feed(self, *, limit=20, offset=0):
         '''
@@ -205,7 +216,8 @@ class Session():
         return requests.get(
             f"https://api.scratch.mit.edu/users/{self._username}/following/users/activity?limit={limit}&offset={offset}",
             headers = self._headers,
-            cookies = self._cookies
+            cookies = self._cookies,
+            timeout = 10,
         ).json()
 
     '''def create_project(self): # not working
@@ -260,7 +272,8 @@ class Session():
         r = requests.get(
             f"https://api.scratch.mit.edu/users/{self._username}/following/users/loves?limit={limit}&offset={offset}",
             headers = self._headers,
-            cookies = self._cookies
+            cookies = self._cookies,
+            timeout = 10,
         ).json()
         projects = []
 
@@ -291,7 +304,7 @@ class Session():
         offs = 0
         resp = []
         for i in range(limit2):
-            resp2 = requests.get(f"https://api.scratch.mit.edu/search/projects?limit=40&offset={offs}&language={language}&mode={mode}&q={query}").json()
+            resp2 = requests.get(f"https://api.scratch.mit.edu/search/projects?limit=40&offset={offs}&language={language}&mode={mode}&q={query}", timeout=10).json()
             if not resp2 == {"code":"BadRequest","message":""}:
                 resp += resp2
             offs+=40
@@ -323,7 +336,7 @@ class Session():
         offs = 0
         resp = []
         for i in range(limit2):
-            resp2 = requests.get(f"https://api.scratch.mit.edu/explore/projects?limit=40&offset={offs}&language={language}&mode={mode}&q={query}").json()
+            resp2 = requests.get(f"https://api.scratch.mit.edu/explore/projects?limit=40&offset={offs}&language={language}&mode={mode}&q={query}", timeout=10).json()
             if not resp2 == {"code":"BadRequest","message":""}:
                 resp += resp2
             offs+=40
@@ -346,6 +359,7 @@ class Session():
         return requests.get(
             f"https://backpack.scratch.mit.edu/{self._username}?limit={limit}&offset={offset}",
             headers = self._headers,
+            timeout = 10,
         ).json()
 
     def delete_from_backpack(self, asset_id):
@@ -358,6 +372,7 @@ class Session():
         return requests.delete(
             f"https://backpack.scratch.mit.edu/{self._username}/{asset_id}",
             headers = self._headers,
+            timeout = 10,
         ).json()
 
     def connect_cloud(self, project_id_arg=None, *, project_id=None):
@@ -481,7 +496,7 @@ class Session():
         else:
             filter = 1
         try:
-            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/category/topics/{category_name}/{page}?detail=1&filter={filter}").json()
+            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/category/topics/{category_name}/{page}?detail=1&filter={filter}", timeout=10).json()
             return_data = []
             for topic in data:
                 t = forum.ForumTopic(id = topic["id"], _session=self)
@@ -512,10 +527,10 @@ class Session():
 
     def search_posts(self, *, query, order="newest", page=0):
         try:
-            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/search?q={query}&o={order}&page={page}").json()["posts"]
+            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/search?q={query}&o={order}&page={page}", timeout=10).json()["posts"]
             return_data = []
             for o in data:
-                a = forum.ForumPost(id = o["id"], _session = self._session)
+                a = forum.ForumPost(id = o["id"], _session = self)
                 a._update_from_dict(o)
                 return_data.append(a)
             return return_data
@@ -532,6 +547,7 @@ class Session():
             f"https://assets.scratch.mit.edu/{hashlib.md5(data).hexdigest()}.{file_ext}",
             headers=self._headers,
             data=data,
+            timeout=10,
         )
     
 # ------ #
@@ -555,7 +571,8 @@ def login(username, password):
     _headers = headers
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     request = requests.post(
-        "https://scratch.mit.edu/login/", data=data, headers=_headers
+        "https://scratch.mit.edu/login/", data=data, headers=_headers,
+        timeout = 10,
     )
     try:
         session_id = str(re.search('"(.*)"', request.headers["Set-Cookie"]).group())

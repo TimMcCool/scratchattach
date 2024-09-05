@@ -422,7 +422,7 @@ def get_cloud(project_id):
         dict: The values of the project's cloud variables
     """
     try:
-        response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit=100&offset=0").text)
+        response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit=100&offset=0", timeout=10).text)
         response.reverse()
         clouddata = {}
         for activity in response:
@@ -445,7 +445,7 @@ def get_var(project_id, variable):
     If the value can't be fetched, the method returns None.
     """
     try:
-        response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit=100&offset=0").text)
+        response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit=100&offset=0", timeout=10).text)
         response = list(filter(lambda k: k["name"] == "☁ "+variable, response))
         if response == []:
             return None
@@ -536,7 +536,7 @@ def get_cloud_logs(project_id, *, filter_by_var_named =None, limit=25, offset=0)
         log_url (str): If you want to get the clouddata from a cloud log API different to Scratch's normal cloud log API, set this argument to the URL of the API. Only set this argument if you know what you are doing. If you want to get the clouddata from the normal API, don't put this argument.
     """
     try:
-        response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit={limit}&offset={offset}").text)
+        response = json.loads(requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={project_id}&limit={limit}&offset={offset}", timeout=10).text)
         if filter_by_var_named is None: return response
         else:
             return list(filter(lambda k: k["name"] == "☁ "+filter_by_var_named, response))
