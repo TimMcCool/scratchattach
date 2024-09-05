@@ -3,13 +3,10 @@ from . import cloud
 import time
 from .encoder import *
 from . import project
-import math
 from threading import Thread
-import json
 import traceback
 import warnings
-from . import exceptions
-import requests
+from . import exceptions#
 
 class CloudRequests:
     """
@@ -18,6 +15,8 @@ class CloudRequests:
     class Request:
         def __init__(self, **entries):
             self.__dict__.update(entries)
+            if not hasattr(self, "request_id"):
+                self.request_id = 0
             self.id = self.request_id
     
     def credit_check(self):
@@ -158,7 +157,7 @@ class CloudRequests:
                 raise (e)
             if req_obj["thread"]:
                 self.outputs[request_id] = {
-                    "output": f"Error: Check the Python console",
+                    "output": "Error: Check the Python console",
                     "request": req_obj
                 }
             else:
@@ -378,7 +377,7 @@ class CloudRequests:
             except Exception:
                 send_as_integer = False
             else:
-                send_as_integer = not ("-" in str(output)) and not (type(output)==bool)
+                send_as_integer = not ("-" in str(output)) and not isinstance(output, bool)
         else:
             send_as_integer = False
 

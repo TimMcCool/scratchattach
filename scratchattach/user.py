@@ -33,17 +33,16 @@ class User:
     :.update(): Updates the attributes
     '''
     def __init__(self, **entries):
+        entries.setdefault("name", entries.get("username"))
         self.__dict__.update(entries)
 
         if hasattr(self, "bio"):
             self.about_me = self.bio
         if hasattr(self, "status"):
             self.wiwo = self.status
-
+        
         if hasattr(self, "name"):
             self.username = self.name
-        if hasattr(self, "username"):
-            self.name = self.username
 
         if not hasattr(self, "_session"):
             self._session = None
@@ -271,21 +270,6 @@ class User:
             boolean: Whether the user is followed by the user provided as argument
         """
         return requests.get(f"http://explodingstar.pythonanywhere.com/api/{user}/?following={self.username}").json()["following"]
-
-    def project_count(self):
-        text = requests.get(
-            f"https://scratch.mit.edu/users/{self.username}/projects/",
-            headers = {
-                "x-csrftoken": "a",
-                "x-requested-with": "XMLHttpRequest",
-                "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
-                "referer": "https://scratch.mit.edu",
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-            }
-        ).text
-        text = text.split("Shared Projects (")[1]
-        text = text.split(")")[0]
-        return int(text)
 
     def project_count(self):
         text = requests.get(

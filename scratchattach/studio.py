@@ -5,7 +5,7 @@ import requests
 import random
 from . import user
 from . import exceptions
-from .commons import api_iterative_data, api_iterative_simple, headers
+from .commons import api_iterative_simple, headers
 
 
 class Studio:
@@ -66,7 +66,7 @@ class Studio:
         """
         Updates the attributes of the Studio object
         """
-        studio = requests.get(f"https://api.scratch.mit.edu/studios/{self.id}")
+        studio = requests.get(f"https://api.scratch.mit.edu/studios/{self.id}", timeout=10)
         if "429" in str(studio):
             return "429"
         if studio.text == '{\n  "response": "Too many requests"\n}':
@@ -98,6 +98,7 @@ class Studio:
             f"https://scratch.mit.edu/site-api/users/bookmarkers/{self.id}/add/?usernames={self._session._username}",
             headers=headers,
             cookies=self._cookies,
+            timeout=10,
         )
 
     def unfollow(self):
@@ -110,6 +111,7 @@ class Studio:
             f"https://scratch.mit.edu/site-api/users/bookmarkers/{self.id}/remove/?usernames={self._session._username}",
             headers=headers,
             cookies=self._cookies,
+            timeout=10,
         )
 
     def comments(self, *, limit=None, offset=0):
@@ -149,7 +151,8 @@ class Studio:
 
     def get_comment(self, comment_id):
         r = requests.get(
-            f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}"
+            f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}",
+            timeout=10,
         ).json()
         return r
 
@@ -178,6 +181,7 @@ class Studio:
             headers=headers,
             cookies=self._cookies,
             data=json.dumps(data),
+            timeout=10,
         ).json()
 
     def set_thumbnail(self, *, file):
@@ -214,12 +218,13 @@ class Studio:
             headers={
                 "accept": "*/",
                 "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryhKZwFjoxAyUTMlSh",
-                "Referer": f"https://scratch.mit.edu/",
+                "Referer": "https://scratch.mit.edu/",
                 "x-csrftoken": "a",
                 "x-requested-with": "XMLHttpRequest",
             },
             data=payload,
             cookies=self._cookies,
+            timeout=10,
         ).json()
 
         if "errors" in r:
@@ -303,6 +308,7 @@ class Studio:
                 f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/invite_curator/?usernames={curator}",
                 headers=headers,
                 cookies=self._cookies,
+                timeout=10,
             ).json()
         except Exception:
             raise (exceptions.Unauthorized)
@@ -318,6 +324,7 @@ class Studio:
                 f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/promote/?usernames={curator}",
                 headers=headers,
                 cookies=self._cookies,
+                timeout=10,
             ).json()
         except Exception:
             raise (exceptions.Unauthorized)
@@ -333,6 +340,7 @@ class Studio:
                 f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/remove/?usernames={curator}",
                 headers=headers,
                 cookies=self._cookies,
+                timeout=10,
             ).json()
         except Exception:
             raise (exceptions.Unauthorized)
@@ -357,6 +365,7 @@ class Studio:
         return requests.post(
             f"https://api.scratch.mit.edu/studios/{self.id}/project/{project_id}",
             headers=self._headers,
+            timeout=10,
         ).json()
 
     def remove_project(self, project_id):
@@ -371,6 +380,7 @@ class Studio:
         return requests.delete(
             f"https://api.scratch.mit.edu/studios/{self.id}/project/{project_id}",
             headers=self._headers,
+            timeout=10,
         ).json()
 
     def managers(self, limit=None, offset=0):
@@ -424,6 +434,7 @@ class Studio:
             headers=headers,
             cookies=self._cookies,
             data=json.dumps({"description": new + "\n"}),
+            timeout=10,
         )
 
     def set_title(self, new):
@@ -437,6 +448,7 @@ class Studio:
             headers=headers,
             cookies=self._cookies,
             data=json.dumps({"title": new}),
+            timeout=10,
         )
 
     def open_projects(self):
@@ -449,6 +461,7 @@ class Studio:
             f"https://scratch.mit.edu/site-api/galleries/{self.id}/mark/open/",
             headers=headers,
             cookies=self._cookies,
+            timeout=10,
         )
 
     def close_projects(self):
@@ -461,6 +474,7 @@ class Studio:
             f"https://scratch.mit.edu/site-api/galleries/{self.id}/mark/closed/",
             headers=headers,
             cookies=self._cookies,
+            timeout=10,
         )
 
     def turn_off_commenting(self):
@@ -474,6 +488,7 @@ class Studio:
                 f"https://scratch.mit.edu/site-api/comments/gallery/{self.id}/toggle-comments/",
                 headers=headers,
                 cookies=self._cookies,
+                timeout=10,
             )
             self.comments_allowed = not self.comments_allowed
 
@@ -488,6 +503,7 @@ class Studio:
                 f"https://scratch.mit.edu/site-api/comments/gallery/{self.id}/toggle-comments/",
                 headers=headers,
                 cookies=self._cookies,
+                timeout=10,
             )
             self.comments_allowed = not self.comments_allowed
 
@@ -501,6 +517,7 @@ class Studio:
             f"https://scratch.mit.edu/site-api/comments/gallery/{self.id}/toggle-comments/",
             headers=headers,
             cookies=self._cookies,
+            timeout=10,
         )
         self.comments_allowed = not self.comments_allowed
 
@@ -522,6 +539,7 @@ class Studio:
             f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/add/?usernames={self._session._username}",
             headers=headers,
             cookies=self._cookies,
+            timeout=10,
         ).json()
 
 
@@ -559,7 +577,7 @@ def search_studios(*, query="", mode="trending", language="en", limit=None, offs
     if not query:
         raise ValueError("The query can't be empty for search")
 
-    url = f"https://api.scratch.mit.edu/search/studios"
+    url = "https://api.scratch.mit.edu/search/studios"
 
     api_data = api_iterative_simple(
         url,
@@ -572,7 +590,7 @@ def search_studios(*, query="", mode="trending", language="en", limit=None, offs
 
 
 def explore_studios(*, query="", mode="trending", language="en", limit=None, offset=0):
-    url = f"https://api.scratch.mit.edu/explore/studios"
+    url = "https://api.scratch.mit.edu/explore/studios"
 
     api_data = api_iterative_simple(
         url,

@@ -1,10 +1,8 @@
 #----- Getting forum topics and posts
 
-import json
 import requests
 from . import user
-from . import exceptions
-from .commons import api_iterative_data, api_iterative_simple, headers
+from .commons import headers
 
 
 class ForumTopic:
@@ -28,6 +26,9 @@ class ForumTopic:
     def __init__(self, **entries):
 
         self.__dict__.update(entries)
+        
+        if not hasattr(self, "id"):
+            self.id = 0
 
         if not hasattr(self, "_session"):
             self._session = None
@@ -46,7 +47,7 @@ class ForumTopic:
         """
         Updates the attributes of the ForumTopic object
         """
-        topic = requests.get(f"https://scratchdb.lefty.one/v3/forum/topic/info/{self.id}").json()
+        topic = requests.get(f"https://scratchdb.lefty.one/v3/forum/topic/info/{self.id}", timeout=10).json()
         return self._update_from_dict(topic)
 
     def _update_from_dict(self, topic):
@@ -67,7 +68,7 @@ class ForumTopic:
         Returns:
             list<dict>: A list that contains the history of the forum topic (changes of topic title etc.)
         """
-        return requests.get(f"https://scratchdb.lefty.one/v3/forum/topic/history/{self.id}").json()
+        return requests.get(f"https://scratchdb.lefty.one/v3/forum/topic/history/{self.id}", timeout=10).json()
 
     def posts(self, *, page=0, order="oldest"):
         """
@@ -78,7 +79,7 @@ class ForumTopic:
         Returns:
             list<scratchattach.forum.ForumPost>: A list containing the posts from the specified page of the forum topic 
         """
-        data = requests.get(f"https://scratchdb.lefty.one/v3/forum/topic/posts/{self.id}/{page}?o={order}").json()
+        data = requests.get(f"https://scratchdb.lefty.one/v3/forum/topic/posts/{self.id}/{page}?o={order}", timeout=10).json()
         return_data = []
         for o in data:
             a = ForumPost(id = o["id"], _session = self._session)
@@ -91,7 +92,7 @@ class ForumTopic:
         Returns:
             scratchattach.forum.ForumPost: An object representing the first topic post 
         """
-        o = requests.get(f"https://scratchdb.lefty.one/v3/forum/topic/posts/{self.id}/0?o=oldest").json()[0]
+        o = requests.get(f"https://scratchdb.lefty.one/v3/forum/topic/posts/{self.id}/0?o=oldest", timeout=10).json()[0]
         a = ForumPost(id = o["id"], _session = self._session)
         a._update_from_dict(o)
         return a
@@ -131,6 +132,9 @@ class ForumPost:
     def __init__(self, **entries):
 
         self.__dict__.update(entries)
+        
+        if not hasattr(self, "id"):
+            self.id = 0
 
         if not hasattr(self, "_session"):
             self._session = None
@@ -146,7 +150,7 @@ class ForumPost:
         """
         Updates the attributes of the ForumPost object
         """
-        post = requests.get(f"https://scratchdb.lefty.one/v3/forum/post/info/{self.id}").json()
+        post = requests.get(f"https://scratchdb.lefty.one/v3/forum/post/info/{self.id}", timeout=10).json()
         return self._update_from_dict(post)
 
     def _update_from_dict(self, post):
@@ -174,7 +178,7 @@ class ForumPost:
         return t
 
     def ocular_reactions(self):
-        return requests.get(f"https://my-ocular.jeffalo.net/api/reactions/{self.id}").json()
+        return requests.get(f"https://my-ocular.jeffalo.net/api/reactions/{self.id}", timeout=10).json()
 
     def get_author(self):
         """
@@ -216,7 +220,8 @@ class ForumPost:
                 "x-csrftoken": "a"
             },
             cookies = cookies,
-            json = f"csrfmiddlewaretoken=a&body={new_content}&"
+            json = f"csrfmiddlewaretoken=a&body={new_content}&",
+            timeout = 10,
         )
 
 
@@ -272,7 +277,7 @@ def get_topic_list(category_name, *, page=0, include_deleted=False):
     else:
         filter = 1
     try:
-        data = requests.get(f"https://scratchdb.lefty.one/v3/forum/category/topics/{category_name}/{page}?detail=1&filter={filter}").json()
+        data = requests.get(f"https://scratchdb.lefty.one/v3/forum/category/topics/{category_name}/{page}?detail=1&filter={filter}", timeout=10).json()
         return_data = []
         for topic in data:
             t = ForumTopic(id = topic["id"])

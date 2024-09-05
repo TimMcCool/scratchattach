@@ -45,7 +45,7 @@ def api_iterative_simple(
         raise exceptions.BadRequest("limit parameter must be >= 0")
     def fetch(o, l):
         resp = requests.get(
-            f"{url}?limit={l}&offset={o}{add_params}", headers=headers, cookies=cookies
+            f"{url}?limit={l}&offset={o}{add_params}", headers=headers, cookies=cookies, timeout=10
         ).json()
         if not resp:
             return None
