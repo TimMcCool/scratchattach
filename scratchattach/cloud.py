@@ -408,6 +408,39 @@ class WsCloudEvents(CloudEvents):
                 except Exception:
                     if "on_disconnect" in self._events:
                         self._events["on_disconnect"]()
+       
+       
+'''
+class CloudRecorder:
+    """
+    Used to record cloud data in real time and access cloud variable values.
+    """
+    def __init__(self, connection):
+        self.connection = connection
+        self.cloud_events = WsCloudEvents(project_id=connection.project_id, connection=connection)
+        self.variable_values = {}
+        
+        @self.cloud_events.event
+        def on_set(event):
+            self.variable_values[event.var] = event.value
+            self.variable_values[event.name] = event.value
+            
+    def __getitem__(self, item):
+        return self.variable_values[item]
+        
+'''
+    
+"""
+Example:
+
+
+cloud_rec = CloudRecorder(conn)
+while True:
+    time.sleep(10)
+    print(cloud_rec["HIGHSCORE"])
+    
+"""
+            
 # -----
 
 
