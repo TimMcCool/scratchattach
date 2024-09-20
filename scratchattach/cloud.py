@@ -7,6 +7,7 @@ import time
 from . import exceptions
 import traceback
 import warnings
+import certifi
 
 class _CloudMixin:
     """
@@ -81,7 +82,7 @@ class CloudConnection(_CloudMixin):
 
     def _connect(self, *, cloud_host):
         try:
-            self.websocket = websocket.WebSocket()
+            self.websocket = websocket.WebSocket(sslopt={"ca_certs": certifi.where()})
             self.websocket.connect(
                 "wss://clouddata.scratch.mit.edu",
                 cookie="scratchsessionsid=" + self._session_id + ";",
@@ -91,7 +92,7 @@ class CloudConnection(_CloudMixin):
             )
         except Exception:
             try:
-                self.websocket = websocket.WebSocket()
+                self.websocket = websocket.WebSocket(sslopt={"ca_certs": certifi.where()})
                 self.websocket.connect(
                     "wss://clouddata.scratch.mit.edu",
                     cookie="scratchsessionsid=" + self._session_id + ";",
@@ -158,7 +159,7 @@ class TwCloudConnection(_CloudMixin):
     :.websocket: The websocket connection (WebSocket object from the websocket-client library)
 
     :.cloud_host: The websocket URL of the cloud variable server
-    
+
     :.allow_non_numeric: Whether the cloud variables can be set to non-numeric values
     """
 
@@ -359,7 +360,15 @@ class TwCloudEvents(CloudEvents):
                     except Exception: pass
                 for activity in result:
                     if "on_"+activity["method"] in self._events:
-                        self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=time.time()*10000))
+                        try:
+                            self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=time.time()*10000))
+                        except Exception as e:
+                            print("Warning: Caught error in cloud event - Full error below")
+                            try:
+                                traceback.print_exc()
+                            except Exception:
+                                print(e)
+            
             except Exception:
                 try:
                     self.connection._connect(cloud_host=self.connection.cloud_host)
@@ -396,7 +405,14 @@ class WsCloudEvents(CloudEvents):
                         pass
                 for activity in result:
                     if "on_"+activity["method"] in self._events:
-                        self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=time.time()*10000))
+                        try:
+                            self._events["on_"+activity["method"]](self.Event(user=None, var=activity["name"][2:], name=activity["name"][2:], value=activity["value"], timestamp=time.time()*10000))
+                        except Exception as e:
+                            print("Warning: Caught error in cloud event - Full error below")
+                            try:
+                                traceback.print_exc()
+                            except Exception:
+                                print(e)            
             except Exception:
                 try:
                     self.connection._connect(cloud_host=self.connection.cloud_host)
@@ -417,7 +433,7 @@ def get_cloud(project_id):
 
     Args:
         project_id (str):
-    
+
     Returns:
         dict: The values of the project's cloud variables
     """
@@ -434,14 +450,14 @@ def get_cloud(project_id):
 def get_var(project_id, variable):
     """
     Gets the value of of a Scratch cloud variable.
-    
+
     Args:
         project_id (str):
         variable (str): The name of the cloud variable (specified without the cloud emoji)
-    
+
     Returns:
         str: The cloud variable's value
-    
+
     If the value can't be fetched, the method returns None.
     """
     try:
@@ -505,7 +521,7 @@ def get_tw_var(project_id, variable, *, purpose="", contact=""):
 
     Returns:
         str: The cloud variable's value
-    
+
     If the value can't be fetched, the method returns None.
     """
     try:
@@ -525,10 +541,10 @@ def get_tw_var(project_id, variable, *, purpose="", contact=""):
 def get_cloud_logs(project_id, *, filter_by_var_named =None, limit=25, offset=0):
     """
     Gets Scratch's clouddata log for a project.
-    
+
     Args:
         project_id:
-    
+
     Keyword Arguments:
         filter_by_var_named (str or None): If you only want to get data for one cloud variable, set this argument to its name.
         limit (int): Max. amount of returned activity.
@@ -549,7 +565,7 @@ def connect_tw_cloud(project_id_arg=None, *, project_id=None, purpose="", contac
 
     Args:
         project_id (str)
-    
+
     Keyword Arguments:
         purpose (str): (optional) Provide information about what you're using TurboWarp's cloud server for
         contact (str): (optional) Provide your Scratch account or another way you can be contacted
