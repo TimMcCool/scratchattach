@@ -11,13 +11,8 @@ from . import project
 from . import exceptions
 from . import studio
 from . import forum
+from .commons import api_iterative_data, api_iterative_simple, headers
 
-headers = {
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-    "x-csrftoken": "a",
-    "x-requested-with": "XMLHttpRequest",
-    "referer": "https://scratch.mit.edu",
-}
 
 class Session():
 
@@ -106,7 +101,7 @@ class Session():
         Returns:
             scratchattach.user.User: Object representing the user associated with the log in / session.
         '''
-        if not "_user" in self.__dict__:
+        if not hasattr(self, "_user"):
             self._user = self.connect_user(self._username)
         return self._user
 
@@ -289,9 +284,19 @@ class Session():
         Returns:
             list<scratchattach.project.Project>: List that contains the search results.
         '''
-        r = requests.get(f"https://api.scratch.mit.edu/search/projects?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
+        limit2 = limit+offset
+        while (limit2 % 40) != 0:
+            limit2+=1
+        limit2 //= 40
+        offs = 0
+        resp = []
+        for i in range(limit2):
+            resp2 = requests.get(f"https://api.scratch.mit.edu/search/projects?limit=40&offset={offs}&language={language}&mode={mode}&q={query}").json()
+            if not resp2 == {"code":"BadRequest","message":""}:
+                resp += resp2
+            offs+=40
+        r = resp[offset:][:limit]
         projects = []
-
         for project_dict in r:
             p = project.Project(_session = self)
             p._update_from_dict(project_dict)
@@ -311,9 +316,19 @@ class Session():
         Returns:
             list<scratchattach.project.Project>: List that contains the explore page projects.
         '''
-        r = requests.get(f"https://api.scratch.mit.edu/explore/projects?limit={limit}&offset={offset}&language={language}&mode={mode}&q={query}").json()
+        limit2 = limit+offset
+        while (limit2 % 40) != 0:
+            limit2+=1
+        limit2 //= 40
+        offs = 0
+        resp = []
+        for i in range(limit2):
+            resp2 = requests.get(f"https://api.scratch.mit.edu/explore/projects?limit=40&offset={offs}&language={language}&mode={mode}&q={query}").json()
+            if not resp2 == {"code":"BadRequest","message":""}:
+                resp += resp2
+            offs+=40
+        r = resp[offset:][:limit]
         projects = []
-
         for project_dict in r:
             p = project.Project(_session = self)
             p._update_from_dict(project_dict)
@@ -507,7 +522,7 @@ class Session():
         except Exception:
             return []
 
-    def upload_asset(asset):
+    def upload_asset(self, asset):
         data = asset if isinstance(asset, bytes) else open(asset, "rb").read()
 
         if isinstance(asset, str):

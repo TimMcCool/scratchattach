@@ -6,13 +6,8 @@ from . import project
 from . import exceptions
 from . import forum
 from bs4 import BeautifulSoup
+from .commons import headers
 
-headers = {
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-    "x-csrftoken": "a",
-    "x-requested-with": "XMLHttpRequest",
-    "referer": "https://scratch.mit.edu",
-}
 
 class User:
 
@@ -40,17 +35,17 @@ class User:
     def __init__(self, **entries):
         self.__dict__.update(entries)
 
-        if "bio" in self.__dict__:
+        if hasattr(self, "bio"):
             self.about_me = self.bio
-        if "status" in self.__dict__:
+        if hasattr(self, "status"):
             self.wiwo = self.status
 
-        if "name" in self.__dict__.keys():
+        if hasattr(self, "name"):
             self.username = self.name
-        if "username" in self.__dict__.keys():
+        if hasattr(self, "username"):
             self.name = self.username
 
-        if "_session" not in self.__dict__.keys():
+        if not hasattr(self, "_session"):
             self._session = None
         if self._session is None:
             self._headers = headers
