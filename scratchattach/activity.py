@@ -80,6 +80,41 @@ class Activity(AbstractScratch):
         except Exception:
             raise(exceptions.FetchError)
         return _user
+        
+    def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException):
+        # Interal function
+        try:
+            _object = Class(**{identificator_id:identificator, "_session":self._session})
+            _object.update()
+            return _object
+        except KeyError as e:
+            raise(NotFoundException("Key error at key "+str(e)+" when reading API response"))
+        except Exception as e:
+            raise(e)
+
+    def target(self):
+        """
+        Returns the activity's target (depending on the activity, this is either a User, Project or Studio object).
+        May also return None if the activity type is unknown.
+        """
+        if self.type == "loveproject" or self.type == "favoriteproject" or self.type == "shareproject":
+            if "target_id" in self.__dict__:
+                return self._make_linked_object("id", self.target_id, project.Project, exceptions.ProjectNotFound)
+            if "project_id" in self.__dict__:
+                return self._make_linked_object("id", self.project_id, project.Project, exceptions.ProjectNotFound)
+        if self.type == "becomecurator" or self.type == "followstudio":
+            if "target_id" in self.__dict__:
+                return self._make_linked_object("id", self.target_id, studio.Studio, exceptions.StudioNotFound)
+            if "gallery_id" in self.__dict__:
+                return self._make_linked_object("id", self.gallery_id, studio.Studio, exceptions.StudioNotFound)
+        if self.type == "followuser":
+            if "target_id" in self.__dict__:
+                return self._make_linked_object("id", self.target_id, user.User, exceptions.UserNotFound)
+            if "followed_username" in self.__dict__:
+                return self._make_linked_object("id", self.followed_username, user.User, exceptions.UserNotFound)
+
+
+
 
 
 
