@@ -94,11 +94,6 @@ class User(AbstractScratch):
         except KeyError: pass
         return True
 
-    def _assert_auth(self):
-        if self._session is None:
-            raise exceptions.Unauthenticated(
-                "You need to use session.connect_user (NOT get_user) in order to perform this operation.")
-
     def _assert_permission(self):
         self._assert_auth()
         if self._session._username != self.username:

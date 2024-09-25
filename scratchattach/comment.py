@@ -74,5 +74,52 @@ class Comment(AbstractScratch):
             return self._make_linked_object("id", self.source_id, studio.Studio, exceptions.UserNotFound)
         if self.source == "project":
             return self._make_linked_object("id", self.source_id, project.Project, exceptions.UserNotFound)
+    
+    # Methods for dealing with the comment
+
+    def reply(self, content, *, commentee_id=""):
+        """
+        Posts a reply comment to the comment.
+        
+        Args:
+            content (str): Comment content to post.
+
+        Keyword arguments:
+            commentee_id (int): The user that will be mentioned in your comment. If you don't want to mention a user, don't set this argument.
+
+        Returns:
+            scratchattach.Comment: The created comment.
+        """
+        
+        self._assert_auth()
+        if self.source == "profile":
+            user.User(username=self.source_id, _session=self._session).reply_comment(content, parent_id=str(self.id), commentee_id=commentee_id)
+        if self.source == "project":
+            project.Project(id=self.id, _session=self._session).reply_comment(content, parent_id=str(self.id), commentee_id=commentee_id)
+        if self.source == "studio":
+            studio.Studio(id=self.id, _session=self._session).reply_comment(content, parent_id=str(self.id), commentee_id=commentee_id)
 
 
+    def delete(self):
+        """
+        Deletes the comment.
+        """
+        self._assert_auth()
+        if self.source == "profile":
+            user.User(username=self.source_id, _session=self._session).delete_comment(comment_id=self.id)
+        if self.source == "project":
+            project.Project(id=self.id, _session=self._session).delete_comment(comment_id=self.id)
+        if self.source == "studio":
+            studio.Studio(id=self.id, _session=self._session).delete_comment(comment_id=self.id)
+
+    def report(self):
+        """
+        Reports the comment to the Scratch team.
+        """
+        self._assert_auth()
+        if self.source == "profile":
+            user.User(username=self.source_id, _session=self._session).report_comment(comment_id=self.id)
+        if self.source == "project":
+            project.Project(id=self.id, _session=self._session).report_comment(comment_id=self.id)
+        if self.source == "studio":
+            studio.Studio(id=self.id, _session=self._session).report_comment(comment_id=self.id)

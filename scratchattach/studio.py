@@ -184,6 +184,43 @@ class Studio:
             timeout=10,
         ).json()
 
+    def delete_comment(self, *, comment_id):
+        # NEEDS TO BE TESTED!
+        """
+        Deletes a comment. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
+
+        Args:
+            comment_id: The id of the comment that should be deleted
+        """
+        if self._session is None:
+            raise (exceptions.Unauthenticated)
+            return
+        if self._session._username != self.author:
+            raise (exceptions.Unauthorized)
+            return
+        return requests.delete(
+            f"https://api.scratch.mit.edu/proxy/comments/studio/{self.id}/comment/{comment_id}/",
+            headers=self._headers,
+            cookies=self._cookies,
+        ).headers
+
+    def report_comment(self, *, comment_id):
+        # NEEDS TO BE TESTED!
+        """
+        Reports a comment to the Scratch team. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
+
+        Args:
+            comment_id: The id of the comment that should be reported
+        """
+        if self._session is None:
+            raise (exceptions.Unauthenticated)
+            return
+        return requests.delete(
+            f"https://api.scratch.mit.edu/proxy/comments/studio/{self.id}/comment/{comment_id}/report",
+            headers=self._headers,
+            cookies=self._cookies,
+        )
+
     def set_thumbnail(self, *, file):
         """
         Sets the studio thumbnail. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`

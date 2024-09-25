@@ -2,6 +2,7 @@
 In v2, all of these classes are inheriting from this abstract class"""
 
 from abc import ABC, abstractmethod
+from . import exceptions
 
 class AbstractScratch(ABC):
 
@@ -26,6 +27,11 @@ class AbstractScratch(ABC):
     @abstractmethod
     def _update_from_dict(self, data) -> bool:
         pass
+
+    def _assert_auth(self):
+        if self._session is None:
+            raise exceptions.Unauthenticated(
+                "You need to use session.connect_user (NOT get_user) in order to perform this operation.")
 
     def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException):
         """
