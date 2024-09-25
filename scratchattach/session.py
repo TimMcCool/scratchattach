@@ -492,7 +492,7 @@ class Session(AbstractScratch):
             scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
         """
         # Get username:
-        you = user.User(username=self.username, session=self)
+        you = user.User(username=self.username, _session=self)
         comment = you.post_comment("scratchattach", commentee_id=int(user_id))
         print("DEBUG", comment.content)
         username = comment.content.split(" ")[0].replace("@", "")
