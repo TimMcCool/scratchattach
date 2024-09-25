@@ -25,8 +25,11 @@ class Comment(AbstractScratch):
 
     def __init__(self, **entries):
         
-        # Set attributes every Activity object needs to have:
+        # Set attributes every Comment object needs to have:
         self.id = None
+        self._session = None
+        self.source_id = None
+        self.cached_replies = []
         if not "source" in entries:
             "source" == "Unknown"
 

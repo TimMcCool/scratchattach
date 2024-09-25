@@ -24,6 +24,20 @@ def parse_object_list(raw, Class, session=None, primary_key="id"):
             print("Warning raised by scratchattach: failed to parse ", raw_dict)
     return results
 
+def _get_object(identificator_id, identificator, Class, NotFoundException):
+    # Interal function: Generalization of the process ran by get_user, get_studio etc.
+    try:
+        _object = Class(**{identificator_id:identificator, "_session":None})
+        if _object.update() == "429":
+            raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+        if not _object: # Target is unshared
+            return False
+        return _object
+    except KeyError as e:
+        raise(NotFoundException("Key error at key "+str(e)+" when reading API response"))
+    except Exception as e:
+        raise(e)
+
 '''
 
 def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True):

@@ -446,10 +446,10 @@ class Session(AbstractScratch):
             return None
     """
 
-    def _connect_object(self, identificator, Class, NotFoundException):
+    def _connect_object(self, identificator_id, identificator, Class, NotFoundException):
         # Interal function: Generalization of the process ran by connect_user, connect_studio etc.
         try:
-            _object = Class(username=identificator, _session=self)
+            _object = Class(**{identificator_id:identificator, "_session":self})
             if _object.update() == "429":
                 raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
             if not _object: # Target is unshared
@@ -471,7 +471,7 @@ class Session(AbstractScratch):
         Returns:
             scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
         """
-        return self._connect_object(username, user.User, exceptions.UserNotFound)
+        return self._connect_object("username", username, user.User, exceptions.UserNotFound)
 
     def connect_project(self, project_id):
         """
@@ -483,7 +483,7 @@ class Session(AbstractScratch):
         Returns:
             scratchattach.project.Project: An object that represents the requested project and allows you to perform actions on the project (like project.love)
         """
-        result = self._connect_object(int(project_id), project.Project, exceptions.ProjectNotFound)
+        result = self._connect_object("id", int(project_id), project.Project, exceptions.ProjectNotFound)
         if result is False: # Project is unshared
             return project.PartialProject(id=int(project_id))
         return result
@@ -498,7 +498,7 @@ class Session(AbstractScratch):
         Returns:
             scratchattach.studio.Studio: An object that represents the requested studio and allows you to perform actions on the studio (like studio.follow)
         """
-        return self._connect_object(int(studio_id), studio.Studio, exceptions.StudioNotFound)
+        return self._connect_object("id", int(studio_id), studio.Studio, exceptions.StudioNotFound)
 
     def connect_topic(self, topic_id):
         """
@@ -510,7 +510,7 @@ class Session(AbstractScratch):
         Returns:
             scratchattach.forum.ForumTopic: An object that represents the requested forum topic
         """
-        return self._connect_object(int(topic_id), forum.ForumTopic, exceptions.ForumContentNotFound)
+        return self._connect_object("id", int(topic_id), forum.ForumTopic, exceptions.ForumContentNotFound)
 
     def connect_post(self, post_id):
 
@@ -523,7 +523,7 @@ class Session(AbstractScratch):
         Returns:
             scratchattach.forum.ForumPost: An object that represents the requested forum post
         """
-        return self._connect_object(int(post_id), forum.ForumPost, exceptions.ForumContentNotFound)
+        return self._connect_object("id", int(post_id), forum.ForumPost, exceptions.ForumContentNotFound)
 
 
 # ------ #

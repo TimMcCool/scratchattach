@@ -27,6 +27,7 @@ class Activity(AbstractScratch):
 
         # Set attributes every Activity object needs to have:
         self.raw = None
+        self._session = None
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)

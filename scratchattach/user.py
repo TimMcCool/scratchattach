@@ -1,4 +1,4 @@
-"""being made v2 ready: Session class and login function"""
+"""v2 ready: Session class and login function"""
 
 import json
 import requests
@@ -403,7 +403,7 @@ class User(AbstractScratch):
             commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
         
         Returns:
-            scratchattach.Comment: A comment object representing the created comment.
+            scratchattach.comment.Comment: An object representing the created comment.
         """
         self._assert_auth()
         data = {
@@ -420,13 +420,13 @@ class User(AbstractScratch):
         if r.status_code != 200:
             raise exceptions.CommentPostFailure(r.text)
         data = r.json()
-        _comment = comment.Comment(source="profile", source_id=self.username, id=data["id"])
+        _comment = comment.Comment(source="profile", source_id=self.username, id=data["id"], _session = self._session)
         _comment._update_from_json(data)
         return _comment
     
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """
-        Posts a reply to a comment on the user's profile. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Replies to a comment given by its id
 
         Args:
             content: Content of the comment that should be posted
@@ -440,7 +440,7 @@ class User(AbstractScratch):
     def activity(self, *, limit=1000):
         """
         Returns:
-            list<dict>: The user's activity data as parsed list of dicts
+            list<scratchattach.Activity>: The user's activity data as parsed list of scratchattach.activity.Activity objects
         """
         soup = BeautifulSoup(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text, 'html.parser')
                 
@@ -448,7 +448,7 @@ class User(AbstractScratch):
         source = soup.find_all("li")
                 
         for data in source:
-            _activity = activity.Activity()
+            _activity = activity.Activity(_session = self._session)
             _activity._update_from_html(data)
             activity.append(_activity)
 
@@ -467,9 +467,7 @@ class User(AbstractScratch):
         """
         Follows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
-        if self._session is None:
-            raise(exceptions.Unauthenticated)
-            return
+        self._assert_auth()
         requests.put(
             f"https://scratch.mit.edu/site-api/users/followers/{self.username}/add/?usernames={self._session._username}",
             headers = headers,
@@ -480,9 +478,7 @@ class User(AbstractScratch):
         """
         Unfollows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
-        if self._session is None:
-            raise(exceptions.Unauthenticated)
-            return
+        self._assert_auth()
         requests.put(
             f"https://scratch.mit.edu/site-api/users/followers/{self.username}/remove/?usernames={self._session._username}",
             headers = headers,
@@ -491,14 +487,12 @@ class User(AbstractScratch):
 
     def delete_comment(self, *, comment_id):
         """
-        Deletes a comment. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Deletes a comment by its ID. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
 
         Args:
             comment_id: The id of the comment that should be deleted
         """
-        if self._session is None:
-            raise(exceptions.Unauthenticated)
-            return
+        self._assert_permission()
         return requests.post(
             f"https://scratch.mit.edu/site-api/comments/user/{self.username}/del/",
             headers = headers,
@@ -508,14 +502,12 @@ class User(AbstractScratch):
 
     def report_comment(self, *, comment_id):
         """
-        Reports a comment to the Scratch team. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Reports a comment by its ID to the Scratch team. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
 
         Args:
             comment_id: The id of the comment that should be reported
         """
-        if self._session is None:
-            raise(exceptions.Unauthenticated)
-            return
+        self._assert_permission()
         return requests.post(
             f"https://scratch.mit.edu/site-api/comments/user/{self.username}/rep/",
             headers = headers,
@@ -523,7 +515,18 @@ class User(AbstractScratch):
             data = json.dumps({"id":str(comment_id)})
         )
 
-    def _get_comments(self, URL):
+    def comments(self, *, page=1, limit=None):
+        """
+        Returns the comments posted on the user's profile (with replies).
+
+        Keyword Arguments:
+            page: The page of the comments that should be returned.
+            limit: Max. amount of returned comments.
+
+        Returns:
+            list<dict>: A list containing the requested comments as dicts.
+        """
+        URL = f"https://scratch.mit.edu/site-api/comments/user/{self.username}/?page={page}"
         DATA = []
 
         page_contents = requests.get(URL).content
@@ -554,46 +557,39 @@ class User(AbstractScratch):
                     "                    ", " ")
                 r_time = reply.find("span", {"class": "time"})['title']
                 reply_data = {
-                    'CommentID': r_comment_id,
-                    'User': r_user,
-                    'Content': r_content,
-                    'Timestamp': r_time
+                    'id': r_comment_id,
+                    'author':{'username': r_user},
+                    'content': r_content,
+                    'datetime_created': r_time
                 }
-                ALL_REPLIES.append(reply_data)
+                _comment = comments.Comment(source="profile", source_id=self.username, _session = self._session)
+                _comment.update_from_dict(reply_data)
+                ALL_REPLIES.append(_comment)
 
             main_comment = {
-                'CommentID': comment_id,
-                'User': user,
-                'Content': content,
-                'Timestamp': time,
-                'hasReplies?': hasReplies,
-                'Replies': ALL_REPLIES
+                'id': comment_id,
+                'author': {"username":user},
+                'content': content,
+                'datetime_created': time,
+                'reply_count': len(ALL_REPLIES),
+                'cached_replies': ALL_REPLIES
             }
-            DATA.append(main_comment)
+            _comment = comments.Comment(source="profile", source_id=self.username, _session = self._session)
+            _comment.update_from_dict(main_comment)
+            DATA.append(_comment)
         return DATA
-
-
-    def comments(self, *, page=1, limit=None):
-        """
-        Returns the comments posted on the user's profile (with replies).
-
-        Keyword Arguments:
-            page: The page of the comments that should be returned.
-            limit: Max. amount of returned comments.
-
-        Returns:
-            list<dict>: A list containing the requested comments as dicts.
-        """
-        URL = f"https://scratch.mit.edu/site-api/comments/user/{self.username}/?page={page}"
-        return self._get_comments(URL)[:limit]
-
+    
     def stats(self):
         """
         Gets information about the user's stats. Fetched from ScratchDB.
 
+        Warning:
+            ScratchDB is down indefinitely, therefore this method is deprecated.
+
         Returns:
             dict: A dict containing the user's stats. If the stats aren't available, all values will be -1.
         """
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
         try:
             stats= requests.get(
                 f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
@@ -607,9 +603,13 @@ class User(AbstractScratch):
         """
         Gets information about the user's ranks. Fetched from ScratchDB.
 
+        Warning:
+            ScratchDB is down indefinitely, therefore this method is deprecated.
+
         Returns:
             dict: A dict containing the user's ranks. If the ranks aren't available, all values will be -1.
         """
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")        
         try:
             return requests.get(
                 f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
@@ -621,6 +621,9 @@ class User(AbstractScratch):
         """
         Gets information about the user's follower count history. Fetched from ScratchDB.
 
+        Warning:
+            ScratchDB is down indefinitely, therefore this method is deprecated.
+
         Keyword Args:
             segment (int): Offset for the first returned element.
             range (int): Amount of returned elements.
@@ -628,27 +631,32 @@ class User(AbstractScratch):
         Returns:
             list<dict>
         """
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")        
         return requests.get(f"https://scratchdb.lefty.one/v3/user/graph/{self.username}/followers?segment={segment}&range={range}")
 
     def forum_counts(self):
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")        
         try:
             return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["counts"]
         except Exception:
             raise exceptions.FetchError
 
     def forum_posts_over_time(self):
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")        
         try:
             return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["history"]
         except Exception:
             raise exceptions.FetchError
 
     def forum_signature(self):
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")        
         try:
             return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["signature"]
         except Exception:
             raise exceptions.FetchError
 
     def forum_signature_history(self):
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")        
         return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/history/{self.username}").json()
 
     def ocular_status(self):
@@ -660,6 +668,7 @@ class User(AbstractScratch):
         """
         return requests.get(f"https://my-ocular.jeffalo.net/api/user/{self.username}").json()
 
+    ''' WIP
     def forum_posts(self, *, page=0, order="newest"):
         """
         Gets the forum posts associated with the user.
@@ -683,7 +692,7 @@ class User(AbstractScratch):
                 return_data.append(a)
             return return_data
         except Exception:
-            return []
+            return []'''
 
 # ------ #
 
@@ -702,12 +711,4 @@ def get_user(username):
         
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_user` instead.
     """
-    try:
-        user = User(username=username)
-        if user.update() == "429":
-            raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-        return user
-    except KeyError:
-        return None
-    except Exception as e:
-        raise(e)
+    commons._get_object("username", username, User, exceptions.UserNotFound)
