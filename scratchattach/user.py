@@ -549,12 +549,12 @@ class User(AbstractScratch):
 
         soup = BeautifulSoup(page_contents, "html.parser")
 
-        comments = soup.find_all("li", {"class": "top-level-reply"})
+        _comments = soup.find_all("li", {"class": "top-level-reply"})
 
-        if len(comments) == 0:
+        if len(_comments) == 0:
             return None
 
-        for comment in comments:
+        for comment in _comments:
             comment_id = comment.find("div", {"class": "comment"})['data-comment-id']
             user = comment.find("a", {"id": "comment-user"})['data-comment-user']
             content = str(comment.find("div", {"class": "content"}).text).strip()
@@ -578,7 +578,7 @@ class User(AbstractScratch):
                     'content': r_content,
                     'datetime_created': r_time
                 }
-                _comment = comments.Comment(source="profile", source_id=self.username, _session = self._session)
+                _comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
                 _comment.update_from_dict(reply_data)
                 ALL_REPLIES.append(_comment)
 
@@ -590,7 +590,7 @@ class User(AbstractScratch):
                 'reply_count': len(ALL_REPLIES),
                 'cached_replies': ALL_REPLIES
             }
-            _comment = comments.Comment(source="profile", source_id=self.username, _session = self._session)
+            _comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
             _comment.update_from_dict(main_comment)
             DATA.append(_comment)
         return DATA

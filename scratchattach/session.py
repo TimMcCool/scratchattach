@@ -486,7 +486,7 @@ class Session(AbstractScratch):
         try:
             comment = you.post_comment("scratchattach", commentee_id=int(user_id))
         except exceptions.CommentPostFailure:
-            raise exceptions.BadRequest("You are being rate-limited for running this operation too often. Implement a cooldown of about 10 seconds.")
+            raise exceptions.BadRequest("You are being rate-limited for running this operation too often.")
         except Exception as e:
             raise e
         username = comment.content.split('">@')[1]
