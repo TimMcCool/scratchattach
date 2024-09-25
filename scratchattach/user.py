@@ -175,8 +175,8 @@ class User(AbstractScratch):
         """
         if limit>40:
             limit=40
-        response = requests.get(
-            f"https://api.scratch.mit.edu/users/{self.username}/followers/?limit={limit}&offset={offset}").json()
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self.username}/followers/", limit=limit, offset=offset)
         return commons.parse_object_list(response, User, self._session, "username")
 
     def follower_names(self, *, limit=40, offset=0):
@@ -194,8 +194,8 @@ class User(AbstractScratch):
         if limit>40:
             limit=40
         followers = []
-        response = requests.get(
-            f"https://api.scratch.mit.edu/users/{self.username}/following/?limit={limit}&offset={offset}").json()
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self.username}/following/", limit=limit, offset=offset)
         return commons.parse_object_list(response, User, self._session, "username")
 
     def following_names(self, *, limit=40, offset=0):
@@ -256,7 +256,8 @@ class User(AbstractScratch):
         return commons.webscrape_count(text, "Studios I follow (", ")")
 
     def studios(self, *, limit=40, offset=0):
-        _studios = requests.get(f"https://api.scratch.mit.edu/users/{self.username}/studios/curate?limit={limit}&offset={offset}").json()
+        _studios = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self.username}/studios/curate", limit=limit, offset=offset)
         studios = []
         for studio_dict in _studios:
             _studio = studio.Studio(_session = self._session, id = studio_dict["id"])
@@ -269,10 +270,8 @@ class User(AbstractScratch):
         Returns:
             list<projects.projects.Project>: The user's shared projects
         """
-        _projects = requests.get(
-            f"https://api.scratch.mit.edu/users/{self.username}/projects/?limit={limit}&offset={offset}",
-            headers = self._headers
-        ).json()
+        _projects = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self.username}/projects/", limit=limit, offset=offset, headers = self._headers)
         for p in _projects:
             p["author"] = {"username":self.username}
         return commons.parse_object_list(_projects, project.Project, self._session)
@@ -282,10 +281,8 @@ class User(AbstractScratch):
         Returns:
             list<projects.projects.Project>: The user's favorite projects
         """
-        _projects = requests.get(
-            f"https://api.scratch.mit.edu/users/{self.username}/favorites/?limit={limit}&offset={offset}",
-            headers = self._headers
-        ).json()
+        _projects = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self.username}/favorites/", limit=limit, offset=offset, headers = self._headers)
         return commons.parse_object_list(_projects, project.Project, self._session)
     
     def favorites_count(self):
@@ -313,10 +310,8 @@ class User(AbstractScratch):
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
         self._assert_permission()
-        _projects = requests.get(
-            f"https://api.scratch.mit.edu/users/{self.username}/projects/recentlyviewed?limit={limit}&offset={offset}",
-            headers = self._headers
-        ).json()
+        _projects = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self.username}/projects/recentlyviewed", limit=limit, offset=offset, headers = self._headers)
         return commons.parse_object_list(_projects, project.Project, self._session)
 
     def set_bio(self, text):

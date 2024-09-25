@@ -1,3 +1,5 @@
+# v2 ready
+
 from .cloud import *
 from .user import *
 from .session import *
@@ -6,10 +8,12 @@ from .studio import *
 from .cloud_requests import *
 from .forum import *
 from .encoder import *
+from . import commons
+from .comment import *
 
 def get_news(*, limit=10, offset=0):
-    return requests.get(f"https://api.scratch.mit.edu/news?limit={limit}&offset={offset}").json()
-
+    return commons.api_iterative("https://api.scratch.mit.edu/news", limit = limit, offset = offset)
+            
 def featured_projects():
     return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["community_featured_projects"]
 
@@ -32,6 +36,7 @@ def design_studio_projects():
     return requests.get("https://api.scratch.mit.edu/proxy/featured").json()["scratch_design_studio"]
 
 def search_posts(*, query, order="newest", page=0):
+    print("Warning: This method is deprecated because ScratchDB is down indefinitely.")
     try:
         data = requests.get(f"https://scratchdb.lefty.one/v3/forum/search?q={query}&o={order}&page={page}").json()["posts"]
         return_data = []
