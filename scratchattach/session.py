@@ -138,15 +138,14 @@ class Session(AbstractScratch):
         '''
         return json.loads(requests.get(
             f"https://scratch.mit.edu/messages/ajax/get-message-count/",
-            headers = {
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
-            },
+            headers = self._headers,
+            cookies = self._cookies,
             timeout = 10,
         ).text)["msg_count"]
 
     # Front-page-related stuff:
 
-    def get_feed(self, *, limit=20, offset=0):
+    def feed(self, *, limit=20, offset=0):
         '''
         Returns the "What's happening" section (frontpage).
 
@@ -160,6 +159,10 @@ class Session(AbstractScratch):
             timeout = 10,
         ).json()
         return commons.parse_object_list(data, activity.Activity, self)
+
+    def get_feed(self, *, limit=20, offset=0):
+        # for more consistent names, this method was renamed
+        return self.feed(limit=limit, offset=offset) # for backwards compatibility with v1
 
     def loved_by_followed_users(self, *, limit=40, offset=0):
         '''
