@@ -46,6 +46,10 @@ Run the following command in your command prompt / shell:
 pip install -U scratchattach
 ```
 
+If this doesn't work, pip was not added to path when you installed Python. Try running:
+```
+python -m pip install -U scratchattach
+```
 
 
 **Logging in with username / password:**
