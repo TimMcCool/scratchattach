@@ -93,6 +93,6 @@ class Activity(AbstractScratch):
                 return self._make_linked_object("id", self.gallery_id, studio.Studio, exceptions.StudioNotFound)
         if self.type == "followuser":
             if "target_id" in self.__dict__:
-                return self._make_linked_object("id", self.target_id, user.User, exceptions.UserNotFound)
+                return self._make_linked_object("username", self.target_id, user.User, exceptions.UserNotFound)
             if "followed_username" in self.__dict__:
-                return self._make_linked_object("id", self.followed_username, user.User, exceptions.UserNotFound)
+                return self._make_linked_object("username", self.followed_username, user.User, exceptions.UserNotFound)

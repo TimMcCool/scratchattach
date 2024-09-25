@@ -28,6 +28,7 @@ class Comment(AbstractScratch):
         # Set attributes every Comment object needs to have:
         self.id = None
         self._session = None
+        self.source=None
         self.source_id = None
         self.cached_replies = []
         if not "source" in entries:
@@ -55,3 +56,23 @@ class Comment(AbstractScratch):
         except Exception: pass
         try: self.reply_count = data["reply_count"]
         except Exception: pass
+
+    # Methods for getting related entities
+
+    def author(self):
+        return self._make_linked_object("username", self.author_name, user.User, exceptions.UserNotFound)
+
+    def place(self):
+        """
+        Returns the place (the project, profile or studio) where the comment was posted as Project, User, or Studio object.
+        
+        If the place can't be traced back, None is returned.
+        """
+        if self.source == "profile":
+            return self._make_linked_object("username", self.source_id, user.User, exceptions.UserNotFound)
+        if self.source == "studio":
+            return self._make_linked_object("id", self.source_id, studio.Studio, exceptions.UserNotFound)
+        if self.source == "project":
+            return self._make_linked_object("id", self.source_id, project.Project, exceptions.UserNotFound)
+
+
