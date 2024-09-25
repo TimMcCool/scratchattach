@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from .abstractscratch import AbstractScratch
 from .commons import headers
 from . import commons
+from . import comment
 
 class User(AbstractScratch):
 
@@ -390,7 +391,6 @@ class User(AbstractScratch):
         }
         response = requests.post(f'https://scratch.mit.edu/discuss/settings/{self.username}/', cookies=self._cookies, headers=headers, data=data)
 
-    ##
     def post_comment(self, content, *, parent_id="", commentee_id=""):
         """
         Posts a comment on the user's profile. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
@@ -419,8 +419,11 @@ class User(AbstractScratch):
         )
         if r.status_code != 200:
             raise exceptions.CommentPostFailure(r.text)
-        return r.text
-
+        data = r.json()
+        _comment = comment.Comment(source="profile", source_id=self.username, id=data["id"])
+        _comment._update_from_json(data)
+        return _comment
+    
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """
         Posts a reply to a comment on the user's profile. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
