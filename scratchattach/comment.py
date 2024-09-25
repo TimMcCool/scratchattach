@@ -9,7 +9,7 @@ from . import session
 from . import project
 from . import studio
 from . import forum
-from . import exceptions
+from . import exceptions, commons
 from .abstractscratch import AbstractScratch
 from .commons import headers
 from bs4 import BeautifulSoup
@@ -123,3 +123,22 @@ class Comment(AbstractScratch):
             project.Project(id=self.id, _session=self._session).report_comment(comment_id=self.id)
         if self.source == "studio":
             studio.Studio(id=self.id, _session=self._session).report_comment(comment_id=self.id)
+
+# ------ #
+
+def get_comment(comment_id):
+    """
+    Gets a comment by comment_id without logging in.
+
+    Args:
+        comment_id (int): ID of the requested comment.
+
+    Returns:
+        scratchattach.comments.Comment: An object representing the requested user
+
+    Warning:
+        Any methods that require authentication (like comment.reply) will not work on the returned object.
+        
+        If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_comment` instead.
+    """
+    return commons._get_object("username", comment_id, Comment, exceptions.UserNotFound)

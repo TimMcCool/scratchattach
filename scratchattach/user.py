@@ -563,7 +563,8 @@ class User(AbstractScratch):
                     'id': r_comment_id,
                     'author':{'username': r_user},
                     'content': r_content,
-                    'datetime_created': r_time
+                    'datetime_created': r_time,
+                    "parent_id" : comment_id,
                 }
                 _comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
                 _comment._update_from_dict(reply_data)
