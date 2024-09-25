@@ -495,7 +495,7 @@ class Session(AbstractScratch):
         you = user.User(username=self.username, _session=self)
         comment = you.post_comment("scratchattach", commentee_id=int(user_id))
         print("DEBUG", comment.content)
-        username = comment.content.split(" ")[0].replace("@", "")
+        username = comment.content.split('">@T')[1].split("</a>")[0]
         print("DEBUG", username)
         you.delete_comment(comment_id=comment.id)
         # Get user info:
