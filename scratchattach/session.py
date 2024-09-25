@@ -603,7 +603,7 @@ def login(username, password, *, timeout=10):
 
     # Post request to login API:
     data = json.dumps({"username": username, "password": password})
-    _headers = headers
+    _headers = dict(headers)
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     request = requests.post(
         "https://scratch.mit.edu/login/", data=data, headers=_headers,

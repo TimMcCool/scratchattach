@@ -419,7 +419,17 @@ class User(AbstractScratch):
         )
         if r.status_code != 200:
             raise exceptions.CommentPostFailure(r.text)
-        data = r.json()
+
+        text = r.text
+        data = {
+            'id': text.split('<div id="comments-')[1].split('" class="comment')[0],
+            'author': {"username":text.split('" data-comment-user="')[1].split('"><img class')[0]},
+            'content': text.split('<div class="content">')[1].split('"</div>')[0],
+            'reply_count': 0,
+            'cached_replies': []
+        }
+
+
         _comment = comment.Comment(source="profile", source_id=self.username, id=data["id"], _session = self._session)
         _comment._update_from_json(data)
         return _comment
