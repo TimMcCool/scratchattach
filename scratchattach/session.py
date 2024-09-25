@@ -424,6 +424,36 @@ class Session():
             data=data,
             timeout=10,
         )
+
+    def connect_topic_list(self, category_name, *, page=0, include_deleted=False):
+        """
+        Gets the topics from a forum category.
+
+        Args:
+            category_name (str): Name of the forum category
+        
+        Keyword Arguments:
+            page (str): Page of the category topics that should be returned
+            include_deleted (boolean): Whether deleted topics should be returned too
+
+        Returns:
+            list<scratchattach.forum.ForumTopic>: A list containing the forum topics from the specified category
+        """
+        category_name.replace(" ", "%20")
+        if include_deleted:
+            filter = 0
+        else:
+            filter = 1
+        try:
+            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/category/topics/{category_name}/{page}?detail=1&filter={filter}", timeout=10).json()
+            return_data = []
+            for topic in data:
+                t = forum.ForumTopic(id = topic["id"], _session=self)
+                t._update_from_dict(topic)
+                return_data.append(t)
+            return return_data
+        except Exception:
+            return None
     """
 
     def connect_user(self, username):
@@ -510,36 +540,6 @@ class Session():
             raise(exceptions.ForumContentNotFound("Key error at key "+str(e)+" when reading API response"))
         except Exception as e:
             raise(e)
-
-    def connect_topic_list(self, category_name, *, page=0, include_deleted=False):
-        """
-        Gets the topics from a forum category.
-
-        Args:
-            category_name (str): Name of the forum category
-        
-        Keyword Arguments:
-            page (str): Page of the category topics that should be returned
-            include_deleted (boolean): Whether deleted topics should be returned too
-
-        Returns:
-            list<scratchattach.forum.ForumTopic>: A list containing the forum topics from the specified category
-        """
-        category_name.replace(" ", "%20")
-        if include_deleted:
-            filter = 0
-        else:
-            filter = 1
-        try:
-            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/category/topics/{category_name}/{page}?detail=1&filter={filter}", timeout=10).json()
-            return_data = []
-            for topic in data:
-                t = forum.ForumTopic(id = topic["id"], _session=self)
-                t._update_from_dict(topic)
-                return_data.append(t)
-            return return_data
-        except Exception:
-            return None
 
     def connect_post(self, post_id):
 
