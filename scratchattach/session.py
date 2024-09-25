@@ -15,6 +15,7 @@ from . import studio
 from . import forum
 from .abstractscratch import AbstractScratch
 from .commons import headers
+from bs4 import BeautifulSoup
 
 
 class Session(AbstractScratch):
@@ -70,14 +71,14 @@ class Session(AbstractScratch):
             "Content-Type": "application/json",
         }
 
-    def _update_from_dict(self, session):
-        self.xtoken = session['user']['token']
+    def _update_from_dict(self, data):
+        self.xtoken = data['user']['token']
         self._headers["X-Token"] = self.xtoken
-        self.email = session["user"]["email"]
-        self.new_scratcher = session["permissions"]["new_scratcher"]
-        self.mute_status = session["permissions"]["mute_status"]
-        self._username = session["user"]["username"]
-        self.banned = session["user"]["banned"]
+        self.email = data["user"]["email"]
+        self.new_scratcher = data["permissions"]["new_scratcher"]
+        self.mute_status = data["permissions"]["mute_status"]
+        self._username = data["user"]["username"]
+        self.banned = data["user"]["banned"]
         if self.banned:
             warnings.warn(f"Warning: The account {self._username} you logged in to is BANNED. Some features may not work properly.")
         return True

@@ -74,14 +74,14 @@ class User(AbstractScratch):
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
-    def _update_from_dict(self, response):
-        self.id = response["id"]
-        self.scratchteam = response["scratchteam"]
-        self.join_date = response["history"]["joined"]
-        self.about_me = response["profile"]["bio"]
-        self.wiwo = response["profile"]["status"]
-        self.country = response["profile"]["country"]
-        self.icon_url = response["profile"]["images"]["90x90"]
+    def _update_from_dict(self, data):
+        self.id = data["id"]
+        self.scratchteam = data["scratchteam"]
+        self.join_date = data["history"]["joined"]
+        self.about_me = data["profile"]["bio"]
+        self.wiwo = data["profile"]["status"]
+        self.country = data["profile"]["country"]
+        self.icon_url = data["profile"]["images"]["90x90"]
         return True
     
     def does_exist(self):
@@ -105,30 +105,6 @@ class User(AbstractScratch):
             return "new scratcher" in group.lower()
         except Exception:
             return None
-    
-    def _parse_activity(self, htm):
-        
-        soup = BeautifulSoup(htm, 'html.parser')
-                
-        activity = []
-        source = soup.find_all("li")
-                
-        for data in source:
-                
-            time=data.find('div').find('span').findNext().findNext().text.strip()
-                
-            if '\xa0' in time:
-                while '\xa0' in time: time=time.replace('\xa0', ' ')
-                
-            user=(data.find('div').find('span').text)
-                
-            operation=data.find('div').find_all('span')[0].next_sibling.strip()
-                
-            result=(data.find('div').find('span').findNext().text)
-                    
-            activity.append({"user":user, "operation":operation, "result":result, "time":time})
-        
-        return activity
 
     def message_count(self):
 
@@ -153,7 +129,7 @@ class User(AbstractScratch):
                     }
         except Exception:
             return None
-
+    ##
     def follower_count(self):
         # follower count
         text = requests.get(
@@ -621,7 +597,17 @@ class User(AbstractScratch):
         Returns:
             list<dict>: The user's activity data as parsed list of dicts
         """
-        return self._parse_activity(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text)
+        soup = BeautifulSoup(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text, 'html.parser')
+                
+        activity = []
+        source = soup.find_all("li")
+                
+        for data in source:
+            _activity = activity.Activity()
+            _activity._update_from_html(data)
+            activity.append(_activity)
+
+        return activity
 
 
     def activity_html(self, *, limit=1000):

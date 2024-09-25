@@ -24,5 +24,5 @@ class AbstractScratch(ABC):
         return self._update_from_dict(response)
     
     @abstractmethod
-    def _update_from_dict(self, session) -> bool:
+    def _update_from_dict(self, data) -> bool:
         pass
