@@ -554,14 +554,14 @@ class User(AbstractScratch):
         if len(_comments) == 0:
             return None
 
-        for comment in _comments:
-            comment_id = comment.find("div", {"class": "comment"})['data-comment-id']
-            user = comment.find("a", {"id": "comment-user"})['data-comment-user']
-            content = str(comment.find("div", {"class": "content"}).text).strip()
-            time = comment.find("span", {"class": "time"})['title']
+        for entity in _comments:
+            comment_id = entity.find("div", {"class": "comment"})['data-comment-id']
+            user = entity.find("a", {"id": "comment-user"})['data-comment-user']
+            content = str(entity.find("div", {"class": "content"}).text).strip()
+            time = entity.find("span", {"class": "time"})['title']
 
             ALL_REPLIES = []
-            replies = comment.find_all("li", {"class": "reply"})
+            replies = entity.find_all("li", {"class": "reply"})
             if len(replies) > 0:
                 hasReplies = True
             else:
