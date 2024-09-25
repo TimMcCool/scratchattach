@@ -474,6 +474,27 @@ class Session(AbstractScratch):
         """
         return self._connect_object("username", username, user.User, exceptions.UserNotFound)
 
+    def find_username_from_id(self, user_id:int):
+        """
+        Warning:
+            Every time this functions is run, a comment on your profile is posted and deleted. Therefore you shouldn't run this too often.
+
+        Returns:
+            str: The username that corresponds to the user id
+        """
+        you = user.User(username=self.username, _session=self)
+        try:
+            comment = you.post_comment("scratchattach", commentee_id=int(user_id))
+        except exceptions.CommentPostFailure:
+            raise exceptions.BadRequest("You are being rate-limited for running this operation too often. Implement a cooldown of about 10 seconds.")
+        except Exception as e:
+            raise e
+        username = comment.content.split('">@')[1]
+        username = username.split("</a>")[0]
+        you.delete_comment(comment_id=comment.id)
+        return username
+
+
     def connect_user_by_id(self, user_id:int):
         """
         Gets a user using this session, connects the session to the User object to allow authenticated actions
@@ -492,22 +513,7 @@ class Session(AbstractScratch):
         Returns:
             scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
         """
-        # Get username:
-        you = user.User(username=self.username, _session=self)
-        try:
-            comment = you.post_comment("scratchattach", commentee_id=int(user_id))
-        except exceptions.CommentPostFailure:
-            raise exceptions.BadRequest("You are being rate-limited for running this operation too often. Implement a cooldown of about 10 seconds.")
-        except Exception as e:
-            raise e
-        print("DEBUG", comment.content)
-        username = comment.content.split('">@')[1]
-        print("DEBUG", username)
-        username = username.split("</a>")[0]
-        print("DEBUG", username)
-        you.delete_comment(comment_id=comment.id)
-        # Get user info:
-        return self._connect_object("username", username, user.User, exceptions.UserNotFound)
+        return self._connect_object("username", self.find_username_from_id(user_id), user.User, exceptions.UserNotFound)
 
     def connect_project(self, project_id):
         """
