@@ -501,7 +501,6 @@ class Session(AbstractScratch):
         # Get user info:
         return self._connect_object("username", username, user.User, exceptions.UserNotFound)
 
-
     def connect_project(self, project_id):
         """
         Gets a project using this session, connects the session to the Project object to allow authenticated actions
