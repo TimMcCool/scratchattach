@@ -1,4 +1,4 @@
-#----- Getting users
+"""being made v2 ready: Session class and login function"""
 
 import json
 import requests
@@ -6,10 +6,11 @@ from . import project
 from . import exceptions
 from . import forum
 from bs4 import BeautifulSoup
+from .abstractscratch import AbstractScratch
 from .commons import headers
 
 
-class User:
+class User(AbstractScratch):
 
     '''
     Represents a Scratch user.
@@ -32,20 +33,35 @@ class User:
     
     :.update(): Updates the attributes
     '''
+
+    def __str__(self):
+        return str(self.username)
+    
     def __init__(self, **entries):
+
+        # Info on how the .update method has to fetch the data:
+        self.update_function = requests.get
+        self.update_API = f"https://api.scratch.mit.edu/users/{entries['username']}"
+
+        # Set attributes every User object needs to have:
+        self._session = None
+        self.id = None
+        self.username = None
+        self.name = None
+
+        # Update attributes from entries dict:
         entries.setdefault("name", entries.get("username"))
         self.__dict__.update(entries)
 
+        # Set alternative attributes:
         if hasattr(self, "bio"):
             self.about_me = self.bio
         if hasattr(self, "status"):
             self.wiwo = self.status
-        
         if hasattr(self, "name"):
             self.username = self.name
 
-        if not hasattr(self, "_session"):
-            self._session = None
+        # Headers and cookies:
         if self._session is None:
             self._headers = headers
             self._cookies = {}
@@ -53,15 +69,20 @@ class User:
             self._headers = self._session._headers
             self._cookies = self._session._cookies
 
-        try:
-            self._headers.pop("Cookie")
-        except Exception: pass
-        self._json_headers = self._headers
+        # Headers for operations that require accept and Content-Type fields:   
+        self._json_headers = dict(self._headers)
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
-    def __str__(self):
-        return str(self.username)
+    def _update_from_dict(self, response):
+        self.id = response["id"]
+        self.scratchteam = response["scratchteam"]
+        self.join_date = response["history"]["joined"]
+        self.about_me = response["profile"]["bio"]
+        self.wiwo = response["profile"]["status"]
+        self.country = response["profile"]["country"]
+        self.icon_url = response["profile"]["images"]["90x90"]
+        return True
     
     def does_exist(self):
         """
@@ -84,32 +105,6 @@ class User:
             return "new scratcher" in group.lower()
         except Exception:
             return None
-
-    def update(self):
-        """
-        Updates the attributes of the User object
-        """
-        r = requests.get(f"https://api.scratch.mit.edu/users/{self.username}/")
-        if "429" in str(r):
-            return "429"
-        if r.text == '{\n  "response": "Too many requests"\n}':
-            return "429"
-        response = json.loads(r.text)
-        self._update_from_dict(response)
-
-    def _update_from_dict(self, response):
-        try:
-
-            self.id = response["id"]
-
-        except Exception:
-            raise(exceptions.UserNotFound)
-        self.scratchteam = response["scratchteam"]
-        self.join_date = response["history"]["joined"]
-        self.about_me = response["profile"]["bio"]
-        self.wiwo = response["profile"]["status"]
-        self.country = response["profile"]["country"]
-        self.icon_url = response["profile"]["images"]["90x90"]
     
     def _parse_activity(self, htm):
         

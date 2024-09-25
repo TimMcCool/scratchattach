@@ -51,9 +51,13 @@ class Session(AbstractScratch):
         # Set attributes every Session object needs to have:
         self.session_id = None
         self.username = None
+        self.xtoken = None
+        self.new_scratcher = None
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)
+
+        # Set alternative attributes:
         self._username = self.username # backwards compatibility with v1
 
         # Base headers and cookies of every session:
@@ -67,11 +71,7 @@ class Session(AbstractScratch):
         }
 
     def _update_from_dict(self, session):
-        try:
-            self.xtoken = session['user']['token']
-        except Exception:
-            self.xtoken = None
-            return "xtoken error"
+        self.xtoken = session['user']['token']
         self._headers["X-Token"] = self.xtoken
         self.email = session["user"]["email"]
         self.new_scratcher = session["permissions"]["new_scratcher"]
