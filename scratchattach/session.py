@@ -25,6 +25,8 @@ class Session():
 
     :.session_id: The session id associated with the login
 
+    :.username: The username associated with the login
+
     :.xtoken: The xtoken associated with the login
 
     :.email: The email address associated with the logged in account
