@@ -431,7 +431,7 @@ class User(AbstractScratch):
 
 
         _comment = comment.Comment(source="profile", source_id=self.username, id=data["id"], _session = self._session)
-        _comment._update_from_json(data)
+        _comment._update_from_dict(data)
         return _comment
     
     def reply_comment(self, content, *, parent_id, commentee_id=""):
