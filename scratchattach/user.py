@@ -579,7 +579,7 @@ class User(AbstractScratch):
                     'datetime_created': r_time
                 }
                 _comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
-                _comment.update_from_dict(reply_data)
+                _comment._update_from_dict(reply_data)
                 ALL_REPLIES.append(_comment)
 
             main_comment = {
@@ -591,7 +591,7 @@ class User(AbstractScratch):
                 'cached_replies': ALL_REPLIES
             }
             _comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
-            _comment.update_from_dict(main_comment)
+            _comment._update_from_dict(main_comment)
             DATA.append(_comment)
         return DATA
     
