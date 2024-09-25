@@ -8,7 +8,7 @@ headers = {
     "x-csrftoken": "a",
     "x-requested-with": "XMLHttpRequest",
     "referer": "https://scratch.mit.edu",
-}
+} # headers recommended for accessing API endpoints that don't require verification
 
 
 def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True):

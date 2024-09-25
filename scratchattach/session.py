@@ -1,4 +1,4 @@
-#----- Connecting to a Scratch account
+"""Session class and login function"""
 
 import json
 import re
