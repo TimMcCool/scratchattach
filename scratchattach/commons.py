@@ -10,6 +10,21 @@ headers = {
     "referer": "https://scratch.mit.edu",
 } # headers recommended for accessing API endpoints that don't require verification
 
+def webscrape_count(raw, text_before, text_after):
+    return int(raw.split(text_before)[1].split(text_after)[0])
+
+def parse_object_list(raw, Class, session=None, primary_key="id"):
+    results = []
+    for raw_dict in raw:
+        try:
+            _obj = Class(**{primary_key:raw_dict["primary_key"], "_session":session})
+            _obj.update_from_dict(raw_dict)
+            results.append(_obj)
+        except Exception:
+            print("Warning raised by scratchattach: failed to parse ", raw_dict)
+    return results
+
+'''
 
 def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True):
     """
@@ -57,3 +72,4 @@ def api_iterative_simple(
         fetch, limit, offset, max_req_limit=max_req_limit, unpack=True
     )
     return api_data
+'''

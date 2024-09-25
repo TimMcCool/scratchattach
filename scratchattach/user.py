@@ -4,11 +4,12 @@ import json
 import requests
 from . import project
 from . import exceptions
+from . import studio
 from . import forum
 from bs4 import BeautifulSoup
 from .abstractscratch import AbstractScratch
 from .commons import headers
-
+from . import commons
 
 class User(AbstractScratch):
 
@@ -90,6 +91,18 @@ class User(AbstractScratch):
         try: self.icon_url = data["profile"]["images"]["90x90"]
         except KeyError: pass
         return True
+
+    def _assert_auth(self):
+        if self._session is None:
+            raise exceptions.Unauthenticated(
+                "You need to use session.connect_user (NOT get_user) in order to perform this operation.")
+
+    def _assert_permission(self):
+        self._assert_auth()
+        if self._session._username != self.username:
+            raise exceptions.Unauthorized(
+                "You need to be authenticated as the profile owner to do this.")
+
     
     def does_exist(self):
         """
@@ -141,33 +154,17 @@ class User(AbstractScratch):
         # follower count
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/followers/",
-            headers = {
-                "x-csrftoken": "a",
-                "x-requested-with": "XMLHttpRequest",
-                "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
-                "referer": "https://scratch.mit.edu",
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-            }
+            headers = self._headers
         ).text
-        text = text.split("Followers (")[1]
-        text = text.split(")")[0]
-        return int(text)
+        return commons.webscrape_count(text, "Followers (", ")")
 
     def following_count(self):
         # following count
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/following/",
-            headers = {
-                "x-csrftoken": "a",
-                "x-requested-with": "XMLHttpRequest",
-                "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
-                "referer": "https://scratch.mit.edu",
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-            }
+            headers = self._headers
         ).text
-        text = text.split("Following (")[1]
-        text = text.split(")")[0]
-        return int(text)
+        return commons.webscrape_count(text, "Following (", ")")
 
     def followers(self, *, limit=40, offset=0):
         """
@@ -176,17 +173,9 @@ class User(AbstractScratch):
         """
         if limit>40:
             limit=40
-        followers = []
         response = requests.get(
             f"https://api.scratch.mit.edu/users/{self.username}/followers/?limit={limit}&offset={offset}").json()
-        for follower in response:
-            try:
-                _user = User(username=follower["username"], _session=self._session)
-                _user.update_from_dict(follower)
-                followers.append(_user)
-            except Exception:
-                print("Failed to parse ", follower)
-        return followers
+        return commons.parse_object_list(response, User, self._session, "username")
 
     def follower_names(self, *, limit=40, offset=0):
         """
@@ -205,14 +194,7 @@ class User(AbstractScratch):
         followers = []
         response = requests.get(
             f"https://api.scratch.mit.edu/users/{self.username}/following/?limit={limit}&offset={offset}").json()
-        for follower in response:
-            try:
-                _user = User(username=follower["username"], _session=self._session)
-                _user.update_from_dict(follower)
-                followers.append(_user)
-            except Exception:
-                print("Failed to parse ", follower)
-        return followers
+        return commons.parse_object_list(response, User, self._session, "username")
 
     def following_names(self, *, limit=40, offset=0):
         """
@@ -226,186 +208,94 @@ class User(AbstractScratch):
         Returns:
             boolean: Whether the user is following the user provided as argument
         """
-        return requests.get(f"http://explodingstar.pythonanywhere.com/api/{self.username}/?following={user}").json()["following"]
+        offset = 0
+        following = False
 
+        while True:
+            try:
+                following_names = self.following_names(limit=20, offset=offset)
+                if user in following_names:
+                    following = True
+                    break
+                if following_names == []:
+                    break
+                offset += 20
+            except Exception:
+                print("Warning: API error when performing following check")
+                return following
+        return following
+    
     def is_followed_by(self, user):
         """
         Returns:
             boolean: Whether the user is followed by the user provided as argument
         """
-        return requests.get(f"http://explodingstar.pythonanywhere.com/api/{user}/?following={self.username}").json()["following"]
+        return User(username=user).is_following(self.username)
 
-    ##
-    
     def project_count(self):
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/projects/",
-            headers = {
-                "x-csrftoken": "a",
-                "x-requested-with": "XMLHttpRequest",
-                "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
-                "referer": "https://scratch.mit.edu",
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-            }
+            headers = self._headers
         ).text
-        text = text.split("Shared Projects (")[1]
-        text = text.split(")")[0]
-        return int(text)
+        return commons.webscrape_count(text, "Shared Projects (", ")")
 
     def studio_count(self):
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/studios/",
-            headers = {
-                "x-csrftoken": "a",
-                "x-requested-with": "XMLHttpRequest",
-                "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
-                "referer": "https://scratch.mit.edu",
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-            }
+            headers = self._headers
         ).text
-        text = text.split("Studios I Curate (")[1]
-        text = text.split(")")[0]
-        return int(text)
+        return commons.webscrape_count(text, "Studios I curate (", ")")
 
     def studios_following_count(self):
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/studios/",
-            headers = {
-                "x-csrftoken": "a",
-                "x-requested-with": "XMLHttpRequest",
-                "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
-                "referer": "https://scratch.mit.edu",
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-            }
+            headers = self._headers
         ).text
-        text = text.split("Studios I Follow (")[1]
-        text = text.split(")")[0]
-        return int(text)
+        return commons.webscrape_count(text, "Studios I follow (", ")")
 
     def studios(self, *, limit=40, offset=0):
-        return requests.get(f"https://api.scratch.mit.edu/users/{self.username}/studios/curate?limit={limit}&offset={offset}").json()
+        _studios = requests.get(f"https://api.scratch.mit.edu/users/{self.username}/studios/curate?limit={limit}&offset={offset}").json()
+        studios = []
+        for studio_dict in _studios:
+            _studio = studio.Studio(_session = self._session, id = studio_dict["id"])
+            _studio._update_from_dict(studio_dict)
+            studios.append(_studio)
+        return studios
 
-    def projects(self, *, limit=None, offset=0):
+    def projects(self, *, limit=40, offset=0):
         """
         Returns:
             list<projects.projects.Project>: The user's shared projects
         """
-        if limit is None:
-            _projects = json.loads(requests.get(
-                f"https://api.scratch.mit.edu/users/{self.username}/projects/?offset={offset}",
-                headers = {
-                    "x-csrftoken": "a",
-                    "x-requested-with": "XMLHttpRequest",
-                    "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
-                    "referer": "https://scratch.mit.edu",
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-                }
-            ).text)
-        else:
-            _projects = requests.get(
-                f"https://api.scratch.mit.edu/users/{self.username}/projects/?limit={limit}&offset={offset}",
-                headers = {
-                    "x-csrftoken": "a",
-                    "x-requested-with": "XMLHttpRequest",
-                    "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
-                    "referer": "https://scratch.mit.edu",
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-                }
-            ).json()
-        projects = []
-        for project_dict in _projects:
-            projects.append(project.Project(
-                _session = self._session,
-                author = self.username,
-                comments_allowed = project_dict["comments_allowed"],
-                description=project_dict["description"],
-                created = project_dict["history"]["created"],
-                last_modified = project_dict["history"]["modified"],
-                share_date = project_dict["history"]["shared"],
-                id = project_dict["id"],
-                thumbnail_url = project_dict["image"],
-                instructions = project_dict["instructions"],
-                remix_parent = project_dict["remix"]["parent"],
-                remix_root = project_dict["remix"]["root"],
-                favorites = project_dict["stats"]["favorites"],
-                loves = project_dict["stats"]["loves"],
-                remixes = project_dict["stats"]["remixes"],
-                views = project_dict["stats"]["views"],
-                title = project_dict["title"],
-                url = "https://scratch.mit.edu/projects/"+str(project_dict["id"])
-            ))
-        return projects
+        _projects = requests.get(
+            f"https://api.scratch.mit.edu/users/{self.username}/projects/?limit={limit}&offset={offset}",
+            headers = self._headers
+        ).json()
+        return commons.parse_object_list(_projects, project.Project, self._session)
 
     def favorites(self, *, limit=None, offset=0):
         """
         Returns:
             list<projects.projects.Project>: The user's favorite projects
         """
-        if limit is None:
-            _projects = json.loads(requests.get(
-                f"https://api.scratch.mit.edu/users/{self.username}/favorites/?offset={offset}",
-                headers = {
-                    "x-csrftoken": "a",
-                    "x-requested-with": "XMLHttpRequest",
-                    "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
-                    "referer": "https://scratch.mit.edu",
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-                }
-            ).text)
-        else:
-            _projects = requests.get(
-                f"https://api.scratch.mit.edu/users/{self.username}/favorites/?limit={limit}&offset={offset}",
-                headers = {
-                    "x-csrftoken": "a",
-                    "x-requested-with": "XMLHttpRequest",
-                    "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
-                    "referer": "https://scratch.mit.edu",
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-                }
-            ).json()
-        projects = []
-        for project_dict in _projects:
-            projects.append(project.Project(
-                _session = self._session,
-                author = self.username,
-                comments_allowed = project_dict["comments_allowed"],
-                description=project_dict["description"],
-                created = project_dict["history"]["created"],
-                last_modified = project_dict["history"]["modified"],
-                share_date = project_dict["history"]["shared"],
-                id = project_dict["id"],
-                thumbnail_url = project_dict["image"],
-                instructions = project_dict["instructions"],
-                remix_parent = project_dict["remix"]["parent"],
-                remix_root = project_dict["remix"]["root"],
-                favorites = project_dict["stats"]["favorites"],
-                loves = project_dict["stats"]["loves"],
-                remixes = project_dict["stats"]["remixes"],
-                views = project_dict["stats"]["views"],
-                title = project_dict["title"],
-                url = "https://scratch.mit.edu/projects/"+str(project_dict["id"])
-            ))
-        return projects
-
+        _projects = requests.get(
+            f"https://api.scratch.mit.edu/users/{self.username}/favorites/?limit={limit}&offset={offset}",
+            headers = self._headers
+        ).json()
+        return commons.parse_object_list(_projects, project.Project, self._session)
+    
     def favorites_count(self):
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/favorites/",
-            headers = {
-                "x-csrftoken": "a",
-                "x-requested-with": "XMLHttpRequest",
-                "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
-                "referer": "https://scratch.mit.edu",
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-            }
+            headers = self._headers
         ).text
-        text = text.split("Favorites (")[1]
-        text = text.split(")")[0]
-        return int(text)
+        return commons.webscrape_count(text, "Favorites (", ")")
 
     def toggle_commenting(self):
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
+        self._assert_permission()
         requests.post(f"https://scratch.mit.edu/site-api/comments/user/{self.username}/toggle-comments/",
             headers = headers,
             cookies = self._cookies
@@ -418,48 +308,18 @@ class User(AbstractScratch):
 
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
-        try:
-            _projects = requests.get(
-                f"https://api.scratch.mit.edu/users/{self.username}/projects/recentlyviewed?limit={limit}&offset={offset}",
-                headers = self._headers
-            ).json()
-            projects = []
-            for project_dict in _projects:
-                projects.append(project.Project(
-                    _session = self._session,
-                    author = self.username,
-                    comments_allowed = project_dict["comments_allowed"],
-                    description=project_dict["description"],
-                    created = project_dict["history"]["created"],
-                    last_modified = project_dict["history"]["modified"],
-                    share_date = project_dict["history"]["shared"],
-                    id = project_dict["id"],
-                    thumbnail_url = project_dict["image"],
-                    instructions = project_dict["instructions"],
-                    remix_parent = project_dict["remix"]["parent"],
-                    remix_root = project_dict["remix"]["root"],
-                    favorites = project_dict["stats"]["favorites"],
-                    loves = project_dict["stats"]["loves"],
-                    remixes = project_dict["stats"]["remixes"],
-                    views = project_dict["stats"]["views"],
-                    title = project_dict["title"],
-                    url = "https://scratch.mit.edu/projects/"+str(project_dict["id"])
-                ))
-            return projects
-        except Exception:
-            raise(exceptions.Unauthorized)
-
+        self._assert_permission()
+        _projects = requests.get(
+            f"https://api.scratch.mit.edu/users/{self.username}/projects/recentlyviewed?limit={limit}&offset={offset}",
+            headers = self._headers
+        ).json()
+        return commons.parse_object_list(_projects, project.Project, self._session)
 
     def set_bio(self, text):
         """
         Sets the user's "About me" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
-        if self._session is None:
-            raise(exceptions.Unauthenticated)
-            return
-        if self._session._username != self.username:
-            raise(exceptions.Unauthorized)
-            return
+        self._assert_permission()
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
             headers = self._json_headers,
@@ -478,12 +338,7 @@ class User(AbstractScratch):
         """
         Sets the user's "What I'm working on" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
-        if self._session is None:
-            raise(exceptions.Unauthenticated)
-            return
-        if self._session._username != self.username:
-            raise(exceptions.Unauthorized)
-            return
+        self._assert_permission()
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
             headers = self._json_headers,
@@ -508,12 +363,7 @@ class User(AbstractScratch):
         Keyword Args:
             label: The label that should appear above the featured project on the user's profile (Like "Featured project", "Featured tutorial", "My favorite things", etc.)
         """
-        if self._session is None:
-            raise(exceptions.Unauthenticated)
-            return
-        if self._session._username != self.username:
-            raise(exceptions.Unauthorized)
-            return
+        self._assert_permission()
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
             headers = self._json_headers,
@@ -525,12 +375,7 @@ class User(AbstractScratch):
         """
         Sets the user's discuss forum signature. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
         """
-        if self._session is None:
-            raise(exceptions.Unauthenticated)
-            return
-        if self._session._username != self.username:
-            raise(exceptions.Unauthorized)
-            return
+        self._assert_permission()
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'content-type': 'application/x-www-form-urlencoded',
@@ -545,6 +390,7 @@ class User(AbstractScratch):
         }
         response = requests.post(f'https://scratch.mit.edu/discuss/settings/{self.username}/', cookies=self._cookies, headers=headers, data=data)
 
+    ##
     def post_comment(self, content, *, parent_id="", commentee_id=""):
         """
         Posts a comment on the user's profile. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
@@ -555,10 +401,11 @@ class User(AbstractScratch):
         Keyword Arguments:
             parent_id: ID of the comment you want to reply to. If you don't want to mention a user, don't put the argument.
             commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
+        
+        Returns:
+            scratchattach.Comment: A comment object representing the created comment.
         """
-        if self._session is None:
-            raise(exceptions.Unauthenticated)
-            return
+        self._assert_auth()
         data = {
         "commentee_id": commentee_id,
         "content": str(content),
