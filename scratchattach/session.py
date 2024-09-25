@@ -110,12 +110,10 @@ class Session(AbstractScratch):
         Returns:
             list<dict>: List that contains all messages as dicts.
         '''
-        data = requests.get(
-            f"https://api.scratch.mit.edu/users/{self._username}/messages?limit={limit}&offset={offset}",
-            headers = self._headers,
-            cookies = self._cookies,
-            timeout = 10,
-        ).json()
+        data = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self._username}/messages",
+            limit = limit, offset = offset, headers = self._headers, cookies = self._cookies
+        )
         return commons.parse_object_list(data, activity.Activity, self)
 
     def clear_messages(self):
@@ -152,12 +150,10 @@ class Session(AbstractScratch):
         Returns:
             list<dict>: List that contains all "What's happening" entries as dicts
         '''
-        data = requests.get(
-            f"https://api.scratch.mit.edu/users/{self._username}/following/users/activity?limit={limit}&offset={offset}",
-            headers = self._headers,
-            cookies = self._cookies,
-            timeout = 10,
-        ).json()
+        data = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self._username}/following/users/activity",
+            limit = limit, offset = offset, headers = self._headers, cookies = self._cookies
+        )
         return commons.parse_object_list(data, activity.Activity, self)
 
     def get_feed(self, *, limit=20, offset=0):
@@ -171,12 +167,10 @@ class Session(AbstractScratch):
         Returns:
             list<scratchattach.project.Project>: List that contains all "Projects loved by Scratchers I'm following" entries as Project objects
         '''
-        data = requests.get(
-            f"https://api.scratch.mit.edu/users/{self._username}/following/users/loves?limit={limit}&offset={offset}",
-            headers = self._headers,
-            cookies = self._cookies,
-            timeout = 10,
-        ).json()
+        data = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self._username}/following/users/loves",
+            limit = limit, offset = offset, headers = self._headers, cookies = self._cookies
+        )
         return commons.parse_object_list(data, project.Project, self)
 
     """ work in progress

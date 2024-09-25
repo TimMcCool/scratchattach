@@ -38,7 +38,6 @@ def _get_object(identificator_id, identificator, Class, NotFoundException):
     except Exception as e:
         raise(e)
 
-'''
 
 def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True):
     """
@@ -65,14 +64,21 @@ def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True)
     return api_data
 
 
-def api_iterative_simple(
-    url, limit, offset, max_req_limit=40, add_params="", headers=headers, cookies={}
+def api_iterative(
+    url, *, limit, offset, max_req_limit=40, add_params="", headers=headers, cookies={}
 ):
+    """
+    Function for getting data from one of Scratch's iterative JSON API endpoints (like /users/<user>/followers, or /users/<user>/projects)
+    """
     if offset < 0:
         raise exceptions.BadRequest("offset parameter must be >= 0")
     if limit < 0:
         raise exceptions.BadRequest("limit parameter must be >= 0")
+    
     def fetch(o, l):
+        """
+        Performs a singla API request
+        """
         resp = requests.get(
             f"{url}?limit={l}&offset={o}{add_params}", headers=headers, cookies=cookies, timeout=10
         ).json()
@@ -86,4 +92,3 @@ def api_iterative_simple(
         fetch, limit, offset, max_req_limit=max_req_limit, unpack=True
     )
     return api_data
-'''
