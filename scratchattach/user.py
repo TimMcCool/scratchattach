@@ -75,13 +75,20 @@ class User(AbstractScratch):
         self._json_headers["Content-Type"] = "application/json"
 
     def _update_from_dict(self, data):
-        self.id = data["id"]
-        self.scratchteam = data["scratchteam"]
-        self.join_date = data["history"]["joined"]
-        self.about_me = data["profile"]["bio"]
-        self.wiwo = data["profile"]["status"]
-        self.country = data["profile"]["country"]
-        self.icon_url = data["profile"]["images"]["90x90"]
+        try: self.id = data["id"]
+        except KeyError: pass
+        try: self.scratchteam = data["scratchteam"]
+        except KeyError: pass
+        try: self.join_date = data["history"]["joined"]
+        except KeyError: pass
+        try: self.about_me = data["profile"]["bio"]
+        except KeyError: pass
+        try: self.wiwo = data["profile"]["status"]
+        except KeyError: pass
+        try: self.country = data["profile"]["country"]
+        except KeyError: pass
+        try: self.icon_url = data["profile"]["images"]["90x90"]
+        except KeyError: pass
         return True
     
     def does_exist(self):
@@ -129,7 +136,7 @@ class User(AbstractScratch):
                     }
         except Exception:
             return None
-    ##
+
     def follower_count(self):
         # follower count
         text = requests.get(
@@ -174,16 +181,9 @@ class User(AbstractScratch):
             f"https://api.scratch.mit.edu/users/{self.username}/followers/?limit={limit}&offset={offset}").json()
         for follower in response:
             try:
-                followers.append(User(
-                    id = follower["id"],
-                    name = follower["username"],
-                    scratchteam = follower["scratchteam"],
-                    join_date = follower["history"]["joined"],
-                    icon_url = follower["profile"]["images"]["90x90"],
-                    status = follower["profile"]["status"],
-                    bio = follower["profile"]["bio"],
-                    country = follower["profile"]["country"]
-                ))
+                _user = User(username=follower["username"], _session=self._session)
+                _user.update_from_dict(follower)
+                followers.append(_user)
             except Exception:
                 print("Failed to parse ", follower)
         return followers
@@ -207,16 +207,9 @@ class User(AbstractScratch):
             f"https://api.scratch.mit.edu/users/{self.username}/following/?limit={limit}&offset={offset}").json()
         for follower in response:
             try:
-                followers.append(User(
-                    id = follower["id"],
-                    name = follower["username"],
-                    scratchteam = follower["scratchteam"],
-                    join_date = follower["history"]["joined"],
-                    icon_url = follower["profile"]["images"]["90x90"],
-                    status = follower["profile"]["status"],
-                    bio = follower["profile"]["bio"],
-                    country = follower["profile"]["country"]
-                ))
+                _user = User(username=follower["username"], _session=self._session)
+                _user.update_from_dict(follower)
+                followers.append(_user)
             except Exception:
                 print("Failed to parse ", follower)
         return followers
@@ -242,6 +235,8 @@ class User(AbstractScratch):
         """
         return requests.get(f"http://explodingstar.pythonanywhere.com/api/{user}/?following={self.username}").json()["following"]
 
+    ##
+    
     def project_count(self):
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/projects/",

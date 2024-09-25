@@ -1,4 +1,4 @@
-"""v2 WIP: Activity class"""
+"""v2 ready: Activity class"""
 
 import json
 import re
