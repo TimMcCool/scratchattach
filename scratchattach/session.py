@@ -1,4 +1,4 @@
-"""Session class and login function"""
+"""v2 ready: Session class and login function"""
 
 import json
 import re
@@ -39,12 +39,15 @@ class Session():
     def __str__(self):
         return "Login for account: {self.username}"
 
-    def __init__(self, session_id, *, username=None):
+    def __init__(self, **entries):
         
         # Set attributes every Session object needs to have:
-        self.session_id = str(session_id)
-        self.username = username
-        self._username = username # backwards compatibility with v1
+        self.session_id = None
+        self.username = None
+
+        # Update attributes from entries dict:
+        self.__dict__.update(entries)
+        self._username = self.username # backwards compatibility with v1
         
         # Base headers and cookies of every session:
         self._headers = headers
@@ -107,7 +110,8 @@ class Session():
     def get_linked_user(self):
         # backwards compatibility with v1
         return self.connect_linked_user() # To avoid inconsistencies with "connect" and "get", this function was renamed
-
+    
+    """ work in progress
     def mystuff_projects(self, ordering, *, page=1, sort_by="", descending=True):
         '''
         Gets the projects from the "My stuff" page.
@@ -374,7 +378,7 @@ class Session():
             f"https://backpack.scratch.mit.edu/{self._username}/{asset_id}",
             headers = self._headers,
             timeout = 10,
-        ).json()
+        ).json()''
 
     def connect_cloud(self, project_id_arg=None, *, project_id=None):
         '''
@@ -395,10 +399,36 @@ class Session():
 
     def connect_tw_cloud(self, project_id_arg=None, *, project_id=None, purpose="", contact=""):
         return cloud.connect_tw_cloud(project_id_arg, project_id=project_id, purpose=purpose, contact=contact)
+    
+    def search_posts(self, *, query, order="newest", page=0):
+        try:
+            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/search?q={query}&o={order}&page={page}", timeout=10).json()["posts"]
+            return_data = []
+            for o in data:
+                a = forum.ForumPost(id = o["id"], _session = self)
+                a._update_from_dict(o)
+                return_data.append(a)
+            return return_data
+        except Exception:
+            return []
+
+    def upload_asset(self, asset):
+        data = asset if isinstance(asset, bytes) else open(asset, "rb").read()
+
+        if isinstance(asset, str):
+            file_ext = pathlib.Path(asset).suffix
+
+        requests.post(
+            f"https://assets.scratch.mit.edu/{hashlib.md5(data).hexdigest()}.{file_ext}",
+            headers=self._headers,
+            data=data,
+            timeout=10,
+        )
+    """
 
     def connect_user(self, username):
         """
-        Gets a user.
+        Gets a user using this session, connects the session to the User object to allow authenticated actions
 
         Args:
             username (str): Username of the requested user
@@ -411,14 +441,14 @@ class Session():
             if _user.update() == "429":
                 raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
             return _user
-        except KeyError:
-            return None
+        except KeyError as e:
+            raise(exceptions.UserNotFound("Key error at key "+str(e)+" when reading API response"))
         except Exception as e:
             raise(e)
 
     def connect_project(self, project_id):
         """
-        Gets a project.
+        Gets a project using this session, connects the session to the Project object to allow authenticated actions
 
         Args:
             project_id (int): ID of the requested project
@@ -434,14 +464,14 @@ class Session():
             if not u:
                 _project = project.PartialProject(id=int(project_id))
             return _project
-        except KeyError:
-            return None
+        except KeyError as e:
+            raise(exceptions.ProjectNotFound("Key error at key "+str(e)+" when reading API response"))
         except Exception as e:
             raise(e)
 
     def connect_studio(self, studio_id):
         """
-        Gets a studio.
+        Gets a studio using this session, connects the session to the Studio object to allow authenticated actions
 
         Args:
             studio_id (int): ID of the requested studio
@@ -454,14 +484,14 @@ class Session():
             if _studio.update() == "429":
                 raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
             return _studio
-        except KeyError:
-            return None
+        except KeyError as e:
+            raise(exceptions.StudioNotFound("Key error at key "+str(e)+" when reading API response"))
         except Exception as e:
             raise(e)
 
     def connect_topic(self, topic_id):
         """
-        Gets a forum topic. Data fetched from ScratchDB.
+        Gets a forum topic using this session, connects the session to the ForumTopic object to allow authenticated actions
 
         Args:
             topic_id (int): ID of the requested forum topic (can be found in the browser URL bar)
@@ -471,15 +501,19 @@ class Session():
         """
 
         try:
-            topic = forum.ForumTopic(id=int(topic_id), _session=self)
-            topic.update()
-            return topic
-        except KeyError:
-            return None
+            _topic = forum.ForumTopic(id=int(topic_id), _session=self)
+            if _topic.update() == "429":
+                raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+            _topic.update()
+            return _topic
+        except KeyError as e:
+            raise(exceptions.ForumContentNotFound("Key error at key "+str(e)+" when reading API response"))
+        except Exception as e:
+            raise(e)
 
     def connect_topic_list(self, category_name, *, page=0, include_deleted=False):
         """
-        Gets the topics from a forum category. Data fetched from ScratchDB.
+        Gets the topics from a forum category.
 
         Args:
             category_name (str): Name of the forum category
@@ -510,7 +544,7 @@ class Session():
     def connect_post(self, post_id):
 
         """
-        Gets a forum post. Data fetched from ScratchDB.
+        Gets a forum post using this session, connects the session to the ForumPost object to allow authenticated actions
 
         Args:
             post_id (int): ID of the requested forum post
@@ -520,64 +554,73 @@ class Session():
         """
 
         try:
-            post = forum.ForumPost(id=int(post_id), _session=self)
-            post.update()
-            return post
+            _post = forum.ForumPost(id=int(post_id), _session=self)
+            _post.update()
+            return _post
         except KeyError:
             return None
 
-    def search_posts(self, *, query, order="newest", page=0):
-        try:
-            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/search?q={query}&o={order}&page={page}", timeout=10).json()["posts"]
-            return_data = []
-            for o in data:
-                a = forum.ForumPost(id = o["id"], _session = self)
-                a._update_from_dict(o)
-                return_data.append(a)
-            return return_data
-        except Exception:
-            return []
-
-    def upload_asset(self, asset):
-        data = asset if isinstance(asset, bytes) else open(asset, "rb").read()
-
-        if isinstance(asset, str):
-            file_ext = pathlib.Path(asset).suffix
-
-        requests.post(
-            f"https://assets.scratch.mit.edu/{hashlib.md5(data).hexdigest()}.{file_ext}",
-            headers=self._headers,
-            data=data,
-            timeout=10,
-        )
     
 # ------ #
+    
+def login_by_id(session_id, *, username=None):
+    """
+    Creates a session / log in to the Scratch website with the specified session id. 
 
-def login(username, password):
+    This method fetches the xtoken and other information by posting a request to scratch.mit.edu/session. (If this fails, a warning is displayed)
+
+    Args:
+        session_id (str)
+        password (str)
+    
+    Keyword arguments:
+        timeout (int): Optional, but recommended. Specify this when the Python environment's IP address is blocked by Scratch's API, but you still want to use cloud variables.
+
+    Returns:
+        scratchattach.session.Session: An object that represents the created log in / session
+    """
+    
+    try:
+        _session = Session(session_id=session_id, username=username)
+        if _session.update() == "429":
+            raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+        return _session
+    except KeyError as e:
+        print(f"Warning: Logged in, but couldn't fetch XToken. Key error at key "+str(e)+" when reading scratch.mit.edu/session API response")
+    except Exception as e:
+        raise(e)
+    
+def login(username, password, *, timeout=10):
     """
     Creates a session / log in to the Scratch website with the specified username and password. 
 
-    This method will first create a session id, then it will fetch the xtoken and other information using the created session id.
-    If the log in fails, it will raise scratchattach.exceptions.LoginFailure.
-    If the login succeeds but fetching the xtoken fails, it will not raise an exception but display a warning. If the accout logged in to is banned, it will also display a warning.
+    This method ...
+    1. creates a session id by posting a login request to Scratch's login API. (If this fails, scratchattach.exceptions.LoginFailure is raised)
+    2. fetches the xtoken and other information by posting a request to scratch.mit.edu/session. (If this fails, a warning is displayed)
 
     Args:
         username (str)
         password (str)
     
+    Keyword arguments:
+        timeout (int): Timeout for the request to Scratch's login API (in seconds). Defaults to 10.
+
     Returns:
         scratchattach.session.Session: An object that represents the created log in / session
     """
+    
+    # Post request to login API:
     data = json.dumps({"username": username, "password": password})
     _headers = headers
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     request = requests.post(
         "https://scratch.mit.edu/login/", data=data, headers=_headers,
-        timeout = 10,
+        timeout = timeout,
     )
     try:
         session_id = str(re.search('"(.*)"', request.headers["Set-Cookie"]).group())
     except Exception:
         raise exceptions.LoginFailure("Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
-    session = Session(session_id, username=username)
-    return session
+    
+    # Create session object:
+    return login_by_id(session_id, username=username)

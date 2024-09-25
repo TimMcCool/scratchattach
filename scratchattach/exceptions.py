@@ -1,3 +1,5 @@
+# Authentication / Authorization:
+
 class Unauthenticated(Exception):
     """
     Raised when an action that requires a log in / session is performed on an object that wasn't created with a session.
@@ -27,6 +29,16 @@ class Unauthorized(Exception):
 
     pass
 
+class XTokenError(Exception):
+    """
+    Raised when an action can't be performed because there is no XToken available.
+
+    This error can occur if the xtoken couldn't be fetched when the session was created. Some actions (like loving projects) require providing this token.
+    """
+
+    pass
+
+# Not found errors:
 
 class UserNotFound(Exception):
     """
@@ -51,24 +63,14 @@ class StudioNotFound(Exception):
 
     pass
 
-
-class ConnectionError(Exception):
+class ForumContentNotFound(Exception):
     """
-    Raised when connecting to Scratch's cloud server fails. This can have various reasons.
-    """
-
-    pass
-
-
-class XTokenError(Exception):
-    """
-    Raised when an action can't be performed because there is no XToken available.
-
-    This error can occur if the xtoken couldn't be fetched when the session was created. Some actions (like loving projects) require providing this token.
+    Raised when a non-existent forum topic / post is requested.
     """
 
     pass
 
+# API errors:
 
 class LoginFailure(Exception):
     """
@@ -79,30 +81,12 @@ class LoginFailure(Exception):
 
     pass
 
-
-class InvalidCloudValue(Exception):
-    """
-    Raised when a cloud variable is set to an invalid value.
-    """
-
-    pass
-
-
 class FetchError(Exception):
     """
     Raised when getting information from the Scratch API fails. This can have various reasons. Make sure all provided arguments are valid.
     """
 
     pass
-
-
-class InvalidDecodeInput(Exception):
-    """
-    Raised when the built-in decoder :meth:`scratchattach.encoder.Encoding.decode` receives an invalid input.
-    """
-
-    pass
-
 
 class BadRequest(Exception):
     """
@@ -119,18 +103,45 @@ class Response429(Exception):
 
     pass
 
-
-class RequestNotFound(Exception):
+class CommentPostFailure(Exception):
     """
-    Cloud Requests: Raised when a non-existent cloud request is edited using :meth:`scratchattach.cloud_requests.CloudRequests.edit_request`.
+    Raised when a comment fails to post. This can have various reasons.
     """
 
     pass
 
 
-class CommentPostFailure(Exception):
+# Cloud / encoding errors:
+
+class ConnectionError(Exception):
     """
-    Raised when a comment fails to post. This can have various reasons.
+    Raised when connecting to Scratch's cloud server fails. This can have various reasons.
+    """
+
+    pass
+
+
+class InvalidCloudValue(Exception):
+    """
+    Raised when a cloud variable is set to an invalid value.
+    """
+
+    pass
+
+
+class InvalidDecodeInput(Exception):
+    """
+    Raised when the built-in decoder :meth:`scratchattach.encoder.Encoding.decode` receives an invalid input.
+    """
+
+    pass
+
+
+# Cloud Requests errors:
+
+class RequestNotFound(Exception):
+    """
+    Cloud Requests: Raised when a non-existent cloud request is edited using :meth:`scratchattach.cloud_requests.CloudRequests.edit_request`.
     """
 
     pass
