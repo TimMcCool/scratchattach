@@ -426,7 +426,7 @@ class Session():
         )
 
     def connect_topic_list(self, category_name, *, page=0, include_deleted=False):
-        """
+        '''
         Gets the topics from a forum category.
 
         Args:
@@ -438,7 +438,7 @@ class Session():
 
         Returns:
             list<scratchattach.forum.ForumTopic>: A list containing the forum topics from the specified category
-        """
+        '''
         category_name.replace(" ", "%20")
         if include_deleted:
             filter = 0
