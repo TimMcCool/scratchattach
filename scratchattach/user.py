@@ -11,6 +11,7 @@ from .abstractscratch import AbstractScratch
 from .commons import headers
 from . import commons
 from . import comment
+from . import activity
 
 class User(AbstractScratch):
 
@@ -459,15 +460,15 @@ class User(AbstractScratch):
         """
         soup = BeautifulSoup(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text, 'html.parser')
                 
-        activity = []
+        activities = []
         source = soup.find_all("li")
                 
         for data in source:
             _activity = activity.Activity(_session = self._session)
             _activity._update_from_html(data)
-            activity.append(_activity)
+            activities.append(_activity)
 
-        return activity
+        return activities
 
 
     def activity_html(self, *, limit=1000):
