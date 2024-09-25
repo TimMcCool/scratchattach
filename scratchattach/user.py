@@ -419,21 +419,26 @@ class User(AbstractScratch):
         )
         if r.status_code != 200:
             raise exceptions.CommentPostFailure(r.text)
-
-        text = r.text
-        data = {
-            'id': text.split('<div id="comments-')[1].split('" class="comment')[0],
-            'author': {"username":text.split('" data-comment-user="')[1].split('"><img class')[0]},
-            'content': text.split('<div class="content">')[1].split('"</div>')[0],
-            'reply_count': 0,
-            'cached_replies': []
-        }
-
-
-        _comment = comment.Comment(source="profile", source_id=self.username, id=data["id"], _session = self._session)
-        _comment._update_from_dict(data)
-        return _comment
-    
+        
+        try:
+            text = r.text
+            data = {
+                'id': text.split('<div id="comments-')[1].split('" class="comment')[0],
+                'author': {"username":text.split('" data-comment-user="')[1].split('"><img class')[0]},
+                'content': text.split('<div class="content">')[1].split('"</div>')[0],
+                'reply_count': 0,
+                'cached_replies': []
+            }
+            _comment = comment.Comment(source="profile", source_id=self.username, id=data["id"], _session = self._session)
+            _comment._update_from_dict(data)
+            return _comment
+        except Exception:
+            if '{"error": "isFlood"}' in text:
+                raise(exceptions.CommentPostFailure(
+                    "You are being rate-limited for running this operation too often. Implement a cooldown of about 10 seconds."))
+            else:
+                raise(exceptions.FetchError("Couldn't parse API response"))
+            
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """
         Replies to a comment given by its id
