@@ -473,6 +473,35 @@ class Session(AbstractScratch):
         """
         return self._connect_object("username", username, user.User, exceptions.UserNotFound)
 
+    def connect_user_by_id(self, user_id:int):
+        """
+        Gets a user using this session, connects the session to the User object to allow authenticated actions
+
+        This method ...
+        1) gets the username by posting a comment with the user_id as commentee_id.
+        2) deletes the posted comment.
+        3) fetches other information about the user using Scratch's api.scratch.mit.edu/users/username API.
+
+        Warning:
+            Every time this functions is run, a comment on your profile is posted and deleted. Therefore you shouldn't run this too often.
+
+        Args:
+            user_id (int): User ID of the requested user
+
+        Returns:
+            scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
+        """
+        # Get username:
+        you = user.User(username=self.username, session=self)
+        comment = you.post_comment("scratchattach", commentee_id=int(user_id))
+        print("DEBUG", comment.content)
+        username = comment.content.split(" ")[0].replace("@", "")
+        print("DEBUG", username)
+        you.delete_comment(comment_id=comment.id)
+        # Get user info:
+        return self._connect_object("username", username, user.User, exceptions.UserNotFound)
+
+
     def connect_project(self, project_id):
         """
         Gets a project using this session, connects the session to the Project object to allow authenticated actions
