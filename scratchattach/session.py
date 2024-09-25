@@ -13,10 +13,11 @@ from . import project
 from . import exceptions
 from . import studio
 from . import forum
+from abstractscratch import AbstractScratch
 from .commons import headers
 
 
-class Session():
+class Session(AbstractScratch):
 
     '''
     Represents a Scratch log in / session. Stores authentication data (session id and xtoken).
@@ -43,6 +44,10 @@ class Session():
 
     def __init__(self, **entries):
         
+        # Info on how the .update method has to fetch the data:
+        self.update_function = requests.post
+        self.update_API = "https://scratch.mit.edu/session"
+
         # Set attributes every Session object needs to have:
         self.session_id = None
         self.username = None
@@ -60,24 +65,6 @@ class Session():
             "accept": "application/json",
             "Content-Type": "application/json",
         }
-
-    def update(self):
-        """
-        Updates the attributes of the Project object. Returns True if the update was successful.
-        """
-        session = requests.post(
-            "https://scratch.mit.edu/session",
-            headers = headers,
-            cookies = self._cookies, timeout=10
-        )
-        # Check for 429 error:
-        if "429" in str(session):
-            return "429"
-        if session.text == '{\n  "response": "Too many requests"\n}':
-            return "429"
-        # If no error: Parse JSON:
-        session = session.json()
-        return self._update_from_dict(session)
 
     def _update_from_dict(self, session):
         try:
@@ -458,6 +445,21 @@ class Session():
             return None
     """
 
+    def _connect_object(self, identificator, Class, NotFoundException):
+        # Interal function: Generalization of the process ran by connect_user, connect_studio etc.
+        try:
+            _object = Class(username=identificator, _session=self)
+            if _object.update() == "429":
+                raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+            if not _object: # Target is unshared
+                return False
+            return _object
+        except KeyError as e:
+            raise(NotFoundException("Key error at key "+str(e)+" when reading API response"))
+        except Exception as e:
+            raise(e)
+
+
     def connect_user(self, username):
         """
         Gets a user using this session, connects the session to the User object to allow authenticated actions
@@ -468,15 +470,7 @@ class Session():
         Returns:
             scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
         """
-        try:
-            _user = user.User(username=username, _session=self)
-            if _user.update() == "429":
-                raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-            return _user
-        except KeyError as e:
-            raise(exceptions.UserNotFound("Key error at key "+str(e)+" when reading API response"))
-        except Exception as e:
-            raise(e)
+        return self._connect_object(username, user.User, exceptions.UserNotFound)
 
     def connect_project(self, project_id):
         """
@@ -488,18 +482,10 @@ class Session():
         Returns:
             scratchattach.project.Project: An object that represents the requested project and allows you to perform actions on the project (like project.love)
         """
-        try:
-            _project = project.Project(id=int(project_id), _session=self)
-            u = _project.update()
-            if u == "429":
-                raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-            if not u:
-                _project = project.PartialProject(id=int(project_id))
-            return _project
-        except KeyError as e:
-            raise(exceptions.ProjectNotFound("Key error at key "+str(e)+" when reading API response"))
-        except Exception as e:
-            raise(e)
+        result = self._connect_object(int(project_id), project.Project, exceptions.ProjectNotFound)
+        if result is False: # Project is unshared
+            return project.PartialProject(id=int(project_id))
+        return result
 
     def connect_studio(self, studio_id):
         """
@@ -511,15 +497,7 @@ class Session():
         Returns:
             scratchattach.studio.Studio: An object that represents the requested studio and allows you to perform actions on the studio (like studio.follow)
         """
-        try:
-            _studio = studio.Studio(id=int(studio_id), _session=self)
-            if _studio.update() == "429":
-                raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-            return _studio
-        except KeyError as e:
-            raise(exceptions.StudioNotFound("Key error at key "+str(e)+" when reading API response"))
-        except Exception as e:
-            raise(e)
+        return self._connect_object(int(studio_id), studio.Studio, exceptions.StudioNotFound)
 
     def connect_topic(self, topic_id):
         """
@@ -531,17 +509,7 @@ class Session():
         Returns:
             scratchattach.forum.ForumTopic: An object that represents the requested forum topic
         """
-
-        try:
-            _topic = forum.ForumTopic(id=int(topic_id), _session=self)
-            if _topic.update() == "429":
-                raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-            _topic.update()
-            return _topic
-        except KeyError as e:
-            raise(exceptions.ForumContentNotFound("Key error at key "+str(e)+" when reading API response"))
-        except Exception as e:
-            raise(e)
+        return self._connect_object(int(topic_id), forum.ForumTopic, exceptions.ForumContentNotFound)
 
     def connect_post(self, post_id):
 
@@ -554,13 +522,7 @@ class Session():
         Returns:
             scratchattach.forum.ForumPost: An object that represents the requested forum post
         """
-
-        try:
-            _post = forum.ForumPost(id=int(post_id), _session=self)
-            _post.update()
-            return _post
-        except KeyError:
-            return None
+        return self._connect_object(int(post_id), forum.ForumPost, exceptions.ForumContentNotFound)
 
     
 # ------ #
@@ -568,8 +530,7 @@ class Session():
 def login_by_id(session_id, *, username=None):
     """
     Creates a session / log in to the Scratch website with the specified session id. 
-
-    This method fetches the xtoken and other information by posting a request to scratch.mit.edu/session. (If this fails, a warning is displayed)
+    Structured similarly to Session._connect_object method.
 
     Args:
         session_id (str)
