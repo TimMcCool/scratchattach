@@ -17,7 +17,7 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 - **[Documentation](https://github.com/TimMcCool/scratchattach/wiki)**
 - [Extended documentation (WIP)](https://scratchattach.readthedocs.io/en/latest/)
 - [Examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)
-- [Hosting]([http](https://github.com/TimMcCool/scratchattach/wiki/Hosting)
+- [Hosting](https://github.com/TimMcCool/scratchattach/wiki/Hosting)
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
 
 Report bugs by opening an issue on this repository. If you need help or guideance, leave a comment in the [official forum topic](https://scratch.mit.edu/discuss/topic/603418/
@@ -45,6 +45,12 @@ Run the following command in your command prompt / shell:
 ```
 pip install -U scratchattach
 ```
+
+If this doesn't work, pip was not added to path when you installed Python. Try running:
+```
+python -m pip install -U scratchattach
+```
+
 
 **Logging in with username / password:**
 
