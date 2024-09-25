@@ -10,13 +10,9 @@ Run the following command in your command prompt
 pip install -U scratchattach
 ```
 
-**OR**
-
-Add this to your Python code:
-```python
-import os
-
-os.system("pip install -U scratchattach")
+If this doesn't work, pip was not added to path when you installed Python. Try running:
+```
+python -m pip install -U scratchattach
 ```
 
 # Logging in
@@ -239,6 +235,8 @@ user.update() #Updates the above data
 ```python
 user.message_count()
 user.featured_data() #Returns info on the user's featured project as dict
+user.does_exist() #Returns True if the user exists and False if the user is deleted. New in v1.7.3
+user.is_new_scratcher() #Returns whether the user is a new Scratcher. New in v1.7.3
 
 user.follower_count()
 user.following_count()
@@ -275,6 +273,7 @@ user.toggle_commenting()
 user.set_bio(text) #Changes the 'About me' of the user
 user.set_wiwo(text)
 user.set_featured("project_id", label="") #Changes the featured project
+user.set_forum_signature(text) # Changes the discuess forum signature of the user. New in v1.7.3
 
 user.stats() #Returns the user's statistics as dict. Fetched from ScratchDB
 user.ranks() #Returns the user's ranks as dict. Fetched from ScratchDB
