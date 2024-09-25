@@ -48,7 +48,11 @@ class Activity(AbstractScratch):
         
         self.time = time
         self.actor_username=(data.find('div').find('span').text)
-            
+
+        self.target_name=(data.find('div').find('span').findNext().text)
+        self.target_link=(data.find('div').find('span').findNext()["href"])
+        self.target_id=(data.find('div').find('span').findNext()["href"].split("/")[-2])
+
         self.type=data.find('div').find_all('span')[0].next_sibling.strip()
         if self.type == "loved":
             self.type = "loveproject"
@@ -58,9 +62,12 @@ class Activity(AbstractScratch):
             self.type = "becomecurator"
         if "shared" in self.type:
             self.type = "shareproject"
+        if "is now following" in self.type:
+            if "users" in self.target_link:
+                self.type = "followuser"
+            else:
+                self.type = "followstudio"
 
-        self.target=(data.find('div').find('span').findNext().text)
-                    
         return True
 
     def actor(self):

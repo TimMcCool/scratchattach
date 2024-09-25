@@ -17,11 +17,11 @@ def parse_object_list(raw, Class, session=None, primary_key="id"):
     results = []
     for raw_dict in raw:
         try:
-            _obj = Class(**{primary_key:raw_dict["primary_key"], "_session":session})
-            _obj.update_from_dict(raw_dict)
+            _obj = Class(**{primary_key:raw_dict[primary_key], "_session":session})
+            _obj._update_from_dict(raw_dict)
             results.append(_obj)
-        except Exception:
-            print("Warning raised by scratchattach: failed to parse ", raw_dict)
+        except Exception as e:
+            print("Warning raised by scratchattach: failed to parse ", raw_dict, "error", e)
     return results
 
 def _get_object(identificator_id, identificator, Class, NotFoundException):

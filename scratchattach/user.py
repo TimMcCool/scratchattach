@@ -273,6 +273,8 @@ class User(AbstractScratch):
             f"https://api.scratch.mit.edu/users/{self.username}/projects/?limit={limit}&offset={offset}",
             headers = self._headers
         ).json()
+        for p in _projects:
+            p["author"] = {"username":self.username}
         return commons.parse_object_list(_projects, project.Project, self._session)
 
     def favorites(self, *, limit=None, offset=0):
@@ -464,7 +466,7 @@ class User(AbstractScratch):
         source = soup.find_all("li")
                 
         for data in source:
-            _activity = activity.Activity(_session = self._session)
+            _activity = activity.Activity(_session = self._session, raw=data)
             _activity._update_from_html(data)
             activities.append(_activity)
 
