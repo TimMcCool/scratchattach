@@ -726,4 +726,4 @@ def get_user(username):
         
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_user` instead.
     """
-    commons._get_object("username", username, User, exceptions.UserNotFound)
+    return commons._get_object("username", username, User, exceptions.UserNotFound)
