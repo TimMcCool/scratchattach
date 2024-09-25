@@ -36,10 +36,17 @@ class Session():
     :.banned: Returns True if the associated account is banned
     '''
     
-    def __init__(self, session_id, *, username=None):
+    def __str__(self):
+        return "Login for account: {self.username}"
 
+    def __init__(self, session_id, *, username=None):
+        
+        # Set attributes every Session object needs to have:
         self.session_id = str(session_id)
-        self._username = username
+        self.username = username
+        self._username = username # backwards compatibility with v1
+        
+        # Base headers and cookies of every session:
         self._headers = headers
         self._cookies = {
             "scratchsessionsid" : self.session_id,
@@ -48,57 +55,47 @@ class Session():
             "accept": "application/json",
             "Content-Type": "application/json",
         }
-        self._get_xtoken()
+
+    def update(self):
+        """
+        Updates the attributes of the Project object. Returns True if the update was successful.
+        """
+        session = requests.post(
+            "https://scratch.mit.edu/session",
+            headers = headers,
+            cookies = self._cookies, timeout=10
+        )
+        # Check for 429 error:
+        if "429" in str(session):
+            return "429"
+        if session.text == '{\n  "response": "Too many requests"\n}':
+            return "429"
+        # If no error: Parse JSON:
+        session = session.json()
+        return self._update_from_dict(session)
+
+    def _update_from_dict(self, session):
         try:
-            self._headers.pop("Cookie")
-        except Exception: pass
-
-    def _get_csrftoken(self): # CSRF Token could always be "a" afaik
-        r = requests.get("https://scratch.mit.edu/csrf_token/", timeout=10).headers
-        print(r)
-        csrftoken = r["Set-Cookie"].split("scratchcsrftoken=")[1].split(";")[0]
-        self._headers["x-csrftoken"] = csrftoken
-        self._cookies["scratchcsrftoken"] = csrftoken
-
-    def _get_xtoken(self):
-
-        # this will fetch the account token
-        try:
-            response = json.loads(requests.post(
-                "https://scratch.mit.edu/session",
-                headers = {
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
-                    "x-csrftoken": "a",
-                    "x-requested-with": "XMLHttpRequest",
-                    "referer": "https://scratch.mit.edu",
-                },
-                cookies = {
-                    "scratchsessionsid" : self.session_id,
-                    "scratchcsrftoken" : "a",
-                    "scratchlanguage" : "en"
-                }, timeout=10
-            ).text)
-
-            self.xtoken = response['user']['token']
-            self._headers["X-Token"] = self.xtoken
-            self.email = response["user"]["email"]
-            self.new_scratcher = response["permissions"]["new_scratcher"]
-            self.mute_status = response["permissions"]["mute_status"]
-            self._username = response["user"]["username"]
-            self.banned = response["user"]["banned"]
-            if self.banned:
-                warnings.warn(f"Warning: The account {self._username} you logged in to is BANNED. Some features may not work properly.")
-
+            self.xtoken = session['user']['token']
         except Exception:
-            if self._username is None:
-                print("Warning: Logged in, but couldn't fetch XToken.\nSome features (including cloud variables) will not work properly. To get cloud variables to work, provide a username argument: Session('session_id', username='username')\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
-            else:
-                print(f"Warning: Logged in as {self._username}, but couldn't fetch XToken. Cloud variables will still work, but other features may not work properly.\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress.")
-            self.xtoken = ""
+            self.xtoken = None
+            return "xtoken error"
+        self._headers["X-Token"] = self.xtoken
+        self.email = session["user"]["email"]
+        self.new_scratcher = session["permissions"]["new_scratcher"]
+        self.mute_status = session["permissions"]["mute_status"]
+        self._username = session["user"]["username"]
+        self.banned = session["user"]["banned"]
+        if self.banned:
+            warnings.warn(f"Warning: The account {self._username} you logged in to is BANNED. Some features may not work properly.")
+        return True
 
-    def get_linked_user(self):
+    def connect_linked_user(self):
         '''
         Gets the user associated with the log in / session.
+
+        Warning:
+            The returned User object is cached. To ensure its attribute are up to date, you need to run .update() on it.
 
         Returns:
             scratchattach.user.User: Object representing the user associated with the log in / session.
@@ -106,6 +103,10 @@ class Session():
         if not hasattr(self, "_user"):
             self._user = self.connect_user(self._username)
         return self._user
+
+    def get_linked_user(self):
+        # backwards compatibility with v1
+        return self.connect_linked_user() # To avoid inconsistencies with "connect" and "get", this function was renamed
 
     def mystuff_projects(self, ordering, *, page=1, sort_by="", descending=True):
         '''
@@ -138,7 +139,7 @@ class Session():
             projects = []
             for target in targets:
                 projects.append(
-                    dict(
+                    project.Project(
                         author = self._username,
                         created = target["fields"]["datetime_created"],
                         last_modified = target["fields"]["datetime_modified"],

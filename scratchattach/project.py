@@ -14,8 +14,10 @@ class PartialProject:
     """
 
     def __init__(self, **entries):
+
         self.shared = None
         self.project_token = None
+
         self.__dict__.update(entries)
         
         if not hasattr(self, "id"):
@@ -150,9 +152,10 @@ class Project(PartialProject):
 
     def update(self):
         """
-        Updates the attributes of the Project object
+        Updates the attributes of the Project object. Returns True if the update was successful.
         """
         if self._session is not None:
+            # Get project as logged out user
             project = requests.get(
                 f"https://api.scratch.mit.edu/projects/{self.id}",
                 headers={
@@ -163,12 +166,15 @@ class Project(PartialProject):
                 },
                 timeout=10,
             )
+            # Check for 429 error:
             if "429" in str(project):
                 return "429"
             if project.text == '{\n  "response": "Too many requests"\n}':
                 return "429"
+            # If no error: Parse JSON:
             project = project.json()
         else:
+            # Get project using connected session
             project = requests.get(
                 f"https://api.scratch.mit.edu/projects/{self.id}",
                 headers={
@@ -178,16 +184,51 @@ class Project(PartialProject):
                 },
                 timeout=10,
             )
+            # Check for 429 error:
             if "429" in str(project):
                 return "429"
             if project.text == '{\n  "response": "Too many requests"\n}':
                 return "429"
+            # If no error: Parse JSON:
             project = project.json()
         if "code" in list(project.keys()):
+            # If the field "code" is present in the response, it indicates an error
             return False
         else:
             return self._update_from_dict(project)
 
+
+    def _update_from_dict(self, project):
+        try:
+            self.id = int(project["id"])
+        except KeyError:
+            pass
+        self.url = "https://scratch.mit.edu/projects/" + str(self.id)
+        self.author = project["author"]["username"]
+        self.comments_allowed = project["comments_allowed"]
+        self.instructions = project["instructions"]
+        self.notes = project["description"]
+        self.created = project["history"]["created"]
+        self.last_modified = project["history"]["modified"]
+        self.share_date = project["history"]["shared"]
+        self.thumbnail_url = project["image"]
+        try:
+            self.remix_parent = project["remix"]["parent"]
+            self.remix_root = project["remix"]["root"]
+        except Exception:
+            self.remix_parent = None
+            self.remix_root = None
+        self.favorites = project["stats"]["favorites"]
+        self.loves = project["stats"]["loves"]
+        self.remix_count = project["stats"]["remixes"]
+        self.views = project["stats"]["views"]
+        self.title = project["title"]
+        try:
+            self.project_token = project["project_token"]
+        except Exception:
+            self.project_token = None
+        return True
+    
     def download(self, *, filename=None, dir=""):
         """
         Downloads the project json to the given directory.
@@ -252,37 +293,6 @@ class Project(PartialProject):
                     "Method only works for projects created with Scratch 3"
                 )
             )
-
-    def _update_from_dict(self, project):
-        try:
-            self.id = int(project["id"])
-        except KeyError:
-            pass
-        self.url = "https://scratch.mit.edu/projects/" + str(self.id)
-        self.author = project["author"]["username"]
-        self.comments_allowed = project["comments_allowed"]
-        self.instructions = project["instructions"]
-        self.notes = project["description"]
-        self.created = project["history"]["created"]
-        self.last_modified = project["history"]["modified"]
-        self.share_date = project["history"]["shared"]
-        self.thumbnail_url = project["image"]
-        try:
-            self.remix_parent = project["remix"]["parent"]
-            self.remix_root = project["remix"]["root"]
-        except Exception:
-            self.remix_parent = None
-            self.remix_root = None
-        self.favorites = project["stats"]["favorites"]
-        self.loves = project["stats"]["loves"]
-        self.remix_count = project["stats"]["remixes"]
-        self.views = project["stats"]["views"]
-        self.title = project["title"]
-        try:
-            self.project_token = project["project_token"]
-        except Exception:
-            self.project_token = None
-        return True
 
     def get_author(self):
         """
