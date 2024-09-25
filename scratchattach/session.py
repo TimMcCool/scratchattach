@@ -77,6 +77,7 @@ class Session(AbstractScratch):
         self.email = data["user"]["email"]
         self.new_scratcher = data["permissions"]["new_scratcher"]
         self.mute_status = data["permissions"]["mute_status"]
+        self.username = data["user"]["username"]
         self._username = data["user"]["username"]
         self.banned = data["user"]["banned"]
         if self.banned:
@@ -493,9 +494,16 @@ class Session(AbstractScratch):
         """
         # Get username:
         you = user.User(username=self.username, _session=self)
-        comment = you.post_comment("scratchattach", commentee_id=int(user_id))
+        try:
+            comment = you.post_comment("scratchattach", commentee_id=int(user_id))
+        except exceptions.CommentPostFailure:
+            raise exceptions.BadRequest("You are being rate-limited for running this operation too often. Implement a cooldown of about 10 seconds.")
+        except Exception as e:
+            raise e
         print("DEBUG", comment.content)
-        username = comment.content.split('">@T')[1].split("</a>")[0]
+        username = comment.content.split('">@')[1]
+        print("DEBUG", username)
+        username = username.split("</a>")[0]
         print("DEBUG", username)
         you.delete_comment(comment_id=comment.id)
         # Get user info:
@@ -504,7 +512,7 @@ class Session(AbstractScratch):
     def connect_project(self, project_id):
         """
         Gets a project using this session, connects the session to the Project object to allow authenticated actions
-
+sess
         Args:
             project_id (int): ID of the requested project
 
