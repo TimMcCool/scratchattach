@@ -116,7 +116,7 @@ class Session(AbstractScratch):
             cookies = self._cookies,
             timeout = 10,
         ).json()
-        return commons.parse_object_list(data, activity.Activity, self._session)
+        return commons.parse_object_list(data, activity.Activity, self)
 
     def clear_messages(self):
         '''
@@ -159,7 +159,7 @@ class Session(AbstractScratch):
             cookies = self._cookies,
             timeout = 10,
         ).json()
-        return commons.parse_object_list(data, activity.Activity, self._session)
+        return commons.parse_object_list(data, activity.Activity, self)
 
     def loved_by_followed_users(self, *, limit=40, offset=0):
         '''
@@ -174,7 +174,7 @@ class Session(AbstractScratch):
             cookies = self._cookies,
             timeout = 10,
         ).json()
-        return commons.parse_object_list(data, project.Project, self._session)
+        return commons.parse_object_list(data, project.Project, self)
 
     """ work in progress
     def search_projects(self, *, query="", mode="trending", language="en", limit=40, offset=0):
