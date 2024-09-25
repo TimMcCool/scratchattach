@@ -38,12 +38,12 @@ class Session(AbstractScratch):
 
     :.banned: Returns True if the associated account is banned
     '''
-    
+
     def __str__(self):
         return "Login for account: {self.username}"
 
     def __init__(self, **entries):
-        
+
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.post
         self.update_API = "https://scratch.mit.edu/session"
@@ -55,7 +55,7 @@ class Session(AbstractScratch):
         # Update attributes from entries dict:
         self.__dict__.update(entries)
         self._username = self.username # backwards compatibility with v1
-        
+
         # Base headers and cookies of every session:
         self._headers = headers
         self._cookies = {
@@ -99,7 +99,7 @@ class Session(AbstractScratch):
     def get_linked_user(self):
         # backwards compatibility with v1
         return self.connect_linked_user() # To avoid inconsistencies with "connect" and "get", this function was renamed
-    
+
     """ work in progress
     def mystuff_projects(self, ordering, *, page=1, sort_by="", descending=True):
         '''
@@ -107,12 +107,12 @@ class Session(AbstractScratch):
 
         Args:
             ordering (str): Possible values for this parameter are "all", "shared", "unshared" and "trashed"
-        
+
         Keyword Arguments:
             page (int): The page of the "My Stuff" projects that should be returned
             sort_by (str): The key the projects should be sorted based on. Possible values for this parameter are "" (then the projects are sorted based on last modified), "view_count", love_count", "remixers_count" (then the projects are sorted based on remix count) and "title" (then the projects are sorted based on title)
             descending (boolean): Determines if the element with the highest key value (the key is specified in the sort_by argument) should be returned first. Defaults to True.
-      
+
         Returns:
             list<dict>: A list with the projects from the "My Stuff" page, each project is represented by a dict.
         '''
@@ -225,7 +225,7 @@ class Session(AbstractScratch):
             ).json()["content-name"])
         except Exception:
             raise(exceptions.FetchError)
-    ''' 
+    '''
     ''' # these APIs are always empty
     def created_by_followed_users(self, *, limit=40, offset=0):
         r = requests.get(
@@ -388,7 +388,7 @@ class Session(AbstractScratch):
 
     def connect_tw_cloud(self, project_id_arg=None, *, project_id=None, purpose="", contact=""):
         return cloud.connect_tw_cloud(project_id_arg, project_id=project_id, purpose=purpose, contact=contact)
-    
+
     def search_posts(self, *, query, order="newest", page=0):
         try:
             data = requests.get(f"https://scratchdb.lefty.one/v3/forum/search?q={query}&o={order}&page={page}", timeout=10).json()["posts"]
@@ -420,7 +420,7 @@ class Session(AbstractScratch):
 
         Args:
             category_name (str): Name of the forum category
-        
+
         Keyword Arguments:
             page (str): Page of the category topics that should be returned
             include_deleted (boolean): Whether deleted topics should be returned too
@@ -524,25 +524,25 @@ class Session(AbstractScratch):
         """
         return self._connect_object(int(post_id), forum.ForumPost, exceptions.ForumContentNotFound)
 
-    
+
 # ------ #
-    
+
 def login_by_id(session_id, *, username=None):
     """
-    Creates a session / log in to the Scratch website with the specified session id. 
+    Creates a session / log in to the Scratch website with the specified session id.
     Structured similarly to Session._connect_object method.
 
     Args:
         session_id (str)
         password (str)
-    
+
     Keyword arguments:
         timeout (int): Optional, but recommended. Specify this when the Python environment's IP address is blocked by Scratch's API, but you still want to use cloud variables.
 
     Returns:
         scratchattach.session.Session: An object that represents the created log in / session
     """
-    
+
     try:
         _session = Session(session_id=session_id, username=username)
         if _session.update() == "429":
@@ -552,10 +552,10 @@ def login_by_id(session_id, *, username=None):
         print(f"Warning: Logged in, but couldn't fetch XToken. Key error at key "+str(e)+" when reading scratch.mit.edu/session API response")
     except Exception as e:
         raise(e)
-    
+
 def login(username, password, *, timeout=10):
     """
-    Creates a session / log in to the Scratch website with the specified username and password. 
+    Creates a session / log in to the Scratch website with the specified username and password.
 
     This method ...
     1. creates a session id by posting a login request to Scratch's login API. (If this fails, scratchattach.exceptions.LoginFailure is raised)
@@ -564,14 +564,14 @@ def login(username, password, *, timeout=10):
     Args:
         username (str)
         password (str)
-    
+
     Keyword arguments:
         timeout (int): Timeout for the request to Scratch's login API (in seconds). Defaults to 10.
 
     Returns:
         scratchattach.session.Session: An object that represents the created log in / session
     """
-    
+
     # Post request to login API:
     data = json.dumps({"username": username, "password": password})
     _headers = headers
@@ -583,7 +583,8 @@ def login(username, password, *, timeout=10):
     try:
         session_id = str(re.search('"(.*)"', request.headers["Set-Cookie"]).group())
     except Exception:
-        raise exceptions.LoginFailure("Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
-    
+        raise exceptions.LoginFailure(
+            "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
+
     # Create session object:
     return login_by_id(session_id, username=username)
