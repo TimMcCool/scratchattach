@@ -13,6 +13,7 @@ from . import project
 from . import exceptions
 from . import studio
 from . import forum
+from . import commons, activity
 from .abstractscratch import AbstractScratch
 from .commons import headers
 from bs4 import BeautifulSoup
@@ -102,7 +103,113 @@ class Session(AbstractScratch):
         # backwards compatibility with v1
         return self.connect_linked_user() # To avoid inconsistencies with "connect" and "get", this function was renamed
 
+    def messages(self, *, limit=40, offset=0):
+        '''
+        Returns the messages.
+
+        Returns:
+            list<dict>: List that contains all messages as dicts.
+        '''
+        data = requests.get(
+            f"https://api.scratch.mit.edu/users/{self._username}/messages?limit={limit}&offset={offset}",
+            headers = self._headers,
+            cookies = self._cookies,
+            timeout = 10,
+        ).json()
+        return commons.parse_object_list(data, activity.Activity, self._session)
+
+    def clear_messages(self):
+        '''
+        Clears all messages.
+        '''
+        return requests.post(
+            "https://scratch.mit.edu/site-api/messages/messages-clear/",
+            headers = self._headers,
+            cookies = self._cookies,
+            timeout = 10,
+        ).text
+
+    def message_count(self):
+        '''
+        Returns the message count.
+
+        Returns:
+            int: message count
+        '''
+        return json.loads(requests.get(
+            f"https://scratch.mit.edu/messages/ajax/get-message-count/",
+            headers = {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
+            },
+            timeout = 10,
+        ).text)["msg_count"]
+
+    # Front-page-related stuff:
+
+    def get_feed(self, *, limit=20, offset=0):
+        '''
+        Returns the "What's happening" section (frontpage).
+
+        Returns:
+            list<dict>: List that contains all "What's happening" entries as dicts
+        '''
+        data = requests.get(
+            f"https://api.scratch.mit.edu/users/{self._username}/following/users/activity?limit={limit}&offset={offset}",
+            headers = self._headers,
+            cookies = self._cookies,
+            timeout = 10,
+        ).json()
+        return commons.parse_object_list(data, activity.Activity, self._session)
+
+    def loved_by_followed_users(self, *, limit=40, offset=0):
+        '''
+        Returns the "Projects loved by Scratchers I'm following" section (frontpage).
+
+        Returns:
+            list<scratchattach.project.Project>: List that contains all "Projects loved by Scratchers I'm following" entries as Project objects
+        '''
+        data = requests.get(
+            f"https://api.scratch.mit.edu/users/{self._username}/following/users/loves?limit={limit}&offset={offset}",
+            headers = self._headers,
+            cookies = self._cookies,
+            timeout = 10,
+        ).json()
+        return commons.parse_object_list(data, project.Project, self._session)
+
     """ work in progress
+    def search_projects(self, *, query="", mode="trending", language="en", limit=40, offset=0):
+        '''
+        Uses the Scratch search to search projects.
+
+        Keyword arguments:
+            query (str): The query that will be searched.
+            mode (str): Has to be one of these values: "trending", "popular" or "recent". Defaults to "trending".
+            language (str): A language abbreviation, defaults to "en". (Depending on the language used on the Scratch website, Scratch displays you different results.)
+            limit (int): Max. amount of returned projects.
+            offset (int): Offset of the first returned project.
+
+        Returns:
+            list<scratchattach.project.Project>: List that contains the search results.
+        '''
+        limit2 = limit+offset
+        while (limit2 % 40) != 0:
+            limit2+=1
+        limit2 //= 40
+        offs = 0
+        resp = []
+        for i in range(limit2):
+            resp2 = requests.get(f"https://api.scratch.mit.edu/search/projects?limit=40&offset={offs}&language={language}&mode={mode}&q={query}", timeout=10).json()
+            if not resp2 == {"code":"BadRequest","message":""}:
+                resp += resp2
+            offs+=40
+        r = resp[offset:][:limit]
+        projects = []
+        for project_dict in r:
+            p = project.Project(_session = self)
+            p._update_from_dict(project_dict)
+            projects.append(p)
+        return projects
+
     def mystuff_projects(self, ordering, *, page=1, sort_by="", descending=True):
         '''
         Gets the projects from the "My stuff" page.
@@ -162,61 +269,8 @@ class Session(AbstractScratch):
         '''
         return self.mystuff_projects(ordering, page=page, sort_by=sort_by, descending=descending)
 
-    def messages(self, *, limit=40, offset=0):
-        '''
-        Returns the messages.
 
-        Returns:
-            list<dict>: List that contains all messages as dicts.
-        '''
-        return requests.get(
-            f"https://api.scratch.mit.edu/users/{self._username}/messages?limit={limit}&offset={offset}",
-            headers = self._headers,
-            cookies = self._cookies,
-            timeout = 10,
-        ).json()
-
-    def clear_messages(self):
-        '''
-        Clears all messages.
-        '''
-        return requests.post(
-            "https://scratch.mit.edu/site-api/messages/messages-clear/",
-            headers = self._headers,
-            cookies = self._cookies,
-            timeout = 10,
-        ).text
-
-    def message_count(self):
-        '''
-        Returns the message count.
-
-        Returns:
-            int: message count
-        '''
-        return json.loads(requests.get(
-            f"https://api.scratch.mit.edu/users/{self._username}/messages/count/",
-            headers = {
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36'
-            },
-            timeout = 10,
-        ).text)["count"]
-
-    def get_feed(self, *, limit=20, offset=0):
-        '''
-        Returns the "What's happening" section (frontpage).
-
-        Returns:
-            list<dict>: List that contains all "What's happening" entries as dicts
-        '''
-        return requests.get(
-            f"https://api.scratch.mit.edu/users/{self._username}/following/users/activity?limit={limit}&offset={offset}",
-            headers = self._headers,
-            cookies = self._cookies,
-            timeout = 10,
-        ).json()
-
-    '''def create_project(self): # not working
+    def create_project(self): # not working
 
         try:
 
@@ -227,90 +281,7 @@ class Session(AbstractScratch):
             ).json()["content-name"])
         except Exception:
             raise(exceptions.FetchError)
-    '''
-    ''' # these APIs are always empty
-    def created_by_followed_users(self, *, limit=40, offset=0):
-        r = requests.get(
-            f"https://api.scratch.mit.edu/users/{self._username}/following/users/projects?limit={limit}&offset={offset}",
-            headers = self._headers,
-            cookies = self._cookies
-        ).json()
-        projects = []
 
-        for project in r:
-            p = project.Project()
-            p._update_from_dict(project)
-            projects.append(p)
-        return projects
-
-    def added_to_followed_studios(self, *, limit=40, offset=0):
-        r = requests.get(
-            f"https://api.scratch.mit.edu/users/{self._username}/following/studios/projects?limit={limit}&offset={offset}",
-            headers = self._headers,
-            cookies = self._cookies
-        ).json()
-        projects = []
-
-        for project in r:
-            p = project.Project()
-            p._update_from_dict(project)
-            projects.append(p)
-        return projects
-    '''
-
-    def loved_by_followed_users(self, *, limit=40, offset=0):
-        '''
-        Returns the "Projects loved by Scratchers I'm following" section (frontpage).
-
-        Returns:
-            list<scratchattach.project.Project>: List that contains all "Projects loved by Scratchers I'm following" entries as Project objects
-        '''
-        r = requests.get(
-            f"https://api.scratch.mit.edu/users/{self._username}/following/users/loves?limit={limit}&offset={offset}",
-            headers = self._headers,
-            cookies = self._cookies,
-            timeout = 10,
-        ).json()
-        projects = []
-
-        for project_dict in r:
-            p = project.Project(_session = self)
-            p._update_from_dict(project_dict)
-            projects.append(p)
-        return projects
-
-    def search_projects(self, *, query="", mode="trending", language="en", limit=40, offset=0):
-        '''
-        Uses the Scratch search to search projects.
-
-        Keyword arguments:
-            query (str): The query that will be searched.
-            mode (str): Has to be one of these values: "trending", "popular" or "recent". Defaults to "trending".
-            language (str): A language abbreviation, defaults to "en". (Depending on the language used on the Scratch website, Scratch displays you different results.)
-            limit (int): Max. amount of returned projects.
-            offset (int): Offset of the first returned project.
-
-        Returns:
-            list<scratchattach.project.Project>: List that contains the search results.
-        '''
-        limit2 = limit+offset
-        while (limit2 % 40) != 0:
-            limit2+=1
-        limit2 //= 40
-        offs = 0
-        resp = []
-        for i in range(limit2):
-            resp2 = requests.get(f"https://api.scratch.mit.edu/search/projects?limit=40&offset={offs}&language={language}&mode={mode}&q={query}", timeout=10).json()
-            if not resp2 == {"code":"BadRequest","message":""}:
-                resp += resp2
-            offs+=40
-        r = resp[offset:][:limit]
-        projects = []
-        for project_dict in r:
-            p = project.Project(_session = self)
-            p._update_from_dict(project_dict)
-            projects.append(p)
-        return projects
     def explore_projects(self, *, query="*", mode="trending", language="en", limit=40, offset=0):
         '''
         Gets projects from the explore page.
@@ -486,7 +457,7 @@ class Session(AbstractScratch):
         try:
             comment = you.post_comment("scratchattach", commentee_id=int(user_id))
         except exceptions.CommentPostFailure:
-            raise exceptions.BadRequest("After posting a comment, you need to wait 10 seconds before you can find users by id again.")
+            raise exceptions.BadRequest("After posting a comment, you need to wait 10 seconds before you can connect users by id again.")
         except Exception as e:
             raise e
         username = comment.content.split('">@')[1]

@@ -1,4 +1,4 @@
-"""Common functions used by various internal modules"""
+"""v2 ready: Common functions used by various internal modules"""
 
 import requests
 from . import exceptions
