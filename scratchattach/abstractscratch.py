@@ -22,7 +22,20 @@ class AbstractScratch(ABC):
         # If no error: Parse JSON:
         response = response.json()
         return self._update_from_dict(response)
-    
+
     @abstractmethod
     def _update_from_dict(self, data) -> bool:
         pass
+
+    def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException):
+        """
+        Internal function for making a linked object (authentication kept) based on an identificator (like a project id or username)
+        """
+        try:
+            _object = Class(**{identificator_id:identificator, "_session":self._session})
+            _object.update()
+            return _object
+        except KeyError as e:
+            raise(NotFoundException("Key error at key "+str(e)+" when reading API response"))
+        except Exception as e:
+            raise(e)

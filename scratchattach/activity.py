@@ -31,21 +31,21 @@ class Activity(AbstractScratch):
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)
-    
+
     def update():
         return False # Objects of this type cannot be update
-    
+
     def _update_from_dict(self, data):
         self.__dict__.update(data)
         return True
-    
+
     def _update_from_html(self, data):
-                
+
         time=data.find('div').find('span').findNext().findNext().text.strip()
-            
+
         if '\xa0' in time:
             while '\xa0' in time: time=time.replace('\xa0', ' ')
-        
+
         self.time = time
         self.actor_username=(data.find('div').find('span').text)
 
@@ -74,23 +74,7 @@ class Activity(AbstractScratch):
         """
         Returns the user that performed the activity as User object
         """
-        _user = user.User(_session = self._session, username=self.actor_username)
-        try:
-            _user.update()
-        except Exception:
-            raise(exceptions.FetchError)
-        return _user
-        
-    def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException):
-        # Interal function
-        try:
-            _object = Class(**{identificator_id:identificator, "_session":self._session})
-            _object.update()
-            return _object
-        except KeyError as e:
-            raise(NotFoundException("Key error at key "+str(e)+" when reading API response"))
-        except Exception as e:
-            raise(e)
+        return self._make_linked_object("username", self.actor_username, user.User, exceptions.UserNotFound)
 
     def target(self):
         """
@@ -112,9 +96,3 @@ class Activity(AbstractScratch):
                 return self._make_linked_object("id", self.target_id, user.User, exceptions.UserNotFound)
             if "followed_username" in self.__dict__:
                 return self._make_linked_object("id", self.followed_username, user.User, exceptions.UserNotFound)
-
-
-
-
-
-
