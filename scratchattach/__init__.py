@@ -76,3 +76,5 @@ def get_csrf_token():
     return requests.get(
         "https://scratch.mit.edu/csrf_token/"
     ).headers["set-cookie"].split(";")[3][len(" Path=/, scratchcsrftoken="):]
+
+#
