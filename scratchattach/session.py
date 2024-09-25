@@ -13,7 +13,7 @@ from . import project
 from . import exceptions
 from . import studio
 from . import forum
-from abstractscratch import AbstractScratch
+from .abstractscratch import AbstractScratch
 from .commons import headers
 
 
