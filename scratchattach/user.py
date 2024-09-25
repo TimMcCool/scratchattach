@@ -173,8 +173,6 @@ class User(AbstractScratch):
         Returns:
             list<scratchattach.user.User>: The user's followers as list of scratchattach.user.User objects
         """
-        if limit>40:
-            limit=40
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self.username}/followers/", limit=limit, offset=offset)
         return commons.parse_object_list(response, User, self._session, "username")
@@ -191,9 +189,6 @@ class User(AbstractScratch):
         Returns:
             list<scratchattach.user.User>: The users that the user is following as list of scratchattach.user.User objects
         """
-        if limit>40:
-            limit=40
-        followers = []
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self.username}/following/", limit=limit, offset=offset)
         return commons.parse_object_list(response, User, self._session, "username")

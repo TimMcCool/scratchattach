@@ -173,7 +173,8 @@ class Session(AbstractScratch):
         )
         return commons.parse_object_list(data, project.Project, self)
 
-    """ work in progress
+    # Search:
+
     def search_projects(self, *, query="", mode="trending", language="en", limit=40, offset=0):
         '''
         Uses the Scratch search to search projects.
@@ -188,24 +189,32 @@ class Session(AbstractScratch):
         Returns:
             list<scratchattach.project.Project>: List that contains the search results.
         '''
-        limit2 = limit+offset
-        while (limit2 % 40) != 0:
-            limit2+=1
-        limit2 //= 40
-        offs = 0
-        resp = []
-        for i in range(limit2):
-            resp2 = requests.get(f"https://api.scratch.mit.edu/search/projects?limit=40&offset={offs}&language={language}&mode={mode}&q={query}", timeout=10).json()
-            if not resp2 == {"code":"BadRequest","message":""}:
-                resp += resp2
-            offs+=40
-        r = resp[offset:][:limit]
-        projects = []
-        for project_dict in r:
-            p = project.Project(_session = self)
-            p._update_from_dict(project_dict)
-            projects.append(p)
-        return projects
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset, add_params=f"&offset={offs}&language={language}&mode={mode}&q={query}")
+        return commons.parse_object_list(response, project.Project, self)
+
+    def explore_projects(self, *, query="*", mode="trending", language="en", limit=40, offset=0):
+        '''
+        Gets projects from the explore page.
+
+        Keyword arguments:
+            query (str): Specifies the tag of the explore page. To get the projects from the "All" tag, set this argument to "*".
+            mode (str): Has to be one of these values: "trending", "popular" or "recent". Defaults to "trending".
+            language (str): A language abbreviation, defaults to "en". (Depending on the language used on the Scratch website, Scratch displays you different explore pages.)
+            limit (int): Max. amount of returned projects.
+            offset (int): Offset of the first returned project.
+
+        Returns:
+            list<scratchattach.project.Project>: List that contains the explore page projects.
+        '''
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset, add_params=f"&offset={offs}&language={language}&mode={mode}&q={query}")
+        return commons.parse_object_list(response, project.Project, self)
+
+
+    """ work in progress
+
+    # My stuff:
 
     def mystuff_projects(self, ordering, *, page=1, sort_by="", descending=True):
         '''
@@ -262,10 +271,9 @@ class Session(AbstractScratch):
 
     def get_mystuff_projects(self, ordering, *, page=1, sort_by="", descending=True):
         '''
-        Alternate name for :meth:`scratchattach.session.Session.mystuff_projects`. See the documentation of this function.
+        Outdated name for :meth:`scratchattach.session.Session.mystuff_projects`. See the documentation of this function.
         '''
         return self.mystuff_projects(ordering, page=page, sort_by=sort_by, descending=descending)
-
 
     def create_project(self): # not working
 
@@ -278,40 +286,6 @@ class Session(AbstractScratch):
             ).json()["content-name"])
         except Exception:
             raise(exceptions.FetchError)
-
-    def explore_projects(self, *, query="*", mode="trending", language="en", limit=40, offset=0):
-        '''
-        Gets projects from the explore page.
-
-        Keyword arguments:
-            query (str): Specifies the tag of the explore page. To get the projects from the "All" tag, set this argument to "*".
-            mode (str): Has to be one of these values: "trending", "popular" or "recent". Defaults to "trending".
-            language (str): A language abbreviation, defaults to "en". (Depending on the language used on the Scratch website, Scratch displays you different explore pages.)
-            limit (int): Max. amount of returned projects.
-            offset (int): Offset of the first returned project.
-
-        Returns:
-            list<scratchattach.project.Project>: List that contains the explore page projects.
-        '''
-        limit2 = limit+offset
-        while (limit2 % 40) != 0:
-            limit2+=1
-        limit2 //= 40
-        offs = 0
-        resp = []
-        for i in range(limit2):
-            resp2 = requests.get(f"https://api.scratch.mit.edu/explore/projects?limit=40&offset={offs}&language={language}&mode={mode}&q={query}", timeout=10).json()
-            if not resp2 == {"code":"BadRequest","message":""}:
-                resp += resp2
-            offs+=40
-        r = resp[offset:][:limit]
-        projects = []
-        for project_dict in r:
-            p = project.Project(_session = self)
-            p._update_from_dict(project_dict)
-            projects.append(p)
-        return projects
-
 
     def backpack(self,limit=20, offset=0):
         '''

@@ -5,8 +5,7 @@ import random
 import requests
 from . import user
 from . import exceptions
-from .commons import api_iterative_data, api_iterative_simple, headers
-
+from . import commons
 
 class PartialProject:
     """
@@ -794,49 +793,9 @@ def get_project(project_id):
         raise (e)
 
 
-def explore_projects(
-    *, query="*", mode="trending", language="en", limit=None, offset=0
-):
-    """
-    Gets projects from the explore page without logging in.
-
-    Keyword arguments:
-        query (str): Specifies the tag of the explore page. To get the projects from the "All" tag, set this argument to "*".
-        mode (str): Has to be one of these values: "trending", "popular" or "recent". Defaults to "trending".
-        language (str): A language abbreviation, defaults to "en". (Depending on the language used on the Scratch website, Scratch displays you different explore pages.)
-        limit (int): Max. amount of returned projects.
-        offset (int): Offset of the first returned project.
-
-    Returns:
-        list<scratchattach.project.Project>: List that contains the explore page projects
-
-    Warning:
-        Any methods that require authentication (like project.love) will not work on the returned objects.
-
-        If you want to use these methods, get the explore page projects with :meth:`scratchattach.session.Session.search_projects` instead.
-    """
-
-    url = f"https://api.scratch.mit.edu/explore/projects"
-
-    api_data = api_iterative_simple(
-        url,
-        limit,
-        offset,
-        max_req_limit=40,
-        add_params=f"&language={language}&mode={mode}&q={query}",
-    )
-
-    projects = []
-    for project in api_data:
-        p = Project()
-        p._update_from_dict(project)
-        projects.append(p)
-    return projects
-
-
-def search_projects(*, query="", mode="trending", language="en", limit=None, offset=0):
-    """
-    Uses the Scratch search to search projects without logging in.
+def search_projects(self, *, query="", mode="trending", language="en", limit=40, offset=0):
+    '''
+    Uses the Scratch search to search projects.
 
     Keyword arguments:
         query (str): The query that will be searched.
@@ -846,29 +805,26 @@ def search_projects(*, query="", mode="trending", language="en", limit=None, off
         offset (int): Offset of the first returned project.
 
     Returns:
-        list<scratchattach.project.Project>: List that contains the search results
+        list<scratchattach.project.Project>: List that contains the search results.
+    '''
+    response = commons.api_iterative(
+        f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset, add_params=f"&offset={offs}&language={language}&mode={mode}&q={query}")
+    return commons.parse_object_list(response, Project, self)
 
-    Warning:
-        Any methods that require authentication (like project.love) will not work on the returned objects.
+def explore_projects(self, *, query="*", mode="trending", language="en", limit=40, offset=0):
+    '''
+    Gets projects from the explore page.
 
-        If you want to use these methods, perform the search with :meth:`scratchattach.session.Session.search_projects` instead.
-    """
-    if not query:
-        raise ValueError("The query can't be empty for search")
+    Keyword arguments:
+        query (str): Specifies the tag of the explore page. To get the projects from the "All" tag, set this argument to "*".
+        mode (str): Has to be one of these values: "trending", "popular" or "recent". Defaults to "trending".
+        language (str): A language abbreviation, defaults to "en". (Depending on the language used on the Scratch website, Scratch displays you different explore pages.)
+        limit (int): Max. amount of returned projects.
+        offset (int): Offset of the first returned project.
 
-    url = f"https://api.scratch.mit.edu/search/projects"
-
-    api_data = api_iterative_simple(
-        url,
-        limit,
-        offset,
-        max_req_limit=40,
-        add_params=f"&language={language}&mode={mode}&q={query}",
-    )
-
-    projects = []
-    for project in api_data:
-        p = Project()
-        p._update_from_dict(project)
-        projects.append(p)
-    return projects
+    Returns:
+        list<scratchattach.project.Project>: List that contains the explore page projects.
+    '''
+    response = commons.api_iterative(
+        f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset, add_params=f"&offset={offs}&language={language}&mode={mode}&q={query}")
+    return commons.parse_object_list(response, Project, self)
