@@ -22,10 +22,11 @@ class MessageEvents(BaseEventHandler):
                 return
             message_count = int(self.user.message_count())
             if message_count != self.current_message_count:
-                try:
-                    self._events["on_count_change"](int(self.current_message_count), int(message_count))
-                except Exception as e:
-                    print(f"Caught exception in event on_count_change: "+str(e))
+                if "on_count_change" in self._events:
+                    try:
+                        self._events["on_count_change"](int(self.current_message_count), int(message_count))
+                    except Exception as e:
+                        print(f"Caught exception in event on_count_change: "+str(e))
                 if message_count != 0:
                     if message_count < self.current_message_count:
                         self.current_message_count = 0
@@ -33,10 +34,11 @@ class MessageEvents(BaseEventHandler):
                         if self.user._session.username == self.user.username: # authorization check
                             new_messages = self.user._session.messages(limit=message_count-self.current_message_count)
                             for message in new_messages[::-1]:
-                                try:
-                                    self._events["on_message"](message)
-                                except Exception as e:
-                                    print(f"Caught exception in event on_message: "+str(e))
+                                if "on_message" in self._events:
+                                    try:
+                                        self._events["on_message"](message)
+                                    except Exception as e:
+                                        print(f"Caught exception in event on_message: "+str(e))
                 self.current_message_count = int(message_count)
             time.sleep(self.update_interval)
             
