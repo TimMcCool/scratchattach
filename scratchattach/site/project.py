@@ -4,7 +4,7 @@ import json
 import random
 import requests
 import time
-from . import user, comment
+from . import user, comment, studio
 from .. import exceptions
 from ..utils import commons
 from ..utils.commons import empty_project_json, headers
@@ -296,7 +296,7 @@ class Project(PartialProject):
             list<scratchattach.studio.Studio>: A list containing the studios this project is in, each studio is represented by a Studio object.
         """
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/studios", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
+            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/studios", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         return commons.parse_object_list(response, studio.Studio, self._session)
 
     def comments(self, *, limit=40, offset=0):
@@ -312,13 +312,13 @@ class Project(PartialProject):
         """
 
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
+            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         return commons.parse_object_list(response, comment.Comment, self._session)
 
 
     def comment_replies(self, *, comment_id, limit=40, offset=0):
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/replies/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
+            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/replies/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         for x in response:
             x["parent_id"] = comment_id
         return commons.parse_object_list(response, comment.Comment, self._session)
@@ -329,7 +329,7 @@ class Project(PartialProject):
             scratchattach.comments.Comment: A Comment object representing the requested comment.
         """
         r = requests.get(
-            f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}",
+            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/{comment_id}",
             headers=self._headers,
             cookies=self._cookies
         ).json()
@@ -406,7 +406,7 @@ class Project(PartialProject):
         Increases the project's view counter by 1. Doesn't require a login.
         """
         requests.post(
-            f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/views/",
+            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/views/",
             headers=headers,
         )
 

@@ -99,7 +99,6 @@ def api_iterative(
         resp = requests.get(
             f"{url}?limit={l}&offset={o}{add_params}", headers=headers, cookies=cookies, timeout=10
         ).json()
-        print(f"{url}?limit={l}&offset={o}{add_params}", resp)
         if not resp:
             return None
         if resp == {"code": "BadRequest", "message": ""}:
