@@ -212,7 +212,6 @@ class ForumPost(BaseSiteComponent):
         posts = ForumTopic(id=self.topic_id, _session=self._session).posts(page=1)
         while posts != []:
             matching = list(filter(lambda x : int(x.id) == int(self.id), posts))
-            print(matching, posts)
             if len(matching) > 0:
                 this = matching[0]
                 break
@@ -225,6 +224,7 @@ class ForumPost(BaseSiteComponent):
 
     def _update_from_dict(self, data):
         self.__dict__.update(data)
+        return True
 
     def _update_from_html(self, soup_html):
         self.post_index = int(soup_html.find('span', class_='conr').text.strip('#'))
@@ -235,6 +235,7 @@ class ForumPost(BaseSiteComponent):
         self.author_name = soup_html.find('dl').find('dt').find('a').text.strip()
         self.author_avatar_url = soup_html.find('dl').find('dt').find('a')['href']
         self.topic_name = soup_html.find('h3').text.strip()
+        return True
 
     def topic(self):
         """
