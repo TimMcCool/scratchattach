@@ -533,7 +533,7 @@ class User(BaseSiteComponent):
             limit: Max. amount of returned comments.
 
         Returns:
-            list<dict>: A list containing the requested comments as dicts.
+            list<scratchattach.comment.Comment>: A list containing the requested comments as Comment objects.
         """
         URL = f"https://scratch.mit.edu/site-api/comments/user/{self.username}/?page={page}"
         DATA = []
@@ -598,6 +598,9 @@ class User(BaseSiteComponent):
 
         Warning:
             For comments very far down on the user's profile, this method will take a while to find the comment. Very old comment are deleted from Scratch's database and may not appear.
+        
+        Returns:
+            scratchattach.comments.Comment: The request comment.
         """
 
         page = 1

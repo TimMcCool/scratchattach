@@ -4,30 +4,38 @@ import json
 import random
 import requests
 import time
-from . import user
+from . import user, comment
 from .. import exceptions
 from ..utils import commons
-from ..utils.commons import empty_project_json
+from ..utils.commons import empty_project_json, headers
+from ._base import BaseSiteComponent
 
 CREATE_PROJECT_USES = []
 
-class PartialProject:
+class PartialProject(BaseSiteComponent):
     """
     Represents an unshared Scratch project that can't be accessed.
     """
 
+    def __str__(self):
+        return f"Unshared project with id {self.id}"
+
     def __init__(self, **entries):
 
+        # Info on how the .update method has to fetch the data:
+        self.update_function = requests.get
+        self.update_API = f"https://api.scratch.mit.edu/users/{entries['id']}"
+
+        # Set attributes every Project object needs to have:
+        self._session = None
         self.shared = None
         self.project_token = None
+        self.id = 0
 
+        # Update attributes from entries dict:
         self.__dict__.update(entries)
         
-        if not hasattr(self, "id"):
-            self.id = 0
-
-        if not hasattr(self, "_session"):
-            self._session = None
+        # Headers and cookies:
         if self._session is None:
             self._headers = headers
             self._cookies = {}
@@ -35,66 +43,64 @@ class PartialProject:
             self._headers = self._session._headers
             self._cookies = self._session._cookies
 
-        try:
-            self._headers.pop("Cookie")
-        except Exception:
-            pass
-
-        self._json_headers = self._headers
+        # Headers for operations that require accept and Content-Type fields:
+        self._json_headers = dict(self._headers)
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
+
+    def _update_from_dict(self, data):
+        try:
+            self.id = int(data["id"])
+        except KeyError:
+            pass
+        try: self.url = "https://scratch.mit.edu/projects/" + str(self.id)
+        except Exception: pass
+        try: self.author_name = data["author"]["username"]
+        except Exception: pass
+        try: self.comments_allowed = data["comments_allowed"]
+        except Exception: pass
+        try: self.instructions = data["instructions"]
+        except Exception: pass
+        try: self.notes = data["description"]
+        except Exception: pass
+        try: self.created = data["history"]["created"]
+        except Exception: pass
+        try: self.last_modified = data["history"]["modified"]
+        except Exception: pass
+        try: self.share_date = data["history"]["shared"]
+        except Exception: pass
+        try: self.thumbnail_url = data["image"]
+        except Exception: pass
+        try:
+            self.remix_parent = data["remix"]["parent"]
+            self.remix_root = data["remix"]["root"]
+        except Exception:
+            self.remix_parent = None
+            self.remix_root = None
+        try: self.favorites = data["stats"]["favorites"]
+        except Exception: pass
+        try: self.loves = data["stats"]["loves"]
+        except Exception: pass
+        try: self.remix_count = data["stats"]["remixes"]
+        except Exception: pass
+        try: self.views = data["stats"]["views"]
+        except Exception: pass
+        try: self.title = data["title"]
+        except Exception: pass
+        try:
+            self.project_token = data["project_token"]
+        except Exception:
+            self.project_token = None
+        return True
 
     def remixes(self, *, limit=None, offset=0):
         """
         Returns:
             list<scratchattach.project.Project>: A list containing the remixes of the project, each project is represented by a Project object.
         """
-
-        def fetch(o, l):
-            resp = requests.get(
-                f"https://api.scratch.mit.edu/projects/{self.id}/remixes/?limit={l}&offset={o}",
-                headers={
-                    "x-csrftoken": "a",
-                    "x-requested-with": "XMLHttpRequest",
-                    "Cookie": "scratchcsrftoken=a;scratchlanguage=en;",
-                    "referer": "https://scratch.mit.edu",
-                    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
-                },
-                timeout=10,
-            ).json()
-            if not resp:
-                return None
-            return resp
-
-        api_data = api_iterative_data(
-            fetch, limit, offset, max_req_limit=40, unpack=True
-        )
-
-        projects = []
-        for project in api_data:
-            projects.append(
-                Project(
-                    author=project["author"]["username"],
-                    comments_allowed=project["comments_allowed"],
-                    notes=project["description"],
-                    created=project["history"]["created"],
-                    last_modified=project["history"]["modified"],
-                    share_date=project["history"]["shared"],
-                    id=project["id"],
-                    thumbnail_url=project["image"],
-                    instructions=project["instructions"],
-                    remix_parent=project["remix"]["parent"],
-                    remix_root=project["remix"]["root"],
-                    favorites=project["stats"]["favorites"],
-                    loves=project["stats"]["loves"],
-                    remixes=project["stats"]["remixes"],
-                    views=project["stats"]["views"],
-                    title=project["title"],
-                    url="https://scratch.mit.edu/projects/" + str(project["id"]),
-                    _session=self._session,
-                )
-            )
-        return projects
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/projects/{self.id}/remixes", limit=limit, offset=offset)
+        return commons.parse_object_list(response, Project, self._session)
 
     def is_shared(self):
         """
@@ -117,7 +123,7 @@ class Project(PartialProject):
 
     :.title:
 
-    :.author: The username of the author
+    :.author_name: The username of the author
 
     :.comments_allowed: boolean that is True if comments are enabled
 
@@ -152,85 +158,6 @@ class Project(PartialProject):
 
     def __str__(self):
         return self.title
-
-    def update(self):
-        """
-        Updates the attributes of the Project object. Returns True if the update was successful.
-        """
-        if self._session is not None:
-            # Get project as logged out user
-            project = requests.get(
-                f"https://api.scratch.mit.edu/projects/{self.id}",
-                headers={
-                    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36",
-                    "x-token": self._session.xtoken,
-                    "Pragma": "no-cache",
-                    "Cache-Control": "no-cache",
-                },
-                timeout=10,
-            )
-            # Check for 429 error:
-            if "429" in str(project):
-                return "429"
-            if project.text == '{\n  "response": "Too many requests"\n}':
-                return "429"
-            # If no error: Parse JSON:
-            project = project.json()
-        else:
-            # Get project using connected session
-            project = requests.get(
-                f"https://api.scratch.mit.edu/projects/{self.id}",
-                headers={
-                    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36",
-                    "Pragma": "no-cache",
-                    "Cache-Control": "no-cache",
-                },
-                timeout=10,
-            )
-            # Check for 429 error:
-            if "429" in str(project):
-                return "429"
-            if project.text == '{\n  "response": "Too many requests"\n}':
-                return "429"
-            # If no error: Parse JSON:
-            project = project.json()
-        if "code" in list(project.keys()):
-            # If the field "code" is present in the response, it indicates an error
-            return False
-        else:
-            return self._update_from_dict(project)
-
-
-    def _update_from_dict(self, project):
-        try:
-            self.id = int(project["id"])
-        except KeyError:
-            pass
-        self.url = "https://scratch.mit.edu/projects/" + str(self.id)
-        self.author = project["author"]["username"]
-        self.comments_allowed = project["comments_allowed"]
-        self.instructions = project["instructions"]
-        self.notes = project["description"]
-        self.created = project["history"]["created"]
-        self.last_modified = project["history"]["modified"]
-        self.share_date = project["history"]["shared"]
-        self.thumbnail_url = project["image"]
-        try:
-            self.remix_parent = project["remix"]["parent"]
-            self.remix_root = project["remix"]["root"]
-        except Exception:
-            self.remix_parent = None
-            self.remix_root = None
-        self.favorites = project["stats"]["favorites"]
-        self.loves = project["stats"]["loves"]
-        self.remix_count = project["stats"]["remixes"]
-        self.views = project["stats"]["views"]
-        self.title = project["title"]
-        try:
-            self.project_token = project["project_token"]
-        except Exception:
-            self.project_token = None
-        return True
     
     def download(self, *, filename=None, dir=""):
         """
@@ -297,26 +224,21 @@ class Project(PartialProject):
                 )
             )
 
-    def get_author(self):
+    def author(self):
         """
         Returns:
             scratchattach.user.User: An object representing the Scratch user who created this project.
         """
-        try:
-            return self._session.connect_user(self.author)
-        except AttributeError:
-            return user.get_user(self.author)
+        return self._make_linked_object("username", self.author_name, user.User, exceptions.UserNotFound)
 
     def studios(self, *, limit=None, offset=0):
         """
         Returns:
-            list<dict>: A list containing the studios this project is in, each studio is represented by a dict.
+            list<scratchattach.studio.Studio>: A list containing the studios this project is in, each studio is represented by a Studio object.
         """
-
-        url = f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/studios"
-
-        api_data = api_iterative_simple(url, limit, offset, max_req_limit=40)
-        return api_data
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/studios", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
+        return commons.parse_object_list(response, studio.Studio, self._session)
 
     def comments(self, *, limit=None, offset=0):
         """
@@ -327,182 +249,164 @@ class Project(PartialProject):
             limit: Max. amount of returned comments.
 
         Returns:
-            list<dict>: A list containing the requested comments as dicts.
+            list<scratchattach.comment.Comment>: A list containing the requested comments as Comment objects.
         """
 
-        url = f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments"
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
+        return commons.parse_object_list(response, comment.Comment, self._session)
 
-        api_data = api_iterative_simple(
-            url,
-            limit,
-            offset,
-            max_req_limit=40,
-            add_params=f"&cachebust={random.randint(0,9999)}",
-            headers=self._headers,
-            cookies=self._cookies,
-        )
-        return api_data
 
     def get_comment_replies(self, *, comment_id, limit=None, offset=0):
-        url = f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}/replies"
-
-        api_data = api_iterative_simple(
-            url,
-            limit,
-            offset,
-            max_req_limit=40,
-            add_params=f"&cachebust={random.randint(0,9999)}",
-            headers=self._headers,
-            cookies=self._cookies,
-        )
-        return api_data
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/replies", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
+        for x in response:
+            x["parent_id"] = comment_id
+        return commons.parse_object_list(response, comment.Comment, self._session)
 
     def get_comment(self, comment_id):
+        """
+        Returns:
+            scratchattach.comments.Comment: A Comment object representing the requested comment.
+        """
         r = requests.get(
             f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/{comment_id}",
             headers=self._headers,
             cookies=self._cookies
         ).json()
-        return r
+        _comment = comment.Comment(id=r["id"], _session=self._session)
+        _comment.update_from_dict(r)
+        return _comment
+    
     def love(self):
         """
         Posts a love on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
+        self._assert_auth()
         r = requests.post(
             f"https://api.scratch.mit.edu/proxy/projects/{self.id}/loves/user/{self._session._username}",
             headers=self._headers,
             cookies=self._cookies,
         ).json()
-        if r["userLove"] is False:
-            self.love()
+        if "userLove" in r:
+            if r["userLove"] is False:
+                self.love()
+        else:
+            raise exceptions.APIError(str(r))
 
     def unlove(self):
         """
         Removes the love from this project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
+        self._assert_auth()
         r = requests.delete(
             f"https://api.scratch.mit.edu/proxy/projects/{self.id}/loves/user/{self._session._username}",
             headers=self._headers,
             cookies=self._cookies,
         ).json()
-        if r["userLove"] is True:
-            self.unlove()
+        if "userLove" in r:
+            if r["userLove"] is True:
+                self.unlove()
+        else:
+            raise exceptions.APIError(str(r))
 
     def favorite(self):
         """
         Posts a favorite on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
+        self._assert_auth()
         r = requests.post(
             f"https://api.scratch.mit.edu/proxy/projects/{self.id}/favorites/user/{self._session._username}",
             headers=self._headers,
             cookies=self._cookies,
         ).json()
-        if r["userFavorite"] is False:
-            self.favorite()
+        if "userFavorite" in r:
+            if r["userFavorite"] is False:
+                self.favorite()
+        else:
+            raise exceptions.APIError(str(r))
 
     def unfavorite(self):
         """
         Removes the favorite from this project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
+        self._assert_auth()
         r = requests.delete(
             f"https://api.scratch.mit.edu/proxy/projects/{self.id}/favorites/user/{self._session._username}",
             headers=self._headers,
             cookies=self._cookies,
         ).json()
-        if r["userFavorite"] is True:
-            self.unfavorite()
+        if "userFavorite" in r:
+            if r["userFavorite"] is True:
+                self.unfavorite()
+        else:
+            raise exceptions.APIError(str(r))
 
     def post_view(self):
         """
-        Increases the project's view counter by 1.
+        Increases the project's view counter by 1. Doesn't require a login.
         """
         requests.post(
             f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/views/",
             headers=headers,
         )
 
+    def set_fields(self, fields_dict):
+        """
+        Sets fields using the api.scratch.mit.edu/projects/xxx/ PUT API.
+        """
+        self._assert_permission()
+        r = requests.put(
+            f"https://api.scratch.mit.edu/projects/{self.id}",
+            headers=self._headers,
+            cookies=self._cookies,
+            data=json.dumps(fields_dict),
+        ).json()
+        return self._update_from_dict(r)
+    
+    def set_fields_site_api(self, fields_dict):
+        """
+        Sets fields using the scratch.mit.edu/site-api API.
+        This function allows setting more fields than Project.set_fields.
+        For example you can also share / unshare the project by setting the "shared" field.
+
+        Warning:
+            According to the Scratch team, this API is deprecated. As of 2024 it's still fully functional tho.
+        """
+        self._assert_permission()
+        r = requests.put(
+            f"https://scratch.mit.edu/site-api/projects/all/{self.id}",
+            headers=self._headers,
+            cookies=self._cookies,
+            data=json.dumps(fields_dict),
+        ).json()
+
     def turn_off_commenting(self):
         """
         Disables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
-        if self._session._username != self.author:
-            raise (exceptions.Unauthorized)
-            return
         data = {"comments_allowed": False}
-        self._update_from_dict(
-            requests.put(
-                f"https://api.scratch.mit.edu/projects/{self.id}/",
-                headers=self._json_headers,
-                cookies=self._cookies,
-                data=json.dumps(data),
-            ).json()
-        )
+        self.set_fields(data)
 
     def turn_on_commenting(self):
         """
         Enables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
-        if self._session._username != self.author:
-            raise (exceptions.Unauthorized)
-            return
         data = {"comments_allowed": True}
-        self._update_from_dict(
-            requests.put(
-                f"https://api.scratch.mit.edu/projects/{self.id}/",
-                headers=self._json_headers,
-                cookies=self._cookies,
-                data=json.dumps(data),
-            ).json()
-        )
+        self.set_fields(data)
 
     def toggle_commenting(self):
         """
         Switches commenting on / off on the project (If comments are on, they will be turned off, else they will be turned on). You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
-        if self._session._username != self.author:
-            raise (exceptions.Unauthorized)
-            return
         data = {"comments_allowed": not self.comments_allowed}
-        self._update_from_dict(
-            requests.put(
-                f"https://api.scratch.mit.edu/projects/{self.id}/",
-                headers=self._json_headers,
-                cookies=self._cookies,
-                data=json.dumps(data),
-            ).json()
-        )
+        self.set_fields(data)
 
     def share(self):
         """
         Shares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
-        if self._session._username != self.author:
-            raise (exceptions.Unauthorized)
-            return
+        self._assert_permission()
         if self.shared is not True:
             requests.put(
                 f"https://api.scratch.mit.edu/proxy/projects/{self.id}/share/",
@@ -514,12 +418,7 @@ class Project(PartialProject):
         """
         Unshares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
-        if self._session._username != self.author:
-            raise (exceptions.Unauthorized)
-            return
+        self._assert_permission()
         if self.shared is not False:
             requests.put(
                 f"https://api.scratch.mit.edu/proxy/projects/{self.id}/unshare/",
@@ -531,12 +430,7 @@ class Project(PartialProject):
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
-        if self._session._username != self.author:
-            raise (exceptions.Unauthorized)
-            return
+        self._assert_permission()
         with open(file, "rb") as f:
             thumbnail = f.read()
         requests.post(
@@ -548,17 +442,12 @@ class Project(PartialProject):
 
     def delete_comment(self, *, comment_id):
         """
-        Deletes a comment. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
+        Deletes a comment by its ID. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
 
         Args:
             comment_id: The id of the comment that should be deleted
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
-        if self._session._username != self.author:
-            raise (exceptions.Unauthorized)
-            return
+        self._assert_permission()
         return requests.delete(
             f"https://api.scratch.mit.edu/proxy/comments/project/{self.id}/comment/{comment_id}/",
             headers=self._headers,
@@ -567,14 +456,12 @@ class Project(PartialProject):
 
     def report_comment(self, *, comment_id):
         """
-        Reports a comment to the Scratch team. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
+        Reports a comment by its ID to the Scratch team. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
 
         Args:
             comment_id: The id of the comment that should be reported
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
+        self._assert_auth()
         return requests.delete(
             f"https://api.scratch.mit.edu/proxy/comments/project/{self.id}/comment/{comment_id}/report",
             headers=self._headers,
@@ -591,18 +478,19 @@ class Project(PartialProject):
         Keyword Arguments:
             parent_id: ID of the comment you want to reply to. If you don't want to mention a user, don't put the argument.
             commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
+        
+        Returns:
+            scratchattach.comments.Comment: Comment object representing the posted comment.
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
+        self._assert_auth()
         data = {
             "commentee_id": commentee_id,
             "content": str(content),
             "parent_id": parent_id,
         }
-        headers = self._json_headers
+        headers = dict(self._json_headers)
         headers["referer"] = "https://scratch.mit.edu/projects/" + str(self.id) + "/"
-        return json.loads(
+        r = json.loads(
             requests.post(
                 f"https://api.scratch.mit.edu/proxy/comments/project/{self.id}/",
                 headers=headers,
@@ -610,6 +498,9 @@ class Project(PartialProject):
                 data=json.dumps(data),
             ).text
         )
+        _comment = comment.Comment(id=r["id"], _session=self._session)
+        _comment._update_from_dict(r)
+        return _comment
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """
@@ -629,22 +520,18 @@ class Project(PartialProject):
     def set_json(self, json_data):
         """
         Sets the project json. You can use this to upload projects to the Scratch website.
+        Returns a dict with Scratch's raw JSON API response.
 
         Args:
             json_data (dict or JSON): The new project JSON as encoded JSON object or as dict
         """
 
+        self._assert_permission()
+
         if not isinstance(json_data, dict):
             json_data = json.loads(json_data)
 
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
-        if self._session._username != self.author:
-            raise (exceptions.Unauthorized("You must be the project owner to do this."))
-            return
-
-        r = requests.put(
+        return requests.put(
             f"https://projects.scratch.mit.edu/{self.id}",
             headers=self._headers,
             cookies=self._cookies,
@@ -653,11 +540,9 @@ class Project(PartialProject):
 
     def upload_json_from(self, project_id):
         """
-        Uploads the project json from the project with the given to the project represented by this Project object
+        Uploads the project json from the project with the given id to the project represented by this Project object
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
+        self._assert_auth()
         other_project = self._session.connect_project(project_id)
         self.set_json(other_project.get_raw_json())
 
@@ -665,19 +550,7 @@ class Project(PartialProject):
         """
         Changes the projects title. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
-        if self._session._username != self.author:
-            raise (exceptions.Unauthorized("You must be the project owner to do this."))
-            return
-        r = requests.put(
-            f"https://api.scratch.mit.edu/projects/{self.id}",
-            headers=self._headers,
-            cookies=self._cookies,
-            data=json.dumps({"title": text}),
-        ).json()
-        return self._update_from_dict(r)
+        self.set_fields({"title": text})
     
     def create_remix(self, *, title=None, project_json=None): # not working
         """
@@ -687,6 +560,8 @@ class Project(PartialProject):
             Don't spam this method - it WILL get you banned from Scratch.
             To prevent accidental spam, a rate limit (5 projects per minute) is implemented for this function.
         """
+        self._assert_auth()
+
         global CREATE_PROJECT_USES
 
         if title is None:
@@ -724,45 +599,26 @@ class Project(PartialProject):
         """
         Changes the projects instructions. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
-        if self._session._username != self.author:
-            raise (exceptions.Unauthorized("You must be the project owner to do this."))
-            return
-        r = requests.put(
-            f"https://api.scratch.mit.edu/projects/{self.id}",
-            headers=self._headers,
-            cookies=self._cookies,
-            data=json.dumps({"instructions": text}),
-        ).json()
-        return self._update_from_dict(r)
+        self.set_fields({"instructions": text})
 
     def set_notes(self, text):
         """
         Changes the projects notes and credits. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
-            return
-        if self._session._username != self.author:
-            raise (exceptions.Unauthorized("You must be the project owner to do this."))
-            return
-        r = requests.put(
-            f"https://api.scratch.mit.edu/projects/{self.id}",
-            headers=self._headers,
-            cookies=self._cookies,
-            data=json.dumps({"description": text}),
-        ).json()
-        return self._update_from_dict(r)
+        self.set_fields({"description": text})
+
 
     def ranks(self):
         """
         Gets information about the project's ranks. Fetched from ScratchDB.
 
+        Warning:
+            This method is deprecated because ScratchDB is down indefinitely.
+
         Returns:
             dict: A dict containing the project's ranks. If the ranks aren't available, all values will be -1.
         """
+        print("Warning: Project.ranks method is deprecated because ScratchDB is down indefinitely.")
         return requests.get(
             f"https://scratchdb.lefty.one/v3/project/info/{self.id}"
         ).json()["statistics"]["ranks"]
@@ -810,33 +666,10 @@ def get_project(project_id):
 
         If you want to use these methods, get the project with :meth:`scratchattach.session.Session.connect_project` instead.
     """
-    try:
-        project = Project(id=int(project_id))
-        u = project.update()
-        if u == "429":
-            raise (
-                exceptions.Response429(
-                    "Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."
-                )
-            )
-        if not u:
-            project = PartialProject(
-                id=int(project_id),
-                author=None,
-                title=None,
-                shared=False,
-                instructions=None,
-                notes=None,
-                loves=None,
-                views=None,
-                favorites=None,
-            )
-        return project
-    except KeyError:
-        return None
-    except Exception as e:
-        raise (e)
-
+    result = commons._get_object("id", project_id, Project, exceptions.ProjectNotFound)
+    if result is False: # Project is unshared
+        return PartialProject(id=int(project_id))
+    return result
 
 def search_projects(self, *, query="", mode="trending", language="en", limit=40, offset=0):
     '''

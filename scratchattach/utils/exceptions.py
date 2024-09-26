@@ -110,6 +110,11 @@ class CommentPostFailure(Exception):
 
     pass
 
+class APIError(Exception):
+    """
+    For API errors that can't be classified into one of the above errors
+    """
+    pass
 
 # Cloud / encoding errors:
 

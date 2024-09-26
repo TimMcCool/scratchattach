@@ -501,7 +501,7 @@ sess
         """
         result = self._connect_object("id", int(project_id), project.Project, exceptions.ProjectNotFound)
         if result is False: # Project is unshared
-            return project.PartialProject(id=int(project_id))
+            return project.PartialProject(id=int(project_id), _session=self._session)
         return result
 
     def connect_studio(self, studio_id):
