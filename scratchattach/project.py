@@ -691,9 +691,9 @@ class Project(PartialProject):
 
         if title is None:
             if "title" in self.__dict__:
-                title = self.title+" remix (scratchattach-made)"
+                title = self.title+" remix"
             else:
-                title = "scratchattach-made remix"
+                title = " remix"
         if project_json is None:
             if "title" in self.__dict__:
                 project_json = self.get_raw_json()

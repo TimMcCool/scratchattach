@@ -7,6 +7,7 @@ import warnings
 import pathlib
 import hashlib
 import time
+import random
 
 from . import user
 from . import cloud
@@ -214,7 +215,7 @@ class Session(BaseCommunityComponent):
         return commons.parse_object_list(response, project.Project, self)
 
 
-    def create_project(self, *, title="Untitled (scratchattach-made)", project_json=empty_project_json, parent_id=None): # not working
+    def create_project(self, *, title=None, project_json=empty_project_json, parent_id=None): # not working
         """
         Creates a project on the Scratch website.
 
@@ -232,6 +233,9 @@ class Session(BaseCommunityComponent):
                 raise exceptions.BadRequest("Rate limit for creating Scratch projects exceeded.\nThis rate limit is enforced by scratchattach, not by the Scratch API.\nFor security reasons, it cannot be turned off.\n\nDon't spam-create projects, it WILL get you banned.")
                 return
             CREATE_PROJECT_USES.insert(0, time.time())
+
+        if title is None:
+            title = f'Untitled-{random.randint(0, 200)}'
 
         params = {
             'is_remix': '0' if parent_id is None else "1",
