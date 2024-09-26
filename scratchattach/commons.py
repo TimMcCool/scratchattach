@@ -58,7 +58,7 @@ empty_project_json = {
     },
 }
 
-class BaseCommunityEntity(ABC):
+class BaseCommunityComponent(ABC):
 
     def update(self):
         """
