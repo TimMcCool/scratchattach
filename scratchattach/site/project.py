@@ -717,6 +717,8 @@ def search_projects(self, *, query="", mode="trending", language="en", limit=40,
     Returns:
         list<scratchattach.project.Project>: List that contains the search results.
     '''
+    if not query:
+        raise ValueError("The query can't be empty for search")
     response = commons.api_iterative(
         f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset, add_params=f"&offset={offs}&language={language}&mode={mode}&q={query}")
     return commons.parse_object_list(response, Project, self)
@@ -735,6 +737,8 @@ def explore_projects(self, *, query="*", mode="trending", language="en", limit=4
     Returns:
         list<scratchattach.project.Project>: List that contains the explore page projects.
     '''
+    if not query:
+        raise ValueError("The query can't be empty for search")
     response = commons.api_iterative(
         f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset, add_params=f"&offset={offs}&language={language}&mode={mode}&q={query}")
     return commons.parse_object_list(response, Project, self)

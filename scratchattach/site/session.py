@@ -218,6 +218,21 @@ class Session(BaseSiteComponent):
             f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
         return commons.parse_object_list(response, project.Project, self)
 
+    def search_studios(self, *, query="", mode="trending", language="en", limit=None, offset=0):
+        if not query:
+            raise ValueError("The query can't be empty for search")
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/search/studios", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
+        return commons.parse_object_list(response, studio.Studio, self)
+
+
+    def explore_studios(self, *, query="", mode="trending", language="en", limit=None, offset=0):
+        if not query:
+            raise ValueError("The query can't be empty for explore")
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/explore/studios", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
+        return commons.parse_object_list(response, studio.Studio, self)
+
 
     def create_project(self, *, title=None, project_json=empty_project_json, parent_id=None): # not working
         """
@@ -225,7 +240,7 @@ class Session(BaseSiteComponent):
 
         Warning:
             Don't spam this method - it WILL get you banned from Scratch.
-            To prevent accidental spam, a rate limit (5 projects per minute) is implemented for this function.
+            To prevendfvt accidental spam, a rate limit (5 projects per minute) is implemented for this function.
         """
         global CREATE_PROJECT_USES
         if len(CREATE_PROJECT_USES) < 5:

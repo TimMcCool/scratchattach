@@ -535,45 +535,19 @@ def get_studio(studio_id):
 
         If you want to use these, get the studio with :meth:`scratchattach.session.Session.connect_studio` instead.
     """
-    try:
-        studio = Studio(id=int(studio_id))
-        if studio.update() == "429":
-            raise (
-                exceptions.Response429(
-                    "Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."
-                )
-            )
-        return studio
-    except KeyError:
-        return None
-    except Exception as e:
-        raise (e)
-
+    return commons._get_object("id", studio_id, Studio, exceptions.StudioNotFound)
 
 def search_studios(*, query="", mode="trending", language="en", limit=None, offset=0):
     if not query:
         raise ValueError("The query can't be empty for search")
-
-    url = "https://api.scratch.mit.edu/search/studios"
-
-    api_data = api_iterative_simple(
-        url,
-        limit,
-        offset,
-        max_req_limit=40,
-        add_params=f"&language={language}&mode={mode}&q={query}",
-    )
-    return api_data
+    response = commons.api_iterative(
+        f"https://api.scratch.mit.edu/search/studios", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
+    return commons.parse_object_list(response, Studio)
 
 
 def explore_studios(*, query="", mode="trending", language="en", limit=None, offset=0):
-    url = "https://api.scratch.mit.edu/explore/studios"
-
-    api_data = api_iterative_simple(
-        url,
-        limit,
-        offset,
-        max_req_limit=40,
-        add_params=f"&language={language}&mode={mode}&q={query}",
-    )
-    return api_data
+    if not query:
+        raise ValueError("The query can't be empty for explore")
+    response = commons.api_iterative(
+        f"https://api.scratch.mit.edu/explore/studios", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
+    return commons.parse_object_list(response, Studio)
