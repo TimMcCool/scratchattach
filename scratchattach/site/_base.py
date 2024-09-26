@@ -43,7 +43,7 @@ class BaseSiteComponent(ABC):
             if r == "429":
                 exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer.")
             if not r: # Target is unshared
-                if Class == project.Project:
+                if Class is project.Project:
                     return project.PartialProject(**{identificator_id:identificator, "_session":self._session})
                 return None
             return _object

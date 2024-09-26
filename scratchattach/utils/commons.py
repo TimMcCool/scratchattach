@@ -119,7 +119,7 @@ def _get_object(identificator_id, identificator, Class, NotFoundException):
         if r == "429":
             raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
         if not r: # Target is unshared
-            if Class == project.Project:
+            if Class is project.Project:
                 return project.PartialProject(**{identificator_id:identificator, "_session":None})
             return None
     except KeyError as e:
