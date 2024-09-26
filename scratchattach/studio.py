@@ -5,7 +5,7 @@ import requests
 import random
 from . import user
 from . import exceptions
-from .commons import api_iterative_simple, headers
+from .commons import api_iterative, headers
 
 
 class Studio:

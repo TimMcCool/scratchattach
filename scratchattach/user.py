@@ -407,7 +407,10 @@ class User(BaseCommunityComponent):
             data=json.dumps(data),
         )
         if r.status_code != 200:
-            raise exceptions.CommentPostFailure(r.text)
+            if "Looks like we are having issues with our servers!" in r.text:
+                raise exceptions.BadRequest("Invalid arguments passed")
+            else:
+                raise exceptions.CommentPostFailure(r.text)
 
         try:
             text = r.text

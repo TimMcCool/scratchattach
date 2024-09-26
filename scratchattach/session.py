@@ -452,6 +452,8 @@ class Session(BaseCommunityComponent):
             comment = you.post_comment("scratchattach", commentee_id=int(user_id))
         except exceptions.CommentPostFailure:
             raise exceptions.BadRequest("After posting a comment, you need to wait 10 seconds before you can connect users by id again.")
+        except exceptions.BadRequest:
+            raise exceptions.UserNotFound("Invalid user id")
         except Exception as e:
             raise e
         you.delete_comment(comment_id=comment.id)
