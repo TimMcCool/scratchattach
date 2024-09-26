@@ -20,7 +20,7 @@ from .. import exceptions
 from . import studio
 from ..eventhandlers import message_events
 from . import activity
-from ..utils.commons import BaseSiteComponent
+from ._base import BaseSiteComponent
 from ..utils.commons import headers, empty_project_json
 from bs4 import BeautifulSoup
 

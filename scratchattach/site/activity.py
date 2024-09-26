@@ -10,7 +10,7 @@ from . import project
 from . import studio
 from . import forum
 from .. import exceptions
-from ..utils.commons import BaseSiteComponent
+from ._base import BaseSiteComponent
 from ..utils.commons import headers
 from bs4 import BeautifulSoup
 
