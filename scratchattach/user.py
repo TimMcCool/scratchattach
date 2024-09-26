@@ -8,13 +8,13 @@ from . import exceptions
 from . import studio
 from . import forum
 from bs4 import BeautifulSoup
-from .commons import BaseCommunityEntity
+from .commons import BaseCommunityComponent
 from .commons import headers
 from . import commons
 from . import comment
 from . import activity, message_events
 
-class User(BaseCommunityEntity):
+class User(BaseCommunityComponent):
 
     '''
     Represents a Scratch user.
