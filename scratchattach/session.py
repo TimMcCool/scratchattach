@@ -229,7 +229,7 @@ class Session(AbstractScratch):
             if CREATE_PROJECT_USES[-1] < time.time() - 300:
                 CREATE_PROJECT_USES.pop()
             else:
-                raise exceptions.BadRequest("Rate limit for creating Scratch projects exceeded.\nThis rate limit is not enforced by scratchattach, not by the Scratch API.\nFor security reasons, it cannot be turned off.\n\nDon't spam-create projects, it WILL get you banned.")
+                raise exceptions.BadRequest("Rate limit for creating Scratch projects exceeded.\nThis rate limit is enforced by scratchattach, not by the Scratch API.\nFor security reasons, it cannot be turned off.\n\nDon't spam-create projects, it WILL get you banned.")
                 return
             CREATE_PROJECT_USES.insert(0, time.time())
 
