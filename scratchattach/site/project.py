@@ -301,7 +301,7 @@ class Project(PartialProject):
 
     def comments(self, *, limit=40, offset=0):
         """
-        Returns the comments posted on the project (except for replies. To get replies use :meth:`scratchattach.project.Project.get_comment_replies`).
+        Returns the comments posted on the project (except for replies. To get replies use :meth:`scratchattach.project.Project.comment_replies`).
 
         Keyword Arguments:
             page: The page of the comments that should be returned.
@@ -316,14 +316,14 @@ class Project(PartialProject):
         return commons.parse_object_list(response, comment.Comment, self._session)
 
 
-    def get_comment_replies(self, *, comment_id, limit=40, offset=0):
+    def comment_replies(self, *, comment_id, limit=40, offset=0):
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/replies", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         for x in response:
             x["parent_id"] = comment_id
         return commons.parse_object_list(response, comment.Comment, self._session)
 
-    def get_comment(self, comment_id):
+    def comment_by_id(self, comment_id):
         """
         Returns:
             scratchattach.comments.Comment: A Comment object representing the requested comment.
