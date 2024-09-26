@@ -81,18 +81,26 @@ class Activity(BaseSiteComponent):
         Returns the activity's target (depending on the activity, this is either a User, Project or Studio object).
         May also return None if the activity type is unknown.
         """
-        if self.type == "loveproject" or self.type == "favoriteproject" or self.type == "shareproject":
+        
+        if "project" in self.type: # target is a project
             if "target_id" in self.__dict__:
                 return self._make_linked_object("id", self.target_id, project.Project, exceptions.ProjectNotFound)
             if "project_id" in self.__dict__:
                 return self._make_linked_object("id", self.project_id, project.Project, exceptions.ProjectNotFound)
-        if self.type == "becomecurator" or self.type == "followstudio":
+            
+        if self.type == "becomecurator" or self.type == "followstudio": # target is a studio
             if "target_id" in self.__dict__:
                 return self._make_linked_object("id", self.target_id, studio.Studio, exceptions.StudioNotFound)
             if "gallery_id" in self.__dict__:
                 return self._make_linked_object("id", self.gallery_id, studio.Studio, exceptions.StudioNotFound)
-        if self.type == "followuser":
+            # NOTE: the "becomecurator" type is ambigous - if it is inside the studio activity tab, the target is the user who joined
+            if "username" in self.__dict__:
+                return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
+            
+        if self.type == "followuser" or "curator" in self.type: # target is a user
             if "target_id" in self.__dict__:
                 return self._make_linked_object("username", self.target_id, user.User, exceptions.UserNotFound)
             if "followed_username" in self.__dict__:
                 return self._make_linked_object("username", self.followed_username, user.User, exceptions.UserNotFound)
+        if "recipient_username" in self.__dict__: # the recipient_username field always indicates the target is a user
+            return self._make_linked_object("username", self.recipient_username, user.User, exceptions.UserNotFound)
