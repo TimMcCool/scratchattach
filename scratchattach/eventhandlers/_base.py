@@ -5,10 +5,6 @@ from ..utils import exceptions
 
 class BaseEventHandler(ABC):
 
-    class Event:
-        def __init__(self, **entries):
-            self.__dict__.update(entries)
-
     def start(self, *, update_interval = 0.1, thread=True):
         """
         Starts the cloud event handler.
