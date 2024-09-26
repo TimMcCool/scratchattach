@@ -12,7 +12,7 @@ from . import cloud
 from . import project
 from . import exceptions
 from . import studio
-from . import forum
+from . import forum, message_events
 from . import commons, activity
 from .commons import AbstractScratch
 from .commons import headers
@@ -508,6 +508,9 @@ sess
             scratchattach.forum.ForumPost: An object that represents the requested forum post
         """
         return self._connect_object("id", int(post_id), forum.ForumPost, exceptions.ForumContentNotFound)
+
+    def connect_message_events(self):
+        return message_events.MessageEvents(user.User(username=self.username))
 
 
 # ------ #

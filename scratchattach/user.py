@@ -2,6 +2,7 @@
 
 import json
 import requests
+import random
 from . import project
 from . import exceptions
 from . import studio
@@ -125,7 +126,7 @@ class User(AbstractScratch):
 
     def message_count(self):
 
-        return json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/messages/count/", headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',}).text)["count"]
+        return json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/messages/count/?cachebust={random.randint(0,10000)}", headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',}).text)["count"]
 
     def featured_data(self):
         """
@@ -608,6 +609,9 @@ class User(AbstractScratch):
             page_content = self.comments(page=page)
         return None
 
+    def message_events(self):
+        return message_events.MessageEvents(self)
+
     def stats(self):
         """
         Gets information about the user's stats. Fetched from ScratchDB.
@@ -696,9 +700,6 @@ class User(AbstractScratch):
             dict
         """
         return requests.get(f"https://my-ocular.jeffalo.net/api/user/{self.username}").json()
-
-    def message_events(self):
-        return message_events.MessageEvents(self)
 
     ''' WIP
     def forum_posts(self, *, page=0, order="newest"):
