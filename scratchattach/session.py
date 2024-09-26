@@ -212,6 +212,19 @@ class Session(AbstractScratch):
         return commons.parse_object_list(response, project.Project, self)
 
 
+    def create_project(self): # not working
+
+        try:
+
+            return self.connect_project(requests.post(
+                "https://projects.scratch.mit.edu/",
+                headers = headers,
+                cookies = self._cookies
+            ).json()["content-name"])
+        except Exception:
+            raise(exceptions.FetchError)
+
+
     """ work in progress
 
     # My stuff:
@@ -274,18 +287,6 @@ class Session(AbstractScratch):
         Outdated name for :meth:`scratchattach.session.Session.mystuff_projects`. See the documentation of this function.
         '''
         return self.mystuff_projects(ordering, page=page, sort_by=sort_by, descending=descending)
-
-    def create_project(self): # not working
-
-        try:
-
-            return self.connect_project(requests.post(
-                "https://projects.scratch.mit.edu/",
-                headers = headers,
-                cookies = self._cookies
-            ).json()["content-name"])
-        except Exception:
-            raise(exceptions.FetchError)
 
     def backpack(self,limit=20, offset=0):
         '''
@@ -510,7 +511,7 @@ sess
         return self._connect_object("id", int(post_id), forum.ForumPost, exceptions.ForumContentNotFound)
 
     def connect_message_events(self):
-        return message_events.MessageEvents(user.User(username=self.username))
+        return message_events.MessageEvents(user.User(username=self.username, _session=self))
 
 
 # ------ #
