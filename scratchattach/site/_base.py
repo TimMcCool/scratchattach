@@ -37,5 +37,5 @@ class BaseSiteComponent(ABC):
         """
         Internal function for making a linked object (authentication kept) based on an identificator (like a project id or username)
         """
-        commons._get_object(identificator_id, identificator, Class, NotFoundException, self._session)
+        return commons._get_object(identificator_id, identificator, Class, NotFoundException, self._session)
 

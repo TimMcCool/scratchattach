@@ -438,7 +438,7 @@ class Session(BaseSiteComponent):
         Therefore the _make_linked_object method has to be adjusted
         to get it to work for in the Session class.
         """
-        commons._get_object(identificator_id, identificator, Class, NotFoundException, self)
+        return commons._get_object(identificator_id, identificator, Class, NotFoundException, self)
 
 
     def connect_user(self, username):
