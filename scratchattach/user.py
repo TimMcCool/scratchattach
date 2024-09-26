@@ -576,7 +576,7 @@ class User(AbstractScratch):
                     "parent_id" : comment_id,
                     "cached_parent_comment" : _comment,
                 }
-                _r_comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
+                _r_comment = comment.Comment(source="profile", source_id=self.username, _session = self._session, cached_parent_comment=_comment)
                 _r_comment._update_from_dict(reply_data)
                 ALL_REPLIES.append(_r_comment)
 
