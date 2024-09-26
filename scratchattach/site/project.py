@@ -1,4 +1,4 @@
-# ----- Getting projects
+"""v2 ready: Project and PartialProject classes"""
 
 import json
 import random
@@ -24,7 +24,7 @@ class PartialProject(BaseSiteComponent):
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
-        self.update_API = f"https://api.scratch.mit.edu/users/{entries['id']}"
+        self.update_API = f"https://api.scratch.mit.edu/projects/{entries['id']}"
 
         # Set attributes every Project object needs to have:
         self._session = None
@@ -93,7 +93,7 @@ class PartialProject(BaseSiteComponent):
             self.project_token = None
         return True
 
-    def remixes(self, *, limit=None, offset=0):
+    def remixes(self, *, limit=40, offset=0):
         """
         Returns:
             list<scratchattach.project.Project>: A list containing the remixes of the project, each project is represented by a Project object.
@@ -152,7 +152,7 @@ class PartialProject(BaseSiteComponent):
         response = requests.post('https://projects.scratch.mit.edu/', params=params, cookies=self._cookies, headers=self._headers, json=project_json).json()
         return self.connect_project(response["content-name"])
 
-    def get_unshared_instructions(self):
+    def get_instructions(self):
         """
         Gets the instructions of the unshared project. Requires authentication.
         
@@ -213,6 +213,11 @@ class Project(PartialProject):
     def __str__(self):
         return self.title
     
+    def get_instructions(self):
+        # Override the get_instructions method that exists for unshared projects
+        self.update()
+        return self.instructions
+
     def download(self, *, filename=None, dir=""):
         """
         Downloads the project json to the given directory.
@@ -243,7 +248,7 @@ class Project(PartialProject):
         Method only works for project created with Scratch 3.
 
         Returns:
-            dict: The project JSON
+            dict: The project JSON as decoded Python dictionary
         """
         try:
             self.update()
@@ -285,7 +290,7 @@ class Project(PartialProject):
         """
         return self._make_linked_object("username", self.author_name, user.User, exceptions.UserNotFound)
 
-    def studios(self, *, limit=None, offset=0):
+    def studios(self, *, limit=40, offset=0):
         """
         Returns:
             list<scratchattach.studio.Studio>: A list containing the studios this project is in, each studio is represented by a Studio object.
@@ -294,7 +299,7 @@ class Project(PartialProject):
             f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/studios", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         return commons.parse_object_list(response, studio.Studio, self._session)
 
-    def comments(self, *, limit=None, offset=0):
+    def comments(self, *, limit=40, offset=0):
         """
         Returns the comments posted on the project (except for replies. To get replies use :meth:`scratchattach.project.Project.get_comment_replies`).
 
@@ -311,7 +316,7 @@ class Project(PartialProject):
         return commons.parse_object_list(response, comment.Comment, self._session)
 
 
-    def get_comment_replies(self, *, comment_id, limit=None, offset=0):
+    def get_comment_replies(self, *, comment_id, limit=40, offset=0):
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self.author}/projects/{self.id}/comments/replies", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         for x in response:

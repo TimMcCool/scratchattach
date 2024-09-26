@@ -269,7 +269,7 @@ class User(BaseSiteComponent):
             p["author"] = {"username":self.username}
         return commons.parse_object_list(_projects, project.Project, self._session)
 
-    def favorites(self, *, limit=None, offset=0):
+    def favorites(self, *, limit=40, offset=0):
         """
         Returns:
             list<projects.projects.Project>: The user's favorite projects
