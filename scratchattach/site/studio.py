@@ -275,7 +275,7 @@ class Studio(BaseSiteComponent):
             content, parent_id=parent_id, commentee_id=commentee_id
         )
 
-    def projects(self, limit=None, offset=0):
+    def projects(self, limit=40, offset=0):
         """
         Gets the studio projects.
 
@@ -290,7 +290,7 @@ class Studio(BaseSiteComponent):
             f"https://api.scratch.mit.edu/studios/{self.id}/projects", limit=limit, offset=offset)
         return commons.parse_object_list(response, project.Project, self._session)
 
-    def curators(self, limit=None, offset=0):
+    def curators(self, limit=40, offset=0):
         """
         Gets the studio curators.
 
@@ -303,7 +303,7 @@ class Studio(BaseSiteComponent):
         """
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/studios/{self.id}/curators", limit=limit, offset=offset)
-        return commons.parse_object_list(response, user.User, self._session)
+        return commons.parse_object_list(response, user.User, self._session, "username")
 
 
     def invite_curator(self, curator):
@@ -399,7 +399,7 @@ class Studio(BaseSiteComponent):
         """
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/studios/{self.id}/managers", limit=limit, offset=offset)
-        return commons.parse_object_list(response, user.User, self._session)
+        return commons.parse_object_list(response, user.User, self._session, "username")
 
     def host(self):
         """
@@ -537,7 +537,7 @@ def get_studio(studio_id):
     """
     return commons._get_object("id", studio_id, Studio, exceptions.StudioNotFound)
 
-def search_studios(*, query="", mode="trending", language="en", limit=None, offset=0):
+def search_studios(*, query="", mode="trending", language="en", limit=40, offset=0):
     if not query:
         raise ValueError("The query can't be empty for search")
     response = commons.api_iterative(
@@ -545,7 +545,7 @@ def search_studios(*, query="", mode="trending", language="en", limit=None, offs
     return commons.parse_object_list(response, Studio)
 
 
-def explore_studios(*, query="", mode="trending", language="en", limit=None, offset=0):
+def explore_studios(*, query="", mode="trending", language="en", limit=40, offset=0):
     if not query:
         raise ValueError("The query can't be empty for explore")
     response = commons.api_iterative(

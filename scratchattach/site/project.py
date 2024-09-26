@@ -212,12 +212,12 @@ class Project(PartialProject):
     :.views: The view count
 
     :.project_token: The project token (required to access the project json)
-
+WW
     :.update(): Updates the attributes
     """
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
     def _assert_permission(self):
         self._assert_auth()
@@ -698,10 +698,7 @@ def get_project(project_id):
 
         If you want to use these methods, get the project with :meth:`scratchattach.session.Session.connect_project` instead.
     """
-    result = commons._get_object("id", project_id, Project, exceptions.ProjectNotFound)
-    if result is False: # Project is unshared
-        return PartialProject(id=int(project_id))
-    return result
+    return commons._get_object("id", project_id, Project, exceptions.ProjectNotFound)
 
 def search_projects(self, *, query="", mode="trending", language="en", limit=40, offset=0):
     '''

@@ -83,6 +83,8 @@ class User(BaseSiteComponent):
     def _update_from_dict(self, data):
         try: self.id = data["id"]
         except KeyError: pass
+        try: self.username = data["username"]
+        except KeyError: pass
         try: self.scratchteam = data["scratchteam"]
         except KeyError: pass
         try: self.join_date = data["history"]["joined"]

@@ -218,7 +218,7 @@ class Session(BaseSiteComponent):
             f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
         return commons.parse_object_list(response, project.Project, self)
 
-    def search_studios(self, *, query="", mode="trending", language="en", limit=None, offset=0):
+    def search_studios(self, *, query="", mode="trending", language="en", limit=40, offset=0):
         if not query:
             raise ValueError("The query can't be empty for search")
         response = commons.api_iterative(
@@ -226,7 +226,7 @@ class Session(BaseSiteComponent):
         return commons.parse_object_list(response, studio.Studio, self)
 
 
-    def explore_studios(self, *, query="", mode="trending", language="en", limit=None, offset=0):
+    def explore_studios(self, *, query="", mode="trending", language="en", limit=40, offset=0):
         if not query:
             raise ValueError("The query can't be empty for explore")
         response = commons.api_iterative(
@@ -435,10 +435,13 @@ class Session(BaseSiteComponent):
         # Interal function: Generalization of the process ran by connect_user, connect_studio etc.
         try:
             _object = Class(**{identificator_id:identificator, "_session":self})
-            if _object.update() == "429":
+            r = _object.update()
+            if r == "429":
                 raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-            if not _object: # Target is unshared
-                return False
+            if not r: # Target is unshared
+                if Class == project.Project:
+                    return project.PartialProject(**{identificator_id:identificator, "_session":self._session})
+                return None
             return _object
         except KeyError as e:
             raise(NotFoundException("Key error at key "+str(e)+" when reading API response"))
@@ -514,10 +517,7 @@ sess
         Returns:
             scratchattach.project.Project: An object that represents the requested project and allows you to perform actions on the project (like project.love)
         """
-        result = self._connect_object("id", int(project_id), project.Project, exceptions.ProjectNotFound)
-        if result is False: # Project is unshared
-            return project.PartialProject(id=int(project_id), _session=self._session)
-        return result
+        return self._connect_object("id", int(project_id), project.Project, exceptions.ProjectNotFound)
 
     def connect_studio(self, studio_id):
         """
