@@ -192,7 +192,7 @@ class Session(AbstractScratch):
             list<scratchattach.project.Project>: List that contains the search results.
         '''
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset, add_params=f"&offset={offs}&language={language}&mode={mode}&q={query}")
+            f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
         return commons.parse_object_list(response, project.Project, self)
 
     def explore_projects(self, *, query="*", mode="trending", language="en", limit=40, offset=0):
@@ -210,11 +210,11 @@ class Session(AbstractScratch):
             list<scratchattach.project.Project>: List that contains the explore page projects.
         '''
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset, add_params=f"&offset={offs}&language={language}&mode={mode}&q={query}")
+            f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
         return commons.parse_object_list(response, project.Project, self)
 
 
-    def create_project(self, *, title="Untitled (scratchattach-made)", project_json=empty_project_json): # not working
+    def create_project(self, *, title="Untitled (scratchattach-made)", project_json=empty_project_json, parent_id=None): # not working
         """
         Creates a project on the Scratch website.
 
@@ -234,8 +234,8 @@ class Session(AbstractScratch):
             CREATE_PROJECT_USES.insert(0, time.time())
 
         params = {
-            'is_remix': '0',
-            'original_id': None,
+            'is_remix': '0' if parent_id is None else "1",
+            'original_id': parent_id,
             'title': title,
         }
 
