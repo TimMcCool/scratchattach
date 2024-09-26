@@ -431,22 +431,14 @@ class Session(BaseSiteComponent):
             return None
     """
 
-    def _connect_object(self, identificator_id, identificator, Class, NotFoundException):
-        # Interal function: Generalization of the process ran by connect_user, connect_studio etc.
-        try:
-            _object = Class(**{identificator_id:identificator, "_session":self})
-            r = _object.update()
-            if r == "429":
-                raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-            if not r: # Target is unshared
-                if Class is project.Project:
-                    return project.PartialProject(**{identificator_id:identificator, "_session":self._session})
-                return None
-            return _object
-        except KeyError as e:
-            raise(NotFoundException("Key error at key "+str(e)+" when reading API response"))
-        except Exception as e:
-            raise(e)
+    def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException):
+        """
+        The Session class doesn't save the login in a ._session attribut, but IS the login ITSELF.
+
+        Therefore the _make_linked_object method has to be adjusted
+        to get it to work for in the Session class.
+        """
+        commons._get_object(identificator_id, identificator, Class, NotFoundException, self)
 
 
     def connect_user(self, username):
@@ -459,7 +451,7 @@ class Session(BaseSiteComponent):
         Returns:
             scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
         """
-        return self._connect_object("username", username, user.User, exceptions.UserNotFound)
+        return self._make_linked_object("username", username, user.User, exceptions.UserNotFound)
 
     def find_username_from_id(self, user_id:int):
         """
@@ -505,7 +497,7 @@ class Session(BaseSiteComponent):
         Returns:
             scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
         """
-        return self._connect_object("username", self.find_username_from_id(user_id), user.User, exceptions.UserNotFound)
+        return self._make_linked_object("username", self.find_username_from_id(user_id), user.User, exceptions.UserNotFound)
 
     def connect_project(self, project_id):
         """
@@ -517,7 +509,7 @@ sess
         Returns:
             scratchattach.project.Project: An object that represents the requested project and allows you to perform actions on the project (like project.love)
         """
-        return self._connect_object("id", int(project_id), project.Project, exceptions.ProjectNotFound)
+        return self._make_linked_object("id", int(project_id), project.Project, exceptions.ProjectNotFound)
 
     def connect_studio(self, studio_id):
         """
@@ -529,7 +521,7 @@ sess
         Returns:
             scratchattach.studio.Studio: An object that represents the requested studio and allows you to perform actions on the studio (like studio.follow)
         """
-        return self._connect_object("id", int(studio_id), studio.Studio, exceptions.StudioNotFound)
+        return self._make_linked_object("id", int(studio_id), studio.Studio, exceptions.StudioNotFound)
 
     def connect_topic(self, topic_id):
         """
@@ -541,7 +533,7 @@ sess
         Returns:
             scratchattach.forum.ForumTopic: An object that represents the requested forum topic
         """
-        return self._connect_object("id", int(topic_id), forum.ForumTopic, exceptions.ForumContentNotFound)
+        return self._make_linked_object("id", int(topic_id), forum.ForumTopic, exceptions.ForumContentNotFound)
 
     def connect_post(self, post_id):
 
@@ -554,7 +546,7 @@ sess
         Returns:
             scratchattach.forum.ForumPost: An object that represents the requested forum post
         """
-        return self._connect_object("id", int(post_id), forum.ForumPost, exceptions.ForumContentNotFound)
+        return self._make_linked_object("id", int(post_id), forum.ForumPost, exceptions.ForumContentNotFound)
 
     def connect_message_events(self):
         return message_events.MessageEvents(user.User(username=self.username, _session=self))

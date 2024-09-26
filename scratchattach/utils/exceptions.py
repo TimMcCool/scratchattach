@@ -68,6 +68,7 @@ class ForumContentNotFound(Exception):
     Raised when a non-existent forum topic / post is requested.
     """
 
+
     pass
 
 # API errors:
@@ -114,6 +115,13 @@ class APIError(Exception):
     """
     For API errors that can't be classified into one of the above errors
     """
+    pass
+
+class ScrapeError(Exception):
+    """
+    Raised when something goes wrong while web-scraping a page with bs4.
+    """
+
     pass
 
 # Cloud / encoding errors:

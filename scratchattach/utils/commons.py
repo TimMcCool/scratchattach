@@ -111,17 +111,19 @@ def api_iterative(
     )
     return api_data
 
-def _get_object(identificator_id, identificator, Class, NotFoundException):
+def _get_object(identificator_id, identificator, Class, NotFoundException, session=None):
     # Interal function: Generalization of the process ran by get_user, get_studio etc.
     try:
-        _object = Class(**{identificator_id:identificator, "_session":None})
+        _object = Class(**{identificator_id:identificator, "_session":session})
         r = _object.update()
         if r == "429":
             raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-        if not r: # Target is unshared
-            if Class is project.Project:
-                return project.PartialProject(**{identificator_id:identificator, "_session":None})
-            return None
+        if not r:
+            # Target is unshared. The cases that this can happen in are hardcoded:
+            if Class is project.Project: # Case: Target is an unshared project.
+                return project.PartialProject(**{identificator_id:identificator, "_session":session})
+        else:
+            return _object
     except KeyError as e:
         raise(NotFoundException("Key error at key "+str(e)+" when reading API response"))
     except Exception as e:

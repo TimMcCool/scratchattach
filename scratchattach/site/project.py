@@ -95,6 +95,8 @@ class PartialProject(BaseSiteComponent):
             self.project_token = data["project_token"]
         except Exception:
             self.project_token = None
+        if "code" in data: # Project is unshared -> return false
+            return False
         return True
 
     def remixes(self, *, limit=40, offset=0):

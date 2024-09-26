@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import requests
 from threading import Thread
-from ..utils import exceptions
+from ..utils import exceptions, commons
 from . import project
 
 class BaseSiteComponent(ABC):
@@ -37,17 +37,5 @@ class BaseSiteComponent(ABC):
         """
         Internal function for making a linked object (authentication kept) based on an identificator (like a project id or username)
         """
-        try:
-            _object = Class(**{identificator_id:identificator, "_session":self._session})
-            r = _object.update()
-            if r == "429":
-                exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer.")
-            if not r: # Target is unshared
-                if Class is project.Project:
-                    return project.PartialProject(**{identificator_id:identificator, "_session":self._session})
-                return None
-            return _object
-        except KeyError as e:
-            raise(NotFoundException("Key error at key "+str(e)+" when reading API response"))
-        except Exception as e:
-            raise(e)
+        commons._get_object(identificator_id, identificator, Class, NotFoundException, self._session)
+
