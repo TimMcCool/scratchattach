@@ -64,6 +64,10 @@ class Comment(BaseSiteComponent):
         except Exception: pass
         try: self.reply_count = data["reply_count"]
         except Exception: pass
+        try: self.source = data["source"]
+        except Exception: pass
+        try: self.source_id = data["source_id"]
+        except Exception: pass
 
     # Methods for getting related entities
 

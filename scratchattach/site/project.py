@@ -2,6 +2,7 @@
 
 import json
 import random
+import base64
 import requests
 import time
 from . import user, comment, studio
@@ -31,6 +32,9 @@ class PartialProject(BaseSiteComponent):
         self.shared = None
         self.project_token = None
         self.id = 0
+        self.instructions = None
+        self.title = None
+        self.parent_title = None
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)
@@ -150,9 +154,11 @@ class PartialProject(BaseSiteComponent):
         }
 
         response = requests.post('https://projects.scratch.mit.edu/', params=params, cookies=self._cookies, headers=self._headers, json=project_json).json()
-        return self.connect_project(response["content-name"])
-
-    def get_instructions(self):
+        _project = self.connect_project(response["content-name"])
+        _project.parent_title = base64.b64decode(response['content-title']).decode('utf-8').split(' remix')[0]
+        return _project
+    
+    def load_description(self):
         """
         Gets the instructions of the unshared project. Requires authentication.
         
@@ -162,7 +168,7 @@ class PartialProject(BaseSiteComponent):
         self._assert_auth()
         new_project = self.create_remix(project_json=empty_project_json)
         self.instructions = new_project.instructions
-        return self.instructions
+        self.title = new_project.parent_title
 
 
 class Project(PartialProject):
@@ -212,7 +218,13 @@ class Project(PartialProject):
 
     def __str__(self):
         return self.title
-    
+
+    def _assert_permission(self):
+        self._assert_auth()
+        if self._session._username != self.author_name:
+            raise exceptions.Unauthorized(
+                "You need to be authenticated as the profile owner to do this.")
+
     def get_instructions(self):
         # Override the get_instructions method that exists for unshared projects
         self.update()
@@ -313,6 +325,9 @@ class Project(PartialProject):
 
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
+        for i in response:
+            i["source"] = "profile"
+            i["source_id"] = self.id
         return commons.parse_object_list(response, comment.Comment, self._session)
 
 
@@ -321,6 +336,8 @@ class Project(PartialProject):
             f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/replies/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         for x in response:
             x["parent_id"] = comment_id
+            x["source"] = "profile"
+            x["source_id"] = self.id
         return commons.parse_object_list(response, comment.Comment, self._session)
 
     def comment_by_id(self, comment_id):
@@ -333,7 +350,7 @@ class Project(PartialProject):
             headers=self._headers,
             cookies=self._cookies
         ).json()
-        _comment = comment.Comment(id=r["id"], _session=self._session)
+        _comment = comment.Comment(id=r["id"], _session=self._session, source="project", source_id=self.id)
         _comment.update_from_dict(r)
         return _comment
     
@@ -555,7 +572,7 @@ class Project(PartialProject):
                 data=json.dumps(data),
             ).text
         )
-        _comment = comment.Comment(id=r["id"], _session=self._session)
+        _comment = comment.Comment(id=r["id"], _session=self._session, source="project", source_id=self.id)
         _comment._update_from_dict(r)
         return _comment
 
