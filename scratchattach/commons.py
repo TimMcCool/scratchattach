@@ -58,7 +58,7 @@ empty_project_json = {
     },
 }
 
-class AbstractScratch(ABC):
+class BaseCommunityEntity(ABC):
 
     def update(self):
         """

@@ -10,11 +10,11 @@ from . import project
 from . import studio
 from . import forum
 from . import exceptions
-from .commons import AbstractScratch
+from .commons import BaseCommunityEntity
 from .commons import headers
 from bs4 import BeautifulSoup
 
-class Activity(AbstractScratch):
+class Activity(BaseCommunityEntity):
 
     '''
     Represents a Scratch activity (message or other user page activity)

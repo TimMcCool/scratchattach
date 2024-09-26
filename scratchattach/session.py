@@ -15,13 +15,13 @@ from . import exceptions
 from . import studio
 from . import forum, message_events
 from . import commons, activity
-from .commons import AbstractScratch
+from .commons import BaseCommunityEntity
 from .commons import headers, empty_project_json
 from bs4 import BeautifulSoup
 
 CREATE_PROJECT_USES = []
 
-class Session(AbstractScratch):
+class Session(BaseCommunityEntity):
 
     '''
     Represents a Scratch log in / session. Stores authentication data (session id and xtoken).

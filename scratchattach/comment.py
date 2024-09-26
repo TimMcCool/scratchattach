@@ -10,11 +10,11 @@ from . import project
 from . import studio
 from . import forum
 from . import exceptions, commons
-from .commons import AbstractScratch
+from .commons import BaseCommunityEntity
 from .commons import headers
 from bs4 import BeautifulSoup
 
-class Comment(AbstractScratch):
+class Comment(BaseCommunityEntity):
 
     '''
     Represents a Scratch comment (on a profile, studio or project)
