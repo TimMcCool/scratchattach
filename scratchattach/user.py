@@ -7,11 +7,11 @@ from . import exceptions
 from . import studio
 from . import forum
 from bs4 import BeautifulSoup
-from .abstractscratch import AbstractScratch
+from .commons import AbstractScratch
 from .commons import headers
 from . import commons
 from . import comment
-from . import activity
+from . import activity, message_events
 
 class User(AbstractScratch):
 
@@ -696,6 +696,9 @@ class User(AbstractScratch):
             dict
         """
         return requests.get(f"https://my-ocular.jeffalo.net/api/user/{self.username}").json()
+
+    def message_events(self):
+        return message_events.MessageEvents(self)
 
     ''' WIP
     def forum_posts(self, *, page=0, order="newest"):

@@ -10,6 +10,7 @@ from .forum import *
 from .encoder import *
 from . import commons
 from .comment import *
+from .message_events import MessageEvents
 
 def get_news(*, limit=10, offset=0):
     return commons.api_iterative("https://api.scratch.mit.edu/news", limit = limit, offset = offset)

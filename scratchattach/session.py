@@ -14,7 +14,7 @@ from . import exceptions
 from . import studio
 from . import forum
 from . import commons, activity
-from .abstractscratch import AbstractScratch
+from .commons import AbstractScratch
 from .commons import headers
 from bs4 import BeautifulSoup
 

@@ -10,7 +10,7 @@ from . import project
 from . import studio
 from . import forum
 from . import exceptions
-from .abstractscratch import AbstractScratch
+from .commons import AbstractScratch
 from .commons import headers
 from bs4 import BeautifulSoup
 
