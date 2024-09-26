@@ -454,9 +454,12 @@ class Session(BaseCommunityComponent):
             raise exceptions.BadRequest("After posting a comment, you need to wait 10 seconds before you can connect users by id again.")
         except Exception as e:
             raise e
-        username = comment.content.split('">@')[1]
-        username = username.split("</a>")[0]
         you.delete_comment(comment_id=comment.id)
+        try:
+            username = comment.content.split('">@')[1]
+            username = username.split("</a>")[0]
+        except IndexError:
+            raise exceptions.UserNotFound()
         return username
 
 
