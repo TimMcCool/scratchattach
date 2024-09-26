@@ -130,7 +130,7 @@ class ForumTopic(BaseSiteComponent):
 
                 posts.append(post)
         except Exception as e:
-            raise exceptions.ScrapeError(str(e))
+            return []
 
         return posts
 
@@ -208,15 +208,16 @@ class ForumPost(BaseSiteComponent):
         Updates the attributes of the ForumPost object.
         As there is no API for retrieving a single post anymore, this requires reloading the forum page.
         """
-        page = 0
-        posts = ForumTopic(id=self.topic_id, _session=self._session).posts(page=0)
+        page = 1
+        posts = ForumTopic(id=self.topic_id, _session=self._session).posts(page=1)
         while posts != []:
-            matching = list(filter(lambda x : x.id == self.id, posts))
+            matching = list(filter(lambda x : int(x.id) == int(self.id), posts))
+            print(matching, posts)
             if len(matching) > 0:
                 this = matching[0]
                 break
             page += 1
-            posts = ForumTopic(id=self.topic_id, _session=self._session).posts(page=0)
+            posts = ForumTopic(id=self.topic_id, _session=self._session).posts(page=page)
         else:
             return False
         
@@ -234,9 +235,8 @@ class ForumPost(BaseSiteComponent):
         self.author_name = soup_html.find('dl').find('dt').find('a').text.strip()
         self.author_avatar_url = soup_html.find('dl').find('dt').find('a')['href']
         self.topic_name = soup_html.find('h3').text.strip()
-        self.topic_id = soup_html.find('a', href=True)['href'].split("/")[-2]
 
-    def get_topic(self):
+    def topic(self):
         """
         Returns:
             scratchattach.forum.ForumTopic: An object representing the forum topic this post is in.

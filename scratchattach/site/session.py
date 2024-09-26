@@ -535,19 +535,6 @@ sess
         """
         return self._make_linked_object("id", int(topic_id), forum.ForumTopic, exceptions.ForumContentNotFound)
 
-    def connect_post(self, post_id):
-
-        """
-        Gets a forum post using this session, connects the session to the ForumPost object to allow authenticated actions
-
-        Args:
-            post_id (int): ID of the requested forum post
-
-        Returns:
-            scratchattach.forum.ForumPost: An object that represents the requested forum post
-        """
-        return self._make_linked_object("id", int(post_id), forum.ForumPost, exceptions.ForumContentNotFound)
-
     def connect_message_events(self):
         return message_events.MessageEvents(user.User(username=self.username, _session=self))
 
