@@ -25,21 +25,21 @@ class User(AbstractScratch):
     :.about_me:
 
     :.wiwo: Returns the user's 'What I'm working on' section
-    
+
     :.country: Returns the country from the user profile
-    
+
     :.icon_url: Returns the link to the user's pfp (90x90)
-   
+
     :.id: Returns the id of the user
-   
+
     :.scratchteam: Retuns True if the user is in the Scratch team
-    
+
     :.update(): Updates the attributes
     '''
 
     def __str__(self):
         return str(self.username)
-    
+
     def __init__(self, **entries):
 
         # Info on how the .update method has to fetch the data:
@@ -72,7 +72,7 @@ class User(AbstractScratch):
             self._headers = self._session._headers
             self._cookies = self._session._cookies
 
-        # Headers for operations that require accept and Content-Type fields:   
+        # Headers for operations that require accept and Content-Type fields:
         self._json_headers = dict(self._headers)
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
@@ -100,7 +100,7 @@ class User(AbstractScratch):
             raise exceptions.Unauthorized(
                 "You need to be authenticated as the profile owner to do this.")
 
-    
+
     def does_exist(self):
         """
         Returns:
@@ -128,10 +128,10 @@ class User(AbstractScratch):
         return json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/messages/count/", headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',}).text)["count"]
 
     def featured_data(self):
-        """           
+        """
         Returns:
             dict: Gets info on the user's featured project and featured label (like "Featured project", "My favorite things", etc.)
-        """        
+        """
         try:
             response = json.loads(requests.get(f"https://scratch.mit.edu/site-api/users/all/{self.username}/").text)
             return {
@@ -216,7 +216,7 @@ class User(AbstractScratch):
                 print("Warning: API error when performing following check")
                 return following
         return following
-    
+
     def is_followed_by(self, user):
         """
         Returns:
@@ -274,7 +274,7 @@ class User(AbstractScratch):
         _projects = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self.username}/favorites/", limit=limit, offset=offset, headers = self._headers)
         return commons.parse_object_list(_projects, project.Project, self._session)
-    
+
     def favorites_count(self):
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/favorites/",
@@ -284,7 +284,7 @@ class User(AbstractScratch):
 
     def toggle_commenting(self):
         """
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
         self._assert_permission()
         requests.post(f"https://scratch.mit.edu/site-api/comments/user/{self.username}/toggle-comments/",
@@ -297,7 +297,7 @@ class User(AbstractScratch):
         Returns:
             list<projects.projects.Project>: The user's recently viewed projects
 
-        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
         self._assert_permission()
         _projects = commons.api_iterative(
@@ -306,7 +306,7 @@ class User(AbstractScratch):
 
     def set_bio(self, text):
         """
-        Sets the user's "About me" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Sets the user's "About me" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
         self._assert_permission()
         requests.put(
@@ -325,7 +325,7 @@ class User(AbstractScratch):
 
     def set_wiwo(self, text):
         """
-        Sets the user's "What I'm working on" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Sets the user's "What I'm working on" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
         self._assert_permission()
         requests.put(
@@ -344,7 +344,7 @@ class User(AbstractScratch):
 
     def set_featured(self, project_id, *, label=""):
         """
-        Sets the user's featured project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user` 
+        Sets the user's featured project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
 
         Args:
             project_id: Project id of the project that should be set as featured
@@ -362,7 +362,7 @@ class User(AbstractScratch):
 
     def set_forum_signature(self, text):
         """
-        Sets the user's discuss forum signature. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Sets the user's discuss forum signature. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
         self._assert_permission()
         headers = {
@@ -381,15 +381,15 @@ class User(AbstractScratch):
 
     def post_comment(self, content, *, parent_id="", commentee_id=""):
         """
-        Posts a comment on the user's profile. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Posts a comment on the user's profile. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
 
         Args:
             content: Content of the comment that should be posted
-        
+
         Keyword Arguments:
             parent_id: ID of the comment you want to reply to. If you don't want to mention a user, don't put the argument.
             commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
-        
+
         Returns:
             scratchattach.comment.Comment: An object representing the created comment.
         """
@@ -407,7 +407,7 @@ class User(AbstractScratch):
         )
         if r.status_code != 200:
             raise exceptions.CommentPostFailure(r.text)
-        
+
         try:
             text = r.text
             data = {
@@ -426,7 +426,7 @@ class User(AbstractScratch):
                     "You are being rate-limited for running this operation too often. Implement a cooldown of about 10 seconds."))
             else:
                 raise(exceptions.FetchError("Couldn't parse API response"))
-            
+
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """
         Replies to a comment given by its id
@@ -446,10 +446,10 @@ class User(AbstractScratch):
             list<scratchattach.Activity>: The user's activity data as parsed list of scratchattach.activity.Activity objects
         """
         soup = BeautifulSoup(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text, 'html.parser')
-                
+
         activities = []
         source = soup.find_all("li")
-                
+
         for data in source:
             _activity = activity.Activity(_session = self._session, raw=data)
             _activity._update_from_html(data)
@@ -468,7 +468,7 @@ class User(AbstractScratch):
 
     def follow(self):
         """
-        Follows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Follows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
         self._assert_auth()
         requests.put(
@@ -479,7 +479,7 @@ class User(AbstractScratch):
 
     def unfollow(self):
         """
-        Unfollows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Unfollows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
         self._assert_auth()
         requests.put(
@@ -490,7 +490,7 @@ class User(AbstractScratch):
 
     def delete_comment(self, *, comment_id):
         """
-        Deletes a comment by its ID. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Deletes a comment by its ID. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
 
         Args:
             comment_id: The id of the comment that should be deleted
@@ -505,7 +505,7 @@ class User(AbstractScratch):
 
     def report_comment(self, *, comment_id):
         """
-        Reports a comment by its ID to the Scratch team. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`  
+        Reports a comment by its ID to the Scratch team. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
 
         Args:
             comment_id: The id of the comment that should be reported
@@ -547,6 +547,15 @@ class User(AbstractScratch):
             content = str(entity.find("div", {"class": "content"}).text).strip()
             time = entity.find("span", {"class": "time"})['title']
 
+            main_comment = {
+                'id': comment_id,
+                'author': {"username":user},
+                'content': content,
+                'datetime_created': time,
+            }
+            _comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
+            _comment._update_from_dict(main_comment)
+
             ALL_REPLIES = []
             replies = entity.find_all("li", {"class": "reply"})
             if len(replies) > 0:
@@ -565,24 +574,40 @@ class User(AbstractScratch):
                     'content': r_content,
                     'datetime_created': r_time,
                     "parent_id" : comment_id,
+                    "cached_parent_comment" : _comment,
                 }
-                _comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
-                _comment._update_from_dict(reply_data)
-                ALL_REPLIES.append(_comment)
+                _r_comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
+                _r_comment._update_from_dict(reply_data)
+                ALL_REPLIES.append(_r_comment)
 
-            main_comment = {
-                'id': comment_id,
-                'author': {"username":user},
-                'content': content,
-                'datetime_created': time,
-                'reply_count': len(ALL_REPLIES),
-                'cached_replies': ALL_REPLIES
-            }
-            _comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
-            _comment._update_from_dict(main_comment)
+            _comment.reply_count = len(ALL_REPLIES)
+            _comment.cached_replies = list(ALL_REPLIES)
+
             DATA.append(_comment)
         return DATA
-    
+
+    def comment_by_id(self, comment_id):
+        """
+        Gets a comment on this user's profile by id.
+
+        Warning:
+            For comments very far down on the user's profile, this method will take a while to find the comment. Very old comment are deleted from Scratch's database and may not appear.
+        """
+
+        page = 1
+        page_content = self.comments(page=page)
+        while page_content != []:
+            results = list(filter(lambda x : str(x.id) == str(comment_id), page_content))
+            if results == []:
+                results = list(filter(lambda x : str(x.id) == str(comment_id), [item for x in page_content for item in x.cached_replies]))
+                if results != []:
+                    return results[0]
+            else:
+                return results[0]
+            page += 1
+            page_content = self.comments(page=page)
+        return None
+
     def stats(self):
         """
         Gets information about the user's stats. Fetched from ScratchDB.
@@ -613,7 +638,7 @@ class User(AbstractScratch):
         Returns:
             dict: A dict containing the user's ranks. If the ranks aren't available, all values will be -1.
         """
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")        
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
         try:
             return requests.get(
                 f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
@@ -635,32 +660,32 @@ class User(AbstractScratch):
         Returns:
             list<dict>
         """
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")        
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
         return requests.get(f"https://scratchdb.lefty.one/v3/user/graph/{self.username}/followers?segment={segment}&range={range}")
 
     def forum_counts(self):
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")        
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
         try:
             return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["counts"]
         except Exception:
             raise exceptions.FetchError
 
     def forum_posts_over_time(self):
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")        
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
         try:
             return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["history"]
         except Exception:
             raise exceptions.FetchError
 
     def forum_signature(self):
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")        
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
         try:
             return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["signature"]
         except Exception:
             raise exceptions.FetchError
 
     def forum_signature_history(self):
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")        
+        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
         return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/history/{self.username}").json()
 
     def ocular_status(self):
@@ -712,7 +737,7 @@ def get_user(username):
 
     Warning:
         Any methods that require authentication (like user.follow) will not work on the returned object.
-        
+
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_user` instead.
     """
     return commons._get_object("username", username, User, exceptions.UserNotFound)
