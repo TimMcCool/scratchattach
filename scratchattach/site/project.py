@@ -351,36 +351,34 @@ class Project(PartialProject):
             headers=headers,
         )
 
-    def set_fields(self, fields_dict):
+    def set_fields(self, fields_dict, *, use_site_api=False):
         """
-        Sets fields using the api.scratch.mit.edu/projects/xxx/ PUT API.
-        """
-        self._assert_permission()
-        r = requests.put(
-            f"https://api.scratch.mit.edu/projects/{self.id}",
-            headers=self._headers,
-            cookies=self._cookies,
-            data=json.dumps(fields_dict),
-        ).json()
-        return self._update_from_dict(r)
-    
-    def set_fields_site_api(self, fields_dict):
-        """
-        Sets fields using the scratch.mit.edu/site-api API.
-        This function allows setting more fields than Project.set_fields.
-        For example you can also share / unshare the project by setting the "shared" field.
+        Sets fields. By default, ueses the api.scratch.mit.edu/projects/xxx/ PUT API.
 
-        Warning:
+        Keyword Arguments:
+        use_site_api (bool):
+            When enabled, the fields are set using the scratch.mit.edu/site-api API.
+            This function allows setting more fields than Project.set_fields.
+            For example you can also share / unshare the project by setting the "shared" field.
             According to the Scratch team, this API is deprecated. As of 2024 it's still fully functional tho.
         """
         self._assert_permission()
-        r = requests.put(
-            f"https://scratch.mit.edu/site-api/projects/all/{self.id}",
-            headers=self._headers,
-            cookies=self._cookies,
-            data=json.dumps(fields_dict),
-        ).json()
-
+        if use_site_api:
+            r = requests.put(
+                f"https://scratch.mit.edu/site-api/projects/all/{self.id}",
+                headers=self._headers,
+                cookies=self._cookies,
+                data=json.dumps(fields_dict),
+            ).json()
+        else:
+            r = requests.put(
+                f"https://api.scratch.mit.edu/projects/{self.id}",
+                headers=self._headers,
+                cookies=self._cookies,
+                data=json.dumps(fields_dict),
+            ).json()
+            return self._update_from_dict(r)
+    
     def turn_off_commenting(self):
         """
         Disables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
