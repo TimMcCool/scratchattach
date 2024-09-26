@@ -3,11 +3,10 @@
 import json
 import requests
 import random
-from . import user, comment, project
+from . import user, comment, project, activity
 from ..utils import exceptions, commons
 from ..utils.commons import api_iterative, headers
 from ._base import BaseSiteComponent
-
 
 class Studio(BaseSiteComponent):
     """
@@ -505,22 +504,14 @@ class Studio(BaseSiteComponent):
             timeout=10,
         )
         self.comments_allowed = not self.comments_allowed
-    ##
 
-    def activity(self, *, limit=None, offset=0):
-        url = f"https://api.scratch.mit.edu/studios/{self.id}/activity"
-
-        api_data = api_iterative_simple(
-            url,
-            limit,
-            offset,
-            max_req_limit=40,
-        )
-        return api_data
+    def activity(self, *, limit=40, offset=0):
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/studios/{self.id}/activity", limit=limit, offset=offset)
+        return commons.parse_object_list(response, activity.Activity, self._session)
 
     def accept_invite(self):
-        if self._session is None:
-            raise (exceptions.Unauthenticated)
+        self._assert_auth()
         return requests.put(
             f"https://scratch.mit.edu/site-api/users/curators-in/{self.id}/add/?usernames={self._session._username}",
             headers=headers,
