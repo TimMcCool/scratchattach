@@ -13,6 +13,51 @@ headers = {
     "referer": "https://scratch.mit.edu",
 } # headers recommended for accessing API endpoints that don't require verification
 
+empty_project_json = {
+    'targets': [
+        {
+            'isStage': True,
+            'name': 'Stage',
+            'variables': {
+                '`jEk@4|i[#Fk?(8x)AV.-my variable': [
+                    'my variable',
+                    0,
+                ],
+            },
+            'lists': {},
+            'broadcasts': {},
+            'blocks': {},
+            'comments': {},
+            'currentCostume': 0,
+            'costumes': [
+                {
+                    'name': '',
+                    'bitmapResolution': 1,
+                    'dataFormat': 'svg',
+                    'assetId': '14e46ec3e2ba471c2adfe8f119052307',
+                    'md5ext': '14e46ec3e2ba471c2adfe8f119052307.svg',
+                    'rotationCenterX': 0,
+                    'rotationCenterY': 0,
+                },
+            ],
+            'sounds': [],
+            'volume': 100,
+            'layerOrder': 0,
+            'tempo': 60,
+            'videoTransparency': 50,
+            'videoState': 'on',
+            'textToSpeechLanguage': None,
+        },
+    ],
+    'monitors': [],
+    'extensions': [],
+    'meta': {
+        'semver': '3.0.0',
+        'vm': '2.3.0',
+        'agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    },
+}
+
 class AbstractScratch(ABC):
 
     def update(self):

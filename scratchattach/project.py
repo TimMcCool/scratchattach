@@ -3,9 +3,13 @@
 import json
 import random
 import requests
+import time
 from . import user
 from . import exceptions
 from . import commons
+from .commons import empty_project_json
+
+CREATE_PROJECT_USES = []
 
 class PartialProject:
     """
@@ -674,6 +678,47 @@ class Project(PartialProject):
             data=json.dumps({"title": text}),
         ).json()
         return self._update_from_dict(r)
+    
+    def create_remix(self, *, title=None, project_json=None): # not working
+        """
+        Creates a project on the Scratch website.
+
+        Warning:
+            Don't spam this method - it WILL get you banned from Scratch.
+            To prevent accidental spam, a rate limit (5 projects per minute) is implemented for this function.
+        """
+        global CREATE_PROJECT_USES
+
+        if title is None:
+            if "title" in self.__dict__:
+                title = self.title+" remix (scratchattach-made)"
+            else:
+                title = "scratchattach-made remix"
+        if project_json is None:
+            if "title" in self.__dict__:
+                project_json = self.get_raw_json()
+            else:
+                project_json = empty_project_json
+
+        if len(CREATE_PROJECT_USES) < 5:
+            CREATE_PROJECT_USES.insert(0, time.time())
+        else:
+            if CREATE_PROJECT_USES[-1] < time.time() - 300:
+                CREATE_PROJECT_USES.pop()
+            else:
+                raise exceptions.BadRequest("Rate limit for remixing Scratch projects exceeded.\nThis rate limit is not enforced by scratchattach, not by the Scratch API.\nFor security reasons, it cannot be turned off.\n\nDon't spam-create projects, it WILL get you banned.")
+                return
+            CREATE_PROJECT_USES.insert(0, time.time())
+
+        params = {
+            'is_remix': '1',
+            'original_id': self.id,
+            'title': title,
+        }
+
+        response = requests.post('https://projects.scratch.mit.edu/', params=params, cookies=self._cookies, headers=self._headers, json=project_json).json()
+        return self.connect_project(response["content-name"])
+
 
     def set_instructions(self, text):
         """
