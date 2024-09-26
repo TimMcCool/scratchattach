@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import requests
 from threading import Thread
-from . import exceptions
+from ..utils import exceptions
 
 class BaseEventHandler(ABC):
 
