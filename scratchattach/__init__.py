@@ -1,16 +1,16 @@
 # v2 ready
 
-from .cloud import *
-from .user import *
-from .session import *
-from .project import *
-from .studio import *
-from .cloud_requests import *
-from .forum import *
-from .encoder import *
-from . import commons
-from .comment import *
-from .message_events import MessageEvents
+from .cloud.cloud import *
+from .site.user import *
+from .site.session import *
+from .site.project import *
+from .site.studio import *
+from .eventhandlers.cloud_requests import *
+from .site.forum import *
+from .utils.encoder import *
+from .utils import commons
+from .site.comment import *
+from .eventhandlers.message_events import MessageEvents
 
 def get_news(*, limit=10, offset=0):
     return commons.api_iterative("https://api.scratch.mit.edu/news", limit = limit, offset = offset)

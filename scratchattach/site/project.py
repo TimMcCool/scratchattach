@@ -5,9 +5,9 @@ import random
 import requests
 import time
 from . import user
-from . import exceptions
-from . import commons
-from .commons import empty_project_json
+from .. import exceptions
+from ..utils import commons
+from ..utils.commons import empty_project_json
 
 CREATE_PROJECT_USES = []
 

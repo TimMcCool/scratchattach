@@ -4,17 +4,19 @@ import json
 import re
 import requests
 
+from ..utils import commons
+
 from . import user
 from . import session
 from . import project
 from . import studio
 from . import forum
-from . import exceptions, commons
-from .commons import BaseCommunityComponent
-from .commons import headers
+from .. import exceptions
+from ..utils.commons import BaseSiteComponent
+from ..utils.commons import headers
 from bs4 import BeautifulSoup
 
-class Comment(BaseCommunityComponent):
+class Comment(BaseSiteComponent):
 
     '''
     Represents a Scratch comment (on a profile, studio or project)

@@ -9,20 +9,24 @@ import hashlib
 import time
 import random
 
+from . import forum
+
+from ..utils import commons
+
 from . import user
-from . import cloud
+from ..cloud import cloud
 from . import project
-from . import exceptions
+from .. import exceptions
 from . import studio
-from . import forum, message_events
-from . import commons, activity
-from .commons import BaseCommunityComponent
-from .commons import headers, empty_project_json
+from ..eventhandlers import message_events
+from . import activity
+from ..utils.commons import BaseSiteComponent
+from ..utils.commons import headers, empty_project_json
 from bs4 import BeautifulSoup
 
 CREATE_PROJECT_USES = []
 
-class Session(BaseCommunityComponent):
+class Session(BaseSiteComponent):
 
     '''
     Represents a Scratch log in / session. Stores authentication data (session id and xtoken).

@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from . import exceptions
 from threading import Thread
 import requests
-from . import exceptions
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
@@ -58,7 +57,7 @@ empty_project_json = {
     },
 }
 
-class BaseCommunityComponent(ABC):
+class BaseSiteComponent(ABC):
 
     def update(self):
         """

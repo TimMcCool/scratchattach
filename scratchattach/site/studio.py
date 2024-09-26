@@ -4,8 +4,8 @@ import json
 import requests
 import random
 from . import user
-from . import exceptions
-from .commons import api_iterative, headers
+from ..utils import exceptions
+from ..utils.commons import api_iterative, headers
 
 
 class Studio:

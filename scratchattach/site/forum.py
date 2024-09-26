@@ -2,7 +2,7 @@
 
 import requests
 from . import user
-from .commons import headers
+from ..utils.commons import headers
 
 
 class ForumTopic:

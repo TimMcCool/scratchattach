@@ -9,12 +9,12 @@ from . import session
 from . import project
 from . import studio
 from . import forum
-from . import exceptions
-from .commons import BaseCommunityComponent
-from .commons import headers
+from .. import exceptions
+from ..utils.commons import BaseSiteComponent
+from ..utils.commons import headers
 from bs4 import BeautifulSoup
 
-class Activity(BaseCommunityComponent):
+class Activity(BaseSiteComponent):
 
     '''
     Represents a Scratch activity (message or other user page activity)

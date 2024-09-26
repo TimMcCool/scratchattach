@@ -4,7 +4,7 @@ import json
 import requests
 from threading import Thread
 import time
-from . import exceptions
+from ..utils import exceptions
 import traceback
 import warnings
 

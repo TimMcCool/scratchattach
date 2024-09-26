@@ -1,7 +1,7 @@
 """v2 ready: MessageEvents class"""
 
-from . import user
-from .commons import BaseEventHandler
+from ..site import user
+from ..utils.commons import BaseEventHandler
 import time
 
 class MessageEvents(BaseEventHandler):

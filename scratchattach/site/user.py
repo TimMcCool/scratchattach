@@ -3,18 +3,20 @@
 import json
 import requests
 import random
+
+from ..eventhandlers import message_events
 from . import project
-from . import exceptions
+from ..utils import exceptions
 from . import studio
 from . import forum
 from bs4 import BeautifulSoup
-from .commons import BaseCommunityComponent
-from .commons import headers
-from . import commons
+from ..utils.commons import BaseSiteComponent
+from ..utils.commons import headers
+from ..utils import commons
 from . import comment
-from . import activity, message_events
+from . import activity
 
-class User(BaseCommunityComponent):
+class User(BaseSiteComponent):
 
     '''
     Represents a Scratch user.

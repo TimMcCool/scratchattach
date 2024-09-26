@@ -1,12 +1,12 @@
 #----- The cloud request handler class
-from . import cloud
+from ..cloud import cloud
 import time
-from .encoder import *
-from . import project
+from ..utils.encoder import *
+from ..site import project
 from threading import Thread
 import traceback
 import warnings
-from . import exceptions#
+from ..utils import exceptions#
 
 class CloudRequests:
     """
