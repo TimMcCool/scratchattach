@@ -62,9 +62,9 @@ class ScratchCloud(BaseCloud):
         else:
             if self.recorder is None:
                 initial_values = self.get_all_vars(use_logs=True)
-                super().get_var(var, recorder_initial_values=initial_values)
+                return super().get_var(var, recorder_initial_values=initial_values)
             else:
-                super().get_var(var)
+                return super().get_var(var)
 
     def get_all_vars(self, *, use_logs=False):
         if self._session is None or use_logs:
@@ -77,9 +77,9 @@ class ScratchCloud(BaseCloud):
         else:
             if self.recorder is None:
                 initial_values = self.get_all_vars(use_logs=True)
-                super().get_all_vars(recorder_initial_values=initial_values)
+                return super().get_all_vars(recorder_initial_values=initial_values)
             else:
-                super().get_all_vars()
+                return super().get_all_vars()
 
 class TwCloud(BaseCloud):
 

@@ -32,7 +32,7 @@ class CloudEvents(BaseEventHandler):
                     try:
                         _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session)
                         data = json.loads(i)
-                        data["name"] = data["name"][2:]
+                        data["name"] = data["name"].replace("☁ ", "")
                         _a._update_from_dict(data)
                         if "on_"+_a.type in self._events:
                             self.call_event("on_"+_a.type, [_a])
