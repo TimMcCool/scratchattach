@@ -17,6 +17,7 @@ class MessageEvents(BaseEventHandler):
     def _update(self):
         self.current_message_count = int(self.user.message_count())
         
+        self.ready = True
         self.call_event("on_ready")
 
         while True:

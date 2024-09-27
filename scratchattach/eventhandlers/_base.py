@@ -3,12 +3,14 @@ from ..utils.requests import Requests as requests
 from threading import Thread
 from ..utils import exceptions
 import traceback
+from . import cloud_recorder
 
 class BaseEventHandler(ABC):
 
     def __init__(self):
         self._thread = None
         self.running = False
+        self.ready = False
         self._events = {}
 
     def start(self, *, thread=True, ignore_exceptions=True):

@@ -4,8 +4,8 @@ from .cloud_events import CloudEvents
 
 class CloudRecorder(CloudEvents):
 
-    def __init__(self, user, *, log_deletions=True, initial_values={}):
-        super().__init__(user)
+    def __init__(self, cloud, initial_values={}):
+        super().__init__(cloud)
         self.cloud_values = initial_values
         self.event(self.on_set)
 
