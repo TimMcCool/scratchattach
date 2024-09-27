@@ -41,7 +41,7 @@ class Comment(BaseSiteComponent):
         # Update attributes from entries dict:
         self.__dict__.update(entries)
 
-    def update(self, data):
+    def update(self):
         # comments can't be updated
         pass
 
