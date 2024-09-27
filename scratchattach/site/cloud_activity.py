@@ -59,7 +59,10 @@ class CloudActivity(BaseSiteComponent):
         else:
             if hasattr(self.cloud, "logs"):
                 logs = self.cloud.logs(filter_by_var_named=self.var)
-                activity = list(filter(lambda x: x.value == self.value and x.timestamp < self.timestamp, logs))
+                matching = list(filter(lambda x: x.value == self.value and x.timestamp <= self.timestamp, logs))
+                if matching == []:
+                    return False
+                activity = matching[0]
                 self.user = activity.user
                 self.timestamp = activity.timestamp
                 return True

@@ -29,7 +29,7 @@ class CloudEvents(BaseEventHandler):
                 result = []
                 for i in data:
                     try:
-                        _a = cloud_activity.CloudActivity()
+                        _a = cloud_activity.CloudActivity(timestamp=time.time()*1000)
                         data = json.loads(i)
                         data["name"] = data["name"][2:]
                         _a._update_from_dict(data)
