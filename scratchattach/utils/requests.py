@@ -5,7 +5,7 @@ proxies = None
 
 class Requests:
     """
-    Centralized HTTP request performer (for better error handling and proxies)
+    Centralized HTTP request handler (for better error handling and proxies)
     """
 
     @staticmethod
