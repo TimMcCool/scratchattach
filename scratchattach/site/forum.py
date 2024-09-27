@@ -338,10 +338,16 @@ def get_topic_list(category_id, *, page=0):
         If you want to use methods that require authentication, get the forum topics with :meth:`scratchattach.session.Session.connect_topic_list` instead.
     """
 
-    response = requests.get(f"https://scratch.mit.edu/discuss/{category_id}/", headers=headers)
-    soup = BeautifulSoup(response.content, 'html.parser')
+    try:
+        response = requests.get(f"https://scratch.mit.edu/discuss/6/")
+        soup = BeautifulSoup(response.content, 'html.parser')
+    except Exception as e:
+        raise exceptions.FetchError(str(e))
 
-    category_name = soup.find('h4').find("span").get_text()
+    try:
+        category_name = soup.find('h4').find("span").get_text()
+    except Exception as e:
+        raise exceptions.BadRequest("Invalid category id")
 
     topics = soup.find_all('tr')
     topics.pop(0)
@@ -354,6 +360,9 @@ def get_topic_list(category_id, *, page=0):
 
         columns = topic.find_all('td')
         columns = [column.text for column in columns]
+        if len(columns) == 1:
+            # This is a sticky topic -> Skip it
+            continue
 
         last_updated = columns[3].split(" ")[0] + " " + columns[3].split(" ")[1]
 
