@@ -362,7 +362,7 @@ class Session(BaseSiteComponent):
                     remixes=target["fields"]["remixers_count"],
                     views=target["fields"]["view_count"],
                     title=target["fields"]["title"],
-                    comment_count=target["fiels"]["commenters_count"]
+                    comment_count=target["fields"]["commenters_count"]
                 ))
             return projects
         except Exception:

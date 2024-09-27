@@ -156,7 +156,7 @@ class PartialProject(BaseSiteComponent):
         }
 
         response = requests.post('https://projects.scratch.mit.edu/', params=params, cookies=self._cookies, headers=self._headers, json=project_json).json()
-        _project = self.connect_project(response["content-name"])
+        _project = self._session.connect_project(response["content-name"])
         _project.parent_title = base64.b64decode(response['content-title']).decode('utf-8').split(' remix')[0]
         return _project
     
@@ -446,14 +446,14 @@ WW
                 f"https://scratch.mit.edu/site-api/projects/all/{self.id}",
                 headers=self._headers,
                 cookies=self._cookies,
-                data=json.dumps(fields_dict),
+                json=fields_dict,
             ).json()
         else:
             r = requests.put(
                 f"https://api.scratch.mit.edu/projects/{self.id}",
                 headers=self._headers,
                 cookies=self._cookies,
-                data=json.dumps(fields_dict),
+                json=fields_dict,
             ).json()
             return self._update_from_dict(r)
     

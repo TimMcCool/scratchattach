@@ -8,7 +8,7 @@ from . import user
 from . import session
 from . import project
 from . import studio
-from . import forum
+from . import forum, comment
 from .. import exceptions
 from ._base import BaseSiteComponent
 from ..utils.commons import headers
@@ -104,3 +104,13 @@ class Activity(BaseSiteComponent):
                 return self._make_linked_object("username", self.followed_username, user.User, exceptions.UserNotFound)
         if "recipient_username" in self.__dict__: # the recipient_username field always indicates the target is a user
             return self._make_linked_object("username", self.recipient_username, user.User, exceptions.UserNotFound)
+        
+        if self.type == "addcomment":
+            if self.comment_type == 0:
+                _c = comment.Comment(id=self.comment_id, source="project", source_id=self.comment_obj_id, _session=self._session)
+            if self.comment_type == 1:
+                _c = comment.Comment(id=self.comment_id, source="profile", source_id=self.comment_obj_id, _session=self._session)
+            if self.comment_type == 2:
+                _c = comment.Comment(id=self.comment_id, source="studio", source_id=self.comment_obj_id, _session=self._session)            
+            _c.update()
+            return _c
