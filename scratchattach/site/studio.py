@@ -151,7 +151,7 @@ class Studio(BaseSiteComponent):
             timeout=10,
         ).json()
         _comment = comment.Comment(id=r["id"], _session=self._session, source="studio", source_id=self.id)
-        _comment.update_from_dict(r)
+        _comment._update_from_dict(r)
         return _comment
 
     def post_comment(self, content, *, parent_id="", commentee_id=""):

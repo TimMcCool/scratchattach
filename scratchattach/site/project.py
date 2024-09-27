@@ -353,7 +353,7 @@ WW
             cookies=self._cookies
         ).json()
         _comment = comment.Comment(id=r["id"], _session=self._session, source="project", source_id=self.id)
-        _comment.update_from_dict(r)
+        _comment._update_from_dict(r)
         return _comment
     
     def love(self):

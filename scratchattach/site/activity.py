@@ -107,7 +107,7 @@ class Activity(BaseSiteComponent):
         
         if self.type == "addcomment": # target is a comment
             if self.comment_type == 0:
-                _c = project.Project(id=self.comment_obj_id, _session=self._session).comment_by_id(self.comment_id)
+                _c = project.Project(id=self.comment_obj_id, author_name=self._session.username, _session=self._session).comment_by_id(self.comment_id)
             if self.comment_type == 1:
                 _c = user.User(username=self.comment_obj_title, _session=self._session).comment_by_id(self.comment_id)
             if self.comment_type == 2:
