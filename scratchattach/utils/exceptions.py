@@ -2,15 +2,21 @@
 
 class Unauthenticated(Exception):
     """
-    Raised when an action that requires a log in / session is performed on an object that wasn't created with a session.
+    Raised when a method that requires a login / session is called on an object that wasn't created with a session.
 
-    Example: If the :meth:`scratchattach.project.Project.love` function is called on a Project object created with :meth:`scratchattach.project.get_project`, it will raise this error.
+    If you create Project, Studio, or User objects using :meth:`scratchattach.get_project`, :meth:`scratchattach.get_studio`, or :meth:`scratchattach.get_user`, they cannot be used for actions that require authentication. Instead, use the following methods to ensure the objects are connected to an authenticated session:
+    
+    - :meth:`scratchattach.Session.connect_project`
+    
+    - :meth:`scratchattach.Session.connect_user`
+    
+    - :meth:`scratchattach.Session.connect_studio`
 
-    If Project / Studio / User objects are created using :meth:`scratchattach.get_project` / :meth:`scratchattach.get_studio` / :meth:`scratchattach.get_user`, they can't be used to perform action that require a session. Use :meth:`scratchattach.Session.connect_project` / :meth:`scratchattach.Session.connect_user` / :meth:`scratchattach.Session.connect_studio` instead.
+    This also applies to cloud variables, forum topics, and forum posts.
     """
 
     def __init__(self, message=""):
-        self.message = "No login / session connected. The object on which the method was called wasn't created with a session. More information: https://scratchattach.readthedocs.io/en/latest/scratchattach.html#scratchattach.exceptions.Unauthenticated"
+        self.message = "No login / session connected.\n\nThe object on which the method was called was created using scratchattach.get_xyz()\nUse session.connect_xyz() instead (xyz is a placeholder).\n\nMore information: https://scratchattach.readthedocs.io/en/latest/scratchattach.html#scratchattach.exceptions.Unauthenticated"
         super().__init__(self.message)
     pass
 
