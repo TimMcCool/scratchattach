@@ -312,9 +312,11 @@ def get_topic(topic_id):
         scratchattach.forum.ForumTopic: An object representing the requested forum topic
 
     Warning:
+        Scratch's API uses very heavy caching for logged out users, therefore the returned data will not be up to date.
+
         Any methods that require authentication will not work on the returned object.
         
-        If you want to use methods that require authentication, create the object with :meth:`scratchattach.session.Session.connect_topic` instead.
+        If you need up-to-date data or want to use methods that require authentication, create the object with :meth:`scratchattach.session.Session.connect_topic` instead.
     """
     return commons._get_object("id", topic_id, ForumTopic, exceptions.ForumContentNotFound)
 
@@ -333,9 +335,11 @@ def get_topic_list(category_id, *, page=0):
         list<scratchattach.forum.ForumTopic>: A list containing the forum topics from the specified category
 
     Warning:
+        Scratch's API uses very heavy caching for logged out users, therefore the returned data will not be up to date.
+
         Any methods that require authentication will not work on the returned objects.
 
-        If you want to use methods that require authentication, get the forum topics with :meth:`scratchattach.session.Session.connect_topic_list` instead.
+        If you need up-to-date data or want to use methods that require authentication, get the forum topics with :meth:`scratchattach.session.Session.connect_topic_list` instead.
     """
 
     try:
