@@ -5,7 +5,7 @@ import random
 import base64
 import time
 from . import user, comment, studio
-from .. import exceptions
+from ..utils import exceptions
 from ..utils import commons
 from ..utils.commons import empty_project_json, headers
 from ._base import BaseSiteComponent

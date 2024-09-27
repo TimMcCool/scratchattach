@@ -8,7 +8,7 @@ from . import session
 from . import project
 from . import studio
 from . import forum, comment
-from .. import exceptions
+from ..utils import exceptions
 from ._base import BaseSiteComponent
 from ..utils.commons import headers
 from bs4 import BeautifulSoup
