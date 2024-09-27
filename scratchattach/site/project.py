@@ -502,6 +502,12 @@ WW
                 cookies=self._cookies,
             )
 
+    def move_to_trash(self):
+        """
+        Moves the project to trash folder. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
+        """
+        self.set_fields({"visibility": "trshbyusr", "isPublished" : False}, use_site_api=True)
+
     def set_thumbnail(self, *, file):
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`

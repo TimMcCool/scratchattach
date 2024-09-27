@@ -320,16 +320,12 @@ class Session(BaseSiteComponent):
         return self.connect_project(response["content-name"])
 
 
-    """ work in progress
-
-    # My stuff:
-
-    def mystuff_projects(self, ordering, *, page=1, sort_by="", descending=True):
+    def mystuff_projects(self, filter_arg="all", *, page=1, sort_by="", descending=True):
         '''
         Gets the projects from the "My stuff" page.
 
         Args:
-            ordering (str): Possible values for this parameter are "all", "shared", "unshared" and "trashed"
+            filter_arg (str): Possible values for this parameter are "all", "shared", "unshared" and "trashed"
 
         Keyword Arguments:
             page (int): The page of the "My Stuff" projects that should be returned
@@ -347,32 +343,27 @@ class Session(BaseSiteComponent):
             descsort = ""
         try:
             targets = requests.get(
-                f"https://scratch.mit.edu/site-api/projects/{ordering}/?page={page}&ascsort={ascsort}&descsort={descsort}",
+                f"https://scratch.mit.edu/site-api/projects/{filter_arg}/?page={page}&ascsort={ascsort}&descsort={descsort}",
                 headers = headers,
                 cookies = self._cookies,
                 timeout = 10,
             ).json()
             projects = []
             for target in targets:
-                projects.append(
-                    project.Project(
-                        author = self._username,
-                        created = target["fields"]["datetime_created"],
-                        last_modified = target["fields"]["datetime_modified"],
-                        share_date = target["fields"]["datetime_shared"],
-                        shared = target["fields"]["isPublished"],
-                        id = target["pk"],
-                        thumbnail_url = "https://uploads.scratch.mit.edu"+target["fields"]["uncached_thumbnail_url"][1:],
-                        favorites = target["fields"]["favorite_count"],
-                        loves = target["fields"]["love_count"],
-                        remixes = target["fields"]["remixers_count"],
-                        views = target["fields"]["view_count"],
-                        thumbnail_name = target["fields"]["thumbnail"],
-                        title = target["fields"]["title"],
-                        url = "https://scratch.mit.edu/projects/" + str(target["pk"]),
-                        comment_count = target["fields"]["commenters_count"],
-                    )
-                )
+                projects.append(project.Project(
+                    id = target["pk"], _session=self, author_name=self._username,
+                    comments_allowed=None, instructions=None, notes=None,
+                    created=target["fields"]["datetime_created"],
+                    last_modified=target["fields"]["datetime_modified"],
+                    share_date=target["fields"]["datetime_shared"],
+                    thumbnail_url="https:"+target["fields"]["thumbnail_url"],
+                    favorites=target["fields"]["favorite_count"],
+                    loves=target["fields"]["love_count"],
+                    remixes=target["fields"]["remixers_count"],
+                    views=target["fields"]["view_count"],
+                    title=target["fields"]["title"],
+                    comment_count=target["fiels"]["commenters_count"]
+                ))
             return projects
         except Exception:
             raise(exceptions.FetchError)
@@ -383,6 +374,7 @@ class Session(BaseSiteComponent):
         '''
         return self.mystuff_projects(ordering, page=page, sort_by=sort_by, descending=descending)
 
+    """ WIP
     def backpack(self,limit=20, offset=0):
         '''
         Lists the assets that are in the backpack of the user associated with the session.
