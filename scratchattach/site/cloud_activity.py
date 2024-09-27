@@ -42,7 +42,7 @@ class CloudActivity(BaseSiteComponent):
         except Exception: pass
         try: self.value = data["value"]
         except Exception: pass
-        try: self.user = data["user"]
+        try: self.username = data["user"]
         except Exception: pass
         try: self.timestamp = data["timestamp"]
         except Exception: pass
@@ -63,7 +63,7 @@ class CloudActivity(BaseSiteComponent):
                 if matching == []:
                     return False
                 activity = matching[0]
-                self.user = activity.user
+                self.username = activity.username
                 self.timestamp = activity.timestamp
                 return True
             else:
