@@ -6,7 +6,7 @@ import traceback
 
 class BaseEventHandler(ABC):
             
-    def start(self, *, update_interval = 0.1, thread=True, ignore_exceptions=True):
+    def start(self, *, thread=True, ignore_exceptions=True):
         """
         Starts the cloud event handler.
 
@@ -16,7 +16,6 @@ class BaseEventHandler(ABC):
         """
         if self.running is False:
             self.ignore_exceptions = ignore_exceptions
-            self.update_interval = update_interval
             self.running = True
             if "on_ready" in self._events:
                 self._events["on_ready"]()

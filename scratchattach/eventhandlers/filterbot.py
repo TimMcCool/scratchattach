@@ -62,7 +62,8 @@ class Filterbot(MessageEvents):
         self.spam_filters = []
         self.log_deletions = log_deletions
         self.event(self.on_message)
-    
+        self.update_interval = 2
+
     def on_message(self, message):
         if message.type == "addcomment":
             delete = False

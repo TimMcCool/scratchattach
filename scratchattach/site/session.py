@@ -630,8 +630,8 @@ sess
         except Exception as e:
             raise exceptions.ScrapeError(str(e))
 
-    def connect_message_events(self):
-        return message_events.MessageEvents(user.User(username=self.username, _session=self))
+    def connect_message_events(self, *, update_interval=2):
+        return message_events.MessageEvents(user.User(username=self.username, _session=self), update_interval=update_interval)
 
     def connect_filterbot(self, *, log_deletions=True):
         return filterbot.Filterbot(user.User(username=self.username, _session=self), log_deletions=log_deletions)

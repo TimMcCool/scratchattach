@@ -8,13 +8,14 @@ class MessageEvents(BaseEventHandler):
     """
     Class that calls events when you receive messages on your Scratch account. Data fetched from Scratch's API.
     """
-    def __init__(self, user):
+    def __init__(self, user, *, update_interval=2):
         self.user = user
         self._thread = None
         self.running = False
         self._events = {}
         self.current_message_count = 0
-    
+        self.update_interval = update_interval
+
     def _update(self):
         self.current_message_count = int(self.user.message_count())
         
