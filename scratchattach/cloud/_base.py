@@ -120,30 +120,35 @@ class BaseCloud(ABC):
         """
         if not isinstance(variable, str):
             raise ValueError("cloud var name must be a string")
-        if self.active_connection:
-            variable = variable.replace("☁ ", "")
-            if not (value in [True, False, float('inf'), -float('inf')]):
-                value = str(value)
-                if len(value) > self.length_limit:
+        if not self.active_connection:
+            self.connect()
+        variable = variable.replace("☁ ", "")
+        if not (value in [True, False, float('inf'), -float('inf')]):
+            value = str(value)
+            if len(value) > self.length_limit:
+                raise(exceptions.InvalidCloudValue(
+                    f"Value exceeds length limit: {str(value)}"
+                ))
+            if not self.allow_non_numeric:
+                x = value.replace(".", "")
+                x = x.replace("-", "")
+                if not (x.isnumeric() or x == ""):
                     raise(exceptions.InvalidCloudValue(
-                        f"Value exceeds length limit: {str(value)}"
+                        "Value not numeric"
                     ))
-                if not self.allow_non_numeric:
-                    x = value.replace(".", "")
-                    x = x.replace("-", "")
-                    if not (x.isnumeric() or x == ""):
-                        raise(exceptions.InvalidCloudValue(
-                            "Value not numeric"
-                        ))
-            while self._ratelimited_until + 0.1 >= time.time():
-                time.sleep(0.001)
-            packet = {
-                "method": "set",
-                "name": "☁ " + variable,
-                "value": value,
-                "user": self.username,
-                "project_id": self.project_id,
-            }
+        while self._ratelimited_until + 0.1 >= time.time():
+            time.sleep(0.001)
+        packet = {
+            "method": "set",
+            "name": "☁ " + variable,
+            "value": value,
+            "user": self.username,
+            "project_id": self.project_id,
+        }
+        try:
+            self._send_packet(packet)
+        except Exception:
+            self.connect()
             try:
                 self._send_packet(packet)
             except Exception:
@@ -151,11 +156,5 @@ class BaseCloud(ABC):
                 try:
                     self._send_packet(packet)
                 except Exception:
-                    self.connect()
-                    try:
-                        self._send_packet(packet)
-                    except Exception:
-                        raise exceptions.ConnectionError(f"Setting cloud variable {variable} failed three times in a row")
-            self._ratelimited_until = time.time()
-        else:
-            print("Warning: The cloud variable can't be set because there is no active connection.\nCall cloud.connect() before setting the cloud var.") 
+                    raise exceptions.ConnectionError(f"Setting cloud variable {variable} failed three times in a row")
+        self._ratelimited_until = time.time()

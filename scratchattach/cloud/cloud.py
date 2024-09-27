@@ -1,5 +1,7 @@
 from ._base import BaseCloud
 from typing import Type
+from ..utils.requests import Requests as requests
+from ..utils import exceptions
 
 class ScratchCloud(BaseCloud):
 
@@ -18,10 +20,6 @@ class ScratchCloud(BaseCloud):
             self.cookie = "scratchsessionsid=" + self._session.id + ";"
             self.origin = "https://scratch.mit.edu"
 
-            # Connect to cloud websocket
-            self.connect()
-
-
     def connect(self):
         self._assert_auth() # Connecting to Scratch's cloud websocket requires a login to the Scratch website
         super().connect()
@@ -29,6 +27,25 @@ class ScratchCloud(BaseCloud):
     def set_var(self, variable, value):
         self._assert_auth() # Setting a cloud var requires a login to the Scratch website
         super().set_var(variable, value)
+    
+    def logs(self, *, filter_by_var_named=None, limit=100, offset=0):
+        """
+        Gets the data from Scratch's clouddata logs.
+        
+        Keyword Arguments:
+            filter_by_var_named (str or None): If you only want to get data for one cloud variable, set this argument to its name.
+            limit (int): Max. amount of returned activity.
+            offset (int): Offset of the first activity in the returned list.
+            log_url (str): If you want to get the clouddata from a cloud log API different to Scratch's normal cloud log API, set this argument to the URL of the API. Only set this argument if you know what you are doing. If you want to get the clouddata from the normal API, don't put this argument.
+        """
+        try:
+            data = requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={self.project_id}&limit={limit}&offset={offset}", timeout=10).json()
+            if filter_by_var_named is None:
+                return data
+            else:
+                return list(filter(lambda k: k["name"] == "☁ "+filter_by_var_named, data))
+        except Exception as e:
+            return exceptions.FetchError(str(e))
 
 class TwCloud(BaseCloud):
 
@@ -47,9 +64,6 @@ class TwCloud(BaseCloud):
         if purpose != "" or contact != "":
             purpose_string = f" (Purpose:{purpose}; Contact:{contact})"
         self.header = {"User-Agent":f"scratchattach/2.0.0{purpose_string}"}
-
-        # Connect to cloud websocket
-        self.connect()
 
 def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> Type[BaseCloud]:
     """
