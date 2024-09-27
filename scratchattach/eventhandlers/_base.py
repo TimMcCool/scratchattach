@@ -5,7 +5,12 @@ from ..utils import exceptions
 import traceback
 
 class BaseEventHandler(ABC):
-            
+
+    def __init__(self):
+        self._thread = None
+        self.running = False
+        self._events = {}
+
     def start(self, *, thread=True, ignore_exceptions=True):
         """
         Starts the cloud event handler.

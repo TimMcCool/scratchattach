@@ -42,7 +42,7 @@ class BaseCloud(ABC):
     :self.print_connect_messages: Whether to print a message on every connect to the cloud server. Defaults to False.
     """
 
-    def __init__(self):
+    def __init__(self, *, project_id, _session=None):
         
         # Internal attributes
         self._ratelimited_until = 0
@@ -88,8 +88,8 @@ class BaseCloud(ABC):
         self.websocket = websocket.WebSocket()
         self.websocket.connect(
             self.cloud_host,
-            #cookie=self.cookie,
-            #origin=self.origin,
+            cookie=self.cookie,
+            origin=self.origin,
             enable_multithread=True,
             timeout = self.ws_timeout,
             header = self.header

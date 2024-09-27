@@ -1,7 +1,10 @@
-from ._base import BaseCloud
+"""v2 ready: ScratchCloud, TwCloud and CustomCloud classes"""
+
+from ._base import BaseCloud, CloudActivity
 from typing import Type
 from ..utils.requests import Requests as requests
-from ..utils import exceptions
+from ..utils import exceptions, commons
+from ..site import activity
 
 class ScratchCloud(BaseCloud):
 
@@ -40,10 +43,11 @@ class ScratchCloud(BaseCloud):
         """
         try:
             data = requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={self.project_id}&limit={limit}&offset={offset}", timeout=10).json()
-            if filter_by_var_named is None:
-                return data
-            else:
-                return list(filter(lambda k: k["name"] == "☁ "+filter_by_var_named, data))
+            if filter_by_var_named is not None:
+                data = list(filter(lambda k: k["name"] == "☁ "+filter_by_var_named, data))
+            for x in data:
+                x["cloud"] = self
+            return commons.parse_object_list(data, activity.CloudActivity, self._session, "name")
         except Exception as e:
             return exceptions.FetchError(str(e))
 
