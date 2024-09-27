@@ -1,3 +1,5 @@
+"""v2 ready: FilterBot class"""
+
 from .message_events import MessageEvents
 import time
 
