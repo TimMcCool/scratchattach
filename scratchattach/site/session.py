@@ -34,7 +34,7 @@ class Session(BaseSiteComponent):
 
     Attributes:
 
-    :.session_id: The session id associated with the login
+    :.id: The session id associated with the login
 
     :.username: The username associated with the login
 
@@ -59,7 +59,7 @@ class Session(BaseSiteComponent):
         self.update_API = "https://scratch.mit.edu/session"
 
         # Set attributes every Session object needs to have:
-        self.session_id = None
+        self.id = None
         self.username = None
         self.xtoken = None
         self.new_scratcher = None
@@ -73,7 +73,7 @@ class Session(BaseSiteComponent):
         # Base headers and cookies of every session:
         self._headers = headers
         self._cookies = {
-            "scratchsessionsid" : self.session_id,
+            "scratchsessionsid" : self.id,
             "scratchcsrftoken" : "a",
             "scratchlanguage" : "en",
             "accept": "application/json",
@@ -450,7 +450,7 @@ class Session(BaseSiteComponent):
         if project_id is None:
             return None
 
-        return cloud.CloudConnection(username = self._username, session_id = self.session_id, project_id = int(project_id))
+        return cloud.CloudConnection(username = self._username, session_id = self.id, project_id = int(project_id))
 
     def connect_tw_cloud(self, project_id_arg=None, *, project_id=None, purpose="", contact=""):
         return cloud.connect_tw_cloud(project_id_arg, project_id=project_id, purpose=purpose, contact=contact)

@@ -31,7 +31,7 @@ class BaseSiteComponent(ABC):
     def _assert_auth(self):
         if self._session is None:
             raise exceptions.Unauthenticated(
-                "You need to use session.connect_user (NOT get_user) in order to perform this operation.")
+                "You need to use session.connect_xyz (NOT get_xyz) in order to perform this operation.")
 
     def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException):
         """
