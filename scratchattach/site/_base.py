@@ -35,6 +35,7 @@ class BaseSiteComponent(ABC):
     def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException):
         """
         Internal function for making a linked object (authentication kept) based on an identificator (like a project id or username)
+        Class must inherit from BaseSiteComponent
         """
         return commons._get_object(identificator_id, identificator, Class, NotFoundException, self._session)
 

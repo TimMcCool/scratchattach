@@ -72,7 +72,7 @@ class ScratchCloud(BaseCloud):
             logs.reverse()
             clouddata = {}
             for activity in logs:
-                clouddata[activity.name[2:]] = activity.value
+                clouddata[activity.name.replace("☁ ", "")] = activity.value
             return clouddata
         else:
             if self.recorder is None:
@@ -80,6 +80,14 @@ class ScratchCloud(BaseCloud):
                 return super().get_all_vars(recorder_initial_values=initial_values)
             else:
                 return super().get_all_vars()
+
+    def events(self, *, use_logs=False):
+        if self._session is None or use_logs:
+            from ..eventhandlers.cloud_events import CloudLogEvents
+            return CloudLogEvents(self)
+        else:
+            return super.events()
+
 
 class TwCloud(BaseCloud):
 

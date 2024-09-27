@@ -450,6 +450,14 @@ class Session(BaseSiteComponent):
         )
     """
 
+    def become_scratcher_invite(self):
+        """
+        If you are a new Scratcher and have been invited for becoming a Scratcher, this API endpoint will provide more info on the invite.
+        """
+        return requests.get(f"https://api.scratch.mit.edu/users/{self.username}/invites", headers=self._headers, cookies=self._cookies).json()
+
+    # --- Connect classes inheriting from BaseCloud ---
+
     def connect_cloud(self, project_id, *, CloudClass:Type[_base.BaseCloud]=cloud.ScratchCloud) -> Type[_base.BaseCloud]:
         """
         Connects to a cloud (by default Scratch's cloud) as logged in user.
@@ -479,11 +487,7 @@ class Session(BaseSiteComponent):
         """
         return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, _session=self)
 
-    def become_scratcher_invite(self):
-        """
-        If you are a new Scratcher and have been invited for becoming a Scratcher, this API endpoint will provide more info on the invite.
-        """
-        return requests.get(f"https://api.scratch.mit.edu/users/{self.username}/invites", headers=self._headers, cookies=self._cookies).json()
+    # --- Connect classes inheriting from BaseSiteComponent ---
 
     def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException):
         """
@@ -491,6 +495,8 @@ class Session(BaseSiteComponent):
 
         Therefore the _make_linked_object method has to be adjusted
         to get it to work for in the Session class.
+
+        Class must inherit from BaseSiteComponent
         """
         return commons._get_object(identificator_id, identificator, Class, NotFoundException, self)
 
@@ -641,12 +647,14 @@ sess
         except Exception as e:
             raise exceptions.ScrapeError(str(e))
 
+    # --- Connect classes inheriting from BaseEventHandler ---
+
     def connect_message_events(self, *, update_interval=2):
+        # shortcut for connect_linked_user().message_events()
         return message_events.MessageEvents(user.User(username=self.username, _session=self), update_interval=update_interval)
 
     def connect_filterbot(self, *, log_deletions=True):
         return filterbot.Filterbot(user.User(username=self.username, _session=self), log_deletions=log_deletions)
-
 
 # ------ #
 

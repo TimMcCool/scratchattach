@@ -102,6 +102,10 @@ class BaseCloud(ABC):
 
     def disconnect(self):
         self.active_connection = False
+        if self.recorder is not None:
+            self.recorder.stop()
+            self.recorder.source_cloud.disconnect()
+            self.recorder = None
         try:
             self.websocket.close()
         except Exception:
@@ -177,3 +181,7 @@ class BaseCloud(ABC):
             while not (self.recorder.cloud_values != {} or start_time < time.time() -5):
                 time.sleep(0.01)
         return self.recorder.get_all_vars()
+
+    def events(self):
+        from ..eventhandlers.cloud_events import CloudEvents
+        return CloudEvents(self)
