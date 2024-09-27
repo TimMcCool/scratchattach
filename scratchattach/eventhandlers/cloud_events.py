@@ -26,7 +26,7 @@ class CloudEvents(BaseEventHandler):
             if self.running is False:
                 return
             try:
-                data = self.source_cloud.websocket.recv().split('\n')
+                data = self.source_cloud.websocket.recv().split('\n')   
                 result = []
                 for i in data:
                     try:
@@ -37,7 +37,6 @@ class CloudEvents(BaseEventHandler):
                         if "on_"+_a.type in self._events:
                             self.call_event("on_"+_a.type, [_a])
                     except Exception as e:
-                        print("DEBUG cloud events parse error", e)
                         pass
             except Exception:
                 time.sleep(0.1) # cooldown

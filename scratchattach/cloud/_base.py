@@ -165,7 +165,7 @@ class BaseCloud(ABC):
             self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
             self.recorder.start()
             start_time = time.time()
-            while not (self.recorder.received_first_msg or start_time < time.time() -5):
+            while not (self.recorder.cloud_values != {} or start_time < time.time() -5):
                 time.sleep(0.01)
         return self.recorder.get_var(var)
 
@@ -174,6 +174,6 @@ class BaseCloud(ABC):
             self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
             self.recorder.start()
             start_time = time.time()
-            while not (self.recorder.received_first_msg or start_time < time.time() -5):
+            while not (self.recorder.cloud_values != {} or start_time < time.time() -5):
                 time.sleep(0.01)
         return self.recorder.get_all_vars()
