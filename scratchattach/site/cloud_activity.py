@@ -36,6 +36,9 @@ class CloudActivity(BaseSiteComponent):
     def update(self):
         return False # Objects of this type cannot be update
     
+    def __eq__(self, activity2):
+        return self.user == activity2.user and self.type == activity2.type and self.timestamp == activity2.timestamp and self.value == activity2.value and self.name == activity2.name
+    
     def _update_from_dict(self, data) -> bool:
         try: self.name = data["name"]
         except Exception: pass

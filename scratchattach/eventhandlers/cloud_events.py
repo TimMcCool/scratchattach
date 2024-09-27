@@ -65,12 +65,11 @@ class CloudLogEvents(BaseEventHandler):
                 return
             try:
                 data = self.source_cloud.logs(limit=25)
-                if data != self.old_data:
-                    for _a in data:
-                        if _a in self.old_data:
-                            break
-                        if "on_"+_a.type in self._events:
-                            self.call_event("on_"+_a.type, [_a])
+                for _a in data:
+                    if _a in self.old_data:
+                        break
+                    if "on_"+_a.type in self._events:
+                        self.call_event("on_"+_a.type, [_a])
                 self.old_data = data
             except Exception:
                 pass
