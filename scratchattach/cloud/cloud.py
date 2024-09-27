@@ -1,7 +1,7 @@
 #----- Cloud interactions
 import websocket
 import json
-import requests
+from ..utils.commons import Requests as requests
 from threading import Thread
 import time
 from ..utils import exceptions

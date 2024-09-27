@@ -1,7 +1,7 @@
 """v2 ready: Session class and login function"""
 
 import json
-import requests
+from ..utils.commons import Requests as requests
 import random
 
 from ..eventhandlers import message_events

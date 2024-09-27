@@ -1,7 +1,7 @@
 """v2 ready: Studio class"""
 
 import json
-import requests
+from ..utils.commons import Requests as requests
 import random
 from . import user, comment, project, activity
 from ..utils import exceptions, commons

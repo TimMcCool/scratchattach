@@ -2,7 +2,7 @@
 
 import json
 import re
-import requests
+from ..utils.commons import Requests as requests
 
 from ..utils import commons
 

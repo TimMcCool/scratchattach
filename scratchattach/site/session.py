@@ -2,7 +2,7 @@
 
 import json
 import re
-import requests
+from ..utils.commons import Requests as requests
 import warnings
 import pathlib
 import hashlib

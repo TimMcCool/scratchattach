@@ -3,7 +3,7 @@
 import json
 import random
 import base64
-import requests
+from ..utils.commons import Requests as requests
 import time
 from . import user, comment, studio
 from .. import exceptions

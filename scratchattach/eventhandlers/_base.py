@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-import requests
+from ..utils.commons import Requests as requests
 from threading import Thread
 from ..utils import exceptions
 import traceback

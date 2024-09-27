@@ -1,6 +1,6 @@
 """v2 ready: ForumTopic and ForumPost classes"""
 
-import requests
+from ..utils.commons import Requests as requests
 from . import user
 from ..utils.commons import headers
 from ..utils import exceptions, commons
