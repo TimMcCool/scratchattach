@@ -112,5 +112,4 @@ class Activity(BaseSiteComponent):
                 _c = user.User(username=self.comment_obj_title, _session=self._session).comment_by_id(self.comment_id)
             if self.comment_type == 2:
                 _c = user.User(id=self.comment_obj_id, _session=self._session).comment_by_id(self.comment_id)          
-            _c.update()
             return _c
