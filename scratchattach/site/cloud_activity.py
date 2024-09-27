@@ -34,9 +34,11 @@ class CloudActivity(BaseSiteComponent):
         self.__dict__.update(entries)
 
     def update(self):
-        return False # Objects of this type cannot be update
+        # Objects of this type cannot be update
+        return False
     
     def __eq__(self, activity2):
+        # CloudLogEvents needs to check if two activites are equal (to finde new ones), therefore CloudActivity objects need to be comparable
         return self.user == activity2.user and self.type == activity2.type and self.timestamp == activity2.timestamp and self.value == activity2.value and self.name == activity2.name
     
     def _update_from_dict(self, data) -> bool:
