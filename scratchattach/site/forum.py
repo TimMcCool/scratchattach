@@ -349,22 +349,26 @@ def get_topic_list(category_id, *, page=0):
     except Exception as e:
         raise exceptions.BadRequest("Invalid category id")
 
-    topics = soup.find_all('tr')
-    topics.pop(0)
-    return_topics = []
+    try:
+        topics = soup.find_all('tr')
+        topics.pop(0)
+        return_topics = []
 
-    for topic in topics:
-        title_link = topic.find('a')
-        title = title_link.text.strip()
-        topic_id = title_link['href'].split('/')[-2]
+        for topic in topics:
+            title_link = topic.find('a')
+            title = title_link.text.strip()
+            topic_id = title_link['href'].split('/')[-2]
 
-        columns = topic.find_all('td')
-        columns = [column.text for column in columns]
-        if len(columns) == 1:
-            # This is a sticky topic -> Skip it
-            continue
+            columns = topic.find_all('td')
+            columns = [column.text for column in columns]
+            if len(columns) == 1:
+                # This is a sticky topic -> Skip it
+                continue
 
-        last_updated = columns[3].split(" ")[0] + " " + columns[3].split(" ")[1]
+            last_updated = columns[3].split(" ")[0] + " " + columns[3].split(" ")[1]
 
-        return_topics.append(ForumTopic(id=int(topic_id), title=title, category_name=category_name, last_updated=last_updated, reply_count=int(columns[1]), view_count=int(columns[2])))
-    return return_topics
+            return_topics.append(ForumTopic(id=int(topic_id), title=title, category_name=category_name, last_updated=last_updated, reply_count=int(columns[1]), view_count=int(columns[2])))
+        return return_topics
+    except Exception as e:
+        raise exceptions.ScrapeError(str(e))
+
