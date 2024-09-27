@@ -110,16 +110,19 @@ class Session(BaseSiteComponent):
         # backwards compatibility with v1
         return self.connect_linked_user() # To avoid inconsistencies with "connect" and "get", this function was renamed
 
-    def messages(self, *, limit=40, offset=0):
+    def messages(self, *, limit=40, offset=0, date_limit=None):
         '''
         Returns the messages.
 
         Returns:
             list<dict>: List that contains all messages as dicts.
         '''
+        add_params = ""
+        if date_limit is not None:
+            add_params = f"&dateLimit={date_limit}"
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/messages",
-            limit = limit, offset = offset, headers = self._headers, cookies = self._cookies
+            limit = limit, offset = offset, headers = self._headers, cookies = self._cookies, add_params=add_params
         )
         return commons.parse_object_list(data, activity.Activity, self)
 
@@ -150,22 +153,25 @@ class Session(BaseSiteComponent):
 
     # Front-page-related stuff:
 
-    def feed(self, *, limit=20, offset=0):
+    def feed(self, *, limit=20, offset=0, date_limit=None):
         '''
         Returns the "What's happening" section (frontpage).
 
         Returns:
             list<dict>: List that contains all "What's happening" entries as dicts
         '''
+        add_params = ""
+        if date_limit is not None:
+            add_params = f"&dateLimit={date_limit}"
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/following/users/activity",
-            limit = limit, offset = offset, headers = self._headers, cookies = self._cookies
+            limit = limit, offset = offset, headers = self._headers, cookies = self._cookies, add_params=add_params
         )
         return commons.parse_object_list(data, activity.Activity, self)
 
-    def get_feed(self, *, limit=20, offset=0):
+    def get_feed(self, *, limit=20, offset=0, date_limit=None):
         # for more consistent names, this method was renamed
-        return self.feed(limit=limit, offset=offset) # for backwards compatibility with v1
+        return self.feed(limit=limit, offset=offset, date_limit=date_limit) # for backwards compatibility with v1
 
     def loved_by_followed_users(self, *, limit=40, offset=0):
         '''

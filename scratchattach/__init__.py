@@ -1,4 +1,4 @@
-# v2 ready
+"""v2 ready: Other Scratch API-related functions"""
 
 from .cloud.cloud import *
 from .site.user import *
@@ -11,6 +11,8 @@ from .utils.encoder import *
 from .utils import commons
 from .site.comment import *
 from .eventhandlers.message_events import MessageEvents
+
+# --- Front page ---
 
 def get_news(*, limit=10, offset=0):
     return commons.api_iterative("https://api.scratch.mit.edu/news", limit = limit, offset = offset)
@@ -39,6 +41,8 @@ def curated_projects():
 def design_studio_projects():
     return featured_data()["scratch_design_studio"]
 
+# --- Statistics ---
+
 def total_site_stats():
     data = requests.get("https://scratch.mit.edu/statistics/data/daily/").json()
     data.pop("_TS")
@@ -59,8 +63,7 @@ def age_distribution():
         return_data[value["x"]] = value["y"]
     return return_data
 
-def get_health():
-    return requests.get("https://api.scratch.mit.edu/health").json()
+# --- CSRF Token Generation API ---
 
 def get_csrf_token():
     """
@@ -72,3 +75,20 @@ def get_csrf_token():
     return requests.get(
         "https://scratch.mit.edu/csrf_token/"
     ).headers["set-cookie"].split(";")[3][len(" Path=/, scratchcsrftoken="):]
+
+# --- Various other api.scratch.mit.edu API endpoints ---
+
+def get_health():
+    return requests.get("https://api.scratch.mit.edu/health").json()
+
+def get_total_project_count() -> int:
+    return requests.get("https://api.scratch.mit.edu/projects/count/all").json()["count"]
+
+def check_username(username):
+    return requests.get(f"https://api.scratch.mit.edu/accounts/checkusername/{username}").json()["msg"]
+
+def check_password(password):
+    return requests.post("https://api.scratch.mit.edu/accounts/checkpassword/", json={"password":password}).json()["msg"]
+
+def check_username(username):
+    return requests.get(f"https://api.scratch.mit.edu/accounts/checkusername/{username}").json()["msg"]

@@ -350,6 +350,32 @@ class Studio(BaseSiteComponent):
             ).json()
         except Exception:
             raise (exceptions.Unauthorized)
+    
+    def transfer_ownership(self, new_owner, *, password):
+        """
+        Makes another Scratcher studio host. You need to specify your password to do this.
+        
+        Arguments:
+            new_owner (str): Username of new host
+
+        Keyword arguments:
+            password (str): The password of your Scratch account
+        
+        Warning:
+            This action is irreversible!
+        """
+        self._assert_auth()
+        try:
+            return requests.put(
+                f"https://api.scratch.mit.edu/studios/{self.id}/transfer/{new_owner}",
+                headers=self._headers,
+                cookies=self._cookies,
+                timeout=10,
+                json={"password":password}
+            ).json()
+        except Exception:
+            raise (exceptions.Unauthorized)
+    
 
     def leave(self):
         """
@@ -505,9 +531,12 @@ class Studio(BaseSiteComponent):
         )
         self.comments_allowed = not self.comments_allowed
 
-    def activity(self, *, limit=40, offset=0):
+    def activity(self, *, limit=40, offset=0, date_limit=None):
+        add_params = ""
+        if date_limit is not None:
+            add_params = f"&dateLimit={date_limit}"
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/studios/{self.id}/activity", limit=limit, offset=offset)
+            f"https://api.scratch.mit.edu/studios/{self.id}/activity", limit=limit, offset=offset, add_params=add_params)
         return commons.parse_object_list(response, activity.Activity, self._session)
 
     def accept_invite(self):
