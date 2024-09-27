@@ -42,7 +42,7 @@ class CloudActivity(BaseSiteComponent):
         except Exception: pass
         try: self.value = data["value"]
         except Exception: pass
-        try: self.username = data["user"]
+        try: self.user = data["user"]
         except Exception: pass
         try: self.timestamp = data["timestamp"]
         except Exception: pass
@@ -50,15 +50,17 @@ class CloudActivity(BaseSiteComponent):
         except Exception: pass
         try: self.type = data["method"]
         except Exception: pass
+        try: self.cloud = data["cloud"]
+        except Exception: pass
 
-    def load_username_and_timestamp(self):
+    def load_log_data(self):
         if self.cloud is None:
             print("Warning: There aren't cloud logs available for this cloud, therefore the user and exact timestamp can't be loaded")
         else:
             if hasattr(self.cloud, "logs"):
                 logs = self.cloud.logs(filter_by_var_named=self.var)
                 activity = list(filter(lambda x: x.value == self.value and x.timestamp < self.timestamp, logs))
-                self.username = activity.username
+                self.user = activity.user
                 self.timestamp = activity.timestamp
                 return True
             else:
