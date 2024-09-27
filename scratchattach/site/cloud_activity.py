@@ -49,7 +49,7 @@ class CloudActivity(BaseSiteComponent):
         except Exception: pass
         try: self.timestamp = data["timestamp"]
         except Exception: pass
-        try: self.type = data["verb"]
+        try: self.type = data["verb"].replace("_var","")
         except Exception: pass
         try: self.type = data["method"]
         except Exception: pass

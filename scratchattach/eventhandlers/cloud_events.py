@@ -73,8 +73,7 @@ class CloudLogEvents(BaseEventHandler):
                             self.call_event("on_"+_a.type, [_a])
                 self.old_data = data
             except Exception:
-                time.sleep(0.1) # cooldown
-                self.source_cloud.connect()
+                pass
             time.sleep(self.update_interval)
 
 
