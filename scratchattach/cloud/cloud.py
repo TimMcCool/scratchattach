@@ -13,8 +13,14 @@ class ScratchCloud(BaseCloud):
         
         # Optional attributes
         self.length_limit = 256
-        self.cookie = "scratchsessionsid=" + self._session.id + ";"
-        self.origin = "https://scratch.mit.edu"
+        if self._session is not None:
+            self.username = self._session.username
+            self.cookie = "scratchsessionsid=" + self._session.id + ";"
+            self.origin = "https://scratch.mit.edu"
+
+            # Connect to cloud websocket
+            self.connect()
+
 
     def connect(self):
         self._assert_auth() # Connecting to Scratch's cloud websocket requires a login to the Scratch website
@@ -42,11 +48,8 @@ class TwCloud(BaseCloud):
             purpose_string = f" (Purpose:{purpose}; Contact:{contact})"
         self.header = {"User-Agent":f"scratchattach/2.0.0{purpose_string}"}
 
-    def connect(self):
-        super().connect()
-
-    def set_var(self, variable, value):
-        super().set_var(variable, value)
+        # Connect to cloud websocket
+        self.connect()
 
 def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> Type[BaseCloud]:
     """

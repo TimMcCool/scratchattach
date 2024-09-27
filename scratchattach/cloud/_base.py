@@ -31,6 +31,8 @@ class BaseCloud(ABC):
 
     :self.length_limit: Length limit for cloud variable values. Defaults to 100000
 
+    :self.username: The username to send during handshake. Defaults to "scratchattach"
+
     :self.header: The header to send. Defaults to None
     
     :self.cookie: The cookie to send. Defaults to None 
@@ -53,45 +55,60 @@ class BaseCloud(ABC):
         self.ws_timeout = 3 # Timeout for send operations (after the timeout, the connection will be renewed and the operation will be retried 3 times)
         self.allow_non_numeric = False
         self.length_limit = 100000
+        self.username = "scratchattach"
         self.header = None
         self.cookie = None
         self.origin = None
+        self.print_connect_message = False
 
     def _assert_auth(self):
         if self._session is None:
             raise exceptions.Unauthenticated(
                 "You need to use session.connect_cloud (NOT get_cloud) in order to perform this operation.")
 
-    def send_packet(self, packet):
+    def _send_packet(self, packet):
         self.websocket.send(json.dumps(packet) + "\n")
+
+    def _handshake(self):
+        packet = {"method": "handshake", "user": self.username, "project_id": self.project_id}
+        try:
+            self._send_packet(packet)
+        except Exception:
+            self.connect()
+            try:
+                self._send_packet(packet)
+            except Exception:
+                self.connect()
+                try:
+                    self._send_packet(packet)
+                except Exception:
+                    raise exceptions.ConnectionError("Handshake failed three times in a row")
 
     def connect(self):
         self.websocket = websocket.WebSocket()
         self.websocket.connect(
             self.cloud_host,
-            cookie=self.cookie,
-            origin=self.origin,
+            #cookie=self.cookie,
+            #origin=self.origin,
             enable_multithread=True,
             timeout = self.ws_timeout,
             header = self.header
         )
+        self._handshake()
+        self.active_connection = True
         if self.print_connect_message:
             print("Connected to cloud server ", self.cloud_host)
 
-    def handshake(self):
-        packet = {"method": "handshake", "user": self._session.username, "project_id": self.project_id}
+    def disconnect(self):
+        self.active_connection = False
         try:
-            self.send_packet(packet)
+            self.websocket.close()
         except Exception:
-            self.connect()
-            try:
-                self.send_packet(packet)
-            except Exception:
-                self.connect()
-                try:
-                    self.send_packet(packet)
-                except Exception:
-                    raise exceptions.ConnectionError("Handshake failed three times in a row")
+            pass
+    
+    def reconnect(self):
+        self.disconnect()
+        self.connect()
 
     def set_var(self, variable, value):
         """
@@ -101,6 +118,8 @@ class BaseCloud(ABC):
             variable (str): The name of the cloud variable that should be set (provided without the cloud emoji)
             value (str): The value the cloud variable should be set to
         """
+        if not isinstance(variable, str):
+            raise ValueError("cloud var name must be a string")
         if self.active_connection:
             variable = variable.replace("☁ ", "")
             if not (value in [True, False, float('inf'), -float('inf')]):
@@ -122,24 +141,21 @@ class BaseCloud(ABC):
                 "method": "set",
                 "name": "☁ " + variable,
                 "value": value,
-                "user": self._username,
+                "user": self.username,
                 "project_id": self.project_id,
             }
             try:
-                self.send_packet(packet)
+                self._send_packet(packet)
             except Exception:
                 self.connect()
                 try:
-                    self.send_packet(packet)
+                    self._send_packet(packet)
                 except Exception:
                     self.connect()
                     try:
-                        self.send_packet(packet)
+                        self._send_packet(packet)
                     except Exception:
                         raise exceptions.ConnectionError(f"Setting cloud variable {variable} failed three times in a row")
             self._ratelimited_until = time.time()
         else:
             print("Warning: The cloud variable can't be set because there is no active connection.\nCall cloud.connect() before setting the cloud var.") 
-
-
-        
