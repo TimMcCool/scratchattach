@@ -2,10 +2,11 @@ from abc import ABC, abstractmethod
 import requests
 from threading import Thread
 from ..utils import exceptions
+import traceback
 
 class BaseEventHandler(ABC):
-
-    def start(self, *, update_interval = 0.1, thread=True):
+            
+    def start(self, *, update_interval = 0.1, thread=True, ignore_exceptions=True):
         """
         Starts the cloud event handler.
 
@@ -14,6 +15,7 @@ class BaseEventHandler(ABC):
             thread (boolean): Whether the event handler should be run in a thread.
         """
         if self.running is False:
+            self.ignore_exceptions = ignore_exceptions
             self.update_interval = update_interval
             self.running = True
             if "on_ready" in self._events:
@@ -24,6 +26,22 @@ class BaseEventHandler(ABC):
             else:
                 self._thread = None
                 self._update()
+    
+    def call_event(self, event_name, args=[]):
+        if event_name in self._events:
+            try:
+                self._events[event_name](*args)
+            except Exception as e:
+                if self.ignore_exceptions:
+                    print(
+                        f"Warning: Caught error in event '{event_name}' - Full error below"
+                    )
+                    try:
+                        traceback.print_exc()
+                    except Exception:
+                        print(e)
+                else:
+                    raise(e)
 
     @abstractmethod
     def _update(self):
