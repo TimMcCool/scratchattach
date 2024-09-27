@@ -484,6 +484,7 @@ sess
     def connect_topic(self, topic_id):
         """
         Gets a forum topic using this session, connects the session to the ForumTopic object to allow authenticated actions
+        Data is up-to-date. Data received from Scratch's RSS feed XML API.
 
         Args:
             topic_id (int): ID of the requested forum topic (can be found in the browser URL bar)
@@ -492,6 +493,58 @@ sess
             scratchattach.forum.ForumTopic: An object that represents the requested forum topic
         """
         return self._make_linked_object("id", int(topic_id), forum.ForumTopic, exceptions.ForumContentNotFound)
+
+
+    def connect_topic_list(self, category_id, *, page=1):
+
+        """
+        Gets the topics from a forum category. Data web-scraped from Scratch's forums UI.
+        Data is up-to-date.
+
+        Args:
+            category_id (str): ID of the forum category
+        
+        Keyword Arguments:
+            page (str): Page of the category topics that should be returned
+
+        Returns:
+            list<scratchattach.forum.ForumTopic>: A list containing the forum topics from the specified category
+        """
+
+        try:
+            response = requests.get(f"https://scratch.mit.edu/discuss/{category_id}/?page={page}", header=self._headers, cookies=self._cookies)
+            soup = BeautifulSoup(response.content, 'html.parser')
+        except Exception as e:
+            raise exceptions.FetchError(str(e))
+
+        try:
+            category_name = soup.find('h4').find("span").get_text()
+        except Exception as e:
+            raise exceptions.BadRequest("Invalid category id")
+
+        try:
+            topics = soup.find_all('tr')
+            topics.pop(0)
+            return_topics = []
+
+            for topic in topics:
+                title_link = topic.find('a')
+                title = title_link.text.strip()
+                topic_id = title_link['href'].split('/')[-2]
+
+                columns = topic.find_all('td')
+                columns = [column.text for column in columns]
+                if len(columns) == 1:
+                    # This is a sticky topic -> Skip it
+                    continue
+
+                last_updated = columns[3].split(" ")[0] + " " + columns[3].split(" ")[1]
+
+                return_topics.append(forum.ForumTopic(_session=self, id=int(topic_id), title=title, category_name=category_name, last_updated=last_updated, reply_count=int(columns[1]), view_count=int(columns[2])))
+            return return_topics
+        except Exception as e:
+            raise exceptions.ScrapeError(str(e))
+
 
     def connect_message_events(self):
         return message_events.MessageEvents(user.User(username=self.username, _session=self))

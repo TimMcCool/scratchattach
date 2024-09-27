@@ -303,7 +303,7 @@ class ForumPost(BaseSiteComponent):
 def get_topic(topic_id):
 
     """
-    Gets a forum topic without logging in.
+    Gets a forum topic without logging in. Data received from Scratch's RSS feed XML API.
 
     Args:
         topic_id (int): ID of the requested forum topic
@@ -320,10 +320,10 @@ def get_topic(topic_id):
     """
     return commons._get_object("id", topic_id, ForumTopic, exceptions.ForumContentNotFound)
 
-def get_topic_list(category_id, *, page=0):
+def get_topic_list(category_id, *, page=1):
 
     """
-    Gets the topics from a forum category without logging in. Data fetched from ScratchDB.
+    Gets the topics from a forum category without logging in. Data web-scraped from Scratch's forums UI.
 
     Args:
         category_id (str): ID of the forum category
@@ -343,7 +343,7 @@ def get_topic_list(category_id, *, page=0):
     """
 
     try:
-        response = requests.get(f"https://scratch.mit.edu/discuss/{category_id}/")
+        response = requests.get(f"https://scratch.mit.edu/discuss/{category_id}/?page={page}")
         soup = BeautifulSoup(response.content, 'html.parser')
     except Exception as e:
         raise exceptions.FetchError(str(e))
