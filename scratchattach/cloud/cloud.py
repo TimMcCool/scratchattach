@@ -4,7 +4,7 @@ from ._base import BaseCloud, CloudActivity
 from typing import Type
 from ..utils.requests import Requests as requests
 from ..utils import exceptions, commons
-from ..site import activity
+from ..site import cloud_activity
 
 class ScratchCloud(BaseCloud):
 
@@ -47,7 +47,7 @@ class ScratchCloud(BaseCloud):
                 data = list(filter(lambda k: k["name"] == "☁ "+filter_by_var_named, data))
             for x in data:
                 x["cloud"] = self
-            return commons.parse_object_list(data, activity.CloudActivity, self._session, "name")
+            return commons.parse_object_list(data, cloud_activity.CloudActivity, self._session, "name")
         except Exception as e:
             return exceptions.FetchError(str(e))
 

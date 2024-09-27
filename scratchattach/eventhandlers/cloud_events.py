@@ -2,7 +2,7 @@
 
 from ..cloud import cloud
 from ._base import BaseEventHandler
-from ..site import activity
+from ..site import cloud_activity
 import time
 import json
 
@@ -30,7 +30,7 @@ class CloudEvents(BaseEventHandler):
                 result = []
                 for i in data:
                     try:
-                        _a = activity.CloudActivity()
+                        _a = cloud_activity.CloudActivity()
                         _a._update_from_dict(json.loads(i))
                         if "on_"+_a.type in self._events:
                             self.call_event("on_"+_a.type, [_a])
