@@ -13,6 +13,7 @@ class CloudEvents(BaseEventHandler):
     def __init__(self, cloud):
         super().__init__()
         self.cloud = cloud
+        self._session = cloud._session
         self.source_cloud = type(cloud)(project_id=cloud.project_id, _session=cloud._session)
         self.source_cloud.ws_timeout = None # No timeout -> allows continous listening
 
@@ -29,7 +30,7 @@ class CloudEvents(BaseEventHandler):
                 result = []
                 for i in data:
                     try:
-                        _a = cloud_activity.CloudActivity(timestamp=time.time()*1000)
+                        _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session)
                         data = json.loads(i)
                         data["name"] = data["name"][2:]
                         _a._update_from_dict(data)
@@ -53,6 +54,7 @@ class CloudLogEvents(BaseEventHandler):
         self.cloud = cloud
         self.source_cloud = cloud
         self.update_interval = update_interval
+        self._session = cloud._session
 
     def _update(self):
         self.old_data = self.source_cloud.logs(limit=25)

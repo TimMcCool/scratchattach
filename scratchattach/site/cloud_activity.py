@@ -70,3 +70,19 @@ class CloudActivity(BaseSiteComponent):
                 print("Warning: There aren't cloud logs available for this cloud, therefore the user and exact timestamp can't be loaded")
         return False
     
+    def actor(self):
+        """
+        Returns the user that performed the cloud activity as scratchattach.user.User object
+        """
+        from ..site import user
+        from ..utils import exceptions
+        return self._make_linked_object("username", self.actor_username, user.User, exceptions.UserNotFound)
+
+    def project(self):
+        """
+        Returns the user that performed the cloud activity as scratchattach.user.User object
+        """
+        from ..site import project
+        from ..utils import exceptions
+        return self._make_linked_object("id", self.cloud.project_id, project.Project, exceptions.ProjectNotFound)
+
