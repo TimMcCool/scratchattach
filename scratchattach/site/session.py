@@ -2,7 +2,6 @@
 
 import json
 import re
-from ..utils.commons import Requests as requests
 import warnings
 import pathlib
 import hashlib
@@ -23,6 +22,8 @@ from . import activity
 from ._base import BaseSiteComponent
 from ..utils.commons import headers, empty_project_json
 from bs4 import BeautifulSoup
+
+from ..utils.requests import Requests as requests
 
 CREATE_PROJECT_USES = []
 

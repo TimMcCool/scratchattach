@@ -2,7 +2,6 @@
 
 import json
 import re
-from ..utils.commons import Requests as requests
 
 from ..utils import commons
 
@@ -15,6 +14,8 @@ from .. import exceptions
 from ._base import BaseSiteComponent
 from ..utils.commons import headers
 from bs4 import BeautifulSoup
+
+from ..utils.requests import Requests as requests
 
 class Comment(BaseSiteComponent):
 

@@ -1,12 +1,13 @@
 """v2 ready: ForumTopic and ForumPost classes"""
 
-from ..utils.commons import Requests as requests
 from . import user
 from ..utils.commons import headers
 from ..utils import exceptions, commons
 from ._base import BaseSiteComponent
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
+
+from ..utils.requests import Requests as requests
 
 class ForumTopic(BaseSiteComponent):
     '''

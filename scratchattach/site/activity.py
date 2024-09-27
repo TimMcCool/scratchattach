@@ -2,7 +2,6 @@
 
 import json
 import re
-from ..utils.commons import Requests as requests
 
 from . import user
 from . import session
@@ -13,6 +12,8 @@ from .. import exceptions
 from ._base import BaseSiteComponent
 from ..utils.commons import headers
 from bs4 import BeautifulSoup
+
+from ..utils.requests import Requests as requests
 
 class Activity(BaseSiteComponent):
 

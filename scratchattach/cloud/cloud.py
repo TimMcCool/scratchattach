@@ -1,12 +1,13 @@
 #----- Cloud interactions
 import websocket
 import json
-from ..utils.commons import Requests as requests
 from threading import Thread
 import time
 from ..utils import exceptions
 import traceback
 import warnings
+
+from ..utils.requests import Requests as requests
 
 class _CloudMixin:
     """

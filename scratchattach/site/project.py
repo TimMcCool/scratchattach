@@ -3,13 +3,14 @@
 import json
 import random
 import base64
-from ..utils.commons import Requests as requests
 import time
 from . import user, comment, studio
 from .. import exceptions
 from ..utils import commons
 from ..utils.commons import empty_project_json, headers
 from ._base import BaseSiteComponent
+
+from ..utils.requests import Requests as requests
 
 CREATE_PROJECT_USES = []
 

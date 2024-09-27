@@ -1,7 +1,6 @@
 """v2 ready: Session class and login function"""
 
 import json
-from ..utils.commons import Requests as requests
 import random
 
 from ..eventhandlers import message_events
@@ -15,6 +14,8 @@ from ..utils.commons import headers
 from ..utils import commons
 from . import comment
 from . import activity
+
+from ..utils.requests import Requests as requests
 
 class User(BaseSiteComponent):
 

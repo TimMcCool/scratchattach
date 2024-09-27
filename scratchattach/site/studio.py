@@ -1,12 +1,13 @@
 """v2 ready: Studio class"""
 
 import json
-from ..utils.commons import Requests as requests
 import random
 from . import user, comment, project, activity
 from ..utils import exceptions, commons
 from ..utils.commons import api_iterative, headers
 from ._base import BaseSiteComponent
+
+from ..utils.requests import Requests as requests
 
 class Studio(BaseSiteComponent):
     """
