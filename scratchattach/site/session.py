@@ -375,18 +375,6 @@ class Session(BaseSiteComponent):
     def connect_tw_cloud(self, project_id_arg=None, *, project_id=None, purpose="", contact=""):
         return cloud.connect_tw_cloud(project_id_arg, project_id=project_id, purpose=purpose, contact=contact)
 
-    def search_posts(self, *, query, order="newest", page=0):
-        try:
-            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/search?q={query}&o={order}&page={page}", timeout=10).json()["posts"]
-            return_data = []
-            for o in data:
-                a = forum.ForumPost(id = o["id"], _session = self)
-                a._update_from_dict(o)
-                return_data.append(a)
-            return return_data
-        except Exception:
-            return []
-
     def upload_asset(self, asset):
         data = asset if isinstance(asset, bytes) else open(asset, "rb").read()
 
@@ -399,36 +387,6 @@ class Session(BaseSiteComponent):
             data=data,
             timeout=10,
         )
-
-    def connect_topic_list(self, category_name, *, page=0, include_deleted=False):
-        '''
-        Gets the topics from a forum category.
-
-        Args:
-            category_name (str): Name of the forum category
-
-        Keyword Arguments:
-            page (str): Page of the category topics that should be returned
-            include_deleted (boolean): Whether deleted topics should be returned too
-
-        Returns:
-            list<scratchattach.forum.ForumTopic>: A list containing the forum topics from the specified category
-        '''
-        category_name.replace(" ", "%20")
-        if include_deleted:
-            filter = 0
-        else:
-            filter = 1
-        try:
-            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/category/topics/{category_name}/{page}?detail=1&filter={filter}", timeout=10).json()
-            return_data = []
-            for topic in data:
-                t = forum.ForumTopic(id = topic["id"], _session=self)
-                t._update_from_dict(topic)
-                return_data.append(t)
-            return return_data
-        except Exception:
-            return None
     """
 
     def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException):

@@ -1,4 +1,4 @@
-#----- Getting forum topics and posts
+"""v2 ready: ForumTopic and ForumPost classes"""
 
 import requests
 from . import user
@@ -21,7 +21,13 @@ class ForumTopic(BaseSiteComponent):
     :.category_name:
 
     :.last_updated:
-    
+
+    Attributes only available if the object was created using scratchattach.get_topic_list or scratchattach.Session.connect_topic_list:
+
+    :.reply_count:
+
+    :.view_count:
+
     :.update(): Updates the attributes
     '''
     def __init__(self, **entries):
@@ -33,6 +39,8 @@ class ForumTopic(BaseSiteComponent):
         # Set attributes every Project object needs to have:
         self._session = None
         self.id = 0
+        self.reply_count = None
+        self.view_count = None
         
         # Update attributes from entries dict:
         self.__dict__.update(entries)
@@ -310,17 +318,16 @@ def get_topic(topic_id):
     """
     return commons._get_object("id", topic_id, ForumTopic, exceptions.ForumContentNotFound)
 
-'''def get_topic_list(category_name, *, page=0):
+def get_topic_list(category_id, *, page=0):
 
     """
     Gets the topics from a forum category without logging in. Data fetched from ScratchDB.
 
     Args:
-        category_name (str): Name of the forum category
+        category_id (str): ID of the forum category
     
     Keyword Arguments:
         page (str): Page of the category topics that should be returned
-        include_deleted (boolean): Whether deleted topics should be returned too
 
     Returns:
         list<scratchattach.forum.ForumTopic>: A list containing the forum topics from the specified category
@@ -331,18 +338,24 @@ def get_topic(topic_id):
         If you want to use methods that require authentication, get the forum topics with :meth:`scratchattach.session.Session.connect_topic_list` instead.
     """
 
-    category_name = category_name.replace(" ", "%20")
-    if include_deleted:
-        filter = 0
-    else:
-        filter = 1
-    try:
-        data = requests.get(f"https://scratchdb.lefty.one/v3/forum/category/topics/{category_name}/{page}?detail=1&filter={filter}", timeout=10).json()
-        return_data = []
-        for topic in data:
-            t = ForumTopic(id = topic["id"])
-            t._update_from_dict(topic)
-            return_data.append(t)
-        return return_data
-    except Exception:
-        return None'''
+    response = requests.get(f"https://scratch.mit.edu/discuss/{category_id}/", headers=headers)
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    category_name = soup.find('h4').find("span").get_text()
+
+    topics = soup.find_all('tr')
+    topics.pop(0)
+    return_topics = []
+
+    for topic in topics:
+        title_link = topic.find('a')
+        title = title_link.text.strip()
+        topic_id = title_link['href'].split('/')[-2]
+
+        columns = topic.find_all('td')
+        columns = [column.text for column in columns]
+
+        last_updated = columns[3].split(" ")[0] + " " + columns[3].split(" ")[1]
+
+        return_topics.append(ForumTopic(id=int(topic_id), title=title, category_name=category_name, last_updated=last_updated, reply_count=int(columns[1]), view_count=int(columns[2])))
+    return return_topics
