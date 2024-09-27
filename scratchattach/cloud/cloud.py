@@ -17,11 +17,11 @@ class ScratchCloud(BaseCloud):
         self.origin = "https://scratch.mit.edu"
 
     def connect(self):
-        self.assert_auth() # Connecting to Scratch's cloud websocket requires a login to the Scratch website
+        self._assert_auth() # Connecting to Scratch's cloud websocket requires a login to the Scratch website
         super().connect()
 
     def set_var(self, variable, value):
-        self.assert_auth() # Setting a cloud var requires a login to the Scratch website
+        self._assert_auth() # Setting a cloud var requires a login to the Scratch website
         super().set_var(variable, value)
 
 class TwCloud(BaseCloud):
@@ -43,11 +43,9 @@ class TwCloud(BaseCloud):
         self.header = {"User-Agent":f"scratchattach/2.0.0{purpose_string}"}
 
     def connect(self):
-        self.assert_auth() # Connecting to Scratch's cloud websocket requires a login to the Scratch website
         super().connect()
 
     def set_var(self, variable, value):
-        self.assert_auth() # Setting a cloud var requires a login to the Scratch website
         super().set_var(variable, value)
 
 def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> Type[BaseCloud]:
@@ -68,6 +66,7 @@ def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> Type[Ba
     Returns:
         Type[scratchattach.cloud.BaseCloud]: An object representing the cloud of a project. Can be of any class inheriting from BaseCloud.
     """
+    print("Warning: To set Scratch cloud variables, use session.connect_cloud instead of get_cloud")
     return CloudClass(project_id=project_id)
 
 def get_scratch_cloud(project_id, *, purpose="", contact=""):
@@ -81,6 +80,7 @@ def get_scratch_cloud(project_id, *, purpose="", contact=""):
     Returns:
         scratchattach.cloud.ScratchCloud: An object representing the Scratch cloud of a project.
     """
+    print("Warning: To set Scratch cloud variables, use session.connect_scratch_cloud instead of get_scratch_cloud")
     return ScratchCloud(project_id=project_id, purpose=purpose, contact=contact)
 
 def get_tw_cloud(project_id, *, purpose="", contact=""):

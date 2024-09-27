@@ -5,7 +5,7 @@ from .site.user import *
 from .site.session import *
 from .site.project import *
 from .site.studio import *
-from .eventhandlers.cloud_requests import *
+#from .eventhandlers.cloud_requests import *
 from .site.forum import *
 from .utils.encoder import *
 from .utils import commons
