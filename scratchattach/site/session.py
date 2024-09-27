@@ -7,6 +7,7 @@ import pathlib
 import hashlib
 import time
 import random
+from typing import Type
 
 from . import forum
 
@@ -435,26 +436,6 @@ class Session(BaseSiteComponent):
             timeout = 10,
         ).json()''
 
-    def connect_cloud(self, project_id_arg=None, *, project_id=None):
-        '''
-        Connects to the cloud variables of a project.
-
-        Args:
-            project_id (str): ID of the project that will be connected to.
-
-        Returns:
-            scratchattach.cloud.CloudConnection: An object that represents the created connection and allows you to set cloud variables
-        '''
-        if project_id is None:
-            project_id = project_id_arg
-        if project_id is None:
-            return None
-
-        return cloud.CloudConnection(username = self._username, session_id = self.id, project_id = int(project_id))
-
-    def connect_tw_cloud(self, project_id_arg=None, *, project_id=None, purpose="", contact=""):
-        return cloud.connect_tw_cloud(project_id_arg, project_id=project_id, purpose=purpose, contact=contact)
-
     def upload_asset(self, asset):
         data = asset if isinstance(asset, bytes) else open(asset, "rb").read()
 
@@ -468,6 +449,35 @@ class Session(BaseSiteComponent):
             timeout=10,
         )
     """
+
+    def connect_cloud(self, project_id, *, CloudClass:Type[cloud.BaseCloud]=cloud.ScratchCloud) -> Type[cloud.BaseCloud]:
+        """
+        Connects to a cloud (by default Scratch's cloud) as logged in user.
+
+        Args:
+            project_id:
+        
+        Keyword arguments:
+            CloudClass: The class that the returned object should be of. By default this class is scratchattach.cloud.ScratchCloud.
+
+        Returns:
+            Type[scratchattach.cloud.BaseCloud]: An object representing the cloud of a project. Can be of any class inheriting from BaseCloud.
+        """
+        return CloudClass(project_id=project_id, _session=self)
+
+    def connect_scratch_cloud(self, project_id, *, purpose="", contact=""):
+        """
+        Returns:
+            scratchattach.cloud.ScratchCloud: An object representing the Scratch cloud of a project.
+        """
+        return cloud.ScratchCloud(project_id=project_id, purpose=purpose, contact=contact, _session=self)
+
+    def connect_tw_cloud(self, project_id, *, purpose="", contact=""):
+        """
+        Returns:
+            scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
+        """
+        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, _session=self)
 
     def become_scratcher_invite(self):
         """

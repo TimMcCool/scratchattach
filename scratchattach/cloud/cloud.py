@@ -1,4 +1,5 @@
 from ._base import BaseCloud
+from typing import Type
 
 class ScratchCloud(BaseCloud):
 
@@ -48,3 +49,43 @@ class TwCloud(BaseCloud):
     def set_var(self, variable, value):
         self.assert_auth() # Setting a cloud var requires a login to the Scratch website
         super().set_var(variable, value)
+
+def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> Type[BaseCloud]:
+    """
+    Connects to a cloud (by default Scratch's cloud) as logged out user.
+
+    Warning:
+        Since this method doesn't connect a login / session to the returned object, setting Scratch cloud variables won't be possible with it.
+
+        To set Scratch cloud variables, use `scratchattach.Session.connect_scratch_cloud` instead.
+
+    Args:
+        project_id:
+    
+    Keyword arguments:
+        CloudClass: The class that the returned object should be of. By default this class is scratchattach.cloud.ScratchCloud.
+
+    Returns:
+        Type[scratchattach.cloud.BaseCloud]: An object representing the cloud of a project. Can be of any class inheriting from BaseCloud.
+    """
+    return CloudClass(project_id=project_id)
+
+def get_scratch_cloud(project_id, *, purpose="", contact=""):
+    """
+    Warning:
+        Since this method doesn't connect a login / session to the returned object, setting Scratch cloud variables won't be possible with it.
+
+        To set Scratch cloud variables, use `scratchattach.Session.connect_scratch_cloud` instead.
+
+        
+    Returns:
+        scratchattach.cloud.ScratchCloud: An object representing the Scratch cloud of a project.
+    """
+    return ScratchCloud(project_id=project_id, purpose=purpose, contact=contact)
+
+def get_tw_cloud(project_id, *, purpose="", contact=""):
+    """
+    Returns:
+        scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
+    """
+    return TwCloud(project_id=project_id, purpose=purpose, contact=contact)
