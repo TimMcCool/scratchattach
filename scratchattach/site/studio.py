@@ -164,6 +164,9 @@ class Studio(BaseSiteComponent):
         Keyword Arguments:
             parent_id: ID of the comment you want to reply to. If you don't want to mention a user, don't put the argument.
             commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
+        
+        Returns:
+            scratchattach.comment.Comment: The posted comment as Comment object.
         """
         self._assert_auth()
         data = {

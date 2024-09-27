@@ -234,7 +234,7 @@ class Session(BaseSiteComponent):
         )
         return commons.parse_object_list(data, project.Project, self)"""
 
-    # Search:
+    # --- Search ---
 
     def search_projects(self, *, query="", mode="trending", language="en", limit=40, offset=0):
         '''
@@ -288,6 +288,8 @@ class Session(BaseSiteComponent):
         return commons.parse_object_list(response, studio.Studio, self)
 
 
+    # --- Create project API ---
+
     def create_project(self, *, title=None, project_json=empty_project_json, parent_id=None): # not working
         """
         Creates a project on the Scratch website.
@@ -319,6 +321,7 @@ class Session(BaseSiteComponent):
         response = requests.post('https://projects.scratch.mit.edu/', params=params, cookies=self._cookies, headers=self._headers, json=project_json).json()
         return self.connect_project(response["content-name"])
 
+    # --- My stuff page ---
 
     def mystuff_projects(self, filter_arg="all", *, page=1, sort_by="", descending=True):
         '''
@@ -333,7 +336,7 @@ class Session(BaseSiteComponent):
             descending (boolean): Determines if the element with the highest key value (the key is specified in the sort_by argument) should be returned first. Defaults to True.
 
         Returns:
-            list<dict>: A list with the projects from the "My Stuff" page, each project is represented by a dict.
+            list<scratchattach.project.Project>: A list with the projects from the "My Stuff" page, each project is represented by a Project object.
         '''
         if descending:
             ascsort = ""
@@ -368,11 +371,40 @@ class Session(BaseSiteComponent):
         except Exception:
             raise(exceptions.FetchError)
 
-    def get_mystuff_projects(self, ordering, *, page=1, sort_by="", descending=True):
-        '''
-        Outdated name for :meth:`scratchattach.session.Session.mystuff_projects`. See the documentation of this function.
-        '''
-        return self.mystuff_projects(ordering, page=page, sort_by=sort_by, descending=descending)
+    def mystuff_studios(self, filter_arg="all", *, page=1, sort_by="", descending=True):
+        if descending:
+            ascsort = ""
+            descsort = sort_by
+        else:
+            ascsort = sort_by
+            descsort = ""
+        try:
+            targets = requests.get(
+                f"https://scratch.mit.edu/site-api/galleries/{filter_arg}/?page={page}&ascsort={ascsort}&descsort={descsort}",
+                headers = headers,
+                cookies = self._cookies,
+                timeout = 10,
+            ).json()
+            studios = []
+            for target in targets:
+                studios.append(studio.Studio(
+                    id = target["pk"], _session=self,
+                    title = target["fields"]["title"],
+                    description = None,
+                    host_id = target["fields"]["owner"]["pk"],
+                    host_name = target["fields"]["owner"]["username"],
+                    open_to_all = None, comments_allowed=None,
+                    image_url = "https:"+target["fields"]["thumbnail_url"],
+                    created = target["fields"]["datetime_created"],
+                    modified = target["fields"]["datetime_modified"],
+                    follower_count = None, manager_count = None,
+                    curator_count = target["fields"]["curators_count"],
+                    project_count = target["fields"]["projecters_count"]
+                ))
+        except Exception:
+            raise(exceptions.FetchError)
+
+        
 
     """ WIP
     def backpack(self,limit=20, offset=0):
