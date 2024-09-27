@@ -160,17 +160,17 @@ class BaseCloud(ABC):
                     raise exceptions.ConnectionError(f"Setting cloud variable {variable} failed three times in a row")
         self._ratelimited_until = time.time()
 
-    def get_var(self, var):
+    def get_var(self, var, *, recorder_initial_values={}):
         if self.recorder is None:
-            self.recorder = cloud_recorder.CloudRecorder(self)
+            self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
             self.recorder.start()
             while not self.recorder.ready:
                 time.sleep(0.01)
         return self.recorder.get_var(var)
 
-    def get_all_vars(self):
+    def get_all_vars(self, *, recorder_initial_values={}):
         if self.recorder is None:
-            self.recorder = cloud_recorder.CloudRecorder(self)
+            self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
             self.recorder.start()
             while not self.recorder.ready:
                 time.sleep(0.01)

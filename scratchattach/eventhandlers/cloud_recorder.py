@@ -4,12 +4,14 @@ from .cloud_events import CloudEvents
 
 class CloudRecorder(CloudEvents):
 
-    def __init__(self, cloud, initial_values={}):
+    def __init__(self, cloud, *, initial_values={}):
         super().__init__(cloud)
         self.cloud_values = initial_values
         self.event(self.on_set)
 
     def get_var(self, var):
+        if not var in self.cloud_value:
+            return None
         return self.cloud_values[var]
     
     def get_all_vars(self):
