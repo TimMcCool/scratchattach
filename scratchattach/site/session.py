@@ -401,6 +401,7 @@ class Session(BaseSiteComponent):
                     curator_count = target["fields"]["curators_count"],
                     project_count = target["fields"]["projecters_count"]
                 ))
+            return studios
         except Exception:
             raise(exceptions.FetchError)
 
