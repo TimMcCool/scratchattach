@@ -733,7 +733,7 @@ def search_projects(*, query="", mode="trending", language="en", limit=40, offse
         raise ValueError("The query can't be empty for search")
     response = commons.api_iterative(
         f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
-    return commons.parse_object_list(response, Project, self)
+    return commons.parse_object_list(response, Project)
 
 def explore_projects(*, query="*", mode="trending", language="en", limit=40, offset=0):
     '''
@@ -753,4 +753,4 @@ def explore_projects(*, query="*", mode="trending", language="en", limit=40, off
         raise ValueError("The query can't be empty for search")
     response = commons.api_iterative(
         f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
-    return commons.parse_object_list(response, Project, self)
+    return commons.parse_object_list(response, Project)
