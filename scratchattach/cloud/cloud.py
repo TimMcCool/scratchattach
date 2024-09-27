@@ -1,6 +1,6 @@
 """v2 ready: ScratchCloud, TwCloud and CustomCloud classes"""
 
-from ._base import BaseCloud, CloudActivity
+from ._base import BaseCloud
 from typing import Type
 from ..utils.requests import Requests as requests
 from ..utils import exceptions, commons

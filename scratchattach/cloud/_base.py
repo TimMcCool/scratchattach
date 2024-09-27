@@ -43,7 +43,7 @@ class BaseCloud(ABC):
     :self.print_connect_messages: Whether to print a message on every connect to the cloud server. Defaults to False.
     """
 
-    def __init__(self, *, project_id, _session=None):
+    def __init__(self):
         
         # Internal attributes
         self._ratelimited_until = 0
