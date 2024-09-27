@@ -16,7 +16,7 @@ from ..utils import commons
 from . import user
 from ..cloud import cloud
 from . import project
-from .. import exceptions
+from ..utils import exceptions
 from . import studio
 from ..eventhandlers import message_events, filterbot
 from . import activity
