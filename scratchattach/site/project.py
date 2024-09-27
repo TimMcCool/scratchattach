@@ -715,7 +715,7 @@ def get_project(project_id):
     """
     return commons._get_object("id", project_id, Project, exceptions.ProjectNotFound)
 
-def search_projects(self, *, query="", mode="trending", language="en", limit=40, offset=0):
+def search_projects(*, query="", mode="trending", language="en", limit=40, offset=0):
     '''
     Uses the Scratch search to search projects.
 
@@ -732,10 +732,10 @@ def search_projects(self, *, query="", mode="trending", language="en", limit=40,
     if not query:
         raise ValueError("The query can't be empty for search")
     response = commons.api_iterative(
-        f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset, add_params=f"&offset={offs}&language={language}&mode={mode}&q={query}")
+        f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
     return commons.parse_object_list(response, Project, self)
 
-def explore_projects(self, *, query="*", mode="trending", language="en", limit=40, offset=0):
+def explore_projects(*, query="*", mode="trending", language="en", limit=40, offset=0):
     '''
     Gets projects from the explore page.
 
@@ -752,5 +752,5 @@ def explore_projects(self, *, query="*", mode="trending", language="en", limit=4
     if not query:
         raise ValueError("The query can't be empty for search")
     response = commons.api_iterative(
-        f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset, add_params=f"&offset={offs}&language={language}&mode={mode}&q={query}")
+        f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
     return commons.parse_object_list(response, Project, self)
