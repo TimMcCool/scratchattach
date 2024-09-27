@@ -713,6 +713,7 @@ def get_project(project_id):
 
         If you want to use these methods, get the project with :meth:`scratchattach.session.Session.connect_project` instead.
     """
+    print("Warning: For methods that require authentication, use session.connect_project instead of get_project")
     return commons._get_object("id", project_id, Project, exceptions.ProjectNotFound)
 
 def search_projects(*, query="", mode="trending", language="en", limit=40, offset=0):

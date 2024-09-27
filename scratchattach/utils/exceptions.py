@@ -16,7 +16,7 @@ class Unauthenticated(Exception):
     """
 
     def __init__(self, message=""):
-        self.message = "No login / session connected.\n\nThe object on which the method was called was created using scratchattach.get_xyz()\nUse session.connect_xyz() instead (xyz is a placeholder).\n\nMore information: https://scratchattach.readthedocs.io/en/latest/scratchattach.html#scratchattach.exceptions.Unauthenticated"
+        self.message = "No login / session connected.\n\nThe object on which the method was called was created using scratchattach.get_xyz()\nUse session.connect_xyz() instead (xyz is a placeholder for user / project / cloud / ...).\n\nMore information: https://scratchattach.readthedocs.io/en/latest/scratchattach.html#scratchattach.exceptions.Unauthenticated"
         super().__init__(self.message)
     pass
 
