@@ -681,6 +681,12 @@ WW
         except Exception:
             raise (exceptions.FetchError)
 
+    def visibility(self):
+        """
+        Returns info about the project's visibility. Requires authentication.
+        """
+        self._assert_auth()
+        return requests.get(f"https://api.scratch.mit.edu/users/{self._session.username}/projects/{self.id}/visibility").json()
 
 # ------ #
 

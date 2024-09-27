@@ -63,6 +63,18 @@ def age_distribution():
         return_data[value["x"]] = value["y"]
     return return_data
 
+def monthly_comment_activity():
+    return requests.get("https://scratch.mit.edu/statistics/data/monthly/").json()["comment_data"]
+
+def monthly_project_shares():
+    return requests.get("https://scratch.mit.edu/statistics/data/monthly/").json()["project_data"]
+
+def monthly_active_users():
+    return requests.get("https://scratch.mit.edu/statistics/data/monthly/").json()["active_user_data"]
+
+def monthly_activity_trends():
+    return requests.get("https://scratch.mit.edu/statistics/data/monthly/").json()["activity_data"]
+
 # --- CSRF Token Generation API ---
 
 def get_csrf_token():
@@ -90,5 +102,10 @@ def check_username(username):
 def check_password(password):
     return requests.post("https://api.scratch.mit.edu/accounts/checkpassword/", json={"password":password}).json()["msg"]
 
-def check_username(username):
-    return requests.get(f"https://api.scratch.mit.edu/accounts/checkusername/{username}").json()["msg"]
+# --- April fools endpoints ---
+
+def aprilfools_get_counter() -> int:
+    return requests.get("https://api.scratch.mit.edu/surprise")["surprise"]
+
+def aprilfools_increment_counter() -> int:
+    return requests.post("https://api.scratch.mit.edu/surprise")["surprise"]

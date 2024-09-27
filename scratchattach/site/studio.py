@@ -547,6 +547,18 @@ class Studio(BaseSiteComponent):
             cookies=self._cookies,
             timeout=10,
         ).json()
+    
+    def your_role(self):
+        """
+        Returns a dict with information about your role in the studio (whether you're following, curating, managing it or are invited)
+        """
+        self._assert_auth()
+        return requests.get(
+            f"https://api.scratch.mit.edu/studios/{self.id}/users/{self._session.username}",
+            headers=self._headers,
+            cookies=self._cookies,
+            timeout=10,
+        ).json()
 
 
 def get_studio(studio_id):

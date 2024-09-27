@@ -110,21 +110,37 @@ class Session(BaseSiteComponent):
         # backwards compatibility with v1
         return self.connect_linked_user() # To avoid inconsistencies with "connect" and "get", this function was renamed
 
-    def messages(self, *, limit=40, offset=0, date_limit=None):
+    def messages(self, *, limit=40, offset=0, date_limit=None, filter_by=None):
         '''
         Returns the messages.
+
+        Keyword arguments:
+            limit, offset, date_limit
+            filter_by (str or None): Can either be None (no filter), "comments", "projects", "studios" or "forums"
 
         Returns:
             list<dict>: List that contains all messages as dicts.
         '''
         add_params = ""
         if date_limit is not None:
-            add_params = f"&dateLimit={date_limit}"
+            add_params += f"&dateLimit={date_limit}"
+        if filter_by is not None:
+            add_params += f"&filter={filter_by}"
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/messages",
             limit = limit, offset = offset, headers = self._headers, cookies = self._cookies, add_params=add_params
         )
         return commons.parse_object_list(data, activity.Activity, self)
+
+    def admin_messages(self, *, limit=40, offset=0):
+        """
+        Returns your messages sent by the Scratch team (alerts).
+        """
+        return commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self._username}/messages/admin",
+            limit = limit, offset = offset, headers = self._headers, cookies = self._cookies
+        )
+
 
     def clear_messages(self):
         '''
@@ -185,6 +201,38 @@ class Session(BaseSiteComponent):
             limit = limit, offset = offset, headers = self._headers, cookies = self._cookies
         )
         return commons.parse_object_list(data, project.Project, self)
+
+    """
+    These methods are disabled because it is unclear if there is any case in which the response is not empty. 
+    def shared_by_followed_users(self, *, limit=40, offset=0):
+        '''
+        Returns the "Projects by Scratchers I'm following" section (frontpage).
+        This section is only visible to old accounts (according to the Scratch wiki).
+        For newer users, this method will always return an empty list.
+
+        Returns:
+            list<scratchattach.project.Project>: List that contains all "Projects loved by Scratchers I'm following" entries as Project objects
+        '''
+        data = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self._username}/following/users/projects",
+            limit = limit, offset = offset, headers = self._headers, cookies = self._cookies
+        )
+        return commons.parse_object_list(data, project.Project, self)
+
+    def in_followed_studios(self, *, limit=40, offset=0):
+        '''
+        Returns the "Projects in studios I'm following" section (frontpage).
+        This section is only visible to old accounts (according to the Scratch wiki).
+        For newer users, this method will always return an empty list.
+
+        Returns:
+            list<scratchattach.project.Project>: List that contains all "Projects loved by Scratchers I'm following" entries as Project objects
+        '''
+        data = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self._username}/following/studios/projects",
+            limit = limit, offset = offset, headers = self._headers, cookies = self._cookies
+        )
+        return commons.parse_object_list(data, project.Project, self)"""
 
     # Search:
 
@@ -394,6 +442,12 @@ class Session(BaseSiteComponent):
             timeout=10,
         )
     """
+
+    def become_scratcher_invite(self):
+        """
+        If you are a new Scratcher and have been invited for becoming a Scratcher, this API endpoint will provide more info on the invite.
+        """
+        return requests.get(f"https://api.scratch.mit.edu/users/{self.username}/invites", headers=self._headers, cookies=self._cookies).json()
 
     def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException):
         """
