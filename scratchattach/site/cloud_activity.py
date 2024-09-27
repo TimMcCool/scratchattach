@@ -22,7 +22,6 @@ class CloudActivity(BaseSiteComponent):
 
     def __init__(self, **entries):
         # Set attributes every Activity object needs to have:
-        self.raw = None
         self._session = None
         self.cloud = None
         self.user = None
