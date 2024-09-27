@@ -19,7 +19,6 @@ class CloudEvents(BaseEventHandler):
     def _update(self):
         self.source_cloud.connect()
         
-        self.ready = True
         self.call_event("on_ready")
 
         while True:

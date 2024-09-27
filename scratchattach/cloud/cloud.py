@@ -54,7 +54,7 @@ class ScratchCloud(BaseCloud):
     def get_var(self, var, *, use_logs=False):
         if self._session is None or use_logs:
             logs = self.logs(limit=100)
-            filtered = list(filter(lambda k: k["name"] == "☁ "+var, logs))
+            filtered = list(filter(lambda k: k.name == "☁ "+var, logs))
             if len(filtered) == 0:
                 return None
             return filtered[0].value

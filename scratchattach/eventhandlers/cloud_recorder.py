@@ -8,9 +8,10 @@ class CloudRecorder(CloudEvents):
         super().__init__(cloud)
         self.cloud_values = initial_values
         self.event(self.on_set)
+        self.received_first_msg = False
 
     def get_var(self, var):
-        if not var in self.cloud_value:
+        if not var in self.cloud_values:
             return None
         return self.cloud_values[var]
     
@@ -18,4 +19,5 @@ class CloudRecorder(CloudEvents):
         return self.cloud_values
     
     def on_set(self, activity):
+        self.received_first_msg = True
         self.cloud_values[activity.var] = activity.value
