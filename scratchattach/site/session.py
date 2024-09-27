@@ -512,7 +512,7 @@ sess
         """
 
         try:
-            response = requests.get(f"https://scratch.mit.edu/discuss/{category_id}/?page={page}", header=self._headers, cookies=self._cookies)
+            response = requests.get(f"https://scratch.mit.edu/discuss/{category_id}/?page={page}", headers=self._headers, cookies=self._cookies)
             soup = BeautifulSoup(response.content, 'html.parser')
         except Exception as e:
             raise exceptions.FetchError(str(e))
