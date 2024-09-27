@@ -339,7 +339,7 @@ def get_topic_list(category_id, *, page=0):
     """
 
     try:
-        response = requests.get(f"https://scratch.mit.edu/discuss/6/")
+        response = requests.get(f"https://scratch.mit.edu/discuss/{category_id}/")
         soup = BeautifulSoup(response.content, 'html.parser')
     except Exception as e:
         raise exceptions.FetchError(str(e))
