@@ -2,7 +2,6 @@
 
 from ..cloud import cloud
 from ._base import BaseEventHandler
-from ..cloud._base import BaseCloud
 from ..site import activity
 import time
 import json
