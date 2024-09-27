@@ -5,7 +5,7 @@ import json
 import time
 from ..utils import exceptions
 import warnings
-from . import cloud_recorder
+from ..eventhandlers import cloud_recorder
 
 class BaseCloud(ABC):
 

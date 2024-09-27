@@ -114,7 +114,7 @@ def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> Type[Ba
         CloudClass: The class that the returned object should be of. By default this class is scratchattach.cloud.ScratchCloud.
 
     Returns:
-        Type[scratchattach.cloud.BaseCloud]: An object representing the cloud of a project. Can be of any class inheriting from BaseCloud.
+        Type[scratchattach._base.BaseCloud]: An object representing the cloud of a project. Can be of any class inheriting from BaseCloud.
     """
     print("Warning: To set Scratch cloud variables, use session.connect_cloud instead of get_cloud")
     return CloudClass(project_id=project_id)

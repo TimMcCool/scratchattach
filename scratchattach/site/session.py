@@ -14,7 +14,7 @@ from . import forum
 from ..utils import commons
 
 from . import user
-from ..cloud import cloud
+from ..cloud import cloud, _base
 from . import project
 from ..utils import exceptions
 from . import studio
@@ -450,7 +450,7 @@ class Session(BaseSiteComponent):
         )
     """
 
-    def connect_cloud(self, project_id, *, CloudClass:Type[cloud.BaseCloud]=cloud.ScratchCloud) -> Type[cloud.BaseCloud]:
+    def connect_cloud(self, project_id, *, CloudClass:Type[_base.BaseCloud]=cloud.ScratchCloud) -> Type[_base.BaseCloud]:
         """
         Connects to a cloud (by default Scratch's cloud) as logged in user.
 
@@ -461,7 +461,7 @@ class Session(BaseSiteComponent):
             CloudClass: The class that the returned object should be of. By default this class is scratchattach.cloud.ScratchCloud.
 
         Returns:
-            Type[scratchattach.cloud.BaseCloud]: An object representing the cloud of a project. Can be of any class inheriting from BaseCloud.
+            Type[scratchattach._base.BaseCloud]: An object representing the cloud of a project. Can be of any class inheriting from BaseCloud.
         """
         return CloudClass(project_id=project_id, _session=self)
 
