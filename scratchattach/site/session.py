@@ -665,16 +665,15 @@ def login_by_id(session_id, *, username=None):
     Returns:
         scratchattach.session.Session: An object that represents the created log in / session
     """
-
+    _session = Session(id=session_id, username=username)
     try:
-        _session = Session(session_id=session_id, username=username)
         if _session.update() == "429":
             raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-        return _session
     except KeyError as e:
         print(f"Warning: Logged in, but couldn't fetch XToken. Key error at key "+str(e)+" when reading scratch.mit.edu/session API response")
     except Exception as e:
         raise(e)
+    return _session
 
 def login(username, password, *, timeout=10):
     """

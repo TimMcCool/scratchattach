@@ -26,6 +26,7 @@ class CloudActivity(BaseSiteComponent):
         self._session = None
         self.cloud = None
         self.user = None
+        self.username = None
         self.type = None
         self.timestamp = time.time()
 
@@ -41,6 +42,8 @@ class CloudActivity(BaseSiteComponent):
         try: self.var = data["name"]
         except Exception: pass
         try: self.value = data["value"]
+        except Exception: pass
+        try: self.user = data["user"]
         except Exception: pass
         try: self.username = data["user"]
         except Exception: pass
@@ -74,14 +77,18 @@ class CloudActivity(BaseSiteComponent):
         """
         Returns the user that performed the cloud activity as scratchattach.user.User object
         """
+        if self.username is None:
+            return None
         from ..site import user
         from ..utils import exceptions
-        return self._make_linked_object("username", self.actor_username, user.User, exceptions.UserNotFound)
+        return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
 
     def project(self):
         """
         Returns the user that performed the cloud activity as scratchattach.user.User object
         """
+        if self.cloud is None:
+            return None
         from ..site import project
         from ..utils import exceptions
         return self._make_linked_object("id", self.cloud.project_id, project.Project, exceptions.ProjectNotFound)
