@@ -53,7 +53,7 @@ class SpamFilter(HardFilter):
             if comment["content"].lower() == content.lower():
                 return True
 
-class FilterBot(MessageEvents):
+class Filterbot(MessageEvents):
 
     def __init__(self, user, *, log_deletions=True):
         super().__init__(user)

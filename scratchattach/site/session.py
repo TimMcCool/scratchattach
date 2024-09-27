@@ -18,7 +18,7 @@ from ..cloud import cloud
 from . import project
 from .. import exceptions
 from . import studio
-from ..eventhandlers import message_events
+from ..eventhandlers import message_events, filterbot
 from . import activity
 from ._base import BaseSiteComponent
 from ..utils.commons import headers, empty_project_json
@@ -630,9 +630,11 @@ sess
         except Exception as e:
             raise exceptions.ScrapeError(str(e))
 
-
     def connect_message_events(self):
         return message_events.MessageEvents(user.User(username=self.username, _session=self))
+
+    def connect_filterbot(self, *, log_deletions=True):
+        return filterbot.Filterbot(user.User(username=self.username, _session=self), log_deletions=log_deletions)
 
 
 # ------ #
