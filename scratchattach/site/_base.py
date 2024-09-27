@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 import requests
 from threading import Thread
 from ..utils import exceptions, commons
-from . import project
 
 class BaseSiteComponent(ABC):
 
