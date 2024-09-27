@@ -12,6 +12,7 @@ from .utils import commons
 from .site.comment import *
 from .eventhandlers.message_events import MessageEvents
 from .eventhandlers.filterbot import Filterbot, HardFilter, SoftFilter, SpamFilter
+from .cloud_server import *
 
 # --- Front page ---
 

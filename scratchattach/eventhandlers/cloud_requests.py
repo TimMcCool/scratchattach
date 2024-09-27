@@ -1,4 +1,4 @@
-#----- The cloud request handler class
+#----- The cloud request handler class (not v2-ed yet)
 from ..cloud import cloud
 import time
 from ..utils.encoder import *

@@ -163,3 +163,13 @@ class RequestNotFound(Exception):
     """
 
     pass
+
+# Websocket server errors:
+
+class WebsocketServerError(Exception):
+
+    """
+    Raised when the self-hosted cloud websocket server fails to start.
+    """
+
+    pass
