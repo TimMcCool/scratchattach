@@ -10,7 +10,7 @@ class Unauthenticated(Exception):
     """
 
     def __init__(self, message=""):
-        self.message = "No login connected. The object on which the method was called wasn't created with a session. More information: https://scratchattach.readthedocs.io/en/latest/scratchattach.html#scratchattach.exceptions.Unauthenticated"
+        self.message = "No login / session connected. The object on which the method was called wasn't created with a session. More information: https://scratchattach.readthedocs.io/en/latest/scratchattach.html#scratchattach.exceptions.Unauthenticated"
         super().__init__(self.message)
     pass
 
