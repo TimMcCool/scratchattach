@@ -78,7 +78,7 @@ class Activity(BaseSiteComponent):
 
     def target(self):
         """
-        Returns the activity's target (depending on the activity, this is either a User, Project or Studio object).
+        Returns the activity's target (depending on the activity, this is either a User, Project, Studio or Comment object).
         May also return None if the activity type is unknown.
         """
         
@@ -105,7 +105,7 @@ class Activity(BaseSiteComponent):
         if "recipient_username" in self.__dict__: # the recipient_username field always indicates the target is a user
             return self._make_linked_object("username", self.recipient_username, user.User, exceptions.UserNotFound)
         
-        if self.type == "addcomment":
+        if self.type == "addcomment": # target is a comment
             if self.comment_type == 0:
                 _c = comment.Comment(id=self.comment_id, source="project", source_id=self.comment_obj_id, _session=self._session)
             if self.comment_type == 1:
