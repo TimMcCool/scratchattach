@@ -30,7 +30,9 @@ class CloudEvents(BaseEventHandler):
                 for i in data:
                     try:
                         _a = cloud_activity.CloudActivity()
-                        _a._update_from_dict(json.loads(i))
+                        data = json.loads(i)
+                        data["name"] = data["name"][2:]
+                        _a._update_from_dict(data)
                         if "on_"+_a.type in self._events:
                             self.call_event("on_"+_a.type, [_a])
                     except Exception as e:

@@ -47,6 +47,7 @@ class ScratchCloud(BaseCloud):
                 data = list(filter(lambda k: k["name"] == "☁ "+filter_by_var_named, data))
             for x in data:
                 x["cloud"] = self
+                x["name"] = x["name"][2:]
             return commons.parse_object_list(data, cloud_activity.CloudActivity, self._session, "name")
         except Exception as e:
             return exceptions.FetchError(str(e))
