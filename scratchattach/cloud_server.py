@@ -26,13 +26,6 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=False, leng
 
         server = SimpleWebSocketServer(hostname, port=port, websocketclass=TwCloudServer)
 
-        server.value_length_limit=length_limit
-        server.value_allow_numeric=allow_non_numeric
-        server.whitelisted_projects=whitelisted_projects
-        server.tw_projects = {}
-        server.tw_userdata = {}
-        server.tw_users = []
-
         if thread:
             Thread(target=server.serveforever).start()
             return server
