@@ -33,7 +33,7 @@ class Comment(BaseSiteComponent):
         self._session = None
         self.source=None
         self.source_id = None
-        self.cached_replies = []
+        self.cached_replies = None
         self.parent_id = None
         self.cached_parent_comment = None
         if not "source" in entries:
@@ -111,9 +111,9 @@ class Comment(BaseSiteComponent):
             if self.source == "profile":
                 self.cached_replies = user.User(username=self.source_id, _session=self._session).comment_by_id(self.id).cached_replies[offset:offset+limit]
             if self.source == "project":
-                self.cached_parent_comment = project.Project(id=self.id, _session=self._session).comment_replies(comment_id=self.id, limit=limit, offset=offset)
+                self.cached_parent_comment = project.Project(id=self.source_id, _session=self._session).comment_replies(comment_id=self.id, limit=limit, offset=offset)
             if self.source == "studio":
-                self.cached_parent_comment = studio.Studio(id=self.id, _session=self._session).comment_replies(comment_id=self.id, limit=limit, offset=offset)
+                self.cached_parent_comment = studio.Studio(id=self.source_id, _session=self._session).comment_replies(comment_id=self.id, limit=limit, offset=offset)
         return self.cached_replies
     
     # Methods for dealing with the comment

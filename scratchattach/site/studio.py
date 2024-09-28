@@ -142,7 +142,6 @@ class Studio(BaseSiteComponent):
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}/replies", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         for x in response:
-            print(x, response)
             x["parent_id"] = comment_id    
             x["source"] = "studio"
             x["source_id"] = self.id    
