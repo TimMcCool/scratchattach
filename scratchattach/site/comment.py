@@ -43,8 +43,8 @@ class Comment(BaseSiteComponent):
         self.__dict__.update(entries)
 
     def update(self):
-        # comments can't be updated
-        pass
+        print("Warning: Comment objects can't be updated")
+        return False # Objects of this type cannot be updated
 
     def _update_from_dict(self, data):
         try: self.id = data["id"]
