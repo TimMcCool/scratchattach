@@ -121,7 +121,7 @@ class Session(BaseSiteComponent):
             filter_by (str or None): Can either be None (no filter), "comments", "projects", "studios" or "forums"
 
         Returns:
-            list<dict>: List that contains all messages as dicts.
+            list<scratch.activity.Activity>: List that contains all messages as Activity objects.
         '''
         add_params = ""
         if date_limit is not None:
