@@ -670,32 +670,6 @@ class User(BaseSiteComponent):
         """
         return requests.get(f"https://my-ocular.jeffalo.net/api/user/{self.username}").json()
 
-    ''' WIP
-    def forum_posts(self, *, page=0, order="newest"):
-        """
-        Gets the forum posts associated with the user.
-
-        Args:
-            username (str): Username of the requested user
-
-        Keyword Args:
-            page (int): Search the page of the results that should be returned.
-            order (str): Specifies the order of the returned posts. "newest" means the first returned post is the newest one, "oldest" means it is the oldest one.
-
-        Returns:
-            list<scratchattach.forum.ForumPost>: A list that contains the forum posts associated with the user.
-        """
-        try:
-            data = requests.get(f"https://scratchdb.lefty.one/v3/forum/user/posts/{self.username}/{page}?o={order}").json()
-            return_data = []
-            for o in data:
-                a = forum.ForumPost(id = o["id"], _session = self._session)
-                a._update_from_dict(o)
-                return_data.append(a)
-            return return_data
-        except Exception:
-            return []'''
-
 # ------ #
 
 def get_user(username):
