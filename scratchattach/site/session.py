@@ -176,7 +176,7 @@ class Session(BaseSiteComponent):
         Returns the "What's happening" section (frontpage).
 
         Returns:
-            list<dict>: List that contains all "What's happening" entries as dicts
+            list<scratch.activity.Activity>: List that contains all "What's happening" entries as Activity objects
         '''
         add_params = ""
         if date_limit is not None:
