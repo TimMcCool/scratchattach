@@ -353,6 +353,8 @@ WW
             headers=self._headers,
             cookies=self._cookies
         ).json()
+        if r is None:
+            raise exceptions.CommentNotFound()
         _comment = comment.Comment(id=r["id"], _session=self._session, source="project", source_id=self.id)
         _comment._update_from_dict(r)
         return _comment

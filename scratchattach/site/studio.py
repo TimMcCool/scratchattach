@@ -152,6 +152,8 @@ class Studio(BaseSiteComponent):
             f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}",
             timeout=10,
         ).json()
+        if r is None:
+            raise exceptions.CommentNotFound()
         _comment = comment.Comment(id=r["id"], _session=self._session, source="studio", source_id=self.id)
         _comment._update_from_dict(r)
         return _comment

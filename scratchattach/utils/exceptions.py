@@ -72,8 +72,9 @@ class ForumContentNotFound(Exception):
     """
     Raised when a non-existent forum topic / post is requested.
     """
+    pass
 
-
+class CommentNotFound(Exception):
     pass
 
 # API errors:
