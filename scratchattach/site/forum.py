@@ -326,6 +326,7 @@ def get_topic(topic_id):
     """
     return commons._get_object("id", topic_id, ForumTopic, exceptions.ForumContentNotFound)
 
+
 def get_topic_list(category_id, *, page=1):
 
     """
