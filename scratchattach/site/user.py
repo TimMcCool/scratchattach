@@ -249,7 +249,7 @@ class User(BaseSiteComponent):
             f"https://scratch.mit.edu/users/{self.username}/studios/",
             headers = self._headers
         ).text
-        return commons.webscrape_count(text, "Studios I follow (", ")")
+        return commons.webscrape_count(text, "Studios I Follow (", ")")
 
     def studios(self, *, limit=40, offset=0):
         _studios = commons.api_iterative(
@@ -660,48 +660,6 @@ class User(BaseSiteComponent):
             ).json()["statistics"]["ranks"]
         except Exception:
             return {"country":{"loves":0,"favorites":0,"comments":0,"views":0,"followers":0,"following":0},"loves":0,"favorites":0,"comments":0,"views":0,"followers":0,"following":0}
-
-    def followers_over_time(self, *, segment=1, range=30):
-        """
-        Gets information about the user's follower count history. Fetched from ScratchDB.
-
-        Warning:
-            ScratchDB is down indefinitely, therefore this method is deprecated.
-
-        Keyword Args:
-            segment (int): Offset for the first returned element.
-            range (int): Amount of returned elements.
-
-        Returns:
-            list<dict>
-        """
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
-        return requests.get(f"https://scratchdb.lefty.one/v3/user/graph/{self.username}/followers?segment={segment}&range={range}")
-
-    def forum_counts(self):
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
-        try:
-            return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["counts"]
-        except Exception:
-            raise exceptions.FetchError
-
-    def forum_posts_over_time(self):
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
-        try:
-            return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["history"]
-        except Exception:
-            raise exceptions.FetchError
-
-    def forum_signature(self):
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
-        try:
-            return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/info/{self.username}").json()["signature"]
-        except Exception:
-            raise exceptions.FetchError
-
-    def forum_signature_history(self):
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
-        return requests.get(f"https://scratchdb.lefty.one/v3/forum/user/history/{self.username}").json()
 
     def ocular_status(self):
         """
