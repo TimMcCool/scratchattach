@@ -147,7 +147,10 @@ class Comment(BaseSiteComponent):
         if self.parent_id is not None:
             parent_id = str(self.parent_id)
         if commentee_id is None:
-            commentee_id = self.author_id
+            if "author_id" in self.__dict__():
+                commentee_id = self.author_id
+            else:
+                commentee_id = ""
         if self.source == "profile":
             return user.User(username=self.source_id, _session=self._session).reply_comment(content, parent_id=str(parent_id), commentee_id=commentee_id)
         if self.source == "project":
