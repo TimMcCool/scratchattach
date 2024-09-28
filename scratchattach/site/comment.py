@@ -136,9 +136,9 @@ class Comment(BaseSiteComponent):
         if self.source == "profile":
             user.User(username=self.source_id, _session=self._session).reply_comment(content, parent_id=str(self.id), commentee_id=commentee_id)
         if self.source == "project":
-            project.Project(id=self.id, _session=self._session).reply_comment(content, parent_id=str(self.id), commentee_id=commentee_id)
+            project.Project(id=self.source_id, _session=self._session).reply_comment(content, parent_id=str(self.id), commentee_id=commentee_id)
         if self.source == "studio":
-            studio.Studio(id=self.id, _session=self._session).reply_comment(content, parent_id=str(self.id), commentee_id=commentee_id)
+            studio.Studio(id=self.source_id, _session=self._session).reply_comment(content, parent_id=str(self.id), commentee_id=commentee_id)
 
 
     def delete(self):
