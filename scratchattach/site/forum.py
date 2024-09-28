@@ -87,7 +87,7 @@ class ForumTopic(BaseSiteComponent):
             raise exceptions.ForumContentNotFound
 
         return self._update_from_dict(dict(
-            title = title, category = category_name, last_updated = last_updated
+            title = title, category_name = category_name, last_updated = last_updated
         ))
         
 
