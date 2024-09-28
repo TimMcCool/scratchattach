@@ -618,7 +618,7 @@ class User(BaseSiteComponent):
                 return results[0]
             page += 1
             page_content = self.comments(page=page)
-        return None
+        raise exceptions.CommentNotFound()
 
     def message_events(self):
         return message_events.MessageEvents(self)
