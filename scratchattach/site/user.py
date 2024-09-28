@@ -426,7 +426,7 @@ class User(BaseSiteComponent):
                 'reply_count': 0,
                 'cached_replies': []
             }
-            _comment = comment.Comment(source="profile", source_id=self.username, id=data["id"], _session = self._session)
+            _comment = comment.Comment(source="profile", parent_id=parent_id, commentee_id=commentee_id, source_id=self.username, id=data["id"], _session = self._session)
             _comment._update_from_dict(data)
             return _comment
         except Exception:
@@ -439,6 +439,11 @@ class User(BaseSiteComponent):
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """
         Replies to a comment given by its id
+
+        Warning:
+            Only replies to top-level comments are shown on the Scratch website. Replies to replies are actually replies to the corresponding top-level comment in the API.
+            
+            Therefore, parent_id should be the comment id of a top level comment.
 
         Args:
             content: Content of the comment that should be posted
