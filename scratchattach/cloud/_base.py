@@ -83,7 +83,6 @@ class BaseCloud(ABC):
 
     def _send_packet_list(self, packet_list):
         packet_string = "".join([json.dumps(packet) + "\n" for packet in packet_list])
-        print(packet_string)
         try:
             self.websocket.send(packet_string)
         except Exception:
