@@ -21,6 +21,8 @@ class BaseSiteComponent(ABC):
             return "429"
         # If no error: Parse JSON:
         response = response.json()
+        if "code" in response:
+            return False
         return self._update_from_dict(response)
 
     @abstractmethod

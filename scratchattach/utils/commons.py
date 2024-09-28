@@ -122,6 +122,8 @@ def _get_object(identificator_id, identificator, Class, NotFoundException, sessi
             from ..site import project
             if Class is project.Project: # Case: Target is an unshared project.
                 return project.PartialProject(**{identificator_id:identificator, "_session":session})
+            else:
+                raise NotFoundException("Not found in API")
         else:
             return _object
     except KeyError as e:
