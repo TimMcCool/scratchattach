@@ -327,7 +327,7 @@ class Project(PartialProject):
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         for i in response:
-            i["source"] = "profile"
+            i["source"] = "project"
             i["source_id"] = self.id
         return commons.parse_object_list(response, comment.Comment, self._session)
 
@@ -337,7 +337,7 @@ class Project(PartialProject):
             f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/{comment_id}/replies/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         for x in response:
             x["parent_id"] = comment_id
-            x["source"] = "profile"
+            x["source"] = "project"
             x["source_id"] = self.id
         return commons.parse_object_list(response, comment.Comment, self._session)
 
