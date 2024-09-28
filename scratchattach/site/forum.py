@@ -148,7 +148,9 @@ class ForumTopic(BaseSiteComponent):
         Returns:
             scratchattach.forum.ForumPost: An object representing the first topic post 
         """
-        return self.posts(page=1)[0]
+        posts = self.posts(page=1)
+        if len(posts) > 0:
+            return posts[0]
 
 
 class ForumPost(BaseSiteComponent):
