@@ -78,21 +78,26 @@ class Filterbot(MessageEvents):
             self.spam_filters.append(filter_obj)
     
     def add_f4f_filter(self):
-        self.add_filter(HardFilter("Filter for 'f4f'", contains="f4f"))
-        self.add_filter(HardFilter("Filter for 'follow me'", contains="follow me"))
-        self.add_filter(HardFilter("Filter for 'follow @'", contains="follow @"))
-        self.add_filter(HardFilter("Filter for 'f 4 f'", contains="f 4 f"))
-        self.add_filter(HardFilter("Filter for 'follow for'", contains="follow for"))
+        self.add_filter(HardFilter("[f4f_filter] 'f4f'", contains="f4f"))
+        self.add_filter(HardFilter("[f4f_filter] 'follow me'", contains="follow me"))
+        self.add_filter(HardFilter("[f4f_filter] 'follow @'", contains="follow @"))
+        self.add_filter(HardFilter("[f4f_filter] f 4 f'", contains="f 4 f"))
+        self.add_filter(HardFilter("[f4f_filter] 'follow for'", contains="follow for"))
 
     def add_ads_filter(self):
-        self.add_filter(SoftFilter(1, "Filter for links", contains="scratch.mit.edu/projects/"))
-        self.add_filter(SoftFilter(-1, "Revert filter for feedback", contains="feedback"))
-        self.add_filter(HardFilter("Filter for 'check out my'", contains="check out my"))
-        self.add_filter(HardFilter("Filter for 'play my'", contains="play my"))
+        self.add_filter(SoftFilter(1, "[ads_filter] links", contains="scratch.mit.edu/projects/"))
+        self.add_filter(SoftFilter(-1, "[ads_filter] feedback", contains="feedback"))
+        self.add_filter(HardFilter("[ads_filter] 'check out my'", contains="check out my"))
+        self.add_filter(HardFilter("[ads_filter] 'play my'", contains="play my"))
+        self.add_filter(SoftFilter(1, "[ads_filter] 'advertis'", contains="advertis"))
 
     def add_spam_filter(self):
-        self.add_filter(SpamFilter("General spam filter", contains=""))
+        self.add_filter(SpamFilter("[spam_filter]", contains=""))
 
+    def add_genalpha_nonsense_filter(self):
+        self.add_filter(HardFilter("[genalpha_nonsene_filter] 'skibidi'", contains="skibidi"))
+        self.add_filter(HardFilter("[genalpha_nonsene_filter] 'rizzler'", contains="rizzler"))
+        self.add_filter(HardFilter("[genalpha_nonsene_filter] 'fanum tax'", contains="fanum tax"))
 
     def on_message(self, message):
         if message.type == "addcomment":
