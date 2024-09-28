@@ -147,7 +147,7 @@ class Comment(BaseSiteComponent):
         if self.parent_id is not None:
             parent_id = str(self.parent_id)
         if commentee_id is None:
-            if "author_id" in self.__dict__():
+            if "author_id" in self.__dict__:
                 commentee_id = self.author_id
             else:
                 commentee_id = ""
