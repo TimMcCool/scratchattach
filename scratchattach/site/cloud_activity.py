@@ -90,7 +90,7 @@ class CloudActivity(BaseSiteComponent):
 
     def project(self):
         """
-        Returns the user that performed the cloud activity as scratchattach.user.User object
+        Returns the project where the cloud activity was performed as scratchattach.project.Project object
         """
         if self.cloud is None:
             return None

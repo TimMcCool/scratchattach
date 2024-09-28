@@ -29,6 +29,7 @@ class Activity(BaseSiteComponent):
 
         # Set attributes every Activity object needs to have:
         self._session = None
+        self.raw = None
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)
@@ -38,10 +39,13 @@ class Activity(BaseSiteComponent):
         return False # Objects of this type cannot be updated
 
     def _update_from_dict(self, data):
+        self.raw = data
         self.__dict__.update(data)
         return True
 
     def _update_from_html(self, data):
+
+        self.raw = data
 
         time=data.find('div').find('span').findNext().findNext().text.strip()
 
@@ -100,8 +104,8 @@ class Activity(BaseSiteComponent):
                 return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
             
         if self.type == "followuser" or "curator" in self.type: # target is a user
-            if "target_id" in self.__dict__:
-                return self._make_linked_object("username", self.target_id, user.User, exceptions.UserNotFound)
+            if "target_name" in self.__dict__:
+                return self._make_linked_object("username", self.target_name, user.User, exceptions.UserNotFound)
             if "followed_username" in self.__dict__:
                 return self._make_linked_object("username", self.followed_username, user.User, exceptions.UserNotFound)
         if "recipient_username" in self.__dict__: # the recipient_username field always indicates the target is a user
