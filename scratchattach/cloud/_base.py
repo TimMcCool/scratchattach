@@ -6,6 +6,7 @@ import time
 from ..utils import exceptions
 import warnings
 from ..eventhandlers import cloud_recorder
+import ssl
 
 class BaseCloud(ABC):
 
@@ -48,7 +49,7 @@ class BaseCloud(ABC):
         # Internal attributes
         self._ratelimited_until = 0
         self.active_connection = False #whether a connection to a cloud variable server is currently established
-        self.websocket = websocket.WebSocket()
+        self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
         self.recorder = None # A CloudRecorder object that records cloud activity for the values to be retrieved later will be saved in this attribute as soon as .get_var is called
 
         # Default values for cloud-specific attributes
@@ -101,7 +102,7 @@ class BaseCloud(ABC):
         self._send_packet(packet)
 
     def connect(self):
-        self.websocket = websocket.WebSocket()
+        self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
         self.websocket.connect(
             self.cloud_host,
             cookie=self.cookie,
