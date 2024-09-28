@@ -34,7 +34,6 @@ class PartialProject(BaseSiteComponent):
         self.project_token = None
         self.id = 0
         self.instructions = None
-        self.title = None
         self.parent_title = None
 
         # Update attributes from entries dict:
@@ -215,7 +214,7 @@ class Project(PartialProject):
     :.views: The view count
 
     :.project_token: The project token (required to access the project json)
-WW
+
     :.update(): Updates the attributes
     """
 
@@ -228,10 +227,9 @@ WW
             raise exceptions.Unauthorized(
                 "You need to be authenticated as the profile owner to do this.")
 
-    def get_instructions(self):
-        # Override the get_instructions method that exists for unshared projects
+    def load_description(self):
+        # Overrides the load_description method that exists for unshared projects
         self.update()
-        return self.instructions
 
     def download(self, *, filename=None, dir=""):
         """
@@ -336,7 +334,7 @@ WW
 
     def comment_replies(self, *, comment_id, limit=40, offset=0):
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/replies/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
+            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/{comment_id}/replies/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         for x in response:
             x["parent_id"] = comment_id
             x["source"] = "profile"
@@ -458,7 +456,7 @@ WW
                 cookies=self._cookies,
                 json=fields_dict,
             ).json()
-            return self._update_from_dict(r)
+        return self._update_from_dict(r)
     
     def turn_off_commenting(self):
         """
@@ -505,11 +503,12 @@ WW
                 cookies=self._cookies,
             )
 
+    ''' doesn't work. the API's response is valid (no errors), but the fields don't change
     def move_to_trash(self):
         """
         Moves the project to trash folder. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
-        self.set_fields({"visibility": "trshbyusr", "isPublished" : False}, use_site_api=True)
+        self.set_fields({"id":int(self.id), "visibility": "trshbyusr", "isPublished" : False}, use_site_api=True)'''
 
     def set_thumbnail(self, *, file):
         """
@@ -583,6 +582,8 @@ WW
                 data=json.dumps(data),
             ).text
         )
+        if "id" not in r:
+            raise exceptions.CommentPostFailure(r)
         _comment = comment.Comment(id=r["id"], _session=self._session, source="project", source_id=self.id)
         _comment._update_from_dict(r)
         return _comment
@@ -594,9 +595,14 @@ WW
         Args:
             content: Content of the comment that should be posted
 
+        Warning:
+            Only replies to top-level comments are shown on the Scratch website. Replies to replies are actually replies to the corresponding top-level comment in the API.
+            
+            Therefore, parent_id should be the comment id of a top level comment.
+            
         Keyword Arguments:
             parent_id: ID of the comment you want to reply to
-            commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
+            commentee_id: ID of the user you are replying to
         """
         return self.post_comment(
             content, parent_id=parent_id, commentee_id=commentee_id
@@ -695,7 +701,7 @@ WW
         Returns info about the project's visibility. Requires authentication.
         """
         self._assert_auth()
-        return requests.get(f"https://api.scratch.mit.edu/users/{self._session.username}/projects/{self.id}/visibility").json()
+        return requests.get(f"https://api.scratch.mit.edu/users/{self._session.username}/projects/{self.id}/visibility", headers=self._headers, cookies=self._cookies).json()
 
 # ------ #
 

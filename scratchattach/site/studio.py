@@ -187,6 +187,8 @@ class Studio(BaseSiteComponent):
             data=json.dumps(data),
             timeout=10,
         ).json()
+        if "id" not in r:
+            raise exceptions.CommentPostFailure(r)
         _comment = comment.Comment(id=r["id"], _session=self._session, source="studio", source_id=self.id)
         _comment._update_from_dict(r)
         return _comment
@@ -273,9 +275,14 @@ class Studio(BaseSiteComponent):
         Args:
             content: Content of the comment that should be posted
 
+        Warning:
+            Only replies to top-level comments are shown on the Scratch website. Replies to replies are actually replies to the corresponding top-level comment in the API.
+            
+            Therefore, parent_id should be the comment id of a top level comment.
+
         Keyword Arguments:
             parent_id: ID of the comment you want to reply to
-            commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
+            commentee_id: ID of the user you are replying to
         """
         self._assert_auth()
         return self.post_comment(

@@ -97,9 +97,11 @@ class Comment(BaseSiteComponent):
         if self.source == "profile":
             self.cached_parent_comment = user.User(username=self.source_id, _session=self._session).comment_by_id(self.parent_id)
         if self.source == "project":
-            self.cached_parent_comment = project.Project(id=self.id, _session=self._session).comment_by_id(self.parent_id)
+            p = project.Project(id=self.source_id, _session=self._session)
+            p.update()
+            self.cached_parent_comment = p.comment_by_id(self.parent_id)
         if self.source == "studio":
-            self.cached_parent_comment = studio.Studio(id=self.id, _session=self._session).comment_by_id(self.parent_id)
+            self.cached_parent_comment = studio.Studio(id=self.source_id, _session=self._session).comment_by_id(self.parent_id)
         return self.cached_parent_comment
     
     def replies(self, *, use_cache=True, limit=40, offset=0):
@@ -111,34 +113,49 @@ class Comment(BaseSiteComponent):
             if self.source == "profile":
                 self.cached_replies = user.User(username=self.source_id, _session=self._session).comment_by_id(self.id).cached_replies[offset:offset+limit]
             if self.source == "project":
-                self.cached_replies = project.Project(id=self.source_id, _session=self._session).comment_replies(comment_id=self.id, limit=limit, offset=offset)
+                p = project.Project(id=self.source_id, _session=self._session)
+                p.update()
+                self.cached_replies = p.comment_replies(comment_id=self.id, limit=limit, offset=offset)
             if self.source == "studio":
                 self.cached_replies = studio.Studio(id=self.source_id, _session=self._session).comment_replies(comment_id=self.id, limit=limit, offset=offset)
         return self.cached_replies
     
     # Methods for dealing with the comment
 
-    def reply(self, content, *, commentee_id=""):
+    def reply(self, content, *, commentee_id=None):
         """
         Posts a reply comment to the comment.
+        
+        Warning:
+            Scratch only shows comments replying to top-level comments, and all replies to replies are actually replies to top-level comments in the API.
 
+            Therefore, if this comment is a reply, this method will not reply to the comment itself but to the corresponding top-level comment.
+    
         Args:
             content (str): Comment content to post.
 
-        Keyword arguments:
-            commentee_id (int): The user that will be mentioned in your comment. If you don't want to mention a user, don't set this argument.
+        Keyword args:
+            commentee_id (None or str): If set to None (default), it will automatically fill out the commentee ID with the user ID of the parent comment author. Set it to "" to mention no user.
+
 
         Returns:
             scratchattach.Comment: The created comment.
         """
 
         self._assert_auth()
+        parent_id = str(self.id)
+        if self.parent_id is not None:
+            parent_id = str(self.parent_id)
+        if commentee_id is None:
+            commentee_id = self.author_id
         if self.source == "profile":
-            user.User(username=self.source_id, _session=self._session).reply_comment(content, parent_id=str(self.id), commentee_id=commentee_id)
+            return user.User(username=self.source_id, _session=self._session).reply_comment(content, parent_id=str(parent_id), commentee_id=commentee_id)
         if self.source == "project":
-            project.Project(id=self.source_id, _session=self._session).reply_comment(content, parent_id=str(self.id), commentee_id=commentee_id)
+            p = project.Project(id=self.source_id, _session=self._session)
+            p.update()
+            return p.reply_comment(content, parent_id=str(parent_id), commentee_id=commentee_id)
         if self.source == "studio":
-            studio.Studio(id=self.source_id, _session=self._session).reply_comment(content, parent_id=str(self.id), commentee_id=commentee_id)
+            return studio.Studio(id=self.source_id, _session=self._session).reply_comment(content, parent_id=str(parent_id), commentee_id=commentee_id)
 
 
     def delete(self):
@@ -149,9 +166,11 @@ class Comment(BaseSiteComponent):
         if self.source == "profile":
             user.User(username=self.source_id, _session=self._session).delete_comment(comment_id=self.id)
         if self.source == "project":
-            project.Project(id=self.id, _session=self._session).delete_comment(comment_id=self.id)
+            p = project.Project(id=self.source_id, _session=self._session)
+            p.update()
+            p.delete_comment(comment_id=self.id)
         if self.source == "studio":
-            studio.Studio(id=self.id, _session=self._session).delete_comment(comment_id=self.id)
+            studio.Studio(id=self.source_id, _session=self._session).delete_comment(comment_id=self.id)
 
     def report(self):
         """
@@ -161,6 +180,8 @@ class Comment(BaseSiteComponent):
         if self.source == "profile":
             user.User(username=self.source_id, _session=self._session).report_comment(comment_id=self.id)
         if self.source == "project":
-            project.Project(id=self.id, _session=self._session).report_comment(comment_id=self.id)
+            p = project.Project(id=self.source_id, _session=self._session)
+            p.update()
+            p.report_comment(comment_id=self.id)
         if self.source == "studio":
-            studio.Studio(id=self.id, _session=self._session).report_comment(comment_id=self.id)
+            studio.Studio(id=self.source_id, _session=self._session).report_comment(comment_id=self.id)
