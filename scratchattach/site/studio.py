@@ -187,7 +187,6 @@ class Studio(BaseSiteComponent):
             data=json.dumps(data),
             timeout=10,
         ).json()
-        print(r)
         _comment = comment.Comment(id=r["id"], _session=self._session, source="studio", source_id=self.id)
         _comment._update_from_dict(r)
         return _comment
