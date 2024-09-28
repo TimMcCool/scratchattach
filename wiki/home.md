@@ -15,6 +15,11 @@ If this doesn't work, pip was not added to path when you installed Python. Try r
 python -m pip install -U scratchattach
 ```
 
+Or this on MacOS:
+```
+python3 -m pip install -U scratchattach
+```
+
 # Logging in
 
 **Logging in with username / password:**
