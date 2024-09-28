@@ -69,6 +69,7 @@ class Comment(BaseSiteComponent):
         except Exception: pass
         try: self.source_id = data["source_id"]
         except Exception: pass
+        return True
 
     # Methods for getting related entities
 

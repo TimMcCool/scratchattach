@@ -59,6 +59,7 @@ class CloudActivity(BaseSiteComponent):
         except Exception: pass
         try: self.cloud = data["cloud"]
         except Exception: pass
+        return True
 
     def load_log_data(self):
         if self.cloud is None:

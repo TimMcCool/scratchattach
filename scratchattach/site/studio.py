@@ -94,6 +94,7 @@ class Studio(BaseSiteComponent):
         except Exception: pass
         try: self.project_count = studio["stats"]["projects"]
         except Exception: pass
+        return True
 
     def follow(self):
         """
