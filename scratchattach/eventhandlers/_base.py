@@ -58,7 +58,6 @@ class BaseEventHandler(ABC):
         """
         if self._thread is not None:
             self.running = False
-            self._thread.join()
             self._thread = None
 
     def pause(self):
