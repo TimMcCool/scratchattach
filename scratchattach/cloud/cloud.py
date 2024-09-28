@@ -132,7 +132,7 @@ def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> Type[Ba
     print("Warning: To set Scratch cloud variables, use session.connect_cloud instead of get_cloud")
     return CloudClass(project_id=project_id)
 
-def get_scratch_cloud(project_id, *, purpose="", contact=""):
+def get_scratch_cloud(project_id):
     """
     Warning:
         Since this method doesn't connect a login / session to the returned object, setting Scratch cloud variables won't be possible with it.
@@ -144,7 +144,7 @@ def get_scratch_cloud(project_id, *, purpose="", contact=""):
         scratchattach.cloud.ScratchCloud: An object representing the Scratch cloud of a project.
     """
     print("Warning: To set Scratch cloud variables, use session.connect_scratch_cloud instead of get_scratch_cloud")
-    return ScratchCloud(project_id=project_id, purpose=purpose, contact=contact)
+    return ScratchCloud(project_id=project_id)
 
 def get_tw_cloud(project_id, *, purpose="", contact=""):
     """

@@ -473,12 +473,12 @@ class Session(BaseSiteComponent):
         """
         return CloudClass(project_id=project_id, _session=self)
 
-    def connect_scratch_cloud(self, project_id, *, purpose="", contact=""):
+    def connect_scratch_cloud(self, project_id):
         """
         Returns:
             scratchattach.cloud.ScratchCloud: An object representing the Scratch cloud of a project.
         """
-        return cloud.ScratchCloud(project_id=project_id, purpose=purpose, contact=contact, _session=self)
+        return cloud.ScratchCloud(project_id=project_id, _session=self)
 
     def connect_tw_cloud(self, project_id, *, purpose="", contact=""):
         """
