@@ -31,6 +31,10 @@ class ScratchCloud(BaseCloud):
         self._assert_auth() # Setting a cloud var requires a login to the Scratch website
         super().set_var(variable, value)
     
+    def set_vars(self, var_value_dict):
+        self._assert_auth() 
+        super().set_vars(var_value_dict)
+
     def logs(self, *, filter_by_var_named=None, limit=100, offset=0):
         """
         Gets the data from Scratch's clouddata logs.
