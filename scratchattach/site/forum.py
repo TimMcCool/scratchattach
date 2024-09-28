@@ -77,7 +77,7 @@ class ForumTopic(BaseSiteComponent):
                 root = ET.fromstring(response.text)
                 namespace = {'atom': 'http://www.w3.org/2005/Atom'}
 
-                title = root.findtext('atom:title', namespaces=namespace)
+                title = root.findtext('atom:title', namespaces=namespace).replace("Latest posts on ","")
                 category_name = root.findall('.//atom:entry', namespaces=namespace)[0].findtext('.//atom:title', namespaces=namespace).split(" :: ")[1]
                 last_updated = root.findtext('atom:updated', namespaces=namespace)
 
