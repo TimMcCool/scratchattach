@@ -242,7 +242,7 @@ class User(BaseSiteComponent):
             f"https://scratch.mit.edu/users/{self.username}/studios/",
             headers = self._headers
         ).text
-        return commons.webscrape_count(text, "Studios I curate (", ")")
+        return commons.webscrape_count(text, "Studios I Curate (", ")")
 
     def studios_following_count(self):
         text = requests.get(
