@@ -107,7 +107,7 @@ class Comment(BaseSiteComponent):
         Keyword Arguments:
             use_cache (bool): Returns the replies cached on the first reply fetch. This makes it SIGNIFICANTLY faster for profile comments. Warning: For profile comments, the replies are retrieved and cached on object creation.
         """
-        if not(use_cache and (self.cached_replies is not None)):
+        if (self.cached_replies is None) or (use_cache is False):
             if self.source == "profile":
                 self.cached_replies = user.User(username=self.source_id, _session=self._session).comment_by_id(self.id).cached_replies[offset:offset+limit]
             if self.source == "project":
