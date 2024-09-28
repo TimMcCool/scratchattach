@@ -117,8 +117,11 @@ class ForumTopic(BaseSiteComponent):
             soup = BeautifulSoup(response.content, 'html.parser')
             soup = soup.find("div", class_="djangobb")
 
-            pagination_div = soup.find('div', class_='pagination')
-            num_pages = int(pagination_div.find_all('a', class_='page')[-1].text)
+            try:
+                pagination_div = soup.find('div', class_='pagination')
+                num_pages = int(pagination_div.find_all('a', class_='page')[-1].text)
+            except Exception:
+                num_pages = 1
 
             try:
                 # get topic category:
@@ -139,7 +142,7 @@ class ForumTopic(BaseSiteComponent):
 
                 posts.append(post)
         except Exception as e:
-            return []
+            raise exceptions.ScrapeError(str(e))
 
         return posts
 
