@@ -66,6 +66,31 @@ class Filterbot(MessageEvents):
         self.event(self.on_message)
         self.update_interval = 2
 
+    def add_filter(self, filter_obj):
+        if isinstance(filter_obj, HardFilter):
+            self.hard_filters.append(filter_obj)
+        if isinstance(filter_obj, SoftFilter):
+            self.soft_filters.append(filter_obj)
+        if isinstance(filter_obj, SpamFilter):
+            self.spam_filters.append(filter_obj)
+    
+    def add_f4f_filter(self):
+        self.add_filter(HardFilter(contains="f4f"))
+        self.add_filter(HardFilter(contains="follow me"))
+        self.add_filter(HardFilter(contains="please follow"))
+        self.add_filter(HardFilter(contains="f 4 f"))
+        self.add_filter(HardFilter(contains="follow for follow"))
+
+    def add_ads_filter(self):
+        self.add_filter(SoftFilter(1, contains="scratch.mit.edu/projects/"))
+        self.add_filter(SoftFilter(-1, contains="feedback"))
+        self.add_filter(HardFilter(contains="check out my"))
+        self.add_filter(HardFilter(contains="play my"))
+
+    def add_spam_filter(self):
+        self.add_filter(SpamFilter(contains=""))
+
+
     def on_message(self, message):
         if message.type == "addcomment":
             delete = False
@@ -101,6 +126,7 @@ class Filterbot(MessageEvents):
 
             # Apply soft filters
             if delete is False:
+                score = 0
                 for soft_filter in self.soft_filters:
                     if soft_filter.apply(content, message.actor_username, source_id):
                         score += soft_filter.score
@@ -116,3 +142,5 @@ class Filterbot(MessageEvents):
                 except Exception:
                     if self.log_deletions:
                         print(f"Failed to: Delete comment #{content.comment_id} by f{message.actor_username}: '{content}'")
+
+        
