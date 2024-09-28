@@ -52,11 +52,13 @@ class SpamFilter(HardFilter):
         if not applies:
             return False
         self.memory.insert(0, {"content":content, "time":time.time()})
+        print(content, self.memory)
         for comment in list(self.memory)[1:]:
             if comment["time"] < time.time() -300:
                 self.memory.remove(comment)
             if comment["content"].lower() == content.lower():
                 return True
+        return False
 
 class Filterbot(MessageEvents):
 
@@ -72,32 +74,32 @@ class Filterbot(MessageEvents):
     def add_filter(self, filter_obj):
         if isinstance(filter_obj, HardFilter):
             self.hard_filters.append(filter_obj)
-        if isinstance(filter_obj, SoftFilter):
+        elif isinstance(filter_obj, SoftFilter):
             self.soft_filters.append(filter_obj)
-        if isinstance(filter_obj, SpamFilter):
+        elif isinstance(filter_obj, SpamFilter): # careful: SpamFilter is also HardFilter due to inheritence
             self.spam_filters.append(filter_obj)
     
     def add_f4f_filter(self):
-        self.add_filter(HardFilter("[f4f_filter] 'f4f'", contains="f4f"))
-        self.add_filter(HardFilter("[f4f_filter] 'follow me'", contains="follow me"))
-        self.add_filter(HardFilter("[f4f_filter] 'follow @'", contains="follow @"))
-        self.add_filter(HardFilter("[f4f_filter] f 4 f'", contains="f 4 f"))
-        self.add_filter(HardFilter("[f4f_filter] 'follow for'", contains="follow for"))
+        self.add_filter(HardFilter("(f4f_filter) 'f4f'", contains="f4f"))
+        self.add_filter(HardFilter("(f4f_filter) 'follow me'", contains="follow me"))
+        self.add_filter(HardFilter("(f4f_filter) 'follow @'", contains="follow @"))
+        self.add_filter(HardFilter("(f4f_filter) f 4 f'", contains="f 4 f"))
+        self.add_filter(HardFilter("(f4f_filter) 'follow for'", contains="follow for"))
 
     def add_ads_filter(self):
-        self.add_filter(SoftFilter(1, "[ads_filter] links", contains="scratch.mit.edu/projects/"))
-        self.add_filter(SoftFilter(-1, "[ads_filter] feedback", contains="feedback"))
-        self.add_filter(HardFilter("[ads_filter] 'check out my'", contains="check out my"))
-        self.add_filter(HardFilter("[ads_filter] 'play my'", contains="play my"))
-        self.add_filter(SoftFilter(1, "[ads_filter] 'advertis'", contains="advertis"))
+        self.add_filter(SoftFilter(1, "(ads_filter) links", contains="scratch.mit.edu/projects/"))
+        self.add_filter(SoftFilter(-1, "(ads_filter) feedback", contains="feedback"))
+        self.add_filter(HardFilter("(ads_filter) 'check out my'", contains="check out my"))
+        self.add_filter(HardFilter("(ads_filter) 'play my'", contains="play my"))
+        self.add_filter(SoftFilter(1, "(ads_filter) 'advertis'", contains="advertis"))
 
     def add_spam_filter(self):
-        self.add_filter(SpamFilter("[spam_filter]", contains=""))
+        self.add_filter(SpamFilter("(spam_filter)", contains=""))
 
     def add_genalpha_nonsense_filter(self):
-        self.add_filter(HardFilter("[genalpha_nonsene_filter] 'skibidi'", contains="skibidi"))
-        self.add_filter(HardFilter("[genalpha_nonsene_filter] 'rizzler'", contains="rizzler"))
-        self.add_filter(HardFilter("[genalpha_nonsene_filter] 'fanum tax'", contains="fanum tax"))
+        self.add_filter(HardFilter("(genalpha_nonsene_filter) 'skibidi'", contains="skibidi"))
+        self.add_filter(HardFilter("[genalpha_nonsene_filter) 'rizzler'", contains="rizzler"))
+        self.add_filter(HardFilter("(genalpha_nonsene_filter) 'fanum tax'", contains="fanum tax"))
 
     def on_message(self, message):
         if message.type == "addcomment":
@@ -120,7 +122,7 @@ class Filterbot(MessageEvents):
                 if hard_filter.apply(content, message.actor_username, source_id):
                     delete=True
                     if self.log_deletions:
-                        print(f"Comment #{message.comment_id} violates hard filter: {hard_filter.filter_name}")
+                        print(f"DETECTED: #{message.comment_id} violates hard filter: {hard_filter.filter_name}")
                     break
 
             # Apply spam filters
@@ -129,7 +131,7 @@ class Filterbot(MessageEvents):
                     if spam_filter.apply(content, message.actor_username, source_id):
                         delete=True
                         if self.log_deletions:
-                            print(f"Comment #{message.comment_id} violates spam filter: {spam_filter.filter_name}")
+                            print(f"DETECTED: #{message.comment_id} violates spam filter: {spam_filter.filter_name}")
                         break
 
             # Apply soft filters
@@ -141,16 +143,16 @@ class Filterbot(MessageEvents):
                         score += soft_filter.score
                         violated_filers.append(soft_filter.name)
                 if score >= 1:
-                    print(f"Comment #{message.comment_id} violates too many soft filters: {violated_filers}")
+                    print(f"DETECTED: #{message.comment_id} violates too many soft filters: {violated_filers}")
                     delete = True
             
             if delete is True:
                 try:
                     message.target().delete()
                     if self.log_deletions:
-                        print(f"Deleted comment #{message.comment_id} by f{message.actor_username}: '{content}'")
-                except Exception:
+                        print(f"DELETED: #{message.comment_id} by f{message.actor_username}: '{content}'")
+                except Exception as e:
                     if self.log_deletions:
-                        print(f"Failed to: Delete comment #{message.comment_id} by f{message.actor_username}: '{content}'")
+                        print(f"DELETION FAILED: #{message.comment_id} by f{message.actor_username}: '{content}'")
 
         
