@@ -68,22 +68,38 @@ class BaseCloud(ABC):
                 "You need to use session.connect_cloud (NOT get_cloud) in order to perform this operation.")
 
     def _send_packet(self, packet):
-        self.websocket.send(json.dumps(packet) + "\n")
-
-    def _handshake(self):
-        packet = {"method": "handshake", "user": self.username, "project_id": self.project_id}
         try:
-            self._send_packet(packet)
+            self.websocket.send(json.dumps(packet) + "\n")
         except Exception:
             self.connect()
             try:
-                self._send_packet(packet)
+                self.websocket.send(json.dumps(packet) + "\n")
             except Exception:
                 self.connect()
                 try:
-                    self._send_packet(packet)
+                    self.websocket.send(json.dumps(packet) + "\n")
                 except Exception:
-                    raise exceptions.ConnectionError("Handshake failed three times in a row")
+                    raise exceptions.ConnectionError(f"Sending packet failed three times in a row: {packet}")
+
+    def _send_packet_list(self, packet_list):
+        packet_string = "".join([json.dumps(packet) + "\n" for packet in packet_list])
+        print(packet_string)
+        try:
+            self.websocket.send(packet_string)
+        except Exception:
+            self.connect()
+            try:
+                self.websocket.send(packet_string)
+            except Exception:
+                self.connect()
+                try:
+                    self.websocket.send(packet_string)
+                except Exception:
+                    raise exceptions.ConnectionError(f"Sending packet list failed three times in a row: {packet_list}")
+
+    def _handshake(self):
+        packet = {"method": "handshake", "user": self.username, "project_id": self.project_id}
+        self._send_packet(packet)
 
     def connect(self):
         self.websocket = websocket.WebSocket()
@@ -115,19 +131,7 @@ class BaseCloud(ABC):
         self.disconnect()
         self.connect()
 
-    def set_var(self, variable, value):
-        """
-        Sets a cloud variable.
-
-        Args:
-            variable (str): The name of the cloud variable that should be set (provided without the cloud emoji)
-            value (str): The value the cloud variable should be set to
-        """
-        if not isinstance(variable, str):
-            raise ValueError("cloud var name must be a string")
-        if not self.active_connection:
-            self.connect()
-        variable = variable.replace("☁ ", "")
+    def _assert_valid_value(self, value):
         if not (value in [True, False, float('inf'), -float('inf')]):
             value = str(value)
             if len(value) > self.length_limit:
@@ -141,6 +145,21 @@ class BaseCloud(ABC):
                     raise(exceptions.InvalidCloudValue(
                         "Value not numeric"
                     ))
+
+
+    def set_var(self, variable, value):
+        """
+        Sets a cloud variable.
+
+        Args:
+            variable (str): The name of the cloud variable that should be set (provided without the cloud emoji)
+            value (str): The value the cloud variable should be set to
+        """
+        self._assert_valid_value(value)
+        if not isinstance(variable, str):
+            raise ValueError("cloud var name must be a string")
+        if not self.active_connection:
+            self.connect()
         while self._ratelimited_until + 0.1 >= time.time():
             time.sleep(0.001)
         packet = {
@@ -150,18 +169,36 @@ class BaseCloud(ABC):
             "user": self.username,
             "project_id": self.project_id,
         }
-        try:
-            self._send_packet(packet)
-        except Exception:
+        self._send_packet(packet)
+        self._ratelimited_until = time.time()
+
+    def set_vars(self, var_value_dict):
+        """
+        Sets multiple cloud variables at once (works for an unlimited amount of variables).
+
+        Args:
+            var_value_dict (dict): variable:value dictionary with the variables / values to set. The dict should like this: {"var1":"value1", "var2":"value2", ...}
+        """
+        if not self.active_connection:
             self.connect()
-            try:
-                self._send_packet(packet)
-            except Exception:
-                self.connect()
-                try:
-                    self._send_packet(packet)
-                except Exception:
-                    raise exceptions.ConnectionError(f"Setting cloud variable {variable} failed three times in a row")
+        while self._ratelimited_until + 0.1 >= time.time():
+            time.sleep(0.001)
+
+        packet_list = []
+        for variable in var_value_dict:
+            value = var_value_dict[variable]
+            self._assert_valid_value(value)
+            if not isinstance(variable, str):
+                raise ValueError("cloud var name must be a string")
+            packet = {
+                "method": "set",
+                "name": "☁ " + variable,
+                "value": value,
+                "user": self.username,
+                "project_id": self.project_id,
+            }
+            packet_list.append(packet)
+        self._send_packet_list(packet_list)
         self._ratelimited_until = time.time()
 
     def get_var(self, var, *, recorder_initial_values={}):
