@@ -1,9 +1,11 @@
+v2 roadmap: https://github.com/TimMcCool/scratchattach/issues/242
+
 Scratch API wrapper with support for almost all site features. Created by [TimMcCool](https://scratch.mit.edu/users/TimMcCool/).
 
 This library can set cloud variables, follow Scratchers, post comments and do so much more! It has special features that make it easy to transmit data through cloud variables.
 
 <p align="left">
-  <img width="160" height="133" src="https://github.com/TimMcCool/scratchattach/blob/main/logos/logo_dark_transparent_eyes.svg">
+  <img width="160" src="[https://github.com/TimMcCool/scratchattach/blob/main/logos/logo_dark_transparent_eyes.svg](https://github.com/TimMcCool/scratchattach/blob/v2/logos/logo.svg)">
 </p>
 
 [![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
