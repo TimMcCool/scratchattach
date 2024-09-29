@@ -13,10 +13,6 @@ pip install -U scratchattach
 If this doesn't work, pip was not added to path when you installed Python. Try running:
 ```
 python -m pip install -U scratchattach
-```
-
-Or this on MacOS:
-```
 python3 -m pip install -U scratchattach
 ```
 
