@@ -122,10 +122,12 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
         def __init__(self, hostname, *, port, websocketclass):
             super().__init__(hostname, port=port, websocketclass=websocketclass)
             self.running = False
-            self._events = {}
-            
-            self.tw_clients = {}
-            self.tw_variables = {}  # Holds cloud variable states
+            self._events = {} # saves event functions called on cloud updates
+
+            self.tw_clients = {} # saves connected clients
+            self.tw_variables = {}  # holds cloud variable states
+
+            # server config
             self.allow_non_numeric = allow_non_numeric
             self.whitelisted_projects = whitelisted_projects
             self.length_limit = length_limit
