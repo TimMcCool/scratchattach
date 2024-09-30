@@ -24,25 +24,22 @@ class TwCloudSocket(WebSocket):
                 if self.server.whitelisted_projects is not None:
                     if data["project_id"] not in self.server.whitelisted_projects:
                         self.close(4002)
-                        print(self.address[0]+":"+str(self.address[1]), "tried to set a var on non-whitelisted project and was disconnected, project:", data["project_id"], "user:",data["user"])
+                        if self.server.log_var_sets:
+                            print(self.address[0]+":"+str(self.address[1]), "tried to set a var on non-whitelisted project and was disconnected, project:", data["project_id"], "user:",data["user"])
                         return
                 # check if value is valid
                 if not self.server._check_value(data["value"]):
-                    print(self.address[0]+":"+str(self.address[1]), "sent an invalid var value")
+                    if self.server.log_var_sets:
+                        print(self.address[0]+":"+str(self.address[1]), "sent an invalid var value")
                     return
-                # perform cloud var set
-                print(self.address[0]+":"+str(self.address[1]), f"set {data['name']} to {data['value']}, project:", str(data["project_id"]), "user:",data["user"])
-                self.server.set_var(data["project_id"], data["name"], data["value"])                
-                # forward to other users connected to the same project
+                # perform cloud var and forward to other players
+                if self.server.log_var_sets:
+                    print(self.address[0]+":"+str(self.address[1]), f"set {data['name']} to {data['value']}, project:", str(data["project_id"]), "user:",data["user"])
+                self.server.set_var(data["project_id"], data["name"], data["value"], user=data["user"], skip_forward=self)                
                 send_to_clients = {
                     "method" : "set", "user" : data["user"], "project_id" : data["project_id"], "name" : data["name"],
                     "value" : data["value"], "timestamp" : round(time.time() * 1000), "server" : "scratchattach/2.0.0",
                 }
-                for user in self.server.active_user_ips(data["project_id"]):
-                    ud = self.server.tw_clients[user]
-                    if ud["client"] == self:
-                        continue # don't forward to the sender theirself
-                    ud["client"].sendMessage(json.dumps(send_to_clients))
                 # raise event
                 _a = cloud_activity.CloudActivity(timestamp=time.time()*1000)
                 data["name"] = data["name"].replace("☁ ", "")
@@ -117,7 +114,7 @@ class TwCloudSocket(WebSocket):
         except Exception as e:
             print("Internal error in handleClose:", e)
 
-def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_limit=None, allow_non_numeric=True, whitelisted_projects=None, allow_nonscratch_names=True, blocked_ips=[]):
+def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_limit=None, allow_non_numeric=True, whitelisted_projects=None, allow_nonscratch_names=True, blocked_ips=[], sync_players=True, log_var_sets=True):
     """
     Starts a websocket server which can be used with TurboWarp's ?cloud_host URL parameter.
     
@@ -138,6 +135,8 @@ def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_li
             self.length_limit = length_limit
             self.allow_nonscratch_names = allow_nonscratch_names
             self.blocked_ips = blocked_ips
+            self.sync_players = sync_players
+            self.log_var_sets = log_var_sets
 
         def check_for_ip_ban(self, client):
             if client.address[0] in self.blocked_ips or client.address[0]+":"+str(client.address[1]) in self.blocked_ips or client.address in self.blocked_ips:
@@ -182,31 +181,34 @@ def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_li
             for project_id in data:
                 self.set_project_vars(project_id, data[project_id])
 
-        def set_project_vars(self, project_id, data):
+        def set_project_vars(self, project_id, data *, user="@server"):
             project_id = str(project_id)
             self.tw_variables[project_id] = data
             for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
                 client.sendMessage("\n".join([
                     json.dumps({
                         "method" : "set", "project_id" : project_id, "name" : "☁ "+varname,
-                        "value" : data[varname], "server" : "scratchattach/2.0.0",
+                        "value" : data[varname], "server" : "scratchattach/2.0.0", "timestamp" : time.time()*1000, "user" : user
                     }) for varname in data])
                 )
 
-        def set_var(self, project_id, var_name, value):
+        def set_var(self, project_id, var_name, value, *, user="@server", skip_forward=None):
             var_name = var_name.replace("☁ ", "")
             project_id = str(project_id)
             if project_id not in self.tw_variables:
                 self.tw_variables[project_id] = {}               
             self.tw_variables[project_id][var_name] = value
 
-            for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
-                client.sendMessage(
-                    json.dumps({
-                        "method" : "set", "project_id" : project_id, "name" : "☁ "+var_name,
-                        "value" : value, "server" : "scratchattach/2.0.0",
-                    })
-                )
+            if self.sync_players is True:
+                for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
+                    if client == skip_forward:
+                        continue
+                    client.sendMessage(
+                        json.dumps({
+                            "method" : "set", "project_id" : project_id, "name" : "☁ "+var_name,
+                            "value" : value, "server" : "scratchattach/2.0.0", "timestamp" : time.time()*1000, "user" : user
+                        })
+                    )
 
         def _check_value(self, value):
             # Checks if a received cloud value satisfies the server's constraints
