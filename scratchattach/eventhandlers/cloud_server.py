@@ -110,14 +110,12 @@ class TwCloudSocket(WebSocket):
         except Exception as e:
             print("Internal error in handleClose:", e)
 
-def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_limit=None, allow_non_numeric=True, whitelisted_projects=None, allow_nonscratch_names=True, blocked_ips=[]):
+def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_limit=None, allow_non_numeric=True, whitelisted_projects=None, allow_nonscratch_names=True, blocked_ips=[]):
     """
     Starts a websocket server which can be used with TurboWarp's ?cloud_host URL parameter.
     
     Prints out the websocket address in the console.
     """
-    print(f"Serving websocket server: ws://{hostname}:{port}")
-
     class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         def __init__(self, hostname, *, port, websocketclass):
             super().__init__(hostname, port=port, websocketclass=websocketclass)
@@ -214,14 +212,14 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
                 if not (x.isnumeric() or x == ""):
                     return False
             return True
-
-        def start(self):
-            # overrides start function from BaseEventHandler which is not needed here
-            print("The server is already running")
         
         def _update(self):
-            # overrides start function from BaseEventHandler which is not needed here
-            return
+            try:
+                # Function called when .start() is executed (.start is inherited from BaseEventHandler)
+                print(f"Serving websocket server: ws://{hostname}:{port}")
+                self.serveforever()
+            except Exception as e:
+                raise exceptions.WebsocketServerError(str(e))
 
         def pause(self):
             self.running = False
@@ -233,13 +231,4 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
             self.running = False
             self.close()
 
-    try:
-        server = TwCloudServer(hostname, port=port, websocketclass=TwCloudSocket)
-        if thread:
-            Thread(target=server.serveforever).start()
-            return server
-        else:
-            server.serveforever()
-    except Exception as e:
-        raise exceptions.WebsocketServerError(str(e))
-    
+    return TwCloudServer(hostname, port=port, websocketclass=TwCloudSocket)
