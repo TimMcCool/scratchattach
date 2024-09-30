@@ -51,21 +51,20 @@ class TwCloudSocket(WebSocket):
                 data = json.loads(self.data)
                 # check if handshake is valid
                 if not "user" in data:
-                    print("Error:", self.address[0]+":"+str(self.address[1]), "handshake without providing a username")
+                    print(self.address[0]+":"+str(self.address[1]), "tried to handshake without providing a username")
                     return
                 if not "project_id" in data:
-                    print("Error:", self.address[0]+":"+str(self.address[1]), "handshake without providing a project_id")
+                    print(self.address[0]+":"+str(self.address[1]), "tried to handshake without providing a project_id")
                     return
                 # check if project_id is in username is allowed
                 if self.server.allow_nonscratch_names is False:
-                    if not get_user(self.data["user"]).does_exist():
-                        self.close()
+                    if not get_user(data["user"]).does_exist():
                         print(self.address[0]+":"+str(self.address[1]), "tried to handshake using a username not existing on Scratch, project:", data["project_id"], "user:",data["user"])
                 # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
                 if self.server.whitelisted_projects is not None:
-                    if data["project_id"] not in self.server.whitelisted_projects:
+                    if str(data["project_id"]) not in self.server.whitelisted_projects:
                         self.close()
-                        print(self.address[0]+":"+str(self.address[1]), "tried to handshake on non-whitelisted project and was disconnected, project:", data["project_id"], "user:",data["user"])
+                        print(self.address[0]+":"+str(self.address[1]), "tried to handshake on a non-whitelisted project:", data["project_id"], "user:",data["user"])
                 # register handshake in users list (save username and project_id)
                 print(self.address[0]+":"+str(self.address[1]), "handshaked, project:", data["project_id"], "user:",data["user"])
                 self.server.tw_clients[self.address]["username"] = data["user"]
