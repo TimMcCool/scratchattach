@@ -204,7 +204,7 @@ def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_li
         def _check_value(self, value):
             # Checks if a received cloud value satisfies the server's constraints
             if self.length_limit is not None:
-                if str(value) > self.length_limit:
+                if len(str(value)) > self.length_limit:
                     return False
             if self.allow_non_numeric is False:
                 x = value.replace(".", "")
