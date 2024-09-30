@@ -136,7 +136,7 @@ def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_li
         def check_for_ip_ban(self, client):
             if client.address[0] in self.blocked_ips or client.address[0]+":"+str(client.address[1]) in self.blocked_ips or client.address in self.blocked_ips:
                 client.sendMessage("You have been banned from this server")
-                client.close()
+                client.close(4002)
                 print(client.address[0]+":"+str(client.address[1]), "(IP-banned) was disconnected")
                 return True
             return False
