@@ -92,13 +92,13 @@ class TwCloudSocket(WebSocket):
 
     def handleClose(self):
         try:
-            if self.address in self.tw_clients:
+            if self.address in self.server.tw_clients:
                 self.server.tw_clients[self.address] = {"client":self, "username":None, "project_id":None}
                 print(self.address[0]+":"+str(self.address[1]), "disconnected")
         except Exception as e:
             print("Internal error in handleClose:", e)
 
-def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=False, length_limit=None, allow_non_numeric=True, whitelisted_projects=None, allow_nonscratch_names=True, blocked_ips=[]):
+def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_limit=None, allow_non_numeric=True, whitelisted_projects=None, allow_nonscratch_names=True, blocked_ips=[]):
     """
     Starts a websocket server which can be used with TurboWarp's ?cloud_host URL parameter.
     
