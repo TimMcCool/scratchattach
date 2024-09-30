@@ -154,6 +154,7 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
             self.tw_variables[project_id] = data
 
         def set_var(self, project_id, var_name, value):
+            var_name = var_name.replace("☁ ", "")
             project_id = str(project_id)
             if project_id not in self.tw_variables:
                 self.tw_variables[project_id] = {}               
