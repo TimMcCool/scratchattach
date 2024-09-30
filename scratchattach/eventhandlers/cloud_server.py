@@ -1,9 +1,10 @@
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from threading import Thread
-from .utils import exceptions
+from ..utils import exceptions
 import json
 import time
-from .site import user
+from ..site import user, cloud_activity
+from ._base import BaseEventHandler
 
 class TwCloudSocket(WebSocket):
 
@@ -31,14 +32,20 @@ class TwCloudSocket(WebSocket):
                     print(self.address[0]+":"+str(self.address[1]), "sent an invalid var value")
                     return
                 # forward to other users connected to the same project
+                send_to_clients = {
+                    "method" : "set", "user" : data["user"], "project_id" : data["project_id"], "name" : data["name"],
+                    "value" : data["value"], "timestamp" : round(time.time() * 1000), "server" : "scratchattach/2.0.0",
+                }
                 for user in self.server.active_user_ips(data["project_id"]):
                     ud = self.server.tw_clients[user]
                     if ud["client"] == self:
                         continue # don't forward to the sender theirself
-                    ud["client"].sendMessage(json.dumps({
-                        "method" : "set", "user" : data["user"], "project_id" : data["project_id"], "name" : data["name"],
-                        "value" : data["value"], "timestamp" : round(time.time() * 1000), "server" : "scratchattach/2.0.0",
-                    }))
+                    ud["client"].sendMessage(json.dumps(send_to_clients))
+                # raise event
+                _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session)
+                data["name"] = data["name"].replace("☁ ", "")
+                _a._update_from_dict(send_to_clients)
+                Thread(target=self.server.call_event, args=["on_set", _a, self])
 
             elif data["method"] == "handshake":
                 data = json.loads(self.data)
@@ -66,10 +73,12 @@ class TwCloudSocket(WebSocket):
                 # send current cloud variable values to the user who handshaked
                 self.sendMessage("\n".join([
                     json.dumps({
-                        "method" : "set", "project_id" : data["project_id"], "name" : varname,
+                        "method" : "set", "project_id" : data["project_id"], "name" : "☁ "+varname,
                         "value" : self.server.tw_variables[str(data["project_id"])][varname], "server" : "scratchattach/2.0.0",
                     }) for varname in self.server.get_project_vars(str(data["project_id"]))])
                 )
+                # raise event
+                Thread(target=self.server.call_event, args=["on_handshake", self.address, data["username"], data["project_id"], self])
 
             else:
                 print("Error:", self.address[0]+":"+str(self.address[1]), "sent a message without providing a valid method (set, handshake)")
@@ -87,13 +96,16 @@ class TwCloudSocket(WebSocket):
 
             print(self.address[0]+":"+str(self.address[1]), "connected")
             self.server.tw_clients[self.address] = {"client":self, "username":None, "project_id":None}
+            # raise event
+            Thread(target=self.server.call_event, args=["on_connect", self.address, self])
         except Exception as e:
             print("Internal error in handleConntected:", e)
 
     def handleClose(self):
         try:
             if self.address in self.server.tw_clients:
-                self.server.tw_clients[self.address] = {"client":self, "username":None, "project_id":None}
+                # raise event
+                Thread(target=self.server.call_event, args=["on_disconnect", self.address, self.server.tw_clients[self.address]["username"], self.server.tw_clients[self.address]["project_id"], self])
                 print(self.address[0]+":"+str(self.address[1]), "disconnected")
         except Exception as e:
             print("Internal error in handleClose:", e)
@@ -106,9 +118,10 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
     """
     print(f"Serving websocket server: ws://{hostname}:{port}")
 
-    class TwCloudServer(SimpleWebSocketServer):
+    class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         def __init__(self, hostname, *, port, websocketclass):
             super().__init__(hostname, port=port, websocketclass=websocketclass)
+            self.running = True
             self.tw_clients = {}
             self.tw_variables = {}  # Holds cloud variable states
             self.allow_non_numeric = allow_non_numeric
@@ -158,7 +171,7 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
             for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
                 client.sendMessage("\n".join([
                     json.dumps({
-                        "method" : "set", "project_id" : project_id, "name" : varname,
+                        "method" : "set", "project_id" : project_id, "name" : "☁ "+varname,
                         "value" : data[varname], "server" : "scratchattach/2.0.0",
                     }) for varname in data])
                 )
@@ -173,7 +186,7 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
             for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
                 client.sendMessage(
                     json.dumps({
-                        "method" : "set", "project_id" : project_id, "name" : var_name,
+                        "method" : "set", "project_id" : project_id, "name" : "☁ "+var_name,
                         "value" : value, "server" : "scratchattach/2.0.0",
                     })
                 )
@@ -190,6 +203,22 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
                     return False
             return True
 
+        def start(self):
+            # overrides start function from BaseEventHandler which is not needed hers
+            return
+        
+        def _update(self):
+            # overrides start function from BaseEventHandler which is not needed hers
+            return
+        
+        def stop(self):
+            self.running = False
+
+        def pause(self):
+            self.running = False
+
+        def resume(self):
+            self.running = True
 
     try:
         server = TwCloudServer(hostname, port=port, websocketclass=TwCloudSocket)
