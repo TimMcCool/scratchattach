@@ -4,7 +4,7 @@ from ..utils import exceptions
 import json
 import time
 from ..site import cloud_activity
-from ..site.user import get_user
+from ..site.user import User
 from ._base import BaseEventHandler
 
 class TwCloudSocket(WebSocket):
@@ -53,14 +53,17 @@ class TwCloudSocket(WebSocket):
                 # check if handshake is valid
                 if not "user" in data:
                     print(self.address[0]+":"+str(self.address[1]), "tried to handshake without providing a username")
+                    self.close(4002)
                     return
                 if not "project_id" in data:
                     print(self.address[0]+":"+str(self.address[1]), "tried to handshake without providing a project_id")
+                    self.close(4002)
                     return
                 # check if project_id is in username is allowed
                 if self.server.allow_nonscratch_names is False:
-                    if not get_user(data["user"]).does_exist():
+                    if not User(username=data["user"]).does_exist():
                         print(self.address[0]+":"+str(self.address[1]), "tried to handshake using a username not existing on Scratch, project:", data["project_id"], "user:",data["user"])
+                        self.close(4002) 
                 # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
                 if self.server.whitelisted_projects is not None:
                     if str(data["project_id"]) not in self.server.whitelisted_projects:
