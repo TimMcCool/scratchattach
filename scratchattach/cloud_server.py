@@ -37,7 +37,7 @@ class TwCloudSocket(WebSocket):
                         continue # don't forward to the sender theirself
                     ud["client"].sendMessage(json.dumps({
                         "method" : "set", "user" : data["user"], "project_id" : data["project_id"], "name" : data["name"],
-                        "value" : data["value"], "timestamp" : round(time.time() * 1000)
+                        "value" : data["value"], "timestamp" : round(time.time() * 1000), "server" : "scratchattach/2.0.0",
                     }))
 
             elif data["method"] == "handshake":
@@ -67,7 +67,7 @@ class TwCloudSocket(WebSocket):
                 self.sendMessage("\n".join([
                     json.dumps({
                         "method" : "set", "project_id" : data["project_id"], "name" : varname,
-                        "value" : self.server.tw_variables[str(data["project_id"])][varname]
+                        "value" : self.server.tw_variables[str(data["project_id"])][varname], "server" : "scratchattach/2.0.0",
                     }) for varname in self.server.get_project_vars(str(data["project_id"]))])
                 )
 
