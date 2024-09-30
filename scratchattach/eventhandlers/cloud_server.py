@@ -23,7 +23,7 @@ class TwCloudSocket(WebSocket):
                 # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
                 if self.server.whitelisted_projects is not None:
                     if data["project_id"] not in self.server.whitelisted_projects:
-                        self.close()
+                        self.close(4002)
                         print(self.address[0]+":"+str(self.address[1]), "tried to handshake on non-whitelisted project and was disconnected, project:", data["project_id"], "user:",data["user"])
                 # check if value is valid
                 if not self.server._check_value(data["value"]):
@@ -64,7 +64,7 @@ class TwCloudSocket(WebSocket):
                 # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
                 if self.server.whitelisted_projects is not None:
                     if str(data["project_id"]) not in self.server.whitelisted_projects:
-                        self.close()
+                        self.close(4002)
                         print(self.address[0]+":"+str(self.address[1]), "tried to handshake on a non-whitelisted project:", data["project_id"], "user:",data["user"])
                 # register handshake in users list (save username and project_id)
                 print(self.address[0]+":"+str(self.address[1]), "handshaked, project:", data["project_id"], "user:",data["user"])
