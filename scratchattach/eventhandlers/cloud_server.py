@@ -181,7 +181,7 @@ def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_li
             for project_id in data:
                 self.set_project_vars(project_id, data[project_id])
 
-        def set_project_vars(self, project_id, data *, user="@server"):
+        def set_project_vars(self, project_id, data, *, user="@server"):
             project_id = str(project_id)
             self.tw_variables[project_id] = data
             for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
