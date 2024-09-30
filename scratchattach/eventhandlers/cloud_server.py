@@ -3,7 +3,7 @@ from threading import Thread
 from ..utils import exceptions
 import json
 import time
-from ..site import user, cloud_activity
+from ..site.user import get_user, cloud_activity
 from ._base import BaseEventHandler
 
 class TwCloudSocket(WebSocket):
@@ -57,7 +57,7 @@ class TwCloudSocket(WebSocket):
                     return
                 # check if project_id is in username is allowed
                 if self.server.allow_nonscratch_names is False:
-                    if not user.get_user(self.data["user"]).does_exist():
+                    if not get_user(self.data["user"]).does_exist():
                         self.close()
                         print(self.address[0]+":"+str(self.address[1]), "tried to handshake using a username not existing on Scratch, project:", data["project_id"], "user:",data["user"])
                 # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
@@ -77,7 +77,7 @@ class TwCloudSocket(WebSocket):
                     }) for varname in self.server.get_project_vars(str(data["project_id"]))])
                 )
                 # raise event
-                Thread(target=self.server.call_event, args=["on_handshake", [self.address, data["user"], data["project_id"], self]]).start()
+                Thread(target=self.server.call_event, args=["on_handshake", [data["user"], data["project_id"], self]]).start()
 
             else:
                 print("Error:", self.address[0]+":"+str(self.address[1]), "sent a message without providing a valid method (set, handshake)")
@@ -95,7 +95,7 @@ class TwCloudSocket(WebSocket):
             print(self.address[0]+":"+str(self.address[1]), "connected")
             self.server.tw_clients[self.address] = {"client":self, "username":None, "project_id":None}
             # raise event
-            Thread(target=self.server.call_event, args=["on_connect", [self.address, self]]).start()
+            Thread(target=self.server.call_event, args=["on_connect", [self]]).start()
         except Exception as e:
             print("Internal error in handleConntected:", e)
 
@@ -105,7 +105,7 @@ class TwCloudSocket(WebSocket):
         try:
             if self.address in self.server.tw_clients:
                 # raise event
-                Thread(target=self.server.call_event, args=["on_disconnect", [self.address, self.server.tw_clients[self.address]["username"], self.server.tw_clients[self.address]["project_id"], self]]).start()
+                Thread(target=self.server.call_event, args=["on_disconnect", [self.server.tw_clients[self.address]["username"], self.server.tw_clients[self.address]["project_id"], self]]).start()
                 print(self.address[0]+":"+str(self.address[1]), "disconnected")
         except Exception as e:
             print("Internal error in handleClose:", e)
