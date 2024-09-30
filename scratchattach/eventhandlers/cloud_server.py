@@ -57,7 +57,7 @@ class TwCloudSocket(WebSocket):
                     return
                 # check if project_id is in username is allowed
                 if self.server.allow_nonscratch_names is False:
-                    if not user.get_user(self.data["username"]).does_exist():
+                    if not user.get_user(self.data["user"]).does_exist():
                         self.close()
                         print(self.address[0]+":"+str(self.address[1]), "tried to handshake using a username not existing on Scratch, project:", data["project_id"], "user:",data["user"])
                 # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
@@ -77,7 +77,7 @@ class TwCloudSocket(WebSocket):
                     }) for varname in self.server.get_project_vars(str(data["project_id"]))])
                 )
                 # raise event
-                Thread(target=self.server.call_event, args=["on_handshake", self.address, data["username"], data["project_id"], self])
+                Thread(target=self.server.call_event, args=["on_handshake", self.address, data["user"], data["project_id"], self])
 
             else:
                 print("Error:", self.address[0]+":"+str(self.address[1]), "sent a message without providing a valid method (set, handshake)")
