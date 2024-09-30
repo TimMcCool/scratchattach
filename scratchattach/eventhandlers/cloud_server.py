@@ -9,6 +9,8 @@ from ._base import BaseEventHandler
 class TwCloudSocket(WebSocket):
 
     def handleMessage(self):
+        if not self.server.running:
+            return
         try:
             if self.server.check_for_ip_ban(self):
                 return
@@ -84,6 +86,8 @@ class TwCloudSocket(WebSocket):
             print("Internal error in handleMessage:", e)
 
     def handleConnected(self):
+        if not self.server.running:
+            return
         try:
             if self.server.check_for_ip_ban(self):
                 return
@@ -96,6 +100,8 @@ class TwCloudSocket(WebSocket):
             print("Internal error in handleConntected:", e)
 
     def handleClose(self):
+        if not self.server.running:
+            return
         try:
             if self.address in self.server.tw_clients:
                 # raise event
@@ -207,20 +213,21 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
 
         def start(self):
             # overrides start function from BaseEventHandler which is not needed here
-            return
+            print("The server is already running")
         
         def _update(self):
             # overrides start function from BaseEventHandler which is not needed here
             return
-        
-        def stop(self):
-            self.running = False
 
         def pause(self):
             self.running = False
 
         def resume(self):
             self.running = True
+
+        def stop(self):
+            self.running = False
+            self.close()
 
     try:
         server = TwCloudServer(hostname, port=port, websocketclass=TwCloudSocket)
