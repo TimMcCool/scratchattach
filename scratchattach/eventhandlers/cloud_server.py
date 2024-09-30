@@ -44,7 +44,7 @@ class TwCloudSocket(WebSocket):
                 _a = cloud_activity.CloudActivity(timestamp=time.time()*1000)
                 data["name"] = data["name"].replace("☁ ", "")
                 _a._update_from_dict(send_to_clients)
-                Thread(target=self.server.call_event, args=["on_set", _a, self])
+                Thread(target=self.server.call_event, args=["on_set", [_a, self]]).start()
 
             elif data["method"] == "handshake":
                 data = json.loads(self.data)
@@ -77,7 +77,7 @@ class TwCloudSocket(WebSocket):
                     }) for varname in self.server.get_project_vars(str(data["project_id"]))])
                 )
                 # raise event
-                Thread(target=self.server.call_event, args=["on_handshake", self.address, data["user"], data["project_id"], self])
+                Thread(target=self.server.call_event, args=["on_handshake", [self.address, data["user"], data["project_id"], self]]).start()
 
             else:
                 print("Error:", self.address[0]+":"+str(self.address[1]), "sent a message without providing a valid method (set, handshake)")
@@ -95,7 +95,7 @@ class TwCloudSocket(WebSocket):
             print(self.address[0]+":"+str(self.address[1]), "connected")
             self.server.tw_clients[self.address] = {"client":self, "username":None, "project_id":None}
             # raise event
-            Thread(target=self.server.call_event, args=["on_connect", self.address, self])
+            Thread(target=self.server.call_event, args=["on_connect", [self.address, self]]).start()
         except Exception as e:
             print("Internal error in handleConntected:", e)
 
@@ -105,7 +105,7 @@ class TwCloudSocket(WebSocket):
         try:
             if self.address in self.server.tw_clients:
                 # raise event
-                Thread(target=self.server.call_event, args=["on_disconnect", self.address, self.server.tw_clients[self.address]["username"], self.server.tw_clients[self.address]["project_id"], self])
+                Thread(target=self.server.call_event, args=["on_disconnect", [self.address, self.server.tw_clients[self.address]["username"], self.server.tw_clients[self.address]["project_id"], self]]).start()
                 print(self.address[0]+":"+str(self.address[1]), "disconnected")
         except Exception as e:
             print("Internal error in handleClose:", e)
