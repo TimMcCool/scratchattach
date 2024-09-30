@@ -121,7 +121,9 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
     class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         def __init__(self, hostname, *, port, websocketclass):
             super().__init__(hostname, port=port, websocketclass=websocketclass)
-            self.running = True
+            self.running = False
+            self._events = {}
+            
             self.tw_clients = {}
             self.tw_variables = {}  # Holds cloud variable states
             self.allow_non_numeric = allow_non_numeric
