@@ -206,11 +206,11 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
             return True
 
         def start(self):
-            # overrides start function from BaseEventHandler which is not needed hers
+            # overrides start function from BaseEventHandler which is not needed here
             return
         
         def _update(self):
-            # overrides start function from BaseEventHandler which is not needed hers
+            # overrides start function from BaseEventHandler which is not needed here
             return
         
         def stop(self):
