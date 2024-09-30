@@ -20,8 +20,6 @@ class TwCloudSocket(WebSocket):
 
             if data["method"] == "set":
                 # cloud variable set received
-                print(self.address[0]+":"+str(self.address[1]), f"set {data['name']} to {data['value']}, project:", str(data["project_id"]), "user:",data["user"])
-                self.server.set_var(data["project_id"], data["name"], data["value"])
                 # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
                 if self.server.whitelisted_projects is not None:
                     if data["project_id"] not in self.server.whitelisted_projects:
@@ -31,6 +29,9 @@ class TwCloudSocket(WebSocket):
                 if not self.server._check_value(data["value"]):
                     print(self.address[0]+":"+str(self.address[1]), "sent an invalid var value")
                     return
+                # perform cloud var set
+                print(self.address[0]+":"+str(self.address[1]), f"set {data['name']} to {data['value']}, project:", str(data["project_id"]), "user:",data["user"])
+                self.server.set_var(data["project_id"], data["name"], data["value"])                
                 # forward to other users connected to the same project
                 send_to_clients = {
                     "method" : "set", "user" : data["user"], "project_id" : data["project_id"], "name" : data["name"],
