@@ -3,7 +3,8 @@ from threading import Thread
 from ..utils import exceptions
 import json
 import time
-from ..site.user import get_user, cloud_activity
+from ..site import cloud_activity
+from ..site.user import get_user
 from ._base import BaseEventHandler
 
 class TwCloudSocket(WebSocket):
