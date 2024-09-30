@@ -134,11 +134,13 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
             return self.tw_variables
 
         def get_project_vars(self, project_id):
+            project_id = str(project_id)
             if project_id in self.tw_variables:
                 return self.tw_variables[project_id]
             else: return {}
         
         def get_var(self, project_id, var_name):
+            project_id = str(project_id)
             var_name = var_name.replace("☁ ", "")
             if project_id in self.tw_variables:
                 if var_name in self.tw_variables[project_id]:
@@ -147,11 +149,19 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
             else: return None
         
         def set_global_vars(self, data):
-            self.tw_variables = data
+            for project_id in data:
+                self.set_project_vars(project_id, data[project_id])
 
         def set_project_vars(self, project_id, data):
             project_id = str(project_id)
             self.tw_variables[project_id] = data
+            for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
+                client.sendMessage("\n".join([
+                    json.dumps({
+                        "method" : "set", "project_id" : project_id, "name" : varname,
+                        "value" : data[varname], "server" : "scratchattach/2.0.0",
+                    }) for varname in data])
+                )
 
         def set_var(self, project_id, var_name, value):
             var_name = var_name.replace("☁ ", "")
@@ -159,6 +169,14 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
             if project_id not in self.tw_variables:
                 self.tw_variables[project_id] = {}               
             self.tw_variables[project_id][var_name] = value
+
+            for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
+                client.sendMessage(
+                    json.dumps({
+                        "method" : "set", "project_id" : project_id, "name" : var_name,
+                        "value" : value, "server" : "scratchattach/2.0.0",
+                    })
+                )
 
         def _check_value(self, value):
             # Checks if a received cloud value satisfies the server's constraints
