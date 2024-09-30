@@ -46,7 +46,6 @@ class TwCloudSocket(WebSocket):
                 if not "user" in data:
                     print("Error:", self.address[0]+":"+str(self.address[1]), "handshake without providing a username")
                     return
-                self.server.tw_clients[self.address]["user"] = data["user"]
                 if not "project_id" in data:
                     print("Error:", self.address[0]+":"+str(self.address[1]), "handshake without providing a project_id")
                     return
@@ -62,7 +61,7 @@ class TwCloudSocket(WebSocket):
                         print(self.address[0]+":"+str(self.address[1]), "tried to handshake on non-whitelisted project and was disconnected, project:", data["project_id"], "user:",data["user"])
                 # register handshake in users list (save username and project_id)
                 print(self.address[0]+":"+str(self.address[1]), "handshaked, project:", data["project_id"], "user:",data["user"])
-                self.server.tw_clients[self.address]["user"] = data["user"]
+                self.server.tw_clients[self.address]["username"] = data["user"]
                 self.server.tw_clients[self.address]["project_id"] = data["project_id"]
                 # send current cloud variable values to the user who handshaked
                 self.sendMessage("\n".join([
