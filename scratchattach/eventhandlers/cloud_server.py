@@ -41,7 +41,7 @@ class TwCloudSocket(WebSocket):
                         continue # don't forward to the sender theirself
                     ud["client"].sendMessage(json.dumps(send_to_clients))
                 # raise event
-                _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session)
+                _a = cloud_activity.CloudActivity(timestamp=time.time()*1000)
                 data["name"] = data["name"].replace("☁ ", "")
                 _a._update_from_dict(send_to_clients)
                 Thread(target=self.server.call_event, args=["on_set", _a, self])
