@@ -10,11 +10,8 @@ class TwCloudSocket(WebSocket):
 
     def handleMessage(self):
         try:
-            # Check for IP ban:
-            if self.address in self.server.blocked_ips or self.address[0]+":"+str(self.address[1]) in self.server.blocked_ips or self.address in self.server.blocked_ips:
-                self.sendMessage("You have been banned from this server")
-                self.close()
-                print(self.address[0]+":"+str(self.address[1]), "(IP-banned) was disconnected")
+            if self.server.check_for_ip_ban(self):
+                return
             
             data = json.loads(self.data)
 
@@ -88,11 +85,8 @@ class TwCloudSocket(WebSocket):
 
     def handleConnected(self):
         try:
-            # Check for IP ban:
-            if self.address[0] in self.server.blocked_ips or self.address[0]+":"+str(self.address[1]) in self.server.blocked_ips or self.address in self.server.blocked_ips:
-                self.sendMessage("You have been banned from this server")
-                self.close()
-                print(self.address[0]+":"+str(self.address[1]), "(IP-banned) attempted reconnecting and was disconnected")
+            if self.server.check_for_ip_ban(self):
+                return
 
             print(self.address[0]+":"+str(self.address[1]), "connected")
             self.server.tw_clients[self.address] = {"client":self, "username":None, "project_id":None}
@@ -130,6 +124,14 @@ def start_tw_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, lengt
             self.allow_nonscratch_names = allow_nonscratch_names
             self.blocked_ips = blocked_ips
 
+        def check_for_ip_ban(self, client):
+            if client.address[0] in self.blocked_ips or client.address[0]+":"+str(client.address[1]) in self.blocked_ips or client.address in self.blocked_ips:
+                client.sendMessage("You have been banned from this server")
+                client.close()
+                print(client.address[0]+":"+str(client.address[1]), "(IP-banned) was disconnected")
+                return True
+            return False
+                            
         def active_projects(self):
             only_active = {}
             for project_id in self.tw_variables:
