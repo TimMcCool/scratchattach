@@ -15,9 +15,8 @@ from . import forum
 
 from ..utils import commons
 
-from . import user
 from ..cloud import cloud, _base
-from . import project
+from . import user, project, backpack_asset
 from ..utils import exceptions
 from . import studio
 from ..eventhandlers import message_events, filterbot
@@ -417,24 +416,20 @@ class Session(BaseSiteComponent):
         Returns:
             list<dict>: List that contains the backpack items as dicts
         '''
-        return requests.get(
-            f"https://backpack.scratch.mit.edu/{self._username}?limit={limit}&offset={offset}",
-            headers = self._headers,
-            timeout = 10,
-        ).json()
-
-    def delete_from_backpack(self, asset_id):
+        data = commons.api_iterative(
+            f"https://backpack.scratch.mit.edu/{self._username}",
+            limit = limit, offset = offset, headers = self._headers
+        )
+        return commons.parse_object_list(data, backpack_asset.BackpackAsset, self)
+    
+    def delete_from_backpack(self, backpack_asset_id):
         '''
         Deletes an asset from the backpack.
 
         Args:
-            asset_id: ID of the asset that will be deleted.
+            backpack_asset_id: ID of the backpack asset that will be deleted
         '''
-        return requests.delete(
-            f"https://backpack.scratch.mit.edu/{self._username}/{asset_id}",
-            headers = self._headers,
-            timeout = 10,
-        ).json()
+        backpack_asset.BackpackAsset(id=backpack_asset_id, _session=self).delete()
 
     def upload_asset(self, asset):
         data = asset if isinstance(asset, bytes) else open(asset, "rb").read()
