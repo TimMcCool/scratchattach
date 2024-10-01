@@ -692,7 +692,7 @@ class User(BaseSiteComponent):
         class Verificator:
 
             def __init__(self, user):
-                self.project = user._make_linked_object("id", verification_project_id, project.Project, self._session)
+                self.project = user._make_linked_object("id", verification_project_id, project.Project, exceptions.ProjectNotFound)
                 self.projecturl = self.project.url
                 self.code = ''.join(random.choices(string.ascii_letters + string.digits, k=25))
                 self.username = user.username
@@ -701,7 +701,7 @@ class User(BaseSiteComponent):
                 return list(filter(lambda x : x.author_name == self.username, self.project.comments())) != []
 
         v = Verificator(self)
-        print(f"{self.username} has to go to {v.projecturl} and comment {self.code} to verify their identity")
+        print(f"{self.username} has to go to {v.projecturl} and comment {v.code} to verify their identity")
         return Verificator(self)
 
 # ------ #
