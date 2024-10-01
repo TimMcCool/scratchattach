@@ -694,7 +694,7 @@ class User(BaseSiteComponent):
             def __init__(self, user):
                 self.project = user._make_linked_object("id", verification_project_id, project.Project, exceptions.ProjectNotFound)
                 self.projecturl = self.project.url
-                self.code = ''.join(random.choices(string.ascii_letters + string.digits, k=25))
+                self.code = ''.join(random.choices(string.ascii_letters + string.digits, k=130))
                 self.username = user.username
 
             def check(self):
