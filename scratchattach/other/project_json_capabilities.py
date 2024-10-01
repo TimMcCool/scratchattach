@@ -266,6 +266,7 @@ class ProjectBody:
             self.__dict__.update(data)
             self.id = self.assetId
             self.filename = self.md5ext
+            self.download_url = f"https://assets.scratch.mit.edu/internalapi/asset/{self.filename}"
         
         def to_json(self):
             return_data = self.__dict__
@@ -278,7 +279,7 @@ class ProjectBody:
                 if filename is None:
                     filename = str(self.filename)
                 response = requests.get(
-                    f"https://assets.scratch.mit.edu/internalapi/asset/{self.filename}",
+                    self.download_url,
                     timeout=10,
                 )
                 open(f"{dir}{filename}", "wb").write(response.content)
