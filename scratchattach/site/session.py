@@ -410,8 +410,6 @@ class Session(BaseSiteComponent):
             raise(exceptions.FetchError)
 
         
-
-    """ WIP
     def backpack(self,limit=20, offset=0):
         '''
         Lists the assets that are in the backpack of the user associated with the session.
@@ -436,7 +434,7 @@ class Session(BaseSiteComponent):
             f"https://backpack.scratch.mit.edu/{self._username}/{asset_id}",
             headers = self._headers,
             timeout = 10,
-        ).json()''
+        ).json()
 
     def upload_asset(self, asset):
         data = asset if isinstance(asset, bytes) else open(asset, "rb").read()
@@ -450,7 +448,6 @@ class Session(BaseSiteComponent):
             data=data,
             timeout=10,
         )
-    """
 
     def become_scratcher_invite(self):
         """
@@ -679,6 +676,8 @@ def login_by_id(session_id, *, username=None, password=None):
     if password is not None:
         session_data = dict(session_id=session_id, username=username, password=password)
         session_string = base64.b64encode(json.dumps(session_data).encode())
+    else:
+        session_string = None
     _session = Session(id=session_id, username=username, session_string=session_string)
     try:
         if _session.update() == "429":
