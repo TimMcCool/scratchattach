@@ -7,6 +7,8 @@ import pathlib
 import hashlib
 import time
 import random
+import base64
+import secrets
 from typing import Type
 
 from . import forum
@@ -655,10 +657,10 @@ sess
 
     def connect_filterbot(self, *, log_deletions=True):
         return filterbot.Filterbot(user.User(username=self.username, _session=self), log_deletions=log_deletions)
-
+        
 # ------ #
 
-def login_by_id(session_id, *, username=None):
+def login_by_id(session_id, *, username=None, password=None):
     """
     Creates a session / log in to the Scratch website with the specified session id.
     Structured similarly to Session._connect_object method.
@@ -673,7 +675,11 @@ def login_by_id(session_id, *, username=None):
     Returns:
         scratchattach.session.Session: An object that represents the created log in / session
     """
-    _session = Session(id=session_id, username=username)
+    # Generate session_string (a scratchattach-specific authentication method)
+    if password is not None:
+        session_data = dict(session_id=session_id, username=username, password=password)
+        session_string = base64.b64encode(json.dumps(session_data).encode())
+    _session = Session(id=session_id, username=username, session_string=session_string)
     try:
         if _session.update() == "429":
             raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
@@ -715,6 +721,22 @@ def login(username, password, *, timeout=10):
     except Exception:
         raise exceptions.LoginFailure(
             "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
-
+        
     # Create session object:
-    return login_by_id(session_id, username=username)
+    return login_by_id(session_id, username=username, password=password)
+
+
+def login_by_session_string(session_string):
+    session_string = base64.b64decode(session_string).decode() # unobfuscate
+    session_data = json.loads(session_string)
+    try:
+        assert session_data.get("session_id")
+        return login_by_id(session_data["session_id"], username=session_data.get("username"), password=session_data.get("password"))
+    except Exception:
+        pass
+    try:
+        assert session_data.get("username") and session_data.get("password")
+        return login(username=session_data["username"], password=session_data["password"])
+    except Exception:
+        pass
+    raise ValueError("Couldn't log in.")
