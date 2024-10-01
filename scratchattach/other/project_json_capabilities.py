@@ -223,7 +223,7 @@ class ProjectBody:
 
         def to_json(self):
             if self.is_cloud:
-                return [self.name, self.saved_content, True]
+                return [self.name, self.saved_value, True]
             else:
                 return [self.name, self.saved_content]
 
