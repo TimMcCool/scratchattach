@@ -59,15 +59,14 @@ class ProjectBody:
 
         def top_level_block(self):
             block = self
-            while block.parent_id is not None:
-                block = self.previous_block()
             return block
 
         def previous_chain(self):
+            # to implement: a method that detects circular block chains (to make sure this method terminates)
             chain = []
             block = self
             while block.parent_id is not None:
-                block = self.previous_block()
+                block = self.attached_block()
                 chain.insert(0,block)
             return chain
 
@@ -75,7 +74,9 @@ class ProjectBody:
             chain = []
             block = self
             while block.next_id is not None:
-                block = self.next_block()
+                if block.id == block.next_id:
+                    break
+                block = self.attached_block()
                 chain.append(block)
             return chain
 
@@ -175,7 +176,7 @@ class ProjectBody:
             self.blocks = []
             for block_id in data["blocks"]: #self.blocks is a dict with the block_id as key and block content as value
                 if isinstance(data["blocks"][block_id], dict): # Sometimes there is a weird list at the end of the blocks list. This list is ignored
-                    block = ProjectBody.Block(id=block_id)
+                    block = ProjectBody.Block(id=block_id, sprite=self)
                     block.from_json(data["blocks"][block_id])
                     self.blocks.append(block)
             self.comments = data["comments"]
