@@ -225,7 +225,7 @@ class ProjectBody:
             if self.is_cloud:
                 return [self.name, self.saved_value, True]
             else:
-                return [self.name, self.saved_content]
+                return [self.name, self.saved_value]
 
     class List(BaseProjectBodyComponent):
 
