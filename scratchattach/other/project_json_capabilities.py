@@ -6,6 +6,7 @@ import string
 from abc import ABC, abstractmethod
 from ..utils import exceptions
 from ..utils.requests import Requests as requests
+import json
 
 def load_components(json_data:list, ComponentClass, target_list):
     for element in json_data:
@@ -91,25 +92,27 @@ class ProjectBody:
             self.id = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
             
         def duplicate_single_block(self):
-            new_block = self.Block(self.__dict__)
+            new_block = ProjectBody.Block(**self.__dict__)
             new_block.parent_id = None
             new_block.next_id = None
-            new_block.generate_new_id()
+            new_block._generate_new_id()
             self.sprite.blocks.append(new_block)
+            return new_block
         
         def duplicate_chain(self):
             blocks_to_dupe = [self] + self.attached_chain()
             duped = []
             for i in range(len(blocks_to_dupe)):
-                new_block = self.Block(blocks_to_dupe[i].__dict__)
+                new_block = ProjectBody.Block(**blocks_to_dupe[i].__dict__)
                 new_block.parent_id = None
                 new_block.next_id = None
-                new_block.generate_new_id()
+                new_block._generate_new_id()
                 if i != 0:
                     new_block.parent_id = duped[i-1].id
                     duped[i-1].next_id = new_block.id
                 duped.append(new_block)
             self.sprite.blocks += duped
+            return duped
 
         def _reattach(self, new_parent_id, new_next_id_of_old_parent):
             if self.parent_id is not None:
@@ -119,11 +122,12 @@ class ProjectBody:
                 self.sprite.blocks.append(old_parent_block)
 
             self.parent_id = new_parent_id
-
-            new_parent_block = self.sprite.block_by_id(self.parent_id)
-            self.sprite.blocks.remove(new_parent_block)
-            new_parent_block.next_id = self.id
-            self.sprite.blocks.append(new_parent_block)
+            
+            if self.parent_id is not None:
+                new_parent_block = self.sprite.block_by_id(self.parent_id)
+                self.sprite.blocks.remove(new_parent_block)
+                new_parent_block.next_id = self.id
+                self.sprite.blocks.append(new_parent_block)
 
             self.topLevel = new_parent_id is None
 
@@ -131,10 +135,11 @@ class ProjectBody:
             old_parent_id = str(self.parent_id)
             self._reattach(new_parent_id, self.next_id)
 
-            old_next_block = self.sprite.block_by_id(self.next_id)
-            self.sprite.blocks.remove(old_next_block)
-            old_next_block.parent_id = old_parent_id
-            self.sprite.blocks.append(old_next_block)
+            if self.next_id is not None:
+                old_next_block = self.sprite.block_by_id(self.next_id)
+                self.sprite.blocks.remove(old_next_block)
+                old_next_block.parent_id = old_parent_id
+                self.sprite.blocks.append(old_next_block)
 
             self.next_id = None
 
@@ -156,6 +161,8 @@ class ProjectBody:
                 self.sprite.blocks.remove(block)
 
         def inputs_as_blocks(self):
+            if self.input_data is None:
+                return None
             inputs = []
             for input in self.input_data:
                 inputs.append(self.sprite.block_by_id(self.input_data[input][1]))
@@ -200,7 +207,7 @@ class ProjectBody:
             self.rotationStyle = data.get("rotationStyle", None)
 
         def to_json(self):
-            return_data = self.__dict__
+            return_data = dict(self.__dict__)
             return_data["variables"] = [variable.to_json() for variable in self.variables]
             return_data["lists"] = [plist.to_json() for plist in self.lists]
             return_data["blocks"] = [block.to_json() for block in self.blocks]
@@ -275,7 +282,7 @@ class ProjectBody:
             self.download_url = f"https://assets.scratch.mit.edu/internalapi/asset/{self.filename}"
         
         def to_json(self):
-            return_data = self.__dict__
+            return_data = dict(self.__dict__)
             return_data.pop("filename")
             return_data.pop("id")
             return return_data
@@ -361,3 +368,17 @@ class ProjectBody:
     
     def user_agent(self):
         return self.meta["agent"]
+    
+    def save(self, *, filename=None, dir=""):
+        """
+        Saves the project body to the given directory.
+
+        Args:
+            filename (str): The name that will be given to the downloaded file.
+            dir (str): The path of the directory the file will be saved in.
+        """
+        if filename is None:
+            filename = "project"
+        filename = filename.replace(".sb3", "")
+        with open(f"{dir}{filename}.sb3", "w") as d:
+            json.dump(self.to_json(), d, indent=4)
