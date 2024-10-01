@@ -256,7 +256,7 @@ class Project(PartialProject):
                 )
             )
 
-    def project_body(self):
+    def body(self):
         """
         Method only works for project created with Scratch 3.
 
