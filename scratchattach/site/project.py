@@ -263,6 +263,10 @@ class Project(PartialProject):
         Returns:
             scratchattach.ProjectBody: The contents of the project as ProjectBody object
         """
+        raw_json = self.raw_json()
+        pb = ProjectBody()
+        pb.from_json(raw_json)
+        return pb
 
     def raw_json(self):
         """
@@ -271,11 +275,19 @@ class Project(PartialProject):
         Returns:
             dict: The raw project JSON as decoded Python dictionary
         """
-        raw_json = self.raw_json()
-        pb = ProjectBody()
-        pb.from_json(raw_json)
-        return pb
-
+        try:
+            self.update()
+            return requests.get(
+                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
+                timeout=10,
+            ).json()
+        except Exception:
+            raise (
+                exceptions.FetchError(
+                    "Either the project was created with an old Scratch version, or you're not authorized for accessing it"
+                )
+            )
+    
     def creator_agent(self):
         """
         Method only works for project created with Scratch 3.
@@ -283,18 +295,7 @@ class Project(PartialProject):
         Returns:
             str: The user agent of the browser that this project was saved with.
         """
-        try:
-            self.update()
-            return requests.get(
-                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
-                timeout=10,
-            ).json()["meta"]["agent"]
-        except Exception:
-            raise (
-                exceptions.FetchError(
-                    "Method only works for projects created with Scratch 3"
-                )
-            )
+        return self.raw_json()["meta"]["agent"]
 
     def author(self):
         """
