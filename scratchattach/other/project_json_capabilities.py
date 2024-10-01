@@ -240,10 +240,10 @@ class ProjectBody:
 
         def from_json(self, data:dict):
             self.__dict__.update(data)
-            if "VARIABLE" in data["params"][0]:
-                self.represented_object = self.projectBody.variable_by_id(data["params"][0]["VARIABLE"])
-            if "LIST" in data["params"][0]:
-                self.represented_object = self.projectBody.variable_by_id(data["params"][0]["LIST"])
+            if "VARIABLE" in data["params"]:
+                self.represented_object = self.projectBody.variable_by_id(data["params"]["VARIABLE"])
+            if "LIST" in data["params"]:
+                self.represented_object = self.projectBody.variable_by_id(data["params"]["LIST"])
 
         def to_json(self):
             return_data = self.__dict__
