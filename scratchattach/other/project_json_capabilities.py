@@ -1,4 +1,5 @@
-"""v2 ready (BETA): Project JSON reading and editing capabilities"""
+"""v2 ready: Project JSON reading and editing capabilities#
+This code is still in BETA, there are still bugs and potential consistency issues to be fixed"""
 
 import random
 import string
@@ -296,6 +297,9 @@ class ProjectBody:
         # Load monitors:
         self.monitors = []
         load_components(data["monitors"], ProjectBody.Monitor, self.monitors)
+        # Save origin of monitor in Monitor object:
+        for monitor in self.monitors:
+            monitor.projectBody = self
         # Set extensions and meta attributs: 
         self.extensions = data["meta"]
         self.meta = data["meta"]
