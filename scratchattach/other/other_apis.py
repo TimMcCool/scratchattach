@@ -10,7 +10,7 @@ def get_news(*, limit=10, offset=0):
 
 def featured_data():
     return requests.get("https://api.scratch.mit.edu/proxy/featured").json()
-x
+
 def featured_projects():
     return featured_data()["community_featured_projects"]
 
