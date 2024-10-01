@@ -80,6 +80,7 @@ class TwCloudSocket(WebSocket):
                         "value" : self.server.tw_variables[str(data["project_id"])][varname], "server" : "scratchattach/2.0.0",
                     }) for varname in self.server.get_project_vars(str(data["project_id"]))])
                 )
+                self.sendMessage("This server uses @TimMcCool's scratchattach 2.0.0")
                 # raise event
                 Thread(target=self.server.call_event, args=["on_handshake", [data["user"], data["project_id"], self]]).start()
 
@@ -206,7 +207,7 @@ def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_li
                     client.sendMessage(
                         json.dumps({
                             "method" : "set", "project_id" : project_id, "name" : "☁ "+var_name,
-                            "value" : value, "server" : "scratchattach/2.0.0", "timestamp" : time.time()*1000, "user" : user
+                            "value" : value, "timestamp" : time.time()*1000, "user" : user
                         })
                     )
 
