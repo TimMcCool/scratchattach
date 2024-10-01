@@ -82,10 +82,6 @@ class Session(BaseSiteComponent):
             "accept": "application/json",
             "Content-Type": "application/json",
         }
-        
-        self.session_data = (self.session_data or {}) if hasattr(self, "session_data") else {}
-        self.session_data.setdefault("session_id", self.id)
-        self.session_data.setdefault("username", self.username)
 
     def _update_from_dict(self, data):
         self.xtoken = data['user']['token']
@@ -661,17 +657,10 @@ sess
 
     def connect_filterbot(self, *, log_deletions=True):
         return filterbot.Filterbot(user.User(username=self.username, _session=self), log_deletions=log_deletions)
-    
-    """
-    def get_session_string(self):
-        session_data = self.session_data.copy()
-        session_data["session_string_id"] = secrets.token_urlsafe(8)
-        return base64.b64encode(json.dumps(session_data).encode())
-    """
-
+        
 # ------ #
 
-def login_by_id(session_id, *, username=None, extra_data=None):
+def login_by_id(session_id, *, username=None, password=None):
     """
     Creates a session / log in to the Scratch website with the specified session id.
     Structured similarly to Session._connect_object method.
@@ -686,7 +675,11 @@ def login_by_id(session_id, *, username=None, extra_data=None):
     Returns:
         scratchattach.session.Session: An object that represents the created log in / session
     """
-    _session = Session(id=session_id, username=username, session_data=extra_data or {})
+    # Generate session_string (a scratchattach-specific authentication method)
+    if password is not None:
+        session_data = dict(session_id=session_id, username=username, password=password)
+        session_string = base64.b64encode(json.dumps(session_data).encode())
+    _session = Session(id=session_id, username=username, session_string=session_string)
     try:
         if _session.update() == "429":
             raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
@@ -696,7 +689,7 @@ def login_by_id(session_id, *, username=None, extra_data=None):
         raise(e)
     return _session
 
-def login(username, password, *, timeout=10, extra_data=None):
+def login(username, password, *, timeout=10):
     """
     Creates a session / log in to the Scratch website with the specified username and password.
 
@@ -728,28 +721,22 @@ def login(username, password, *, timeout=10, extra_data=None):
     except Exception:
         raise exceptions.LoginFailure(
             "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
-
-    session_data = extra_data or {}
-    session_data.setdefault("username", username)
-    session_data.setdefault("password", password)
-
+        
     # Create session object:
-    return login_by_id(session_id, username=username, extra_data=session_data)
+    return login_by_id(session_id, username=username, password=password)
 
 
-""" Would allow for logging in with both sessionid and password at once for failure reduction
 def login_by_session_string(session_string):
     session_string = base64.b64decode(session_string).decode() # unobfuscate
     session_data = json.loads(session_string)
     try:
         assert session_data.get("session_id")
-        return login_by_id(session_data["session_id"], username=session_data.get("username"), extra_data=session_data)
+        return login_by_id(session_data["session_id"], username=session_data.get("username"), password=session_data.get("password"))
     except Exception:
         pass
     try:
         assert session_data.get("username") and session_data.get("password")
-        return login(username=session_data["username"], password=session_data["password"], extra_data=session_data)
+        return login(username=session_data["username"], password=session_data["password"])
     except Exception:
         pass
     raise ValueError("Couldn't log in.")
-"""
