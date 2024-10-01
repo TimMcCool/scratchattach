@@ -251,6 +251,7 @@ class ProjectBody:
         def to_json(self):
             return self.__dict__
 
+        '''will be fixed
         def represented_object(self):
             if not hasattr(self, "projectBody"):
                 print("Can't get represented object because the origin projectBody of this monitor is not saved")
@@ -258,7 +259,7 @@ class ProjectBody:
             if "VARIABLE" in self.params:
                 return self.projectBody.variable_by_id(self.params["VARIABLE"])
             if "LIST" in self.params:
-                return self.projectBody.variable_by_id(self.params["LIST"])
+                return self.projectBody.variable_by_id(self.params["LIST"])'''
 
     class Asset(BaseProjectBodyComponent):
 
