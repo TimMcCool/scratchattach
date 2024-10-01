@@ -329,8 +329,11 @@ class ProjectBody:
         return_data["meta"] = self.meta
         return return_data
 
+    def blocks(self):
+        return [block for sprite in self.sprites for block in sprite.blocks]
+    
     def block_count(self):
-        return len(self.blocks)
+        return len(self.blocks())
     
     def assets(self):
         return [sound for sprite in self.sprites for sound in sprite.sounds] + [costume for sprite in self.sprites for costume in sprite.costumes]
