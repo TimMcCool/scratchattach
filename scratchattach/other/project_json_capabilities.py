@@ -167,7 +167,10 @@ class ProjectBody:
             load_components(data["lists"], ProjectBody.List, self.lists) # load lists
             self.broadcasts = data["broadcasts"]
             self.blocks = []
-            load_components(data["blocks"], ProjectBody.Block, self.blocks) # load lists
+            for block_id in self.blocks: #self.blocks is a dict with the block_id as key and block content as value
+                block = ProjectBody.Block(id=block_id)
+                block.from_json(self.blocks[block_id])
+                self.blocks.append(block)
             self.comments = data["comments"]
             self.currentCostume = data["currentCostume"]
             self.costumes = []
