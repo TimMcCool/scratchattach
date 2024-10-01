@@ -692,7 +692,7 @@ class User(BaseSiteComponent):
         class Verificator:
 
             def __init__(self, user):
-                self.project = self._make_linked_object("id", verification_project_id, project.Project, self._session)
+                self.project = user._make_linked_object("id", verification_project_id, project.Project, self._session)
                 self.projecturl = self.project.url
                 self.code = ''.join(random.choices(string.ascii_letters + string.digits, k=25))
                 self.username = user.username
