@@ -10,7 +10,7 @@ def load_components(json_data:list, ComponentClass, target_list):
     target_list = []
     for element in json_data:
         component = ComponentClass()
-        component._load_from_json(element)
+        component.from_json(element)
         target_list.append(component)
 
 class ProjectBody:
