@@ -44,7 +44,7 @@ class ProjectBody:
             self.fields = data["fields"] # The values inside the block's inputs
             self.shadow = data["shadow"] # Whether the block is displayed with a shadow
             self.topLevel = data["topLevel"]
-            self.mutation = data["mutation"]
+            self.mutation = data.get("mutation",None)
             self.x = data.get("x", 0)
             self.y = data.get("y", 0)
             
@@ -167,10 +167,11 @@ class ProjectBody:
             load_components(data["lists"], ProjectBody.List, self.lists) # load lists
             self.broadcasts = data["broadcasts"]
             self.blocks = []
-            for block_id in self.blocks: #self.blocks is a dict with the block_id as key and block content as value
-                block = ProjectBody.Block(id=block_id)
-                block.from_json(self.blocks[block_id])
-                self.blocks.append(block)
+            for block_id in data["blocks"]: #self.blocks is a dict with the block_id as key and block content as value
+                if isinstance(data["blocks"][block_id], dict): # Sometimes there is a weird list at the end of the blocks list. This list is ignored
+                    block = ProjectBody.Block(id=block_id)
+                    block.from_json(data["blocks"][block_id])
+                    self.blocks.append(block)
             self.comments = data["comments"]
             self.currentCostume = data["currentCostume"]
             self.costumes = []
