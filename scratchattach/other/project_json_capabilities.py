@@ -8,7 +8,6 @@ from ..utils import exceptions
 from ..utils.requests import Requests as requests
 
 def load_components(json_data:list, ComponentClass, target_list):
-    target_list = []
     for element in json_data:
         component = ComponentClass()
         component.from_json(element)
