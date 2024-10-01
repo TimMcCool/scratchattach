@@ -666,7 +666,7 @@ sess
     def get_session_string(self):
         session_data = self.session_data.copy()
         session_data["session_string_id"] = secrets.token_urlsafe(8)
-        return base64.b64encode(json.dumps(self.session_data).encode())
+        return base64.b64encode(json.dumps(session_data).encode())
     """
 
 # ------ #
