@@ -1,3 +1,5 @@
+"""v2 ready (BETA): Project JSON reading and editing capabilities"""
+
 import random
 import string
 from abc import ABC, abstractmethod

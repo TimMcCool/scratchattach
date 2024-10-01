@@ -9,7 +9,7 @@ from ..utils import exceptions
 from ..utils import commons
 from ..utils.commons import empty_project_json, headers
 from ._base import BaseSiteComponent
-
+from ..other.project_json_capabilities import ProjectBody
 from ..utils.requests import Requests as requests
 
 CREATE_PROJECT_USES = []
@@ -256,27 +256,27 @@ class Project(PartialProject):
                 )
             )
 
-    def get_raw_json(self):
+    def project_body(self):
         """
         Method only works for project created with Scratch 3.
 
         Returns:
-            dict: The project JSON as decoded Python dictionary
+            scratchattach.ProjectBody: The contents of the project as ProjectBody object
         """
-        try:
-            self.update()
-            return requests.get(
-                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
-                timeout=10,
-            ).json()
-        except Exception:
-            raise (
-                exceptions.FetchError(
-                    "Method only works for projects created with Scratch 3"
-                )
-            )
 
-    def get_creator_agent(self):
+    def raw_json(self):
+        """
+        Method only works for project created with Scratch 3.
+
+        Returns:
+            dict: The raw project JSON as decoded Python dictionary
+        """
+        raw_json = self.raw_json()
+        pb = ProjectBody()
+        pb.from_json(raw_json)
+        return pb
+
+    def creator_agent(self):
         """
         Method only works for project created with Scratch 3.
 
@@ -607,6 +607,19 @@ class Project(PartialProject):
         return self.post_comment(
             content, parent_id=parent_id, commentee_id=commentee_id
         )
+    
+    def set_body(self, project_body:ProjectBody):
+        """
+        Sets the project's contents You can use this to upload projects to the Scratch website.
+        Returns a dict with Scratch's raw JSON API response.
+
+        Args:
+            project_body (scratchattach.ProjectBody): A ProjectBody object containing the contents of the project
+        """
+        self._assert_permission()
+        
+        return self.set_json(project_body.to_json())
+
 
     def set_json(self, json_data):
         """
