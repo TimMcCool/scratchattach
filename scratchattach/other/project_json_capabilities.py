@@ -66,7 +66,7 @@ class ProjectBody:
             chain = []
             block = self
             while block.parent_id is not None:
-                block = self.attached_block()
+                block = self.previous_block()
                 chain.insert(0,block)
             return chain
 
