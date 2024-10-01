@@ -59,6 +59,8 @@ class BackpackAsset(BaseSiteComponent):
         Args:
             dir (str): The path of the directory the file will be saved in.
         """
+        if not (dir.endswith("/") or dir.endswith("\\")):
+            dir = dir+"/"
         try:
             response = requests.get(
                 self.download_url,
@@ -72,7 +74,6 @@ class BackpackAsset(BaseSiteComponent):
                 )
             )
 
-    
     def delete(self):
         self._assert_auth()
 

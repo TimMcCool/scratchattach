@@ -242,6 +242,8 @@ class Project(PartialProject):
         try:
             if filename is None:
                 filename = str(self.id)
+            if not (dir.endswith("/") or dir.endswith("\\")):
+                dir = dir+"/"
             self.update()
             response = requests.get(
                 f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",

@@ -288,6 +288,8 @@ class ProjectBody:
             return return_data
 
         def download(self, *, filename=None, dir=""):
+            if not (dir.endswith("/") or dir.endswith("\\")):
+                dir = dir+"/"
             try:
                 if filename is None:
                     filename = str(self.filename)
