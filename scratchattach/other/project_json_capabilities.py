@@ -192,7 +192,7 @@ class ProjectBody:
             return_data["variables"] = [variable.to_json() for variable in self.variables]
             return_data["lists"] = [plist.to_json() for plist in self.lists]
             return_data["blocks"] = [block.to_json() for block in self.blocks]
-            return_data["customes"] = [custome.to_json() for custome in self.customes]
+            return_data["costumes"] = [custome.to_json() for custome in self.costumes]
             return_data["sounds"] = [sound.to_json() for sound in self.sounds]
             return return_data
 
