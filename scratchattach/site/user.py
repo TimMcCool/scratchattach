@@ -2,6 +2,7 @@
 
 import json
 import random
+import string
 
 from ..eventhandlers import message_events
 from . import project
@@ -674,6 +675,32 @@ class User(BaseSiteComponent):
             dict
         """
         return requests.get(f"https://my-ocular.jeffalo.net/api/user/{self.username}").json()
+    
+    def verify_identity(self, *, verification_project_id=395330233):
+        """
+        Can be used in applications to verify a user's identity.
+        
+        This function returns a Verifactor object. Attributs of this object:
+        :.projecturl: The link to the project where the user has to go to verify
+        :.project: The project where the user has to go to verify as scratchattach.Project object
+        :.code: The code that the user has to comment
+
+        To check if the user verified successfully, call the .check() function on the returned object.
+        It will return True if the user commented the code.
+        """
+
+        class Verificator:
+
+            def __init__(self, user):
+                self.project = self._make_linked_object("id", verification_project_id, project.Project, self._session)
+                self.projecturl = self.project.url
+                self.code = ''.join(random.choices(string.ascii_letters + string.digits, k=25))
+                self.username = user.username
+
+            def check(self):
+                return list(filter(lambda x : x.author_name == self.username, self.project.comments())) != []
+
+        return Verificator(self)
 
 # ------ #
 

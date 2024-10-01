@@ -489,7 +489,7 @@ class Session(BaseSiteComponent):
 
     # --- Connect classes inheriting from BaseSiteComponent ---
 
-    def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException):
+    def _make_linked_object(self, identificator_name, identificator, Class, NotFoundException):
         """
         The Session class doesn't save the login in a ._session attribut, but IS the login ITSELF.
 
@@ -498,7 +498,7 @@ class Session(BaseSiteComponent):
 
         Class must inherit from BaseSiteComponent
         """
-        return commons._get_object(identificator_id, identificator, Class, NotFoundException, self)
+        return commons._get_object(identificator_name, identificator, Class, NotFoundException, self)
 
 
     def connect_user(self, username):
