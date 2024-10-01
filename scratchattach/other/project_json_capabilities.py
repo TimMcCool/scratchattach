@@ -81,7 +81,13 @@ class ProjectBody:
         def complete_chain(self):
             return self.previous_chain() + [self] + self.attached_chain()
     
-        def generate_new_id(self):
+        def _generate_new_id(self):
+            """
+            Generates a new id for the block and updates the id.
+            
+            Warning:
+                The next_id attribute of the parent block and the parent_id attribute of the next block will NOT be updated by this method.
+            """
             self.id = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
             
         def duplicate_single_block(self):
