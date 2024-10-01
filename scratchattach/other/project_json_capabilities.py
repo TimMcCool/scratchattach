@@ -174,7 +174,7 @@ class ProjectBody:
             self.comments = data["comments"]
             self.currentCostume = data["currentCostume"]
             self.costumes = []
-            load_components(data["customes"], ProjectBody.Asset, self.costumes) # load lists
+            load_components(data["costumes"], ProjectBody.Asset, self.costumes) # load lists
             self.sounds = []
             load_components(data["sounds"], ProjectBody.Asset, self.sounds) # load lists
             self.volume = data["volume"]
