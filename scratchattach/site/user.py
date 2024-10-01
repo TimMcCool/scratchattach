@@ -700,6 +700,8 @@ class User(BaseSiteComponent):
             def check(self):
                 return list(filter(lambda x : x.author_name == self.username, self.project.comments())) != []
 
+        v = Verificator(self)
+        print(f"{self.username} has to go to {v.projecturl} and comment {self.code} to verify their identity")
         return Verificator(self)
 
 # ------ #
