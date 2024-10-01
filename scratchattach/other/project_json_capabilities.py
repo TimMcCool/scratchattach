@@ -162,9 +162,15 @@ class ProjectBody:
             self.isStage = data["isStage"]
             self.name = data["name"]
             self.variables = []
-            load_components(data["variables"], ProjectBody.Variable, self.variables) # load variables
+            for variable_id in data["variables"]: #self.lists is a dict with the list_id as key and info as value
+                pvar = ProjectBody.Variable(id=variable_id)
+                pvar.from_json(data["variables"][variable_id])
+                self.variables.append(pvar)
             self.lists = []
-            load_components(data["lists"], ProjectBody.List, self.lists) # load lists
+            for list_id in data["lists"]: #self.lists is a dict with the list_id as key and info as value
+                plist = ProjectBody.List(id=list_id)
+                plist.from_json(data["lists"][list_id])
+                self.lists.append(plist)
             self.broadcasts = data["broadcasts"]
             self.blocks = []
             for block_id in data["blocks"]: #self.blocks is a dict with the block_id as key and block content as value
@@ -220,7 +226,7 @@ class ProjectBody:
         def from_json(self, data:list):
             self.name = data[0]
             self.saved_value = data[1]
-            self.is_cloud = len(data) == 2
+            self.is_cloud = len(data) == 3
 
         def to_json(self):
             if self.is_cloud:
@@ -250,9 +256,9 @@ class ProjectBody:
                 print("Can't get represented object because the origin projectBody of this monitor is not saved")
                 return
             if "VARIABLE" in self.params:
-                return self.projectBody.variable_by_id(data["params"]["VARIABLE"])
+                return self.projectBody.variable_by_id(self.params["VARIABLE"])
             if "LIST" in self.params:
-                return self.projectBody.variable_by_id(data["params"]["LIST"])
+                return self.projectBody.variable_by_id(self.params["LIST"])
 
     class Asset(BaseProjectBodyComponent):
 
@@ -326,7 +332,7 @@ class ProjectBody:
         return len(self.blocks)
     
     def assets(self):
-        return len([sound for sprite in self.sprites for sound in sprite.sounds]) + ([costume for sprite in self.sprites for costume in sprite.costumes])
+        return [sound for sprite in self.sprites for sound in sprite.sounds] + [costume for sprite in self.sprites for costume in sprite.costumes]
 
     def asset_count(self):
         return len(self.assets())
