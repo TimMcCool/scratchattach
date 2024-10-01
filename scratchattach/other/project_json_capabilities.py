@@ -161,13 +161,18 @@ class ProjectBody:
         def from_json(self, data:dict):
             self.isStage = data["isStage"]
             self.name = data["name"]
+            self.variables = []
             load_components(data["variables"], ProjectBody.Variable, self.variables) # load variables
+            self.lists = []
             load_components(data["lists"], ProjectBody.List, self.lists) # load lists
             self.broadcasts = data["broadcasts"]
+            self.blocks = []
             load_components(data["blocks"], ProjectBody.Block, self.blocks) # load lists
             self.comments = data["comments"]
             self.currentCostume = data["currentCostume"]
+            self.costumes = []
             load_components(data["customes"], ProjectBody.Asset, self.costumes) # load lists
+            self.sounds = []
             load_components(data["sounds"], ProjectBody.Asset, self.sounds) # load lists
             self.volume = data["volume"]
             self.layerOrder = data["layerOrder"]
@@ -283,8 +288,10 @@ class ProjectBody:
         Imports the project data from a dict that contains the raw project json
         """
         # Load sprites:
+        self.sprites = []
         load_components(data["targets"], ProjectBody.Sprite, self.sprites)
         # Load monitors:
+        self.monitors = []
         load_components(data["monitors"], ProjectBody.Monitor, self.monitors)
         # Set extensions and meta attributs: 
         self.extensions = data["meta"]
