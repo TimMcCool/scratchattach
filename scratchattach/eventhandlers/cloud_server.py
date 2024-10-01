@@ -117,7 +117,7 @@ class TwCloudSocket(WebSocket):
 
 def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_limit=None, allow_non_numeric=True, whitelisted_projects=None, allow_nonscratch_names=True, blocked_ips=[], sync_players=True, log_var_sets=True):
     """
-    Starts a websocket server which can be used with TurboWarp's ?cloud_host URL parameter.
+    Inits a websocket server which can be used with TurboWarp's ?cloud_host URL parameter.
     
     Prints out the websocket address in the console.
     """
