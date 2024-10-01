@@ -36,19 +36,15 @@ class ProjectBody:
 
         def from_json(self, data: dict):
             self.opcode = data["opcode"] # The name of the block 
-            self.next_id = dict["next"] # The id of the block attached below this block
-            self.parent_id = dict["parent"] # The id of the block that this block is attached to
-            self.input_data = dict["inputs"] # The blocks inside of the block (if the block is a loop or an if clause for example)
+            self.next_id = data["next"] # The id of the block attached below this block
+            self.parent_id = data["parent"] # The id of the block that this block is attached to
+            self.input_data = data["inputs"] # The blocks inside of the block (if the block is a loop or an if clause for example)
             self.fields = data["fields"] # The values inside the block's inputs
             self.shadow = data["shadow"] # Whether the block is displayed with a shadow
             self.topLevel = data["topLevel"]
             self.mutation = data["mutation"]
-            self.x = 0
-            self.y = 0
-            if "x" in data:
-                self.x = data["x"]
-            if "y" in data:
-                self.y = data["y"]
+            self.x = data.get("x", 0)
+            self.y = data.get("y", 0)
             
         def to_json(self):
             return {"opcode":self.opcode,"next":self.next_id,"parent":self.parent_id,"inputs":self.input_data,"fields":self.fields,"topLevel":self.topLevel,"shadow":self.shadow,"x":self.x,"y":self.y}
@@ -233,7 +229,7 @@ class ProjectBody:
     class Monitor(BaseProjectBodyComponent):
 
         def from_json(self, data:dict):
-            self.__dict__.update(dict)
+            self.__dict__.update(data)
             if "VARIABLE" in data["params"][0]:
                 self.represented_object = self.projectBody.variable_by_id(data["params"][0]["VARIABLE"])
             if "LIST" in data["params"][0]:
@@ -247,7 +243,7 @@ class ProjectBody:
     class Asset(BaseProjectBodyComponent):
 
         def from_json(self, data:dict):
-            self.__dict__.update(dict)
+            self.__dict__.update(data)
             self.id = self.assetId
             self.filename = self.md5ext
         
@@ -291,7 +287,6 @@ class ProjectBody:
         # Set extensions and meta attributs: 
         self.extensions = data["meta"]
         self.meta = data["meta"]
-        return True
 
     def to_json(self):
         """
