@@ -429,7 +429,7 @@ class Session(BaseSiteComponent):
         Args:
             backpack_asset_id: ID of the backpack asset that will be deleted
         '''
-        backpack_asset.BackpackAsset(id=backpack_asset_id, _session=self).delete()
+        return backpack_asset.BackpackAsset(id=backpack_asset_id, _session=self).delete()
 
     def upload_asset(self, asset):
         data = asset if isinstance(asset, bytes) else open(asset, "rb").read()

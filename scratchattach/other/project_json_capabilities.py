@@ -40,11 +40,11 @@ class ProjectBody:
         def from_json(self, data: dict):
             self.opcode = data["opcode"] # The name of the block 
             self.next_id = data["next"] # The id of the block attached below this block
-            self.parent_id = data["parent"] # The id of the block that this block is attached to
-            self.input_data = data["inputs"] # The blocks inside of the block (if the block is a loop or an if clause for example)
+            self.parent_id = data.get("parent", None) # The id of the block that this block is attached to
+            self.input_data = data.get("inputs", None) # The blocks inside of the block (if the block is a loop or an if clause for example)
             self.fields = data["fields"] # The values inside the block's inputs
             self.shadow = data["shadow"] # Whether the block is displayed with a shadow
-            self.topLevel = data["topLevel"]
+            self.topLevel = data.get("topLevel", False)
             self.mutation = data.get("mutation",None)
             self.x = data.get("x", 0)
             self.y = data.get("y", 0)
@@ -173,6 +173,7 @@ class ProjectBody:
         def from_json(self, data:dict):
             self.isStage = data["isStage"]
             self.name = data["name"]
+            self.id = self.name # Sprites are uniquely identifiable through their name
             self.variables = []
             for variable_id in data["variables"]: #self.lists is a dict with the list_id as key and info as value
                 pvar = ProjectBody.Variable(id=variable_id)
@@ -208,9 +209,16 @@ class ProjectBody:
 
         def to_json(self):
             return_data = dict(self.__dict__)
-            return_data["variables"] = [variable.to_json() for variable in self.variables]
-            return_data["lists"] = [plist.to_json() for plist in self.lists]
-            return_data["blocks"] = [block.to_json() for block in self.blocks]
+            return_data.pop("id")
+            return_data["variables"] = {}
+            for variable in self.variables:
+                return_data["variables"][variable.id] = variable.to_json()
+            return_data["lists"] = {}
+            for plist in self.lists:
+                return_data["lists"][plist.id] = plist.to_json()
+            return_data["blocks"] = {}
+            for block in self.blocks:
+                return_data["blocks"][block.id] = block.to_json()
             return_data["costumes"] = [custome.to_json() for custome in self.costumes]
             return_data["sounds"] = [sound.to_json() for sound in self.sounds]
             return return_data
@@ -261,7 +269,10 @@ class ProjectBody:
             self.__dict__.update(data)
 
         def to_json(self):
-            return self.__dict__
+            return_data = dict(self.__dict__)
+            if "projectBody" in return_data:
+                return_data.pop("projectBody")
+            return return_data
 
         '''will be fixed
         def represented_object(self):
@@ -334,12 +345,8 @@ class ProjectBody:
         Returns a valid project JSON dict with the contents of this project
         """
         return_data = {}
-        return_data["targets"] = {}
-        for sprite in self.sprites:
-            return_data["targets"][sprite.id] = sprite.to_json()
-        return_data["monitors"] = {}
-        for monitor in self.monitors:
-            return_data["monitors"][monitor.id] = monitor.to_json()
+        return_data["targets"] = [sprite.to_json() for sprite in self.sprites]
+        return_data["monitors"] = [monitor.to_json() for monitor in self.monitors]
         return_data["extensions"] = self.extensions
         return_data["meta"] = self.meta
         return return_data
@@ -379,6 +386,8 @@ class ProjectBody:
             filename (str): The name that will be given to the downloaded file.
             dir (str): The path of the directory the file will be saved in.
         """
+        if not (dir.endswith("/") or dir.endswith("\\")):
+            dir = dir + "/"
         if filename is None:
             filename = "project"
         filename = filename.replace(".sb3", "")
