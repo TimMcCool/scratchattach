@@ -294,7 +294,7 @@ class ProjectBody:
             return new_var
 
         def create_list(self, name, *, value=[]):
-            new_list = ProjectBody.Variable(name=name, value=value)
+            new_list = ProjectBody.List(name=name, value=value)
             self.lists.append(new_list)
             return new_list
         
@@ -313,8 +313,8 @@ class ProjectBody:
         
     class Variable(BaseProjectBodyComponent):
         
-        def __init__(self, entries):
-            super().__init__(entries)
+        def __init__(self, **entries):
+            super().__init__(**entries)
             if self.id is None:
                 self._generate_new_id()
 
@@ -331,8 +331,8 @@ class ProjectBody:
 
     class List(BaseProjectBodyComponent):
 
-        def __init__(self, entries):
-            super().__init__(entries)
+        def __init__(self, **entries):
+            super().__init__(**entries)
             if self.id is None:
                 self._generate_new_id()
 
