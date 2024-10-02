@@ -1,4 +1,4 @@
-from .cloud._base import BaseEventHandler
+from .cloud._base import BaseCloud
 from .cloud.cloud import ScratchCloud, TwCloud, get_cloud, get_scratch_cloud, get_tw_cloud
 
 from .eventhandlers._base import BaseEventHandler
