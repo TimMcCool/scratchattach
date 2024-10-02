@@ -72,13 +72,13 @@ class Filterbot(MessageEvents):
         self.update_interval = 2
 
     def add_filter(self, filter_obj):
-        if isinstance(filter_obj, HardFilter):
-            self.hard_filters.append(filter_obj)
-        elif isinstance(filter_obj, SoftFilter):
+        if isinstance(filter_obj, SoftFilter):
             self.soft_filters.append(filter_obj)
         elif isinstance(filter_obj, SpamFilter): # careful: SpamFilter is also HardFilter due to inheritence
             self.spam_filters.append(filter_obj)
-    
+        elif isinstance(filter_obj, HardFilter):
+            self.hard_filters.append(filter_obj)
+
     def add_f4f_filter(self):
         self.add_filter(HardFilter("(f4f_filter) 'f4f'", contains="f4f"))
         self.add_filter(HardFilter("(f4f_filter) 'follow me'", contains="follow me"))

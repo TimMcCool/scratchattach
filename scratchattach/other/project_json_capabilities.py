@@ -1,5 +1,5 @@
 """v2 ready: Project JSON reading and editing capabilities#
-This code is still in BETA, there are still bugs and potential consistency issues to be fixed"""
+This code is still in BETA, there are still bugs and potential consistency issues to be fixed. New features will be added."""
 
 import random
 import zipfile
