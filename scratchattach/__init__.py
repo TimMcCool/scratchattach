@@ -5,6 +5,7 @@ from .eventhandlers.cloud_server import init_cloud_server
 from .eventhandlers._base import BaseEventHandler
 
 from .other.other_apis import *
+from .other.project_json_capabilities import ProjectBody, project_body_from_dict, project_body_from_file, empty_project_body
 
 from .site.activity import Activity
 from .site.backpack_asset import BackpackAsset

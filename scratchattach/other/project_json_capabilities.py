@@ -2,10 +2,12 @@
 This code is still in BETA, there are still bugs and potential consistency issues to be fixed"""
 
 import random
+import zipfile
 import string
 from abc import ABC, abstractmethod
 from ..utils import exceptions
 from ..utils.requests import Requests as requests
+from ..utils.commons import empty_project_json
 import json
 
 def load_components(json_data:list, ComponentClass, target_list):
@@ -393,3 +395,30 @@ class ProjectBody:
         filename = filename.replace(".sb3", "")
         with open(f"{dir}{filename}.sb3", "w") as d:
             json.dump(self.to_json(), d, indent=4)
+
+def empty_project_body():
+    pb = ProjectBody()
+    pb.from_json(empty_project_json)
+    return pb
+
+def project_body_from_dict(project_json:dict):
+    pb = ProjectBody()
+    pb.from_json(project_json)
+    return pb
+
+def project_body_from_file(path_to_file):
+    pb = ProjectBody()
+    try:
+        with open(path_to_file, "r") as r:
+            project_json = json.loads(r.read())
+    except Exception as e:
+        with zipfile.ZipFile(path_to_file, 'r') as zip_ref:
+            # Check if the file exists in the zip
+            if "project.json" in zip_ref.namelist():
+                # Read the file as bytes
+                with zip_ref.open("project.json") as file:
+                    project_json = json.loads(file.read())
+            else:
+                raise ValueError("specified sb3 archive doesn't contain project.json")
+    pb.from_json(project_json)
+    return pb
