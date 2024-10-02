@@ -301,20 +301,23 @@ button,
     justify-content: space-around;
     flex-wrap: wrap; /* Allows wrapping if the screen is too narrow */
     gap: 20px; /* Fixed gap between feature boxes */
-    width: 1200px;
+    width: 100%; /* Full width of the parent */
+    max-width: 1200px; /* Maximum width */
     margin: 0 auto; /* Centers the container horizontally */
+    padding: 0 20px; /* Add padding to avoid edge clipping */
 }
 
 .feature-box {
     color: #ffffff;
     padding: 20px;
-    width: 350px; /* Ensure three boxes per row with gap */
+    flex: 1 1 300px; /* Grow and shrink with a minimum width of 300px */
     border-radius: 8px;
     text-align: center;
     position: relative; /* For positioning the icon */
     padding-top: 25px; /* Space for the icon */
     margin-top: 35px;
     background-color: rgba(0, 0, 0, 0.199);
+    min-width: 250px; /* Minimum width to avoid being too small */
 }
 
 /* Icon in circle */
@@ -326,11 +329,11 @@ button,
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background-color: #5f4c85;/*#444; /* Circle background color */
+    background-color: #5f4c85; /* Circle background color */
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;/*#faa51d;*/
+    color: white; /* Icon color */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Shadow for the circle */
 }
 
@@ -352,6 +355,20 @@ button,
     color: #b0b0b0;
     margin-top: 10px; /* Space between title and text */
 }
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+    .features {
+        flex-direction: column; /* Stack feature boxes vertically */
+        align-items: center; /* Center the boxes */
+    }
+
+    .feature-box {
+        width: 90%; /* Use a percentage for responsive width */
+        margin-top: 20px; /* Adjust top margin */
+    }
+}
+
 
 
 /* Icons */

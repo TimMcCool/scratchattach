@@ -37,5 +37,3 @@ def community_projects():
             {"project_id":p.id, "title":p.title, "author":str(p.__dict__.get("author_name")), "thumbnail_url":f"https://uploads.scratch.mit.edu/get_image/project/{p.id}_480x360.png"} for p in sa.Studio(id=31478892).projects(limit=40)
         ]
     return jsonify(random.choices(community_projects_cache, k=5))
-
-app.run(debug=True)
