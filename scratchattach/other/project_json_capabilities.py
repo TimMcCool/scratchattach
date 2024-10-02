@@ -354,7 +354,7 @@ class ProjectBody:
                 return_data.pop("projectBody")
             return return_data
 
-        def represented_object(self):
+        def target(self):
             if not hasattr(self, "projectBody"):
                 print("Can't get represented object because the origin projectBody of this monitor is not saved")
                 return
