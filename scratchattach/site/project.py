@@ -61,6 +61,8 @@ class PartialProject(BaseSiteComponent):
         except Exception: pass
         try: self.author_name = data["author"]["username"]
         except Exception: pass
+        try: self.author_name = data["username"]
+        except Exception: pass
         try: self.comments_allowed = data["comments_allowed"]
         except Exception: pass
         try: self.instructions = data["instructions"]
