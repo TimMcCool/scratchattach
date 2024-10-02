@@ -10,6 +10,7 @@ import random
 import base64
 import secrets
 from typing import Type
+import zipfile
 
 from . import forum
 
@@ -24,7 +25,7 @@ from . import activity
 from ._base import BaseSiteComponent
 from ..utils.commons import headers, empty_project_json
 from bs4 import BeautifulSoup
-
+from ..other import project_json_capabilities
 from ..utils.requests import Requests as requests
 
 CREATE_PROJECT_USES = []
@@ -237,6 +238,54 @@ class Session(BaseSiteComponent):
         )
         return commons.parse_object_list(data, project.Project, self)"""
 
+    # -- Project JSON editing capabilities ---
+
+    def connect_empty_project_pb():
+        pb = project_json_capabilities.ProjectBody()
+        pb.from_json(empty_project_json)
+        return pb
+
+    def connect_pb_from_dict(project_json:dict):
+        pb = project_json_capabilities.ProjectBody()
+        pb.from_json(project_json)
+        return pb
+
+    def connect_pb_from_file(path_to_file):
+        pb = project_json_capabilities.ProjectBody()
+        pb.from_json(project_json_capabilities._load_sb3_file(path_to_file))
+        return pb
+    
+    def download_asset(asset_id_with_file_ext, *, filename=None, dir=""):
+        if not (dir.endswith("/") or dir.endswith("\\")):
+            dir = dir+"/"
+        try:
+            if filename is None:
+                filename = str(asset_id_with_file_ext)
+            response = requests.get(
+                "https://assets.scratch.mit.edu/"+str(asset_id_with_file_ext),
+                timeout=10,
+            )
+            open(f"{dir}{filename}", "wb").write(response.content)
+        except Exception:
+            raise (
+                exceptions.FetchError(
+                    "Failed to download asset"
+                )
+            )
+
+    def upload_asset(self, asset_content):
+        data = asset_content if isinstance(asset_content, bytes) else open(asset_content, "rb").read()
+
+        if isinstance(asset_content, str):
+            file_ext = pathlib.Path(asset_content).suffix
+
+        requests.post(
+            f"https://assets.scratch.mit.edu/{hashlib.md5(data).hexdigest()}.{file_ext}",
+            headers=self._headers,
+            data=data,
+            timeout=10,
+        )
+
     # --- Search ---
 
     def search_projects(self, *, query="", mode="trending", language="en", limit=40, offset=0):
@@ -431,18 +480,6 @@ class Session(BaseSiteComponent):
         '''
         return backpack_asset.BackpackAsset(id=backpack_asset_id, _session=self).delete()
 
-    def upload_asset(self, asset):
-        data = asset if isinstance(asset, bytes) else open(asset, "rb").read()
-
-        if isinstance(asset, str):
-            file_ext = pathlib.Path(asset).suffix
-
-        requests.post(
-            f"https://assets.scratch.mit.edu/{hashlib.md5(data).hexdigest()}.{file_ext}",
-            headers=self._headers,
-            data=data,
-            timeout=10,
-        )
 
     def become_scratcher_invite(self):
         """

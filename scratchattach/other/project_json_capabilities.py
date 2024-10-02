@@ -318,12 +318,13 @@ class ProjectBody:
                     )
                 )
 
-    def __init__(self, *, sprites=[], monitors=[], extensions=[], meta=[{"agent":None}]):
+    def __init__(self, *, sprites=[], monitors=[], extensions=[], meta=[{"agent":None}], _session=None):
         # sprites are called "targets" in the initial API response
         self.sprites = sprites
         self.monitors = monitors
         self.extensions = extensions
         self.meta = meta
+        self._session = _session
 
     def from_json(self, data:dict):
         """
@@ -352,6 +353,8 @@ class ProjectBody:
         return_data["extensions"] = self.extensions
         return_data["meta"] = self.meta
         return return_data
+
+    # -- Functions to get info --
 
     def blocks(self):
         return [block for sprite in self.sprites for block in sprite.blocks]
@@ -396,18 +399,23 @@ class ProjectBody:
         with open(f"{dir}{filename}.sb3", "w") as d:
             json.dump(self.to_json(), d, indent=4)
 
-def empty_project_body():
+        # -- Functions to modify project contents --
+
+        def add_sound(self, asset:ProjectBody.asset):
+            if self._session is None:
+                print("Warning: When uploading the project to the Scratch website, the added sound won't be available there. To automatically upload")
+
+def get_empty_project_pb():
     pb = ProjectBody()
     pb.from_json(empty_project_json)
     return pb
 
-def project_body_from_dict(project_json:dict):
+def get_pb_from_dict(project_json:dict):
     pb = ProjectBody()
     pb.from_json(project_json)
     return pb
 
-def project_body_from_file(path_to_file):
-    pb = ProjectBody()
+def _load_sb3_file(path_to_file):
     try:
         with open(path_to_file, "r") as r:
             project_json = json.loads(r.read())
@@ -420,5 +428,28 @@ def project_body_from_file(path_to_file):
                     project_json = json.loads(file.read())
             else:
                 raise ValueError("specified sb3 archive doesn't contain project.json")
-    pb.from_json(project_json)
+
+def get_pb_from_file(path_to_file):
+    pb = ProjectBody()
+    pb.from_json(_load_sb3_file(path_to_file))
     return pb
+
+def download_asset(asset_id_with_file_ext, *, filename=None, dir=""):
+    if not (dir.endswith("/") or dir.endswith("\\")):
+        dir = dir+"/"
+    try:
+        if filename is None:
+            filename = str(asset_id_with_file_ext)
+        response = requests.get(
+            "https://assets.scratch.mit.edu/"+str(asset_id_with_file_ext),
+            timeout=10,
+        )
+        open(f"{dir}{filename}", "wb").write(response.content)
+    except Exception:
+        raise (
+            exceptions.FetchError(
+                "Failed to download asset"
+            )
+        )
+
+# The method for uploading an asset by id requires authentication and can be found in the site.session.Session class
