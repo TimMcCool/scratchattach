@@ -273,14 +273,17 @@ class Session(BaseSiteComponent):
                 )
             )
 
-    def upload_asset(self, asset_content):
+    def upload_asset(self, asset_content, *, asset_id=None, file_ext=None):
         data = asset_content if isinstance(asset_content, bytes) else open(asset_content, "rb").read()
 
         if isinstance(asset_content, str):
             file_ext = pathlib.Path(asset_content).suffix
 
+        if asset_id is None:
+            asset_id = hashlib.md5(data).hexdigest()
+
         requests.post(
-            f"https://assets.scratch.mit.edu/{hashlib.md5(data).hexdigest()}.{file_ext}",
+            f"https://assets.scratch.mit.edu/{asset_id}.{file_ext}",
             headers=self._headers,
             data=data,
             timeout=10,

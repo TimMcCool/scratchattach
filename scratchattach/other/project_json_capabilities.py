@@ -9,6 +9,7 @@ from ..utils import exceptions
 from ..utils.requests import Requests as requests
 from ..utils.commons import empty_project_json
 import json
+import hashlib
 
 def load_components(json_data:list, ComponentClass, target_list):
     for element in json_data:
@@ -33,6 +34,15 @@ class ProjectBody:
         @abstractmethod
         def to_json(self):
             pass
+
+        def _generate_new_id(self):
+            """
+            Generates a new id and updates the id.
+            
+            Warning:
+                When done on Block objects, the next_id attribute of the parent block and the parent_id attribute of the next block will NOT be updated by this method.
+            """
+            self.id = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
 
 
     class Block(BaseProjectBodyComponent):
@@ -83,16 +93,7 @@ class ProjectBody:
 
         def complete_chain(self):
             return self.previous_chain() + [self] + self.attached_chain()
-    
-        def _generate_new_id(self):
-            """
-            Generates a new id for the block and updates the id.
-            
-            Warning:
-                The next_id attribute of the parent block and the parent_id attribute of the next block will NOT be updated by this method.
-            """
-            self.id = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
-            
+                
         def duplicate_single_block(self):
             new_block = ProjectBody.Block(**self.__dict__)
             new_block.parent_id = None
@@ -211,6 +212,8 @@ class ProjectBody:
 
         def to_json(self):
             return_data = dict(self.__dict__)
+            if "projectBody" in return_data:
+                return_data.pop("projectBody")
             return_data.pop("id")
             return_data["variables"] = {}
             for variable in self.variables:
@@ -237,13 +240,83 @@ class ProjectBody:
                 return None
             return matching[0]
 
+        def variable_by_name(self, variable_name):
+            matching = list(filter(lambda x : x.name == variable_name, self.variables))
+            if matching == []:
+                return None
+            return matching[0]
+
+        def list_by_name(self, list_name):
+            matching = list(filter(lambda x : x.name == list_name, self.lists))
+            if matching == []:
+                return None
+            return matching[0]
+
         def block_by_id(self, block_id):
             matching = list(filter(lambda x : x.id == block_id, self.blocks))
             if matching == []:
                 return None
             return matching[0]
+        
+        # -- Functions to modify project contents --
 
+        def create_sound(self, asset_content, *, name="new sound", dataFormat="mp3", rate=4800, sampleCount=4800):
+            data = asset_content if isinstance(asset_content, bytes) else open(asset_content, "rb").read()
+
+            new_asset_id = hashlib.md5(data).hexdigest()
+            new_asset = ProjectBody.Asset(assetId=new_asset_id, name=name, id=new_asset_id, dataFormat=dataFormat, rate=rate, sampleCound=sampleCount, md5ext=new_asset_id+"."+dataFormat, filename=new_asset_id+"."+dataFormat)
+            self.sounds.append(new_asset)
+            if not hasattr(self, "projectBody"):
+                print("Warning: Since there's no project body connected to this object, the new sound asset won't be uploaded to Scratch")
+            elif self.projectBody._session is None:
+                print("Warning: Since there's no login connected to this object, the new sound asset won't be uploaded to Scratch")
+            else:
+                self._session.upload_asset(data, asset_id=new_asset_id, file_ext=dataFormat)
+            return new_asset
+
+        def create_costume(self, asset_content, *, name="new costume", dataFormat="svg", rotationCenterX=0, rotationCenterY=0):
+            data = asset_content if isinstance(asset_content, bytes) else open(asset_content, "rb").read()
+
+            new_asset_id = hashlib.md5(data).hexdigest()
+            new_asset = ProjectBody.Asset(assetId=new_asset_id, name=name, id=new_asset_id, dataFormat=dataFormat, rotationCenterX=rotationCenterX, rotationCenterY=rotationCenterY, md5ext=new_asset_id+"."+dataFormat, filename=new_asset_id+"."+dataFormat)
+            self.costumes.append(new_asset)
+            if not hasattr(self, "projectBody"):
+                print("Warning: Since there's no project body connected to this object, the new costume asset won't be uploaded to Scratch")
+            elif self.projectBody._session is None:
+                print("Warning: Since there's no login connected to this object, the new costume asset won't be uploaded to Scratch")
+            else:
+                self._session.upload_asset(data, asset_id=new_asset_id, file_ext=dataFormat)
+            return new_asset
+
+        def create_variable(self, name, *, value=0, is_cloud=False):
+            new_var = ProjectBody.Variable(name=name, value=value, is_cloud=is_cloud)
+            self.variables.append(new_var)
+            return new_var
+
+        def create_list(self, name, *, value=[]):
+            new_list = ProjectBody.Variable(name=name, value=value)
+            self.lists.append(new_list)
+            return new_list
+        
+        def add_block(self, block, *, parent_id=None):
+            block.parent_id = None
+            block.next_id = None
+            if parent_id is not None:
+                block.reattach_single_block(parent_id)
+            self.blocks.append(block)
+
+        def add_block_chain(self, block_chain, *, parent_id=None):
+            parent = parent_id
+            for block in block_chain:
+                self.add_block(block, parent_id=parent)
+                parent = str(block.id)
+        
     class Variable(BaseProjectBodyComponent):
+        
+        def __init__(self, entries):
+            super().__init__(entries)
+            if self.id is None:
+                self._generate_new_id()
 
         def from_json(self, data:list):
             self.name = data[0]
@@ -257,6 +330,11 @@ class ProjectBody:
                 return [self.name, self.saved_value]
 
     class List(BaseProjectBodyComponent):
+
+        def __init__(self, entries):
+            super().__init__(entries)
+            if self.id is None:
+                self._generate_new_id()
 
         def from_json(self, data:list):
             self.name = data[0]
@@ -276,15 +354,14 @@ class ProjectBody:
                 return_data.pop("projectBody")
             return return_data
 
-        '''will be fixed
         def represented_object(self):
             if not hasattr(self, "projectBody"):
                 print("Can't get represented object because the origin projectBody of this monitor is not saved")
                 return
             if "VARIABLE" in self.params:
-                return self.projectBody.variable_by_id(self.params["VARIABLE"])
+                return self.projectBody.sprite_by_name(self.spriteName).variable_by_name(self.params["VARIABLE"])
             if "LIST" in self.params:
-                return self.projectBody.variable_by_id(self.params["LIST"])'''
+                return self.projectBody.sprite_by_name(self.spriteName).list_by_name(self.params["LIST"])
 
     class Asset(BaseProjectBodyComponent):
 
@@ -333,6 +410,9 @@ class ProjectBody:
         # Load sprites:
         self.sprites = []
         load_components(data["targets"], ProjectBody.Sprite, self.sprites)
+        # Save origin of sprite in Sprite object:
+        for sprite in self.sprites:
+            sprite.projectBody = self            
         # Load monitors:
         self.monitors = []
         load_components(data["monitors"], ProjectBody.Monitor, self.monitors)
@@ -380,6 +460,12 @@ class ProjectBody:
             if r is not None:
                 return r
     
+    def sprite_by_name(self, sprite_name):
+        matching = list(filter(lambda x : x.name == sprite_name, self.sprites))
+        if matching == []:
+            return None
+        return matching[0]
+    
     def user_agent(self):
         return self.meta["agent"]
     
@@ -398,12 +484,6 @@ class ProjectBody:
         filename = filename.replace(".sb3", "")
         with open(f"{dir}{filename}.sb3", "w") as d:
             json.dump(self.to_json(), d, indent=4)
-
-        # -- Functions to modify project contents --
-
-        def add_sound(self, asset:ProjectBody.asset):
-            if self._session is None:
-                print("Warning: When uploading the project to the Scratch website, the added sound won't be available there. To automatically upload")
 
 def get_empty_project_pb():
     pb = ProjectBody()
