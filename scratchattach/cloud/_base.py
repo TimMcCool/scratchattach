@@ -18,7 +18,7 @@ class BaseCloud(ABC):
     - must then set some attributes
 
     Attributs that must be specified in the __init__ function a class inheriting from this one:
-    
+
     :self._session: Either None or a Session object
 
     :self.project_id: Project id of the cloud variables
@@ -36,8 +36,8 @@ class BaseCloud(ABC):
     :self.username: The username to send during handshake. Defaults to "scratchattach"
 
     :self.header: The header to send. Defaults to None
-    
-    :self.cookie: The cookie to send. Defaults to None 
+
+    :self.cookie: The cookie to send. Defaults to None
 
     :self.origin: The origin to send. Defaults to None
 
@@ -45,7 +45,7 @@ class BaseCloud(ABC):
     """
 
     def __init__(self):
-        
+
         # Internal attributes
         self._ratelimited_until = 0
         self.active_connection = False #whether a connection to a cloud variable server is currently established
@@ -126,7 +126,7 @@ class BaseCloud(ABC):
             self.websocket.close()
         except Exception:
             pass
-    
+
     def reconnect(self):
         self.disconnect()
         self.connect()
