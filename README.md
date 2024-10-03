@@ -25,6 +25,8 @@ Report bugs by opening an issue on this repository. If you need help or guideanc
 
 # Example usage
 
+Set a cloud variable:
+
 ```py
 import scratchattach as scratch3
 
