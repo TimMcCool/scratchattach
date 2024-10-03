@@ -157,7 +157,7 @@ section {
 }
 
 .section-3 {
-    background-color: #1f1f1f;
+    background-color: #1c1c1c;
     padding-top: 0px;
     padding-bottom:15px;
 }
@@ -282,17 +282,20 @@ button,
     position: relative; /* Keep it in flow with section-1 */
     z-index: 3; /* Ensure gradient is above the overlay */
     margin: 0px;
+    text-align: center;
 }
 
 .gradient-2 {
     height: 50px;
-    background: linear-gradient(to bottom, #222222, #1f1f1f);
+    background: linear-gradient(to bottom, #222222, #1c1c1c);
+    text-align: center;
 }
 
 /* Gradient section styles */
 .gradient-3 {
     height: 50px;
-    background: linear-gradient(to bottom, #1f1f1f, #222222);
+    background: linear-gradient(to bottom, #1c1c1c, #222222);
+    text-align: center;
 }
 
 /* Features section */
