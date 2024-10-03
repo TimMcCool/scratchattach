@@ -11,13 +11,12 @@ class ScratchCloud(BaseCloud):
     def __init__(self, *, project_id, _session=None):
         super().__init__()
         
-        # Required attributes
         self.project_id = project_id
-        self._session = _session
+
+        # Configure this object's attributes specifically for being used with Scratch's cloud:
         self.cloud_host = "wss://clouddata.scratch.mit.edu"
-        
-        # Optional attributes
         self.length_limit = 256
+        self._session = _session
         if self._session is not None:
             self.username = self._session.username
             self.cookie = "scratchsessionsid=" + self._session.id + ";"
@@ -95,21 +94,36 @@ class ScratchCloud(BaseCloud):
 
 class TwCloud(BaseCloud):
 
-    def __init__(self, *, project_id, _session=None, cloud_host="wss://clouddata.turbowarp.org", purpose="", contact=""):
+    def __init__(self, *, project_id, cloud_host="wss://clouddata.turbowarp.org", purpose="", contact=""):
         super().__init__()
         
-        # Required attributes
         self.project_id = project_id
-        self._session = _session
-        self.cloud_host = cloud_host
         
-        # Optional attributes
+        # Configure this object's attributes specifically for being used with TurboWarp's cloud:
+        self.cloud_host = cloud_host
         self.ws_ratelimit = 0 # TurboWarp doesn't enforce a wait time between cloud variable sets
         self.length_limit = 100000 # TurboWarp doesn't enforce a cloud variable length
         purpose_string = ""
         if purpose != "" or contact != "":
             purpose_string = f" (Purpose:{purpose}; Contact:{contact})"
         self.header = {"User-Agent":f"scratchattach/2.0.0{purpose_string}"}
+
+class CustomCloud(BaseCloud):
+
+    def __init__(self, *, project_id, cloud_host, **kwargs):
+        super().__init__()
+        
+        self.project_id = project_id
+        self.cloud_host = cloud_host
+
+        # Configure this object's attributes specifically for the cloud that the developer wants to connect to:
+        # -> For this purpose, all additional keyword arguments (kwargs) will be set as attributes of the CustomCloud object
+        # This allows the maximum amount of attribute customization
+        # See the docstring for the cloud._base.BaseCloud class (or the documentation in the GitHub Wiki) to find out what attributes can be set / specified as keyword args
+        self.__dict__.update(kwargs)
+
+        # If even more customization is needed, the developer can create a class inheriting from cloud._base.BaseCloud to override functions like .set_var etc.
+
 
 def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> Type[BaseCloud]:
     """

@@ -11,21 +11,21 @@ import ssl
 class BaseCloud(ABC):
 
     """
-    Base class for a project's cloud variables.
+    Base class for a project's cloud variables. Represents a cloud.
 
     When inheriting from this class, the __init__ function ...
     - must first call super().__init__()
     - must then set some attributes
 
-    Attributs that must be specified in the __init__ function a class inheriting from this one:
-
-    :self._session: Either None or a Session object
+    Attributes that must be specified in the __init__ function a class inheriting from this one:
 
     :self.project_id: Project id of the cloud variables
 
     :self.cloud_host: URL of the websocket server ("wss://..." or "ws://...")
 
     Attributes that can, but don't have to be specified in the __init__ function:
+
+    :self._session: Either None or a site.session.Session object. Defaults to None.
 
     :self.ws_ratelimit: The wait time between cloud variable sets. Defaults to 0.1
 
@@ -46,13 +46,15 @@ class BaseCloud(ABC):
 
     def __init__(self):
 
-        # Internal attributes
+        # Required internal attributes that every object representing a cloud needs to have (no matter what cloud is represented):
+        self._session = None
         self._ratelimited_until = 0
         self.active_connection = False #whether a connection to a cloud variable server is currently established
         self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
         self.recorder = None # A CloudRecorder object that records cloud activity for the values to be retrieved later will be saved in this attribute as soon as .get_var is called
 
-        # Default values for cloud-specific attributes
+        # Set default values for attributes that save configurations specific to the represented cloud:
+        # (These attributes can be specifically in the constructors of classes inheriting from this base class)
         self.ws_ratelimit = 0.1
         self.ws_timeout = 3 # Timeout for send operations (after the timeout, the connection will be renewed and the operation will be retried 3 times)
         self.allow_non_numeric = False
