@@ -155,7 +155,7 @@ class BaseCloud(ABC):
 
     def _enforce_ratelimit(self, *, n):
         # n is the amount of variables being set
-        if (time.time() - self.first_var_set) / self.var_stets_since_first > self.ws_longterm_ratelimit: # if the average delay between cloud variable sets has been bigger than the long-term rate-limit, cloud variables can be set fast (wait time smaller than long-term rate limit) again
+        if (time.time() - self.first_var_set) / (self.var_stets_since_first+1) > self.ws_longterm_ratelimit: # if the average delay between cloud variable sets has been bigger than the long-term rate-limit, cloud variables can be set fast (wait time smaller than long-term rate limit) again
             self.var_stets_since_first = 0
             self.first_var_set = time.time()
 
