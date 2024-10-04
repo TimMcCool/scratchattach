@@ -160,9 +160,8 @@ class BaseCloud(ABC):
             self.first_var_set = time.time()
 
         wait_time = self.ws_shortterm_ratelimit * n
-        if time.time() - self.first_var_set > 30: # if cloud variables have been continously set fast (wait time smaller than long-term rate limit) for a minute, they should be set slow now (wait time = long-term rate limit) to avoid getting rate-limited
+        if time.time() - self.first_var_set > 25: # if cloud variables have been continously set fast (wait time smaller than long-term rate limit) for 25 seconds, they should be set slow now (wait time = long-term rate limit) to avoid getting rate-limited
             wait_time = self.ws_longterm_ratelimit * n
-        print(wait_time)
         while self.last_var_set + wait_time >= time.time():
             time.sleep(0.001)
         
