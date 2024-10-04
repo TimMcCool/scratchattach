@@ -6,6 +6,7 @@ from threading import Thread, Condition
 import time
 import traceback
 from ..utils.encoder import Encoding
+from ..utils import exceptions
 
 class Request:
 
@@ -40,10 +41,8 @@ class Request:
             else:
                 print(f"Exception in request '{self.name}':")
                 raise(e)
-        self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":[f"Error in request {self.name}","Check the Python console"], "priority":self.response_priority})
-        print("about to aquire")
+            self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":[f"Error in request {self.name}","Check the Python console"], "priority":self.response_priority})
         with self.cloud_requests.responder_condition:
-            print("about to notify responder")
             self.cloud_requests.responder_condition.notify() # Activate the .cloud_requests._responder process so it sends back the data to Scratch
 
 class ReceivedRequest:
@@ -55,7 +54,7 @@ class CloudRequests(CloudEvents):
 
     # The CloudRequests class is built upon CloudEvents, similar to how Filterbot is built upon MessageEvents
 
-    def __init__(self, cloud, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=True):
+    def __init__(self, cloud, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=True, respond_order="receive"):
         super().__init__(cloud)
         # Setup
         self._requests = {}
@@ -63,6 +62,7 @@ class CloudRequests(CloudEvents):
         self.respond_in_thread = False
         self.no_packet_loss = no_packet_loss # When enabled, query the clouddata log regularly for missed requests and reconnect after every single request (reduces packet loss a lot, but is spammy and can make response duration longer)
         self.used_cloud_vars = used_cloud_vars
+        self.respond_order = respond_order
 
         # Lists and dicts for saving request-related stuff
         self.request_parts = {} # Dict (key: request_id) for saving the parts of the requests not fully received yet
@@ -156,13 +156,12 @@ class CloudRequests(CloudEvents):
             for i in input:
                 output += Encoding.encode(i)
                 output += "89"
-        self._respond(received_request.request_id, output, validation=3222 if send_as_integer else None)
+        self._respond(received_request.request_id, output, validation=3222 if send_as_integer else 2222)
 
     def _respond(self, request_id, response, *, validation=2222):
         """
         Sends back the request response to the Scratch project
         """
-
         if (self.cloud.last_var_set + 8 < time.time() # if the cloud connection has been idle for too long, a reconnect is necessary to make sure the first package will not be lost
             ) or self.no_packet_loss:
             self.cloud.reconnect()
@@ -188,8 +187,10 @@ class CloudRequests(CloudEvents):
                     self.cloud.set_var(
                         f"FROM_HOST_{self.used_cloud_vars[self.current_var]}",
                         f"{response_part}.{request_id}{iteration_string}1")
-                except Exception:
+                except exceptions.ConnectionError:
                     Thread(target=self.call_event, args=["on_disconnect"]).start()
+                except Exception:
+                    print("scratchattach: internal error while responding (please submit a bug report on GitHub):", e, f"{response_part}.{request_id}{iteration_string}1")
                 self.current_var += 1
                 if self.current_var == len(self.used_cloud_vars):
                     self.current_var = 0
@@ -199,8 +200,10 @@ class CloudRequests(CloudEvents):
                     self.cloud.set_var(
                         f"FROM_HOST_{self.used_cloud_vars[self.current_var]}",
                         f"{remaining_response}.{request_id}{validation}")
-                except Exception:
+                except exceptions.ConnectionError:
                     Thread(target=self.call_event, args=["on_disconnect"]).start()
+                except Exception:
+                    print("scratchattach: internal error while responding (please submit a bug report on GitHub):", e, f"{response_part}.{request_id}{iteration_string}")
                 self.current_var += 1
                 if self.current_var == len(self.used_cloud_vars):
                     self.current_var = 0
@@ -310,7 +313,6 @@ class CloudRequests(CloudEvents):
         with self.responder_condition:
             while self.responder_thread is not None: # If self.responder_thread is None, it means cloud requests were stopped using .stop()
                 self.responder_condition.wait() # Wait for executed requests to respond
-                print("got responder notification")
                 
                 while self.request_outputs != []:
                     if self.respond_order == "finish":
