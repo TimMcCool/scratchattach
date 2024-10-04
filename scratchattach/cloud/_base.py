@@ -55,7 +55,7 @@ class BaseCloud(ABC):
 
         # Set default values for attributes that save configurations specific to the represented cloud:
         # (These attributes can be specifically in the constructors of classes inheriting from this base class)
-        self.ws_ratelimit = 0.1
+        self.ws_ratelimit = 0.06
         self.ws_timeout = 3 # Timeout for send operations (after the timeout, the connection will be renewed and the operation will be retried 3 times)
         self.allow_non_numeric = False
         self.length_limit = 100000
@@ -162,7 +162,7 @@ class BaseCloud(ABC):
             raise ValueError("cloud var name must be a string")
         if not self.active_connection:
             self.connect()
-        while self._ratelimited_until + 0.1 >= time.time():
+        while self._ratelimited_until + self.ws_ratelimit >= time.time():
             time.sleep(0.001)
         packet = {
             "method": "set",
@@ -174,17 +174,22 @@ class BaseCloud(ABC):
         self._send_packet(packet)
         self._ratelimited_until = time.time()
 
-    def set_vars(self, var_value_dict):
+    def set_vars(self, var_value_dict, *, intelligent_waits=True):
         """
         Sets multiple cloud variables at once (works for an unlimited amount of variables).
 
         Args:
             var_value_dict (dict): variable:value dictionary with the variables / values to set. The dict should like this: {"var1":"value1", "var2":"value2", ...}
+        
+        Kwargs:
+            intelligent_waits (boolean): When enabled, the method will automatically decide how long to wait before performing this cloud variable set, to make sure no rate limits are triggered
         """
         if not self.active_connection:
             self.connect()
-        while self._ratelimited_until + 0.1 >= time.time():
-            time.sleep(0.001)
+        if intelligent_waits:
+            wait_time = 0.07 * len(list(var_value_dict.keys())) - 0.01
+            while self._ratelimited_until + wait_time >= time.time():
+                time.sleep(0.001)
 
         packet_list = []
         for variable in var_value_dict:
