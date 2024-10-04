@@ -56,8 +56,8 @@ class BaseEventHandler(ABC):
         """
         Permanently stops the event handler.
         """
+        self.running = False
         if self._thread is not None:
-            self.running = False
             self._thread = None
 
     def pause(self):
@@ -71,7 +71,7 @@ class BaseEventHandler(ABC):
         Resumes the event handler.
         """
         if self.running is False:
-            self.start(update_interval=self.update_interval, thread=True)
+            self.start()
 
     def event(self, function):
         """

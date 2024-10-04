@@ -89,8 +89,7 @@ class ScratchCloud(BaseCloud):
             from ..eventhandlers.cloud_events import CloudLogEvents
             return CloudLogEvents(self)
         else:
-            return super.events()
-
+            return super().events()
 
 class TwCloud(BaseCloud):
 

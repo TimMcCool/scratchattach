@@ -30,7 +30,6 @@ class PartialProject(BaseSiteComponent):
 
         # Set attributes every Project object needs to have:
         self._session = None
-        self.shared = None
         self.project_token = None
         self.id = 0
         self.instructions = None
@@ -489,24 +488,22 @@ class Project(PartialProject):
         Shares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         self._assert_permission()
-        if self.shared is not True:
-            requests.put(
-                f"https://api.scratch.mit.edu/proxy/projects/{self.id}/share/",
-                headers=self._json_headers,
-                cookies=self._cookies,
-            )
+        requests.put(
+            f"https://api.scratch.mit.edu/proxy/projects/{self.id}/share/",
+            headers=self._json_headers,
+            cookies=self._cookies,
+        )
 
     def unshare(self):
         """
         Unshares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         self._assert_permission()
-        if self.shared is not False:
-            requests.put(
-                f"https://api.scratch.mit.edu/proxy/projects/{self.id}/unshare/",
-                headers=self._json_headers,
-                cookies=self._cookies,
-            )
+        requests.put(
+            f"https://api.scratch.mit.edu/proxy/projects/{self.id}/unshare/",
+            headers=self._json_headers,
+            cookies=self._cookies,
+        )
 
     ''' doesn't work. the API's response is valid (no errors), but the fields don't change
     def move_to_trash(self):

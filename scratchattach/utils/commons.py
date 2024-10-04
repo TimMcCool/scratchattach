@@ -121,7 +121,7 @@ def _get_object(identificator_name, identificator, Class, NotFoundException, ses
             # Target is unshared. The cases that this can happen in are hardcoded:
             from ..site import project
             if Class is project.Project: # Case: Target is an unshared project.
-                return project.PartialProject(**{identificator_name:identificator, "_session":session})
+                return project.PartialProject(**{identificator_name:identificator, "shared":False, "_session":session})
             else:
                 raise NotFoundException
         else:

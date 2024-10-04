@@ -1,4 +1,4 @@
-"""v2 ready: CloudRequests class (threading.Condition verion)"""
+"""v2 ready: CloudRequests class (threading.Condition version)"""
 
 from .cloud_events import CloudEvents
 from ..site import project
@@ -13,7 +13,7 @@ class Request:
     Saves a request added to the request handler
     """
 
-    def __init__(self, request_name, *, on_call, cloud_requests:CloudRequests, thread=True, enabled=True, response_priority=0):
+    def __init__(self, request_name, *, on_call, cloud_requests, thread=True, enabled=True, response_priority=0):
         self.name = request_name
         self.on_call = on_call
         self.thread = thread
@@ -21,7 +21,7 @@ class Request:
         self.response_priority = response_priority
         self.cloud_requests = cloud_requests # the corresponding CloudRequests object
         
-    def __call__(self, received_request : ReceivedRequest):
+    def __call__(self, received_request):
         if not self.enabled:
             self.cloud_requests.call_event("on_disabled_request", [received_request])
         try:
@@ -40,14 +40,15 @@ class Request:
             else:
                 print(f"Exception in request '{self.name}':")
                 raise(e)
-            self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":[f"Error in request {self.name}","Check the Python console"], "priority":self.response_priority})
-        self.cloud_requests.responder_condition.notify() # Activate the .cloud_requests._responder process so it sends back the data to Scratch
+        self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":[f"Error in request {self.name}","Check the Python console"], "priority":self.response_priority})
+        print("about to aquire")
+        with self.responder_condition:
+            print("about to notify responder")
+            self.cloud_requests.responder_condition.notify() # Activate the .cloud_requests._responder process so it sends back the data to Scratch
 
 class ReceivedRequest:
 
-    def __init__(self, request:Request, **entries):
-        self.request = request # The request that was received
-        self.request_id = 0 # This attribute must be always be set
+    def __init__(self, **entries):
         self.__dict__.update(entries)
 
 class CloudRequests(CloudEvents):
@@ -75,8 +76,10 @@ class CloudRequests(CloudEvents):
         self.responder_condition = Condition()
 
         # Start ._executer and ._responder threads (these threads are remain blocked until cloud activity is received and don't consume any CPU)
-        self.executer_thread = Thread(target=self._executer).start()
-        self.responder_thread = Thread(target=self._responder).start()
+        self.executer_thread = Thread(target=self._executer)
+        self.responder_thread = Thread(target=self._responder)
+        self.executer_thread.start()
+        self.responder_thread.start()
 
         self.current_var = 0 # ID of the last set FROM_HOST_ variable (when a response is sent back to Scratch, these are set cyclically)
         self.credit_check()
@@ -97,6 +100,7 @@ class CloudRequests(CloudEvents):
                 thread=thread,
                 response_priority=response_priority,
                 on_call=function,
+                cloud_requests=self
             )
 
         if function is None:
@@ -106,7 +110,8 @@ class CloudRequests(CloudEvents):
             # => the decorator doesn't provide arguments
             self._requests[function.__name__] = Request(
                 function.__name__,
-                on_call=function
+                on_call=function,
+                cloud_requests=self
             )
 
     def add_request(self, function, *, enabled=True, name=None):
@@ -229,7 +234,7 @@ class CloudRequests(CloudEvents):
                 return
             
             self.responded_request_ids.insert(0, request_id)
-            self.responded_request_ids = self.responded_request_ids[:15]
+            self.responded_request_ids = self.responded_request_ids[:35]
 
             # If the request consists of multiple parts: Put together the parts to get the whole raw request string
             _raw_request = ""
@@ -268,10 +273,11 @@ class CloudRequests(CloudEvents):
             )
             if received_request.request.thread:
                 self.executed_requests[request_id] = received_request
-                Thread(target=received_request.request, args=[received_request]) # Execute the request function directly in a thread
+                Thread(target=received_request.request, args=[received_request]).start() # Execute the request function directly in a thread
             else:
                 self.received_requests.append(received_request)
-                self.executer_condition.notify() # Activate the ._executer process so that it handles the received request
+                with self.executer_condition:
+                    self.executer_condition.notify() # Activate the ._executer process so that it handles the received request
     
     def _executer(self):
         """
@@ -280,44 +286,49 @@ class CloudRequests(CloudEvents):
         # If .no_packet_loss is enabled and the cloud provides logs, the logs are used to check whether there are cloud activities that were not received over the cloud connection used by the underlying cloud events
         use_extra_data = (self.no_packet_loss and hasattr(self.cloud, "logs"))
         
-        self.executer_condition.acquire()
-        while self._thread is not None: # If self._thread is None, it means cloud requests were stopped using .stop()
-            self.executer_condition.wait(timeout = 5 if use_extra_data else None) # Wait for requests to be received
-            
-            if self.received_requests == [] and use_extra_data:
-                Thread(target=self.on_reconnect).start()
-
-            while self.received_requests != []:
-                received_request = self.received_requests.pop(0)
-                self.executed_requests[received_request.request_id] = received_request
-                received_request.request(received_request) # Execute the request function
-
-                if use_extra_data:
+        with self.executer_condition:
+            self.executer_condition.wait() # Wait for requests to be received
+            while self.executer_thread is not None: # If self.executer_thread is None, it means cloud requests were stopped using .stop()
+                
+                if self.received_requests == [] and use_extra_data:
                     Thread(target=self.on_reconnect).start()
+
+                while self.received_requests != []:
+                    received_request = self.received_requests.pop(0)
+                    self.executed_requests[received_request.request_id] = received_request
+                    received_request.request(received_request) # Execute the request function
+
+                    if use_extra_data:
+                        Thread(target=self.on_reconnect).start()
+                
+                self.executer_condition.wait(timeout = 2.5 if use_extra_data else None) # Wait for requests to be received
 
     def _responder(self):
         """
         A process that detects incoming request outputs in .request_outputs and handles them by sending them back to the Scratch project, also removes the corresponding ReceivedRequest object from .executed_requests
         """
-        self.responder_condition.acquire()
-        while self._thread is not None: # If self._thread is None, it means cloud requests were stopped using .stop()
-            self.responder_condition.wait() # Wait for executed requests to respond
-            
-            while self.request_outputs != []:
-                if self.respond_order == "finish":
-                    output_obj = self.request_outputs.pop(0)
-                else:
-                    output_obj = min(self.request_outputs, key=lambda x : x[self.respond_order])
-                    self.request_outputs.remove(output_obj)
-                received_request = self.executed_requests.pop(output_obj["request_id"])
-                self._parse_output(received_request, output_obj["output"])
+        with self.responder_condition:
+            while self.responder_thread is not None: # If self.responder_thread is None, it means cloud requests were stopped using .stop()
+                self.responder_condition.wait() # Wait for executed requests to respond
+                print("got responder notification")
+                
+                while self.request_outputs != []:
+                    if self.respond_order == "finish":
+                        output_obj = self.request_outputs.pop(0)
+                    else:
+                        output_obj = min(self.request_outputs, key=lambda x : x[self.respond_order])
+                        self.request_outputs.remove(output_obj)
+                    received_request = self.executed_requests.pop(output_obj["request_id"])
+                    self._parse_output(received_request, output_obj["output"])
                 
     def on_reconnect(self):
         """
         Called when the underlying cloud events reconnect. Makes sure that no requests are missed in this case.
         """
-        extradata = self.cloud.logs(limit=70)[::-1] # Reverse result so oldest activity is first
+        extradata = self.cloud.logs(limit=35)[::-1] # Reverse result so oldest activity is first
         for activity in extradata:
+            if activity.timestamp < self.startup_time:
+                continue
             self.on_set(activity) # Read in the fetched activity
         
     # -- Other stuff --
@@ -328,12 +339,19 @@ class CloudRequests(CloudEvents):
         """
         # Override the .stop function from BaseEventHandler to make sure the ._executer and ._responder threads are also terminated
         super().stop()
-        self.executer_condition.notify()
-        self.responder_condition.notify()
+        self.executer_thread = None
+        self.responder_thread = None
+        with self.executer_condition:
+            with self.responder_condition:
+                self.executer_condition.notify()
+                self.responder_condition.notify()
 
     def credit_check(self):
         try:
-            p = project.get_project(self.cloud.project_id)
+            p = project.Project(id=self.cloud.project_id)
+            if not p.update(): # can't get project, probably because it's unshared (no authentication is used for getting it)
+                print("If you use CloudRequests, please credit TimMcCool!")
+                return
             description = (str(p.instructions) + str(p.notes)).lower()
             if not ("timmccool" in description or "timmcool" in description or "timccool" in description or "timcool" in description):
                 print("It was detected that no credit was given in the project description! Please credit TimMcCool when using CloudRequests.")

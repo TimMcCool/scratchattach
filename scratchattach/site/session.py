@@ -74,7 +74,7 @@ class Session(BaseSiteComponent):
         self._username = self.username # backwards compatibility with v1
 
         # Base headers and cookies of every session:
-        self._headers = headers
+        self._headers = dict(headers)
         self._cookies = {
             "scratchsessionsid" : self.id,
             "scratchcsrftoken" : "a",

@@ -5,6 +5,7 @@ from ._base import BaseEventHandler
 from ..site import cloud_activity
 import time
 import json
+from threading import Thread
 
 class CloudEvents(BaseEventHandler):
     """
@@ -16,6 +17,7 @@ class CloudEvents(BaseEventHandler):
         self._session = cloud._session
         self.source_cloud = type(cloud)(project_id=cloud.project_id, _session=cloud._session)
         self.source_cloud.ws_timeout = None # No timeout -> allows continous listening
+        self.startup_time = time.time() * 1000
 
     def _updater(self):
         """
@@ -23,7 +25,7 @@ class CloudEvents(BaseEventHandler):
         """
         self.source_cloud.connect()
         
-        self.call_event("on_ready")
+        Thread(target=self.call_event, args=["on_ready"]).start()
 
         while True:
             if self.running is False:
@@ -34,6 +36,8 @@ class CloudEvents(BaseEventHandler):
                 for i in data:
                     try:
                         _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session)
+                        if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
+                            continue
                         data = json.loads(i)
                         data["name"] = data["name"].replace("☁ ", "")
                         _a._update_from_dict(data)
@@ -43,7 +47,7 @@ class CloudEvents(BaseEventHandler):
             except Exception:
                 time.sleep(0.1) # cooldown
                 self.source_cloud.connect()
-                self.call_event("on_reconnect", [])
+                Thread(target=self.call_event, args=["on_reconnect", []]).start()
 
 
 class CloudLogEvents(BaseEventHandler):
@@ -62,7 +66,7 @@ class CloudLogEvents(BaseEventHandler):
     def _updater(self):
         self.old_data = self.source_cloud.logs(limit=25)
 
-        self.call_event("on_ready")
+        Thread(target=self.call_event, args=["on_ready"]).start()
 
         while True:
             if self.running is False:
@@ -70,6 +74,8 @@ class CloudLogEvents(BaseEventHandler):
             try:
                 data = self.source_cloud.logs(limit=25)
                 for _a in data:
+                    if _a.timestamp < self.startup_time:
+                        continue
                     if _a in self.old_data:
                         break
                     self.call_event("on_"+_a.type, [_a])

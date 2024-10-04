@@ -248,3 +248,7 @@ class BaseCloud(ABC):
     def events(self):
         from ..eventhandlers.cloud_events import CloudEvents
         return CloudEvents(self)
+
+    def requests(self, *, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=True):
+        from ..eventhandlers.cloud_requests import CloudRequests
+        return CloudRequests(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
