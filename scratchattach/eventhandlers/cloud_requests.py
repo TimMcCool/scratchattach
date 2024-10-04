@@ -42,7 +42,7 @@ class Request:
                 raise(e)
         self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":[f"Error in request {self.name}","Check the Python console"], "priority":self.response_priority})
         print("about to aquire")
-        with self.responder_condition:
+        with self.cloud_requests.responder_condition:
             print("about to notify responder")
             self.cloud_requests.responder_condition.notify() # Activate the .cloud_requests._responder process so it sends back the data to Scratch
 
