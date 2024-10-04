@@ -62,6 +62,8 @@ class SpamFilter(HardFilter):
 
 class Filterbot(MessageEvents):
 
+    # The Filterbot class is built upon MessageEvents, similar to how CloudEvents is built upon CloudEvents
+
     def __init__(self, user, *, log_deletions=True):
         super().__init__(user)
         self.hard_filters = []

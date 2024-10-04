@@ -17,7 +17,10 @@ class CloudEvents(BaseEventHandler):
         self.source_cloud = type(cloud)(project_id=cloud.project_id, _session=cloud._session)
         self.source_cloud.ws_timeout = None # No timeout -> allows continous listening
 
-    def _update(self):
+    def _updater(self):
+        """
+        A process that listens for cloud activity and executes events on cloud activity
+        """
         self.source_cloud.connect()
         
         self.call_event("on_ready")
@@ -34,13 +37,14 @@ class CloudEvents(BaseEventHandler):
                         data = json.loads(i)
                         data["name"] = data["name"].replace("☁ ", "")
                         _a._update_from_dict(data)
-                        if "on_"+_a.type in self._events:
-                            self.call_event("on_"+_a.type, [_a])
+                        self.call_event("on_"+_a.type, [_a])
                     except Exception as e:
                         pass
             except Exception:
                 time.sleep(0.1) # cooldown
                 self.source_cloud.connect()
+                self.call_event("on_reconnect", [])
+
 
 class CloudLogEvents(BaseEventHandler):
     """
@@ -55,7 +59,7 @@ class CloudLogEvents(BaseEventHandler):
         self.update_interval = update_interval
         self._session = cloud._session
 
-    def _update(self):
+    def _updater(self):
         self.old_data = self.source_cloud.logs(limit=25)
 
         self.call_event("on_ready")
@@ -68,8 +72,7 @@ class CloudLogEvents(BaseEventHandler):
                 for _a in data:
                     if _a in self.old_data:
                         break
-                    if "on_"+_a.type in self._events:
-                        self.call_event("on_"+_a.type, [_a])
+                    self.call_event("on_"+_a.type, [_a])
                 self.old_data = data
             except Exception:
                 pass

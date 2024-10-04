@@ -14,7 +14,10 @@ class MessageEvents(BaseEventHandler):
         self.current_message_count = 0
         self.update_interval = update_interval
 
-    def _update(self):
+    def _updater(self):
+        """
+        A process that listens for cloud activity and executes events on cloud activity
+        """
         self.current_message_count = int(self.user.message_count())
         
         self.call_event("on_ready")
