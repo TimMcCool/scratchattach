@@ -29,7 +29,7 @@ class BaseCloud(ABC):
 
     :self.ws_shortterm_ratelimit: The wait time between cloud variable sets. Defaults to 0.1
 
-    :self.ws_longterm_rate: The amount of cloud variable set that can be performed long-term without ever getting ratelimited
+    :self.ws_longterm_ratelimit: The amount of cloud variable set that can be performed long-term without ever getting ratelimited
 
     :self.allow_non_numeric: Whether non-numeric cloud variable values are allowed. Defaults to False
 
@@ -60,7 +60,7 @@ class BaseCloud(ABC):
         # Set default values for attributes that save configurations specific to the represented cloud:
         # (These attributes can be specifically in the constructors of classes inheriting from this base class)
         self.ws_shortterm_ratelimit = 0.06667
-        self.ws_longterm_rate = 60
+        self.ws_longterm_ratelimit = 60
         self.ws_timeout = 3 # Timeout for send operations (after the timeout, the connection will be renewed and the operation will be retried 3 times)
         self.allow_non_numeric = False
         self.length_limit = 100000
