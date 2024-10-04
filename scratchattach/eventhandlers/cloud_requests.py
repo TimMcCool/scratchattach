@@ -54,7 +54,7 @@ class CloudRequests(CloudEvents):
 
     # The CloudRequests class is built upon CloudEvents, similar to how Filterbot is built upon MessageEvents
 
-    def __init__(self, cloud, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=True, respond_order="receive"):
+    def __init__(self, cloud, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=False, respond_order="receive"):
         super().__init__(cloud)
         # Setup
         self._requests = {}
@@ -210,8 +210,6 @@ class CloudRequests(CloudEvents):
                 remaining_response = ""
                 
             time.sleep(self.cloud.ws_shortterm_ratelimit)
-
-        self.idle_since = time.time()
 
     # -- Register and handle incoming requests --
 
