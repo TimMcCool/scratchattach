@@ -50,17 +50,17 @@ class BaseCloud(ABC):
 
         # Required internal attributes that every object representing a cloud needs to have (no matter what cloud is represented):
         self._session = None
-        self._ratelimited_until = 0
         self.active_connection = False #whether a connection to a cloud variable server is currently established
         self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
         self.recorder = None # A CloudRecorder object that records cloud activity for the values to be retrieved later will be saved in this attribute as soon as .get_var is called
         self.first_var_set = 0
+        self.last_var_set = 0
         self.var_stets_since_first = 0
 
         # Set default values for attributes that save configurations specific to the represented cloud:
         # (These attributes can be specifically in the constructors of classes inheriting from this base class)
         self.ws_shortterm_ratelimit = 0.06667
-        self.ws_longterm_ratelimit = 60
+        self.ws_longterm_ratelimit = 0.1
         self.ws_timeout = 3 # Timeout for send operations (after the timeout, the connection will be renewed and the operation will be retried 3 times)
         self.allow_non_numeric = False
         self.length_limit = 100000
@@ -160,9 +160,10 @@ class BaseCloud(ABC):
             self.first_var_set = time.time()
 
         wait_time = self.ws_shortterm_ratelimit * n
-        if time.time() - self.first_var_set > 60: # if cloud variables have been continously set fast (wait time smaller than long-term rate limit) for a minute, they should be set slow now (wait time = long-term rate limit) to avoid getting rate-limited
+        if time.time() - self.first_var_set > 30: # if cloud variables have been continously set fast (wait time smaller than long-term rate limit) for a minute, they should be set slow now (wait time = long-term rate limit) to avoid getting rate-limited
             wait_time = self.ws_longterm_ratelimit * n
-        while self._ratelimited_until + wait_time >= time.time():
+        print(wait_time)
+        while self.last_var_set + wait_time >= time.time():
             time.sleep(0.001)
         
 
@@ -191,7 +192,7 @@ class BaseCloud(ABC):
             "project_id": self.project_id,
         }
         self._send_packet(packet)
-        self._ratelimited_until = time.time()
+        self.last_var_set = time.time()
 
     def set_vars(self, var_value_dict, *, intelligent_waits=True):
         """
@@ -225,7 +226,7 @@ class BaseCloud(ABC):
             }
             packet_list.append(packet)
         self._send_packet_list(packet_list)
-        self._ratelimited_until = time.time()
+        self.last_var_set = time.time()
 
     def get_var(self, var, *, recorder_initial_values={}):
         if self.recorder is None:
