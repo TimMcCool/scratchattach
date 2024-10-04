@@ -102,7 +102,7 @@ class TwCloud(BaseCloud):
         # Configure this object's attributes specifically for being used with TurboWarp's cloud:
         self.cloud_host = cloud_host
         self.ws_shortterm_ratelimit = 0 # TurboWarp doesn't enforce a wait time between cloud variable sets
-        self.ws_longterm_ratelimit = 0 # TurboWarp also doesn't enforce a long-term rate limit for cloud variable sets
+        self.ws_longterm_ratelimit = 0
         self.length_limit = 100000 # TurboWarp doesn't enforce a cloud variable length
         purpose_string = ""
         if purpose != "" or contact != "":
