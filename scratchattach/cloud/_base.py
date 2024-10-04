@@ -79,10 +79,12 @@ class BaseCloud(ABC):
         try:
             self.websocket.send(json.dumps(packet) + "\n")
         except Exception:
+            time.sleep(1)
             self.connect()
             try:
                 self.websocket.send(json.dumps(packet) + "\n")
             except Exception:
+                time.sleep(1)
                 self.connect()
                 try:
                     self.websocket.send(json.dumps(packet) + "\n")
