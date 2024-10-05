@@ -251,10 +251,14 @@ class BaseCloud(ABC):
         from ..eventhandlers.cloud_events import CloudEvents
         return CloudEvents(self)
 
-    def requests(self, *, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=False, respond_order="receive"):
-        from ..eventhandlers.cloud_requests import CloudRequests
-        return CloudRequests(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss, respond_order=respond_order)
+    def requests(self, *, no_packet_loss=False, asyncio=False, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], respond_order="receive"):
+        if asyncio:
+            from ..eventhandlers.cloud_requests_async import CloudRequestsAsync
+            return CloudRequestsAsync(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss, respond_order=respond_order)
+        else:
+            from ..eventhandlers.cloud_requests import CloudRequests
+            return CloudRequests(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss, respond_order=respond_order)
 
-    def storage(self, *, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=False):
+    def storage(self, *, no_packet_loss=False, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"]):
         from ..eventhandlers.cloud_storage import CloudStorage
         return CloudStorage(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
