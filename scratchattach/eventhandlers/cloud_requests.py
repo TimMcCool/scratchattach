@@ -1,8 +1,8 @@
-"""v2 ready: CloudRequests class (threading.Condition version)"""
+"""v2 ready: CloudRequests class (threading.Event version)"""
 
 from .cloud_events import CloudEvents
 from ..site import project
-from threading import Thread, Condition, current_thread
+from threading import Thread, Event, current_thread
 import time
 import traceback
 from ..utils.encoder import Encoding
@@ -43,8 +43,7 @@ class Request:
                 print(f"Exception in request '{self.name}':")
                 raise(e)
             self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":[f"Error in request {self.name}","Check the Python console"], "priority":self.response_priority})
-        with self.cloud_requests.responder_condition:
-            self.cloud_requests.responder_condition.notify() # Activate the .cloud_requests._responder process so it sends back the data to Scratch
+        self.cloud_requests.responder_condition.set() # Activate the .cloud_requests._responder process so it sends back the data to Scratch
 
 class ReceivedRequest:
 
@@ -74,8 +73,8 @@ class CloudRequests(CloudEvents):
         self.responded_request_ids = [] # Saves the last 15 request ids that have been responded to. This prevents double responses then using the clouddata logs as 2nd source for preventing packet loss
 
         # threading Condition objects used to block threads until they are needed (lower CPU usage compared to a busy-sleep event queue)#
-        self.executer_condition = Condition()
-        self.responder_condition = Condition()
+        self.executer_event = Event()
+        self.responder_event = Event()
 
         # Start ._executer and ._responder threads (these threads are remain blocked until cloud activity is received and don't consume any CPU)
         self.executer_thread = Thread(target=self._executer)
@@ -278,8 +277,7 @@ class CloudRequests(CloudEvents):
                 Thread(target=received_request.request, args=[received_request]).start() # Execute the request function directly in a thread
             else:
                 self.received_requests.append(received_request)
-                with self.executer_condition:
-                    self.executer_condition.notify() # Activate the ._executer process so that it handles the received request
+                self.executer_event.set() # Activate the ._executer process so that it handles the received request
     
     def _executer(self):
         """
@@ -288,31 +286,32 @@ class CloudRequests(CloudEvents):
         # If .no_packet_loss is enabled and the cloud provides logs, the logs are used to check whether there are cloud activities that were not received over the cloud connection used by the underlying cloud events
         use_extra_data = (self.no_packet_loss and hasattr(self.cloud, "logs"))
         
-        with self.executer_condition:
-            self.executer_condition.wait() # Wait for requests to be received
-            while self.executer_thread is not None: # If self.executer_thread is None, it means cloud requests were stopped using .stop()
-                
-                if self.received_requests == [] and use_extra_data:
+        self.executer_event.wait() # Wait for requests to be received
+        while self.executer_thread is not None: # If self.executer_thread is None, it means cloud requests were stopped using .stop()
+            self.executer_event.clear()
+
+            if self.received_requests == [] and use_extra_data:
+                Thread(target=self.on_reconnect).start()
+
+            while self.received_requests != []:
+                received_request = self.received_requests.pop(0)
+                self.executed_requests[received_request.request_id] = received_request
+                received_request.request(received_request) # Execute the request function
+
+                if use_extra_data:
                     Thread(target=self.on_reconnect).start()
-
-                while self.received_requests != []:
-                    received_request = self.received_requests.pop(0)
-                    self.executed_requests[received_request.request_id] = received_request
-                    received_request.request(received_request) # Execute the request function
-
-                    if use_extra_data:
-                        Thread(target=self.on_reconnect).start()
-                
-                self.executer_condition.wait(timeout = 2.5 if use_extra_data else None) # Wait for requests to be received
+            
+            self.executer_event.wait(timeout = 2.5 if use_extra_data else None) # Wait for requests to be received
 
     def _responder(self):
         """
         A process that detects incoming request outputs in .request_outputs and handles them by sending them back to the Scratch project, also removes the corresponding ReceivedRequest object from .executed_requests
         """
-        with self.responder_condition:
+        with self.responder_event:
             while self.responder_thread is not None: # If self.responder_thread is None, it means cloud requests were stopped using .stop()
-                self.responder_condition.wait() # Wait for executed requests to respond
-                
+                self.responder_event.wait() # Wait for executed requests to respond
+                self.responder_event.clear()
+
                 while self.request_outputs != []:
                     if self.respond_order == "finish":
                         output_obj = self.request_outputs.pop(0)
@@ -368,10 +367,8 @@ class CloudRequests(CloudEvents):
         super().stop()
         self.executer_thread = None
         self.responder_thread = None
-        with self.executer_condition:
-            with self.responder_condition:
-                self.executer_condition.notify()
-                self.responder_condition.notify()
+        self.executer_event.set()
+        self.responder_event.set()
 
     def credit_check(self):
         try:
