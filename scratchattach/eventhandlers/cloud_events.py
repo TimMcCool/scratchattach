@@ -47,7 +47,7 @@ class CloudEvents(BaseEventHandler):
             except Exception:
                 time.sleep(0.1) # cooldown
                 self.source_cloud.connect()
-                Thread(target=self.call_event, args=["on_reconnect", []]).start()
+                self.call_event("on_reconnect", [])
 
 
 class CloudLogEvents(BaseEventHandler):
@@ -66,7 +66,7 @@ class CloudLogEvents(BaseEventHandler):
     def _updater(self):
         self.old_data = self.source_cloud.logs(limit=25)
 
-        Thread(target=self.call_event, args=["on_ready"]).start()
+        self.call_event("on_ready")
 
         while True:
             if self.running is False:

@@ -70,7 +70,7 @@ class Filterbot(MessageEvents):
         self.soft_filters = []
         self.spam_filters = []
         self.log_deletions = log_deletions
-        self.event(self.on_message)
+        self.event(self.on_message, thread=False)
         self.update_interval = 2
 
     def add_filter(self, filter_obj):

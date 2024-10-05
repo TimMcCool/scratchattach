@@ -66,7 +66,7 @@ class CloudActivity(BaseSiteComponent):
             print("Warning: There aren't cloud logs available for this cloud, therefore the user and exact timestamp can't be loaded")
         else:
             if hasattr(self.cloud, "logs"):
-                logs = self.cloud.logs(filter_by_var_named=self.var)
+                logs = self.cloud.logs(filter_by_var_named=self.var, limit=100)
                 matching = list(filter(lambda x: x.value == self.value and x.timestamp <= self.timestamp, logs))
                 if matching == []:
                     return False

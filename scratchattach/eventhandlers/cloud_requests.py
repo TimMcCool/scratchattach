@@ -2,7 +2,7 @@
 
 from .cloud_events import CloudEvents
 from ..site import project
-from threading import Thread, Condition
+from threading import Thread, Condition, current_thread
 import time
 import traceback
 from ..utils.encoder import Encoding
@@ -26,10 +26,11 @@ class Request:
         if not self.enabled:
             self.cloud_requests.call_event("on_disabled_request", [received_request])
         try:
+            current_thread().setName(received_request.request_id)
             output = self.on_call(*received_request.arguments)
             self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":output, "priority":self.response_priority})
         except Exception as e:
-            Thread(target=self.cloud_requests.call_event, args=["on_error", [received_request, e]]).start()
+            self.cloud_requests.call_event("on_error", [received_request, e])
             if self.cloud_requests.ignore_exceptions:
                 print(
                     f"Warning: Caught error in request '{self.name}' - Full error below"
@@ -58,7 +59,8 @@ class CloudRequests(CloudEvents):
         super().__init__(cloud)
         # Setup
         self._requests = {}
-        self.event(self.on_set)
+        self.event(self.on_set, thread=False)
+        self.event(self.on_reconnect, thread=True)
         self.respond_in_thread = False
         self.no_packet_loss = no_packet_loss # When enabled, query the clouddata log regularly for missed requests and reconnect after every single request (reduces packet loss a lot, but is spammy and can make response duration longer)
         self.used_cloud_vars = used_cloud_vars
@@ -86,7 +88,7 @@ class CloudRequests(CloudEvents):
 
     # -- Adding and removing requests --
 
-    def request(self, function=None, *, enabled=True, name=None, thread=False, response_priority=0):
+    def request(self, function=None, *, enabled=True, name=None, thread=True, response_priority=0):
         """
         Decorator function. Adds a request to the request handler.
         """
@@ -108,11 +110,7 @@ class CloudRequests(CloudEvents):
             return inner
         else:
             # => the decorator doesn't provide arguments
-            self._requests[function.__name__] = Request(
-                function.__name__,
-                on_call=function,
-                cloud_requests=self
-            )
+            inner(function)
 
     def add_request(self, function, *, enabled=True, name=None):
         self.request(enabled=enabled, name=name)(function)
@@ -188,7 +186,7 @@ class CloudRequests(CloudEvents):
                         f"FROM_HOST_{self.used_cloud_vars[self.current_var]}",
                         f"{response_part}.{request_id}{iteration_string}1")
                 except exceptions.ConnectionError:
-                    Thread(target=self.call_event, args=["on_disconnect"]).start()
+                    self.call_even("on_disconnect")
                 except Exception:
                     print("scratchattach: internal error while responding (please submit a bug report on GitHub):", e, f"{response_part}.{request_id}{iteration_string}1")
                 self.current_var += 1
@@ -201,7 +199,7 @@ class CloudRequests(CloudEvents):
                         f"FROM_HOST_{self.used_cloud_vars[self.current_var]}",
                         f"{remaining_response}.{request_id}{validation}")
                 except exceptions.ConnectionError:
-                    Thread(target=self.call_event, args=["on_disconnect"]).start()
+                    self.call_event("on_disconnect")
                 except Exception:
                     print("scratchattach: internal error while responding (please submit a bug report on GitHub):", e, f"{response_part}.{request_id}{iteration_string}")
                 self.current_var += 1
@@ -256,13 +254,15 @@ class CloudRequests(CloudEvents):
                 print(
                     f"Warning: Client received an unknown request called '{request_name}'"
                 )
-                Thread(target=self.call_event, args=["on_unknown_request", [
+                self.call_event("on_unknown_request", [
                     ReceivedRequest(request_name=request,
                         requester=activity.user,
                         timestamp=activity.timestamp,
                         arguments=arguments,
-                        request_id=request_id)
-                ]]).start()
+                        request_id=request_id,
+                        activity=activity
+                    )
+                ])
                 return
             
             received_request = ReceivedRequest(
@@ -270,7 +270,8 @@ class CloudRequests(CloudEvents):
                 requester=activity.user,
                 timestamp=activity.timestamp,
                 arguments=arguments,
-                request_id=request_id
+                request_id=request_id,
+                activity=activity
             )
             if received_request.request.thread:
                 self.executed_requests[request_id] = received_request
@@ -330,7 +331,33 @@ class CloudRequests(CloudEvents):
             if activity.timestamp < self.startup_time:
                 continue
             self.on_set(activity) # Read in the fetched activity
-        
+    
+    # -- Functions to be used in requests to get info about the request --
+
+    def get_requester(self):
+        """
+        Can be used inside a request to get the username that performed the request.
+        """
+        activity = self.executed_requests[current_thread().name].activity
+        if activity.user is None:
+            activity.load_log_data()
+        return activity.user
+
+    def get_timestamp(self):
+        """
+        Can be used inside a request to get the timestamp of when the request was received.
+        """
+        activity = self.executed_requests[current_thread().name].activity
+        return activity.timestamp
+
+    def get_exact_timestamp(self):
+        """
+        Can be used inside a request to get the exact timestamp of when the request was performed.
+        """
+        activity = self.executed_requests[current_thread().name].activity
+        activity.load_log_data()
+        return activity.timestamp
+
     # -- Other stuff --
 
     def stop(self):

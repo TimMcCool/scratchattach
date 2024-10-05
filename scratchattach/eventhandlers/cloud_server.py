@@ -44,7 +44,7 @@ class TwCloudSocket(WebSocket):
                 _a = cloud_activity.CloudActivity(timestamp=time.time()*1000)
                 data["name"] = data["name"].replace("☁ ", "")
                 _a._update_from_dict(send_to_clients)
-                Thread(target=self.server.call_event, args=["on_set", [_a, self]]).start()
+                self.server.call_event("on_set", [_a, self])
 
             elif data["method"] == "handshake":
                 data = json.loads(self.data)
@@ -82,7 +82,7 @@ class TwCloudSocket(WebSocket):
                 )
                 self.sendMessage("This server uses @TimMcCool's scratchattach 2.0.0")
                 # raise event
-                Thread(target=self.server.call_event, args=["on_handshake", [data["user"], data["project_id"], self]]).start()
+                self.server.call_event("on_handshake", [data["user"], data["project_id"], self])
 
             else:
                 print("Error:", self.address[0]+":"+str(self.address[1]), "sent a message without providing a valid method (set, handshake)")
@@ -100,7 +100,7 @@ class TwCloudSocket(WebSocket):
             print(self.address[0]+":"+str(self.address[1]), "connected")
             self.server.tw_clients[self.address] = {"client":self, "username":None, "project_id":None}
             # raise event
-            Thread(target=self.server.call_event, args=["on_connect", [self]]).start()
+            self.server.call_event("on_connect", [self])
         except Exception as e:
             print("Internal error in handleConntected:", e)
 
@@ -110,7 +110,7 @@ class TwCloudSocket(WebSocket):
         try:
             if self.address in self.server.tw_clients:
                 # raise event
-                Thread(target=self.server.call_event, args=["on_disconnect", [self.server.tw_clients[self.address]["username"], self.server.tw_clients[self.address]["project_id"], self]]).start()
+                self.server.call_event("on_disconnect", [self.server.tw_clients[self.address]["username"], self.server.tw_clients[self.address]["project_id"], self])
                 print(self.address[0]+":"+str(self.address[1]), "disconnected")
         except Exception as e:
             print("Internal error in handleClose:", e)
