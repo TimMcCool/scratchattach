@@ -251,6 +251,10 @@ class BaseCloud(ABC):
         from ..eventhandlers.cloud_events import CloudEvents
         return CloudEvents(self)
 
-    def requests(self, *, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=False):
+    def requests(self, *, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=False, respond_order="receive"):
         from ..eventhandlers.cloud_requests import CloudRequests
-        return CloudRequests(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
+        return CloudRequests(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss, respond_order=respond_order)
+
+    def storage(self, *, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=False):
+        from ..eventhandlers.cloud_storage import CloudStorage
+        return CloudStorage(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)

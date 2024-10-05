@@ -112,6 +112,8 @@ def api_iterative(
 
 def _get_object(identificator_name, identificator, Class, NotFoundException, session=None):
     # Interal function: Generalization of the process ran by get_user, get_studio etc.
+    # Builds an object of class that is inheriting from BaseSiteComponent
+    # # Class must inherit from BaseSiteComponent
     try:
         _object = Class(**{identificator_name:identificator, "_session":session})
         r = _object.update()

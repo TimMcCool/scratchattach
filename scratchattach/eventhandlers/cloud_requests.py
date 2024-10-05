@@ -71,6 +71,8 @@ class CloudRequests(CloudEvents):
         self.executed_requests = {} # Dict (key: request_id) saving the request that are currently being executed and have not been responded yet (as ReceivedRequest objects)
         self.request_outputs = [] # List for the output data returned by the requests (so the thread sending it back to Scratch can access it)
         self.responded_request_ids = [] # Saves the last 15 request ids that have been responded to. This prevents double responses then using the clouddata logs as 2nd source for preventing packet loss
+        self.packet_memory = [] # Saves the last 15 responses so the Scratch project can re-request packets that weren't received
+        self._packets_to_resend = []
 
         # threading Condition objects used to block threads until they are needed (lower CPU usage compared to a busy-sleep event queue)#
         self.executer_event = Event()
@@ -119,16 +121,16 @@ class CloudRequests(CloudEvents):
 
     # -- Parse and send back the request output --
 
-    def _parse_output(self, received_request, output):
+    def _parse_output(self, request_name, output):
         """
         Prepares the transmission of the request output to the Scratch project
         """
         if len(str(output)) > 3000:
             print(
-                f"Warning: Output of request '{received_request.request.name}' is longer than 3000 characters (length: {len(str(output))} characters). Responding the request will take >4 seconds."
+                f"Warning: Output of request '{request_name}' is longer than 3000 characters (length: {len(str(output))} characters). Responding the request will take >4 seconds."
             )
 
-        if str(received_request.request_id).endswith("0"):
+        if str(output["request_id"]).endswith("0"):
             try:
                 int(output) == output
             except Exception:
@@ -139,7 +141,7 @@ class CloudRequests(CloudEvents):
             send_as_integer = False
 
         if output is None:
-            print(f"Warning: Request '{received_request.request.name}' didn't return anything.")
+            print(f"Warning: Request '{request_name}' didn't return anything.")
             return
         elif send_as_integer:
             output = str(output)
@@ -153,7 +155,19 @@ class CloudRequests(CloudEvents):
             for i in input:
                 output += Encoding.encode(i)
                 output += "89"
-        self._respond(received_request.request_id, output, validation=3222 if send_as_integer else 2222)
+        self._respond(output["request_id"], output, validation=3222 if send_as_integer else 2222)
+
+    def _set_FROM_HOST_var(self, value):
+        try:
+            self.cloud.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", value)
+        except exceptions.ConnectionError:
+            self.call_even("on_disconnect")
+        except Exception:
+            print("scratchattach: internal error while responding (please submit a bug report on GitHub):", e, f"{response_part}.{request_id}{iteration_string}1")
+        self.current_var += 1
+        if self.current_var == len(self.used_cloud_vars):
+            self.current_var = 0
+        time.sleep(self.cloud.ws_shortterm_ratelimit)
 
     def _respond(self, request_id, response, *, validation=2222):
         """
@@ -163,9 +177,10 @@ class CloudRequests(CloudEvents):
             ) or self.no_packet_loss:
             self.cloud.reconnect()
 
+        memory = {"rid":request_id}
         remaining_response = str(response)
         length_limit = self.cloud.length_limit - (len(str(request_id))+6) # the subtrahend is the worst-case length of the "."+numbers after the "."
-
+        
         i = 0
         while not remaining_response == "":
             if len(remaining_response) > length_limit:
@@ -180,33 +195,23 @@ class CloudRequests(CloudEvents):
                 else:
                     iteration_string = "00" + str(i)
 
-                try:
-                    self.cloud.set_var(
-                        f"FROM_HOST_{self.used_cloud_vars[self.current_var]}",
-                        f"{response_part}.{request_id}{iteration_string}1")
-                except exceptions.ConnectionError:
-                    self.call_even("on_disconnect")
-                except Exception:
-                    print("scratchattach: internal error while responding (please submit a bug report on GitHub):", e, f"{response_part}.{request_id}{iteration_string}1")
-                self.current_var += 1
-                if self.current_var == len(self.used_cloud_vars):
-                    self.current_var = 0
+                value_to_send = f"{response_part}.{request_id}{iteration_string}1"
+                memory[i] = value_to_send
+                
+                self._set_FROM_HOST_var(value_to_send)
 
             else:
-                try:
-                    self.cloud.set_var(
-                        f"FROM_HOST_{self.used_cloud_vars[self.current_var]}",
-                        f"{remaining_response}.{request_id}{validation}")
-                except exceptions.ConnectionError:
-                    self.call_event("on_disconnect")
-                except Exception:
-                    print("scratchattach: internal error while responding (please submit a bug report on GitHub):", e, f"{response_part}.{request_id}{iteration_string}")
-                self.current_var += 1
-                if self.current_var == len(self.used_cloud_vars):
-                    self.current_var = 0
+                self._set_FROM_HOST_var(f"{remaining_response}.{request_id}{validation}")
+                self.packet_memory.append(memory)
+                if len(self.packet_memory) > 15:
+                    self.packet_memory.pop(0)
                 remaining_response = ""
-                
-            time.sleep(self.cloud.ws_shortterm_ratelimit)
+                    
+    def _request_packet_from_memory(self, request_id, packet_id):
+        memory = list(filter(lambda x : x["rid"] == request_id, self.packet_memory))
+        if len(memory) > 0:
+            self._packets_to_resend.append(memory[0][int(packet_id)])
+            self.responder_event.set() # activate _responder process
 
     # -- Register and handle incoming requests --
 
@@ -219,6 +224,11 @@ class CloudRequests(CloudEvents):
         if activity.var == "TO_HOST" and "." in activity.value:
             # Parsing the received request
             raw_request, request_id = activity.value.split(".")
+
+            if len(request_id) == 8 and request_id[0] == "9":
+                # A lost packet was re-requested
+                self._request_packet_from_memory(request_id[1:], int(raw_request))
+                return
 
             if request_id in self.responded_request_ids:
                 # => The received request has already been answered, meaning this activity has already been received
@@ -311,6 +321,9 @@ class CloudRequests(CloudEvents):
             while self.responder_thread is not None: # If self.responder_thread is None, it means cloud requests were stopped using .stop()
                 self.responder_event.wait() # Wait for executed requests to respond
                 self.responder_event.clear()
+                
+                while self._packets_to_resend != []:
+                    self._set_FROM_HOST_var(self._packets_to_resend.pop(0))
 
                 while self.request_outputs != []:
                     if self.respond_order == "finish":
@@ -318,8 +331,11 @@ class CloudRequests(CloudEvents):
                     else:
                         output_obj = min(self.request_outputs, key=lambda x : x[self.respond_order])
                         self.request_outputs.remove(output_obj)
-                    received_request = self.executed_requests.pop(output_obj["request_id"])
-                    self._parse_output(received_request, output_obj["output"])
+                    if output_obj["request_id"] in self.executed_requests:
+                        received_request = self.executed_requests.pop(output_obj["request_id"])
+                        self._parse_output(received_request, output_obj["output"])
+                    else:
+                        self._parse_output("[sent from backend]", output_obj["output"])
                 
     def on_reconnect(self):
         """
@@ -358,6 +374,13 @@ class CloudRequests(CloudEvents):
         return activity.timestamp
 
     # -- Other stuff --
+
+    def send(self, data, *, priority=0):
+        """
+        Send data to the Scratch project without a priorly received request. The Scratch project will only receive the data if it's running.
+        """
+        self.request_outputs.append({"receive":time.time()*1000, "request_id":"100000", "output":data, "priority":priority})
+        self.responder_event.set() # activate _responder process
 
     def stop(self):
         """

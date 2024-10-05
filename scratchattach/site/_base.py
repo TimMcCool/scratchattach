@@ -7,7 +7,7 @@ class BaseSiteComponent(ABC):
 
     def update(self):
         """
-        Updates the attributes of the object. Returns True if the update was successful.
+        Updates the attributes of the object by performing an API response. Returns True if the update was successful.
         """
         response = self.update_function(
             self.update_API,
@@ -27,6 +27,9 @@ class BaseSiteComponent(ABC):
 
     @abstractmethod
     def _update_from_dict(self, data) -> bool:
+        """
+        Parses the API response that is fetched in the update-method. Class specific, must be overridden in classes inheriting from this one.
+        """
         pass
 
     def _assert_auth(self):
