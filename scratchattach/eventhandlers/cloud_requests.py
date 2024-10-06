@@ -391,6 +391,11 @@ class CloudRequests(CloudEvents):
         """
         self.request_outputs.append({"receive":time.time()*1000, "request_id":"100000000"+str(random.randint(1000, 9999)), "output":data, "priority":priority})
         self.responder_event.set() # activate _responder process
+        # Prevent user from breaking cloud requests by sending too fast (automatically increase wait time if the server can't keep up):
+        if len(self.request_outputs) > 20:
+            time.sleep(0.5)
+        if len(self.request_outputs) > 15:
+            time.sleep(0.2)
         if len(self.request_outputs) > 10:
             time.sleep(0.13)
         elif len(self.request_outputs) > 3:
