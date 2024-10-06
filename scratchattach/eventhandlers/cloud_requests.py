@@ -391,6 +391,7 @@ class CloudRequests(CloudEvents):
         """
         self.request_outputs.append({"receive":time.time()*1000, "request_id":"100000000"+str(random.randint(1000, 9999)), "output":data, "priority":priority})
         self.responder_event.set() # activate _responder process
+        time.sleep(0.07)
 
     def stop(self):
         """
