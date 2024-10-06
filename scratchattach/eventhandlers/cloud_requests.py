@@ -230,7 +230,7 @@ class CloudRequests(CloudEvents):
             # Parsing the received request
             raw_request, request_id = activity.value.split(".")
 
-            if len(request_id) == 8 and request_id[0] == "9":
+            if len(request_id) == 8 and request_id[-1] == "9":
                 # A lost packet was re-requested
                 self._request_packet_from_memory(request_id[1:], int(raw_request))
                 return
@@ -287,6 +287,7 @@ class CloudRequests(CloudEvents):
                 request_id=request_id,
                 activity=activity
             )
+            self.call_event("on_request", received_request)
             if received_request.request.thread:
                 self.executed_requests[request_id] = received_request
                 Thread(target=received_request.request, args=[received_request]).start() # Execute the request function directly in a thread
