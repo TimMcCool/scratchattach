@@ -4,6 +4,7 @@ from .cloud_events import CloudEvents
 from ..site import project
 from threading import Thread, Event, current_thread
 import time
+import random
 import traceback
 from ..utils.encoder import Encoding
 from ..utils import exceptions
@@ -86,6 +87,7 @@ class CloudRequests(CloudEvents):
 
         self.current_var = 0 # ID of the last set FROM_HOST_ variable (when a response is sent back to Scratch, these are set cyclically)
         self.credit_check()
+        self.hard_stop = False # When set to True, all processes will halt immediately without finishing safely (can result in not fully received / responded requests etc.)
 
     # -- Adding and removing requests --
 
@@ -206,7 +208,10 @@ class CloudRequests(CloudEvents):
                 if len(self.packet_memory) > 15:
                     self.packet_memory.pop(0)
                 remaining_response = ""
-                    
+
+            if self.hard_stop: # stop immediately without exiting safely
+                break
+
     def _request_packet_from_memory(self, request_id, packet_id):
         memory = list(filter(lambda x : x["rid"] == request_id, self.packet_memory))
         if len(memory) > 0:
@@ -310,7 +315,9 @@ class CloudRequests(CloudEvents):
 
                 if use_extra_data:
                     Thread(target=self.on_reconnect).start()
-            
+                if self.hard_stop: # stop immediately without exiting safely
+                    break
+
             self.executer_event.wait(timeout = 2.5 if use_extra_data else None) # Wait for requests to be received
 
     def _responder(self):
@@ -323,6 +330,8 @@ class CloudRequests(CloudEvents):
             
             while self._packets_to_resend != []:
                 self._set_FROM_HOST_var(self._packets_to_resend.pop(0))
+                if self.hard_stop: # stop immediately without exiting safely
+                    break
 
             while self.request_outputs != []:
                 if self.respond_order == "finish":
@@ -335,7 +344,9 @@ class CloudRequests(CloudEvents):
                     self._parse_output(received_request, output_obj["output"], output_obj["request_id"])
                 else:
                     self._parse_output("[sent from backend]", output_obj["output"], output_obj["request_id"])
-                
+                if self.hard_stop: # stop immediately without exiting safely
+                    break
+
     def on_reconnect(self):
         """
         Called when the underlying cloud events reconnect. Makes sure that no requests are missed in this case.
@@ -378,12 +389,12 @@ class CloudRequests(CloudEvents):
         """
         Send data to the Scratch project without a priorly received request. The Scratch project will only receive the data if it's running.
         """
-        self.request_outputs.append({"receive":time.time()*1000, "request_id":"100000", "output":data, "priority":priority})
+        self.request_outputs.append({"receive":time.time()*1000, "request_id":"100000000"+str(random.randint(1000, 9999)), "output":data, "priority":priority})
         self.responder_event.set() # activate _responder process
 
     def stop(self):
         """
-        Stops the request handler and all associated threads forever.
+        Stops the request handler and all associated threads forever. Lets running response sending processes finish.
         """
         # Override the .stop function from BaseEventHandler to make sure the ._executer and ._responder threads are also terminated
         super().stop()
@@ -391,6 +402,15 @@ class CloudRequests(CloudEvents):
         self.responder_thread = None
         self.executer_event.set()
         self.responder_event.set()
+    
+    def hard_stop(self):
+        """
+        Stops the request handler and all associated threads forever. Stops running response sending processes immediately.
+        """
+        self.hard_stop = True
+        self.stop()
+        time.sleep(0.5)
+        self.hard_stop = False
 
     def credit_check(self):
         try:
