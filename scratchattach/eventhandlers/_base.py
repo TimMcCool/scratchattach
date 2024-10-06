@@ -11,6 +11,7 @@ class BaseEventHandler(ABC):
         self._thread = None
         self.running = False
         self._events = {}
+        self._threaded_events = {}
 
     def start(self, *, thread=True, ignore_exceptions=True):
         """

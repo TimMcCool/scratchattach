@@ -43,7 +43,7 @@ class Request:
                 print(f"Exception in request '{self.name}':")
                 raise(e)
             self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":[f"Error in request {self.name}","Check the Python console"], "priority":self.response_priority})
-        self.cloud_requests.responder_condition.set() # Activate the .cloud_requests._responder process so it sends back the data to Scratch
+        self.cloud_requests.responder_event.set() # Activate the .cloud_requests._responder process so it sends back the data to Scratch
 
 class ReceivedRequest:
 
@@ -74,7 +74,7 @@ class CloudRequests(CloudEvents):
         self.packet_memory = [] # Saves the last 15 responses so the Scratch project can re-request packets that weren't received
         self._packets_to_resend = []
 
-        # threading Condition objects used to block threads until they are needed (lower CPU usage compared to a busy-sleep event queue)#
+        # threading Event objects used to block threads until they are needed (lower CPU usage compared to a busy-sleep event queue)#
         self.executer_event = Event()
         self.responder_event = Event()
 
@@ -121,7 +121,7 @@ class CloudRequests(CloudEvents):
 
     # -- Parse and send back the request output --
 
-    def _parse_output(self, request_name, output):
+    def _parse_output(self, request_name, output, request_id):
         """
         Prepares the transmission of the request output to the Scratch project
         """
@@ -130,7 +130,7 @@ class CloudRequests(CloudEvents):
                 f"Warning: Output of request '{request_name}' is longer than 3000 characters (length: {len(str(output))} characters). Responding the request will take >4 seconds."
             )
 
-        if str(output["request_id"]).endswith("0"):
+        if str(request_id).endswith("0"):
             try:
                 int(output) == output
             except Exception:
@@ -155,7 +155,7 @@ class CloudRequests(CloudEvents):
             for i in input:
                 output += Encoding.encode(i)
                 output += "89"
-        self._respond(output["request_id"], output, validation=3222 if send_as_integer else 2222)
+        self._respond(request_id, output, validation=3222 if send_as_integer else 2222)
 
     def _set_FROM_HOST_var(self, value):
         try:
@@ -317,25 +317,24 @@ class CloudRequests(CloudEvents):
         """
         A process that detects incoming request outputs in .request_outputs and handles them by sending them back to the Scratch project, also removes the corresponding ReceivedRequest object from .executed_requests
         """
-        with self.responder_event:
-            while self.responder_thread is not None: # If self.responder_thread is None, it means cloud requests were stopped using .stop()
-                self.responder_event.wait() # Wait for executed requests to respond
-                self.responder_event.clear()
-                
-                while self._packets_to_resend != []:
-                    self._set_FROM_HOST_var(self._packets_to_resend.pop(0))
+        while self.responder_thread is not None: # If self.responder_thread is None, it means cloud requests were stopped using .stop()
+            self.responder_event.wait() # Wait for executed requests to respond
+            self.responder_event.clear()
+            
+            while self._packets_to_resend != []:
+                self._set_FROM_HOST_var(self._packets_to_resend.pop(0))
 
-                while self.request_outputs != []:
-                    if self.respond_order == "finish":
-                        output_obj = self.request_outputs.pop(0)
-                    else:
-                        output_obj = min(self.request_outputs, key=lambda x : x[self.respond_order])
-                        self.request_outputs.remove(output_obj)
-                    if output_obj["request_id"] in self.executed_requests:
-                        received_request = self.executed_requests.pop(output_obj["request_id"])
-                        self._parse_output(received_request, output_obj["output"])
-                    else:
-                        self._parse_output("[sent from backend]", output_obj["output"])
+            while self.request_outputs != []:
+                if self.respond_order == "finish":
+                    output_obj = self.request_outputs.pop(0)
+                else:
+                    output_obj = min(self.request_outputs, key=lambda x : x[self.respond_order])
+                    self.request_outputs.remove(output_obj)
+                if output_obj["request_id"] in self.executed_requests:
+                    received_request = self.executed_requests.pop(output_obj["request_id"])
+                    self._parse_output(received_request, output_obj["output"], output_obj["request_id"])
+                else:
+                    self._parse_output("[sent from backend]", output_obj["output"], output_obj["request_id"])
                 
     def on_reconnect(self):
         """
