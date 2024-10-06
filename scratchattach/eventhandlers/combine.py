@@ -14,3 +14,15 @@ class MultiEventHandler:
     def start(self, *args, **kwargs):
         for handler in self.handlers:
             handler.start(*args, **kwargs)
+
+    def stop(self, *args, **kwargs):
+        for handler in self.handlers:
+            handler.stop(*args, **kwargs)
+
+    def pause(self, *args, **kwargs):
+        for handler in self.handlers:
+            handler.pause(*args, **kwargs)
+
+    def resume(self, *args, **kwargs):
+        for handler in self.handlers:
+            handler.resume(*args, **kwargs)
