@@ -66,7 +66,7 @@ class BackpackAsset(BaseSiteComponent):
                 self.download_url,
                 timeout=10,
             )
-            open(f"{dir}{self.filename}.sb3", "wb").write(response.content)
+            open(f"{dir}{self.filename}", "wb").write(response.content)
         except Exception as e:
             raise (
                 exceptions.FetchError(
