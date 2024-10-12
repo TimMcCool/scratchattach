@@ -55,6 +55,35 @@ This is now used consistently throughout the whole library.
 - session.messages(), studio.activiy(), user.activity() and session.feed() now return lists of Activity objects
 - The class has the methods .actor(), .target() (returning the user, studio, project or comment the activity targets)
 
+## Cloud:
+
+- Completely reworked cloud variable classes and methods
+- Added a generalized base class (BaseCloud) for representing the cloud of any cloud variable server.
+- Added ScratchCloud and TwCloud inherit from this class and are optimized for using Scratch / TurboWarp cloud variables. There's also CustomCloud (also inheriting from BaseCloud) which allows setting all attributes yourself in the constructor. Cloud objects are obtained using scratch3.get_cloud(project_id) / session.connect_cloud(project_id).
+- If you need even more customizability (like defining your own set_var function etc) you can create your own class inheriting from BaseCloud (there's more info about this in the docstring of BaseCloud).
+- Added a built-in cloud recorder. When calling the (new) cloud.get_var(var_name) function for the first time, it will automatically start recording cloud variable updates on the websocket using the new built-in scratchattach.eventhandlers.cloud_recorder.CloudRecorder class. cloud.get_var will return the recorded value, this means you can now safely use the cloud.get_var and cloud.get_all_vars functions in a loop without having to worry about spamming an API.
+- cloud.set_var() now allows setting cloud variables faster (15 var sets per second)
+- Added cloud.set_vars function for setting multiple cloud vars simultaneously (with an intelligent rate-limit handler)
+- Added cloud.reconnect()
+- Added ScratchCloud.logs(), the cloud activities are not represented as scratchattach.CloudActivity objects. This class has the methods .load_log_data() (loads the user who set the var from the clouddata logs, if logs are available for the cloud), .actor() -> scratchattach.User and .project() -> scratchattach.Project
+
+## Cloud events:
+
+- The event handler is now initialized using `events = cloud.events()`. There's one event handler class that gets data from the websocket (CloudEvents) and another one that gets the data from the cloud logs (CloudLogEvent)
+- Abstracted lots of functions in the BaseEventHandler class which is also used by scratchattach's new message events
+- on_set event function is now called with a CloudActivity object as argument
+
+## Cloud requests:
+
+- The event handler is now initialized using `client = cloud.requests()`. The same CloudRequests class is used for any cloud variable websocket (Scratch, TurboWarp etc.)
+- Massively lowered CPU usage by implementing threading.Event in the event loops to lock them until a request is received
+- Added .send("data") for sending messages (either string, int or list of string / int) to the Scratch project without a priorly received request
+- Added TCP-like packet loss prevention
+- client.get_requester() and client.get_exact_timestamp() now work for requests ran in threads (all requests are now ran in threads by default)
+- It's now possible to add priority values to requests to determine the order in which responses should be sent back to the Scratch project
+- Requests not ran in threads no longer block the process sending back data to Scratch -> faster request handling
+- Requests are now saved as callable scratchattach.eventhandlers.cloud_requests.Request objects in the CloudRequests._requests dict, cleaned up code a lot, CloudRequests is now built on top of / inheriting from CloudEvents
+
 ## Other stuff:
 
 - Added functions for getting statistics: `sa.monthly_comment_activity()`, `sa.monthly_project_shares()`, `sa.monthly_active_users()`, `sa.monthly_activity_trends()`
