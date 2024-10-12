@@ -7,7 +7,7 @@ Some less important changes are not listed here. [How to migrate to v2 quicky](h
 - Structured all the classes in three categories (site components, cloud, and event handlers). There are three base classes: BaseSiteComponent, BaseCloud and BaseEventHandler. All other classes inherit from one of these base classes, common methods are definied within the base class. This adds more abstraction to the library.
 - Added utils > commons.py file with methods for getting an object of a class inheriting from BaseSiteComponent and for getting and parsing data from an iterative Scratch API.
 - In method names "get_" always means that there's no Session connected to the returned object and that the returned object therefore can't be used for performing operations (like .love(), .follow()) that require authentication.
-"connect_" always means that the Session will be connected to the returned object / saved in the object's ._session attribute.
+"connect_" always means that the Session will be connected to the returned object / saved in the object's ._session attribute. If a method is called on this object, the object returned by the method will also have the Session connected to it. This makes it possible to write code like `session.connect_user("username").projects()[0].comment_by_id("comment_id").reply("text")` without having to worry about staying logged in.
 This is now used consistently throughout the whole library.
 - Added new logo and scratchattach website (scratchattach.tim1de.net) featuring scratchattach projects (automatically fetched from the Scratch studio)
 
@@ -31,6 +31,36 @@ This is now used consistently throughout the whole library.
 - Added `studio.comment_by_id` for getting a studio comment (as scratchattach.Comment object) by its id
 
 ## Projects: 
+
+- Projects are now represented as scratchattach.Project objects everywhere (for example, when using `sa.featured_projects()` etc.)
+- Added `session.create_project()` and `project.create_remix()` methods (also works on unshared projects) for creating projects
+- Added `project.load_description()` method that allows getting the title and description of an unshared project (Warning: Using it might be against Scratch's rules)
+- Added `project.body()` function that loads the contents of the project as `scratchattach.ProjectBody` object (this class allows editing the project further using Python, then it can be saved on Scratch using `project.set_body(project_body)`)
+- Made it so specific errors are raised when loving, faving etc. fails
+- Added `project.visibility()` method which returns info about the project's visibility on Scratch
+
+## Forum:
+
+- Fixed session.connect_topic, scratchattach.get_topic and connect_ / get_topic_list functions (they now work without ScratchDB and scrape the data directly from the website or the RSS feed)
+- Removed get_post and connect_post functions (getting a post by id is no longer possible)
+
+## Comments:
+
+- Added the scratchattach.Comment class representing a project, studio or profile comment
+- The class has methods like .author(), .place(), .parent_comment() -> scratchattach.Comment, .replies(), .reply("content") (for replying directly to a comment), .delete(), .report()
+
+## Messages / Activities:
+
+- Added the scratchattach.Activity class representing an activity shown in the "What I've been doing" feed of a user, in the "What's happening?" feed on the front page or in the activity feed of a studio, or representing a message (in Scratch's API, the JSON objects saving messages and activities share the same structure)
+- session.messages(), studio.activiy(), user.activity() and session.feed() now return lists of Activity objects
+- The class has the methods .actor(), .target() (returning the user, studio, project or comment the activity targets)
+
+## Other stuff:
+
+- Added functions for getting statistics: `sa.monthly_comment_activity()`, `sa.monthly_project_shares()`, `sa.monthly_active_users()`, `sa.monthly_activity_trends()`
+- Added functions for checking if a username / password is available and allowed: `sa.check_username("username")`, `sa.check_password("password")`
+- Added `sa.aprilfools_get_counter()` and `sa.aprilfools_increment_counter()`
+- Added scratchattach.BackpackAsset class representing an object saved in the backpack, with the .download() and .delete() methods
 
 # 1.7.3
 
