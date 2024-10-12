@@ -4,6 +4,14 @@ Some less important changes are not listed here. [How to migrate to v2 quickly](
 
 scratchattach is now by far the biggest Scratch API wrapper.
 
+## Key Changes in v2.0.0:
+
+- Tons of new features.
+- New object-oriented design with base classes for better abstraction.
+- Cloud storage framework, comment filterbot and cloud events / cloud requests improvements.
+- Project JSON editing capabilities and new features for self-hosting TurboWarp servers.
+- Session handling is more consistent across the library.
+
 ## General:
 
 - Structured all the classes in three categories (site components, cloud, and event handlers). There are three base classes: BaseSiteComponent, BaseCloud and BaseEventHandler. All other classes inherit from one of these base classes, common methods are definied within the base class. This adds more abstraction to the library.
