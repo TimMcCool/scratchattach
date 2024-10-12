@@ -352,11 +352,14 @@ class CloudRequests(CloudEvents):
         """
         Called when the underlying cloud events reconnect. Makes sure that no requests are missed in this case.
         """
-        extradata = self.cloud.logs(limit=35)[::-1] # Reverse result so oldest activity is first
-        for activity in extradata:
-            if activity.timestamp < self.startup_time:
-                continue
-            self.on_set(activity) # Read in the fetched activity
+        try:
+            extradata = self.cloud.logs(limit=35)[::-1] # Reverse result so oldest activity is first
+            for activity in extradata:
+                if activity.timestamp < self.startup_time:
+                    continue
+                self.on_set(activity) # Read in the fetched activity
+        except Exception:
+            pass
     
     # -- Functions to be used in requests to get info about the request --
 

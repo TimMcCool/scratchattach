@@ -35,7 +35,7 @@ class CloudEvents(BaseEventHandler):
                 result = []
                 for i in data:
                     try:
-                        _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session)
+                        _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session, cloud=self.cloud)
                         if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
                             continue
                         data = json.loads(i)
