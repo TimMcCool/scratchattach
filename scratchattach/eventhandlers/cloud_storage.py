@@ -13,6 +13,7 @@ class Database:
 
     def __init__(self, name, *, json_file_path, save_interval=30):
         self.save_event_function = None
+        self.set_event_function = None
         self.name = name
 
         # Import from JSON file
@@ -55,11 +56,16 @@ class Database:
     
     def set(self, key, value):
         self.data[key] = value
-    
+
+        if self.set_event_function is not None:
+            self.set_event_function()
+
     def event(self, event_function):
         # Decorator function for adding the on_save event that is called when a save is performed
         if event_function.__name__ == "on_save":
             self.save_event_function = event_function
+        if event_function.__name__ = "on_set":
+            self.set_event_function = event_function
         
     def _autosaver(self):
         # Task autosaving the db. save interval specified in .save_interval attribute
