@@ -436,7 +436,7 @@ class CloudRequests(CloudEvents):
         try:
             p = project.Project(id=self.cloud.project_id)
             if not p.update(): # can't get project, probably because it's unshared (no authentication is used for getting it)
-                print("If you use CloudRequests, please credit TimMcCool!")
+                print("If you use cloud requests or cloud storages, please credit TimMcCool!")
                 return
             description = (str(p.instructions) + str(p.notes)).lower()
             if not ("timmccool" in description or "timmcool" in description or "timccool" in description or "timcool" in description):

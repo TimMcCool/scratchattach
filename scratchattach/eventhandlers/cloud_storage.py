@@ -2,6 +2,8 @@
 
 from .cloud_requests import CloudRequests
 import json
+import time
+from threading import Thread
 
 class Database:
 
@@ -10,6 +12,9 @@ class Database:
     """
 
     def __init__(self, name, *, json_file_path, save_interval=30):
+        self.save_event_function = None
+        self.name = name
+
         # Import from JSON file
         if not json_file_path.endswith(".json"):
             json_file_path = json_file_path+".json"
@@ -17,20 +22,22 @@ class Database:
 
         try:
             with open(json_file_path, 'r') as json_file:
-                self.data = json.load(json_file_path)
+                self.data = json.load(json_file)
         except FileNotFoundError:
             print(f"Creating file {json_file_path}. Your database {name} will be stored there.")
-            self.data = []
+            self.data = {}
             self.save_to_json()
         
         if isinstance(self.data , list):
             raise ValueError(
                 "Invalid JSON file content: Top-level object must be a dict, not a list"
             )
-    
-        # Other initialization
-        self.save_event_function = None
-    
+        
+        # Start autosaving
+        self.save_interval = save_interval
+        if self.save_interval is not None:
+            Thread(target=self._autosaver).start()
+
     def save_to_json(self):
         with open(self.json_file_path, 'w') as json_file:
             json.dump(self.data, json_file, indent=4)
@@ -42,6 +49,8 @@ class Database:
         return list(self.data.keys())
 
     def get(self, key) -> str:
+        if not key in self.data:
+            return None
         return self.data[key]
     
     def set(self, key, value):
@@ -51,6 +60,12 @@ class Database:
         # Decorator function for adding the on_save event that is called when a save is performed
         if event_function.__name__ == "on_save":
             self.save_event_function = event_function
+        
+    def _autosaver(self):
+        # Task autosaving the db. save interval specified in .save_interval attribute
+        while True:
+            time.sleep(self.save_interval)
+            self.save_to_json()
 
 class CloudStorage(CloudRequests):
     
@@ -70,7 +85,10 @@ class CloudStorage(CloudRequests):
         self.request(self.database_names, thread=True)
     
     def get(self, db_name, key) -> str:
-        return self.get_database(db_name).get(key)
+        try:
+            return self.get_database(db_name).get(key)
+        except Exception:
+            return None
 
     def set(self, db_name, key, value):
         return self.get_database(db_name).set(key, value)
@@ -88,4 +106,13 @@ class CloudStorage(CloudRequests):
         self._databases[database.name] = database
 
     def get_database(self, name) -> Database:
-        return self._databases[name]
+        if name in self._databases:
+            return self._databases[name]
+        return None
+
+    def save(self):
+        """
+        Saves the data in the JSON files for all databases in self._databases
+        """
+        for dbname in self._databases:
+            self._databases[dbname].save_to_json()
