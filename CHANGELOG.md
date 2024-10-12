@@ -88,6 +88,8 @@ This is now used consistently throughout the whole library.
 
 ## Cloud storage (new in v2.0):
 
+Docs: https://github.com/TimMcCool/scratchattach/wiki/Cloud-Storage
+
 - A simple key-value storage engine that can be initialized using `storage = cloud.storage()`, built upon / inheriting from CloudRequests
 - Allows adding databases, getting / setting attributes from the Scratch project (just like for cloud requests, there's a pre-built sprite) and saving them in JSON files automatically
 - An event is called on every set operation -> allows connecting dbs like mongodb
@@ -98,10 +100,14 @@ This is now used consistently throughout the whole library.
 
 ## Message events and Filterbot:
 
+Docs: https://github.com/TimMcCool/scratchattach/wiki/Filterbot
+
 - Added new `MessageEvents` class that allows reacting to messages in real time. Every time you receive a message on Scratch, an event is be called (similar to cloud events)
 - Added a `Filterbot` framework, a bot automatically checking comments you receive, checking them for spam and blacklisted words and deleting them if they match criteria. There are different kind of filters, some always applying (HardFilter) while others only apply if a cumulative score is exceeded (SoftFilter). There's also SpamFilter which only deletes comments matching criteria if they are posted too often. There are also pre-built filter profiles (like an f4f filter and an ads filter).
 
-## Self-hosting a TurboWarp cloud variable websocket
+## Self-hosting a TurboWarp cloud variable websocket (new in v2.0):
+
+Docs: https://github.com/TimMcCool/scratchattach/wiki/Self%E2%80%90hosting-TurboWarp-cloud-websockets
 
 - Added a feature for easily hosting a websocket server locally (TwCloudServer class). The server is automatically set up for being used as cloud_host for a project running on TurboWarp (through TurboWarp's ?cloud_host= URL parameter).
 - The server is is initialized using `server = sa.init_cloud_server()` and started using `server.start()`. After starting, the address where the server is running is printed in the console. This address (including the port) has to be passed to TurboWarp's ?cloud_host= URL parameter. When hosting the server locally, it will be only be accessible by devices in your network. To host online, use a hosting platform and start the websocket server there.
@@ -111,7 +117,9 @@ This is now used consistently throughout the whole library.
 - You can directly set cloud variables server-side anytime.
 - You can access the values of the cloud variables and the users connected to the server directly from the Python backend anytime, using `server.active_user_names(project_id)`, `server.active_user_ips(project_id`, `server.get_var(project_id, var_name)` etc. There are also events called on cloud variable sets (the TwCloudServer class is inheriting from BaseEvenHandler).
 
-## Project JSON editing capabilities
+## Project JSON editing capabilities (new in v2.0):
+
+Docs: https://github.com/TimMcCool/scratchattach/wiki/Project-JSON-editing-capabilities
 
 - Added ProjectBody representing the contents of a Scratch project.
 - The contents of a Scratch project can be loaded from a Scratch community project using `body = project.body()` or from a sb3 file using `body = sa.read_sb3_file("filepath")`. You can also create an empty project using `body = sa.get_empty_project_pb()`
