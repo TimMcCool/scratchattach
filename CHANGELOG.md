@@ -1,6 +1,6 @@
 # 2.0.0
 
-Some less important changes are not listed here. [How to migrate to v2 quicky](https://github.com/TimMcCool/scratchattach/wiki/Migrating-to-v2)
+Some less important changes are not listed here. [How to migrate to v2 quickly](https://github.com/TimMcCool/scratchattach/wiki/Migrating-to-v2)
 
 ## General:
 
