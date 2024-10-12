@@ -328,6 +328,9 @@ class ProjectBody:
                 return [self.name, self.saved_value, True]
             else:
                 return [self.name, self.saved_value]
+        
+        def make_cloud_variable(self):
+            self.is_cloud = True
 
     class List(BaseProjectBodyComponent):
 
