@@ -123,7 +123,7 @@ class CloudRequests(CloudEvents):
             self._requests.pop(name)
         except Exception:
             raise ValueError(
-                f"No request with name {} found to remove"
+                f"No request with name {name} found to remove"
             )
 
     # -- Parse and send back the request output --
