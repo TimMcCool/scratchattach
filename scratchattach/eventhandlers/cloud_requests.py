@@ -119,7 +119,12 @@ class CloudRequests(CloudEvents):
         self.request(enabled=enabled, name=name)(function)
 
     def remove_request(self, name):
-        self._requests.pop(name)
+        try:
+            self._requests.pop(name)
+        except Exception:
+            raise ValueError(
+                f"No request with name {} found to remove"
+            )
 
     # -- Parse and send back the request output --
 
