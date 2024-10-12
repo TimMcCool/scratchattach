@@ -58,7 +58,7 @@ class Database:
         self.data[key] = value
 
         if self.set_event_function is not None:
-            self.set_event_function()
+            self.set_event_function(key, value)
 
     def event(self, event_function):
         # Decorator function for adding the on_save event that is called when a save is performed
