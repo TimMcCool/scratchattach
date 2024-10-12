@@ -2,6 +2,8 @@
 
 Some less important changes are not listed here. [How to migrate to v2 quickly](https://github.com/TimMcCool/scratchattach/wiki/Migrating-to-v2)
 
+scratchattach is now by far the biggest Scratch API wrapper.
+
 ## General:
 
 - Structured all the classes in three categories (site components, cloud, and event handlers). There are three base classes: BaseSiteComponent, BaseCloud and BaseEventHandler. All other classes inherit from one of these base classes, common methods are definied within the base class. This adds more abstraction to the library.
@@ -82,7 +84,30 @@ This is now used consistently throughout the whole library.
 - client.get_requester() and client.get_exact_timestamp() now work for requests ran in threads (all requests are now ran in threads by default)
 - It's now possible to add priority values to requests to determine the order in which responses should be sent back to the Scratch project
 - Requests not ran in threads no longer block the process sending back data to Scratch -> faster request handling
-- Requests are now saved as callable scratchattach.eventhandlers.cloud_requests.Request objects in the CloudRequests._requests dict, cleaned up code a lot, CloudRequests is now built on top of / inheriting from CloudEvents
+- Requests are now saved as callable scratchattach.eventhandlers.cloud_requests.Request objects in the CloudRequests._requests dict, cleaned up code a lot, CloudRequests is now built upon / inheriting from CloudEvents
+
+## Cloud storage (new in v2.0):
+
+- A simple key-value storage engine that can be initialized using `storage = cloud.storage()`, built upon / inheriting from CloudRequests
+- Allows adding databases, getting / setting attributes from the Scratch project (just like for cloud requests, there's a pre-built sprite) and saving them in JSON files automatically
+- An event is called on every set operation -> allows connecting dbs like mongodb
+
+## MultiEventHandlers (new in v2.0):
+
+- Added new `scratchattach.MultiEventHandlers([ ... ])` class that allows combining multiple event handlers (cloud events, cloud requests, cloud storages, message events or filterbots) in one object
+
+## Message events and Filterbot:
+
+- Added new `MessageEvents` class that allows reacting to messages in real time. Every time you receive a message on Scratch, an event is be called (similar to cloud events)
+- Added a `Filterbot` framework, a bot automatically checking comments you receive, checking them for spam and blacklisted words and deleting them if they match criteria. There are different kind of filters, some always applying (HardFilter) while others only apply if a cumulative score is exceeded (SoftFilter). There's also SpamFilter which only deletes comments matching criteria if they are posted too often. There are also pre-built filter profiles (like an f4f filter and an ads filter).
+
+## Self-hosting a TurboWarp cloud variable websocket
+
+- Added
+
+## Project JSON editing capabilities
+
+- Added
 
 ## Other stuff:
 
