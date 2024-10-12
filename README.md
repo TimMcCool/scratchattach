@@ -1,7 +1,8 @@
 scratchattach is a Scratch API wrapper with support for almost all site features. Created by [TimMcCool](https://scratch.mit.edu/users/TimMcCool/).
 
 The library allows setting cloud variables, following users, updating your profile, and
-so much more! Additionally, it provides frameworks that simplify sending data through cloud variables.
+so much more!
+Additionally, it provides frameworks that simplify sending data through cloud variables.
 
 <p align="left">
   <img width="160" src="https://github.com/TimMcCool/scratchattach/blob/v2/logos/logo.svg">
