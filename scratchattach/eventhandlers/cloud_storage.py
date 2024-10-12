@@ -95,6 +95,7 @@ class CloudStorage(CloudRequests):
             return None
 
     def set(self, db_name, key, value):
+        print(db_name, key, value, self._databases)
         return self.get_database(db_name).set(key, value)
 
     def keys(self, db_name) -> list:
