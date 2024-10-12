@@ -92,14 +92,20 @@ class CloudStorage(CloudRequests):
         try:
             return self.get_database(db_name).get(key)
         except Exception:
-            return None
+            if self.get_database(db_name) is None:
+                return f"Error: Database {db_name} doesn't exist"
+            else:
+                return f"Error: Key {key} doesn't exist in database {db_name}"
 
     def set(self, db_name, key, value):
         print(db_name, key, value, self._databases)
         return self.get_database(db_name).set(key, value)
 
     def keys(self, db_name) -> list:
-        return self.get_database(db_name).keys()
+        try:
+            return self.get_database(db_name).keys()
+        except Exception:
+            return f"Error: Database {db_name} doesn't exist"
 
     def databases(self) -> list:
         return list(self._databases.values())

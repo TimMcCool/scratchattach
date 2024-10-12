@@ -5,6 +5,7 @@ from .eventhandlers.cloud_server import init_cloud_server
 from .eventhandlers._base import BaseEventHandler
 from .eventhandlers.filterbot import Filterbot, HardFilter, SoftFilter, SpamFilter
 from .eventhandlers.cloud_storage import Database
+from .eventhandlers.combine import MultiEventHandler
 
 from .other.other_apis import *
 from .other.project_json_capabilities import ProjectBody, get_empty_project_pb, get_pb_from_dict, get_pb_from_file, download_asset
