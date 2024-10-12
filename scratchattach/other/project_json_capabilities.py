@@ -509,7 +509,7 @@ def _load_sb3_file(path_to_file):
             else:
                 raise ValueError("specified sb3 archive doesn't contain project.json")
 
-def get_pb_from_file(path_to_file):
+def read_sb3_file(path_to_file):
     pb = ProjectBody()
     pb.from_json(_load_sb3_file(path_to_file))
     return pb
