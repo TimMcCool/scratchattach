@@ -79,10 +79,14 @@ class CloudStorage(CloudRequests):
         super().__init__(cloud, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
         # Setup
         self._databases = {}
-        self.request(self.get, thread=True)
-        self.request(self.set, thread=True)
-        self.request(self.keys, thread=True)
-        self.request(self.database_names, thread=True)
+        self.request(self.get, thread=False)
+        self.request(self.set, thread=False)
+        self.request(self.keys, thread=False)
+        self.request(self.database_names, thread=False)
+        self.request(self.ping, thread=False)
+
+    def ping(self):
+        return "Database backend is running"
     
     def get(self, db_name, key) -> str:
         try:
