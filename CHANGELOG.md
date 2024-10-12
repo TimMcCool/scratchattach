@@ -103,11 +103,24 @@ This is now used consistently throughout the whole library.
 
 ## Self-hosting a TurboWarp cloud variable websocket
 
-- Added
+- Added a feature for easily hosting a websocket server locally (TwCloudServer class). The server is automatically set up for being used as cloud_host for a project running on TurboWarp (through TurboWarp's ?cloud_host= URL parameter).
+- The server is is initialized using `server = sa.init_cloud_server()` and started using `server.start()`. After starting, the address where the server is running is printed in the console. This address (including the port) has to be passed to TurboWarp's ?cloud_host= URL parameter. When hosting the server locally, it will be only be accessible by devices in your network. To host online, use a hosting platform and start the websocket server there.
+- You can allow non-numeric cloud values (enabled by default)
+- You can customize the IP addresss (localhost by default) and the port (8080 by default) where the server is running on
+- You can block IP addresses from connecting to the server
+- You can directly set cloud variables server-side anytime.
+- You can access the values of the cloud variables and the users connected to the server directly from the Python backend anytime, using `server.active_user_names(project_id)`, `server.active_user_ips(project_id`, `server.get_var(project_id, var_name)` etc. There are also events called on cloud variable sets (the TwCloudServer class is inheriting from BaseEvenHandler).
 
 ## Project JSON editing capabilities
 
-- Added
+- Added ProjectBody representing the contents of a Scratch project.
+- The contents of a Scratch project can be loaded from a Scratch community project using `body = project.body()` or from a sb3 file using `body = sa.read_sb3_file("filepath")`. You can also create an empty project using `body = sa.get_empty_project_pb()`
+- The attributes .sprites, .monitors (the variables and lists shown in the project), .extensions and .meta save the project contents
+- There's a ProjectBody.BaseProjectBodyComponent class. Variables, lists, sprites, assets, blocks and monitors are represented using Variable, List, Sprite, Asset, Block and Monitor classes that inherit from BaseProjectBodyComponent.
+- It is possible to add and remove variables and convert variables to cloud variables
+- It is possible to navigate through the project's blocks using `block = Sprite.block_by_id(block_id)`, `block.complete_chain()`, `block2 = block.attached_block()` etc. You can add blocks and edit blocks using `block.attach_block`, `block.delete()`, `sprite.add_block(block)` etc. (there are many more features, [see the docs for all of them](https://github.com/TimMcCool/scratchattach/wiki/Project-JSON-editing-capabilities))
+- It is possible to add assets (sounds and costumes) to the project. The added assets are automatically uploaded to the Scratch website if the ProjectBody object was connected using a Project object which was connected using a Session object.
+- Assets can be directly downloaded using sa.download_asset(asset_id_with_file_ext) or Asset.download()
 
 ## Other stuff:
 
