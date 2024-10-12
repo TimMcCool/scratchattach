@@ -64,7 +64,7 @@ class Database:
         # Decorator function for adding the on_save event that is called when a save is performed
         if event_function.__name__ == "on_save":
             self.save_event_function = event_function
-        if event_function.__name__ = "on_set":
+        if event_function.__name__ == "on_set":
             self.set_event_function = event_function
         
     def _autosaver(self):
