@@ -26,6 +26,7 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 # Helpful resources
 
 - [Get your session id](https://github.com/TimMcCool/scratchattach/wiki/Get-your-session-id)
+
 - [Examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)
 - [Hosting](https://github.com/TimMcCool/scratchattach/wiki/Hosting)
 
