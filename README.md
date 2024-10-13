@@ -1,6 +1,4 @@
-v2 roadmap: https://github.com/TimMcCool/scratchattach/issues/242
-
-Scratch API wrapper with support for almost all site features. Created by [TimMcCool](https://scratch.mit.edu/users/TimMcCool/).
+**Scratch API wrapper with support for almost all site features.** Created by [TimMcCool](https://scratch.mit.edu/users/TimMcCool/).
 
 This library can set cloud variables, follow Scratchers, post comments and do so much more! It has special features that make it easy to transmit data through cloud variables.
 
