@@ -40,6 +40,8 @@ Report bugs by opening an issue on this repository. If you need help or guideanc
 
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
 
+Contribute code by opening a pull request on this repository.
+
 # ️Example usage
 
 Set a cloud variable:
@@ -121,9 +123,3 @@ project.post_comment('Great project!')
 ```
 
 **All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki/Documentation).**
-
-# Contributors
-
-- Allmost all code by TimMcCool.
-- See the GitHub repository for full list of contributors.
-- Create a pull request to contribute code yourself.
