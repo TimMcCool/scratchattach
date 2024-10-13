@@ -36,6 +36,7 @@ Report bugs by opening an issue on this repository. If you need help or guideanc
 # Helpful for contributors
 
 - **[Structure of the library](https://github.com/TimMcCool/scratchattach/wiki/Structure-of-the-library)**
+
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
 
 # ️Example usage
