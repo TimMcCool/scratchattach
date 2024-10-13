@@ -45,7 +45,7 @@ class Session(BaseSiteComponent):
 
     :.email: The email address associated with the logged in account
 
-    :.new_scratcher: Returns True if the associated account is a Scratcher
+    :.new_scratcher: Returns True if the associated account is a new Scratcher
 
     :.mute_status: Information about commenting restrictions of the associated account
 
