@@ -157,7 +157,7 @@ section {
 }
 
 .section-3 {
-    background-color: #1c1c1c;
+    background-color: #1f1f1f;
     padding-top: 0px;
     padding-bottom:15px;
 }
@@ -287,14 +287,14 @@ button,
 
 .gradient-2 {
     height: 50px;
-    background: linear-gradient(to bottom, #222222, #1c1c1c);
+    background: linear-gradient(to bottom, #222222, #1f1f1f);
     text-align: center;
 }
 
 /* Gradient section styles */
 .gradient-3 {
     height: 50px;
-    background: linear-gradient(to bottom, #1c1c1c, #222222);
+    background: linear-gradient(to bottom, #1f1f1f, #222222);
     text-align: center;
 }
 
