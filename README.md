@@ -16,11 +16,11 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 
 - **[Documentation](https://github.com/TimMcCool/scratchattach/wiki/Documentation)**
 
+- [Cloud Variables](https://github.com/TimMcCool/scratchattach/wiki/Documentation#cloud-variables)
 - [Cloud Requests](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)
 - [Cloud Storage](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Storage)
 - [Filterbot](https://github.com/TimMcCool/scratchattach/wiki/Filterbot)
-- [Project JSON editing capabilities](https://github.com/TimMcCool/scratchattach/wiki/Project-JSON-editing-capabilities)
-- [Self-hosting a TW cloud websocket](https://github.com/TimMcCool/scratchattach/wiki/Project-JSON-editing-capabilities)
+- [Self-hosting a TW cloud websocket](https://github.com/TimMcCool/scratchattach/wiki/Documentation#hosting-a-cloud-server)
 
 # Helpful resources
 
