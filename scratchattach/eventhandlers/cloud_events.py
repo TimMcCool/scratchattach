@@ -1,4 +1,4 @@
-"""v2 ready: CloudEvents class"""
+"""CloudEvents class"""
 
 from ..cloud import cloud
 from ._base import BaseEventHandler

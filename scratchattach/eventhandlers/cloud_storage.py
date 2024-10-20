@@ -1,4 +1,4 @@
-"""v2 ready: CloudStorage class"""
+"""CloudStorage class"""
 
 from .cloud_requests import CloudRequests
 import json

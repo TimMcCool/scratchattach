@@ -1,4 +1,4 @@
-"""v2 ready: MessageEvents class"""
+"""MessageEvents class"""
 
 from ..site import user
 from ._base import BaseEventHandler

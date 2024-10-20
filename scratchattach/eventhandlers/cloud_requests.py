@@ -1,4 +1,4 @@
-"""v2 ready: CloudRequests class (threading.Event version)"""
+"""CloudRequests class (threading.Event version)"""
 
 from .cloud_events import CloudEvents
 from ..site import project

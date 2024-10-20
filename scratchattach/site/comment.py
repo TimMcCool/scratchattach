@@ -1,4 +1,4 @@
-"""v2 ready: Comment class"""
+"""Comment class"""
 
 import json
 import re

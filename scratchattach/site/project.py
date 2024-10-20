@@ -1,4 +1,4 @@
-"""v2 ready: Project and PartialProject classes"""
+"""Project and PartialProject classes"""
 
 import json
 import random

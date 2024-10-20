@@ -1,4 +1,4 @@
-"""v2 ready: Studio class"""
+"""Studio class"""
 
 import json
 import random
