@@ -514,12 +514,12 @@ class Session(BaseSiteComponent):
         """
         return cloud.ScratchCloud(project_id=project_id, _session=self)
 
-    def connect_tw_cloud(self, project_id, *, purpose="", contact=""):
+    def connect_tw_cloud(self, project_id, *, purpose="", contact="", cloud_host="wss://clouddata.turbowarp.org"):
         """
         Returns:
             scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
         """
-        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, _session=self)
+        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host, _session=self)
 
     # --- Connect classes inheriting from BaseSiteComponent ---
 

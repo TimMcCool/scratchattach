@@ -7,7 +7,7 @@ class CloudActivity(BaseSiteComponent):
 
     Attributes:
 
-    :.user: The user who caused the cloud event (the user who added / set / deleted the cloud variable)
+    :.username: The user who caused the cloud event (the user who added / set / deleted the cloud variable)
 
     :.var: The name of the cloud variable that was updated (specified without the cloud emoji)
 

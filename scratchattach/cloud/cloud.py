@@ -160,9 +160,9 @@ def get_scratch_cloud(project_id):
     print("Warning: To set Scratch cloud variables, use session.connect_scratch_cloud instead of get_scratch_cloud")
     return ScratchCloud(project_id=project_id)
 
-def get_tw_cloud(project_id, *, purpose="", contact=""):
+def get_tw_cloud(project_id, *, purpose="", contact="", cloud_host="wss://clouddata.turbowarp.org"):
     """
     Returns:
         scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
     """
-    return TwCloud(project_id=project_id, purpose=purpose, contact=contact)
+    return TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host)
