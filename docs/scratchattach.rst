@@ -11,7 +11,12 @@ scratchattach.cloud module
    :members:
    :undoc-members:
    :show-inheritance:
-   :submodules:
+
+.. toctree::
+   :maxdepth: 1
+   :glob:
+
+   cloud/*
 
 scratchattach.eventhandlers module
 ----------------------------------
@@ -20,7 +25,12 @@ scratchattach.eventhandlers module
    :members:
    :undoc-members:
    :show-inheritance:
-   :submodules:
+
+.. toctree::
+   :maxdepth: 1
+   :glob:
+
+   eventhandlers/*
 
 scratchattach.other module
 --------------------------
@@ -29,7 +39,12 @@ scratchattach.other module
    :members:
    :undoc-members:
    :show-inheritance:
-   :submodules:
+
+.. toctree::
+   :maxdepth: 1
+   :glob:
+
+   other/*
 
 scratchattach.site module
 -------------------------
@@ -38,7 +53,12 @@ scratchattach.site module
    :members:
    :undoc-members:
    :show-inheritance:
-   :submodules:
+
+.. toctree::
+   :maxdepth: 1
+   :glob:
+
+   site/*
 
 scratchattach.utils module
 --------------------------
@@ -47,13 +67,9 @@ scratchattach.utils module
    :members:
    :undoc-members:
    :show-inheritance:
-   :submodules:
 
-Module contents
----------------
+.. toctree::
+   :maxdepth: 1
+   :glob:
 
-.. automodule:: scratchattach
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :submodules:
+   utils/*
