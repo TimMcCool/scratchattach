@@ -85,7 +85,7 @@ scratchattach.eventhandlers
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.eventhandlers.combine module
+   scratchattach.eventhandlers.combine
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.eventhandlers.combine
