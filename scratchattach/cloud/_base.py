@@ -14,7 +14,9 @@ class BaseCloud(ABC):
     Base class for a project's cloud variables. Represents a cloud.
 
     When inheriting from this class, the __init__ function ...
+
     - must first call super().__init__()
+    
     - must then set some attributes
 
     Attributes that must be specified in the __init__ function a class inheriting from this one:
