@@ -11,6 +11,7 @@ scratchattach.cloud module
    :members:
    :undoc-members:
    :show-inheritance:
+   :submodules:
 
 scratchattach.eventhandlers module
 ----------------------------------
@@ -19,6 +20,7 @@ scratchattach.eventhandlers module
    :members:
    :undoc-members:
    :show-inheritance:
+   :submodules:
 
 scratchattach.other module
 --------------------------
@@ -27,6 +29,7 @@ scratchattach.other module
    :members:
    :undoc-members:
    :show-inheritance:
+   :submodules:
 
 scratchattach.site module
 -------------------------
@@ -35,6 +38,7 @@ scratchattach.site module
    :members:
    :undoc-members:
    :show-inheritance:
+   :submodules:
 
 scratchattach.utils module
 --------------------------
@@ -43,6 +47,7 @@ scratchattach.utils module
    :members:
    :undoc-members:
    :show-inheritance:
+   :submodules:
 
 Module contents
 ---------------
@@ -51,3 +56,4 @@ Module contents
    :members:
    :undoc-members:
    :show-inheritance:
+   :submodules:
