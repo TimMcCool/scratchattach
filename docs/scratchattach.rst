@@ -11,6 +11,7 @@ scratchattach.cloud
    :members:
    :undoc-members:
    :show-inheritance:
+   :special-members: __init__ 
 
    scratchattach.cloud._base
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -20,7 +21,6 @@ scratchattach.cloud
       :undoc-members:
       :show-inheritance:
       :private-members:
-      :special-members: __init__ 
 
    scratchattach.cloud.cloud
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -30,7 +30,6 @@ scratchattach.cloud
       :undoc-members:
       :show-inheritance:
       :private-members:
-      :special-members: __init__ 
 
 scratchattach.eventhandlers
 ----------------------------------
