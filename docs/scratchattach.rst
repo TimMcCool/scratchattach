@@ -19,6 +19,7 @@ scratchattach.cloud
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.cloud.cloud
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -27,6 +28,7 @@ scratchattach.cloud
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
 
 scratchattach.eventhandlers
@@ -44,6 +46,7 @@ scratchattach.eventhandlers
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.eventhandlers.cloud_events
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -52,6 +55,7 @@ scratchattach.eventhandlers
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.eventhandlers.cloud_recorder
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -60,6 +64,7 @@ scratchattach.eventhandlers
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.eventhandlers.cloud_requests
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -68,6 +73,7 @@ scratchattach.eventhandlers
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.eventhandlers.cloud_server
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -76,6 +82,7 @@ scratchattach.eventhandlers
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.eventhandlers.cloud_storage
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -84,6 +91,7 @@ scratchattach.eventhandlers
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.eventhandlers.combine
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -92,6 +100,7 @@ scratchattach.eventhandlers
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.eventhandlers.filterbot
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -100,6 +109,7 @@ scratchattach.eventhandlers
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.eventhandlers.message_events
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -108,6 +118,7 @@ scratchattach.eventhandlers
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
 
 scratchattach.other
@@ -117,6 +128,7 @@ scratchattach.other
    :members:
    :undoc-members:
    :show-inheritance:
+   :private-members:
 
    scratchattach.other.other_apis
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -125,6 +137,7 @@ scratchattach.other
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.other.project_json_capabilities
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -133,6 +146,7 @@ scratchattach.other
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
 
 scratchattach.site
@@ -143,9 +157,6 @@ scratchattach.site
    :undoc-members:
    :show-inheritance:
 
-   Submodules:
-   ^^^^^^^^^^^^
-
    scratchattach.site._base
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -153,6 +164,7 @@ scratchattach.site
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.site.activity
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -161,6 +173,7 @@ scratchattach.site
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.site.backpack_asset
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -169,6 +182,7 @@ scratchattach.site
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.site.cloud_activity
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -177,6 +191,7 @@ scratchattach.site
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.site.comment
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -185,6 +200,7 @@ scratchattach.site
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.site.forum
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -193,6 +209,7 @@ scratchattach.site
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.site.project
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -201,6 +218,7 @@ scratchattach.site
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.site.session
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -209,6 +227,7 @@ scratchattach.site
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.site.studio
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -217,6 +236,7 @@ scratchattach.site
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.site.user
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -225,6 +245,7 @@ scratchattach.site
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
 
 scratchattach.utils
@@ -242,6 +263,7 @@ scratchattach.utils
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.utils.encoder
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -250,6 +272,7 @@ scratchattach.utils
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.utils.exceptions
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -258,6 +281,7 @@ scratchattach.utils
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
 
    scratchattach.utils.requests
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -266,3 +290,4 @@ scratchattach.utils
       :members:
       :undoc-members:
       :show-inheritance:
+      :private-members:
