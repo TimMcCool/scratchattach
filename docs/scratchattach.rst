@@ -11,7 +11,6 @@ scratchattach.cloud
    :members:
    :undoc-members:
    :show-inheritance:
-   :special-members: __init__ 
 
    scratchattach.cloud._base
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -21,6 +20,7 @@ scratchattach.cloud
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.cloud.cloud
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -30,6 +30,7 @@ scratchattach.cloud
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
 scratchattach.eventhandlers
 ----------------------------------
@@ -47,6 +48,7 @@ scratchattach.eventhandlers
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.eventhandlers.cloud_events
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -56,6 +58,7 @@ scratchattach.eventhandlers
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.eventhandlers.cloud_recorder
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -65,6 +68,7 @@ scratchattach.eventhandlers
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.eventhandlers.cloud_requests
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -74,6 +78,7 @@ scratchattach.eventhandlers
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.eventhandlers.cloud_server
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -83,6 +88,7 @@ scratchattach.eventhandlers
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.eventhandlers.cloud_storage
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -92,6 +98,7 @@ scratchattach.eventhandlers
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.eventhandlers.combine
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -101,6 +108,7 @@ scratchattach.eventhandlers
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.eventhandlers.filterbot
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -110,6 +118,7 @@ scratchattach.eventhandlers
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.eventhandlers.message_events
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -119,6 +128,7 @@ scratchattach.eventhandlers
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
 
 scratchattach.other
@@ -138,6 +148,7 @@ scratchattach.other
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.other.project_json_capabilities
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -147,6 +158,7 @@ scratchattach.other
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
 
 scratchattach.site
@@ -165,6 +177,7 @@ scratchattach.site
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.site.activity
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -174,6 +187,7 @@ scratchattach.site
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.site.backpack_asset
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -183,6 +197,7 @@ scratchattach.site
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.site.cloud_activity
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -192,6 +207,7 @@ scratchattach.site
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.site.comment
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -201,6 +217,7 @@ scratchattach.site
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.site.forum
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -210,6 +227,7 @@ scratchattach.site
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.site.project
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -219,6 +237,7 @@ scratchattach.site
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.site.session
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -228,6 +247,7 @@ scratchattach.site
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.site.studio
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -237,6 +257,7 @@ scratchattach.site
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.site.user
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -246,6 +267,7 @@ scratchattach.site
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
 
 scratchattach.utils
@@ -264,6 +286,7 @@ scratchattach.utils
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.utils.encoder
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -273,6 +296,7 @@ scratchattach.utils
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.utils.exceptions
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -282,6 +306,7 @@ scratchattach.utils
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
 
    scratchattach.utils.requests
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -291,3 +316,4 @@ scratchattach.utils
       :undoc-members:
       :show-inheritance:
       :private-members:
+      :special-members: __init__ 
