@@ -119,7 +119,7 @@ class CustomCloud(BaseCloud):
         # Configure this object's attributes specifically for the cloud that the developer wants to connect to:
         # -> For this purpose, all additional keyword arguments (kwargs) will be set as attributes of the CustomCloud object
         # This allows the maximum amount of attribute customization
-        # See the docstring for the cloud._base.BaseCloud class (or the documentation in the GitHub Wiki) to find out what attributes can be set / specified as keyword args
+        # See the docstring for the cloud._base.BaseCloud class to find out what attributes can be set / specified as keyword args
         self.__dict__.update(kwargs)
 
         # If even more customization is needed, the developer can create a class inheriting from cloud._base.BaseCloud to override functions like .set_var etc.
