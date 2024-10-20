@@ -692,7 +692,7 @@ sess
         
 # ------ #
 
-def login_by_id(session_id, *, username=None, password=None):
+def login_by_id(session_id, *, username=None, password=None, xtoken=None):
     """
     Creates a session / log in to the Scratch website with the specified session id.
     Structured similarly to Session._connect_object method.
@@ -713,14 +713,20 @@ def login_by_id(session_id, *, username=None, password=None):
         session_string = base64.b64encode(json.dumps(session_data).encode())
     else:
         session_string = None
-    _session = Session(id=session_id, username=username, session_string=session_string)
+    _session = Session(id=session_id, username=username, session_string=session_string, xtoken=xtoken)
     try:
-        if _session.update() == "429":
-            raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-    except KeyError as e:
-        print(f"Warning: Logged in, but couldn't fetch XToken. Key error at key "+str(e)+" when reading scratch.mit.edu/session API response")
+        status = _session.update()
     except Exception as e:
-        raise(e)
+        status = False
+        print(f"Key error at key "+str(e)+" when reading scratch.mit.edu/session API response")
+    if status is not True:
+        if _session.xtoken is None:
+            if _session.username is None:
+                print(f"Warning: Logged in by id, but couldn't fetch XToken. Make sure the provided session id is valid.\nSetting cloud variables can still work if you provide a username='username' keyword argument to the connect_by_id function")
+            else:
+                print(f"Warning: Logged in by id, but couldn't fetch XToken. Make sure the provided session id is valid.")
+        else:
+            print(f"Warning: Logged in by id, but couldn't fetch session info. This won't affect any other features.")
     return _session
 
 def login(username, password, *, timeout=10):
@@ -743,21 +749,23 @@ def login(username, password, *, timeout=10):
     """
 
     # Post request to login API:
-    data = json.dumps({"username": username, "password": password})
-    _headers = dict(headers)
-    _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     request = requests.post(
-        "https://scratch.mit.edu/login/", data=data, headers=_headers,
+        "https://scratch.mit.edu/accounts/login", json={"username": username, "password": password}, headers=headers,
         timeout = timeout,
     )
     try:
+        response = request.json()
+        if "token" in response:
+            xtoken = response["token"]
+        else:
+            xtoken = None
         session_id = str(re.search('"(.*)"', request.headers["Set-Cookie"]).group())
     except Exception:
         raise exceptions.LoginFailure(
             "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
         
     # Create session object:
-    return login_by_id(session_id, username=username, password=password)
+    return login_by_id(session_id, username=username, password=password, xtoken=xtoken)
 
 
 def login_by_session_string(session_string):

@@ -501,14 +501,14 @@ def get_pb_from_dict(project_json:dict):
 def _load_sb3_file(path_to_file):
     try:
         with open(path_to_file, "r") as r:
-            project_json = json.loads(r.read())
+            return json.loads(r.read())
     except Exception as e:
         with zipfile.ZipFile(path_to_file, 'r') as zip_ref:
             # Check if the file exists in the zip
             if "project.json" in zip_ref.namelist():
                 # Read the file as bytes
                 with zip_ref.open("project.json") as file:
-                    project_json = json.loads(file.read())
+                    return json.loads(file.read())
             else:
                 raise ValueError("specified sb3 archive doesn't contain project.json")
 
