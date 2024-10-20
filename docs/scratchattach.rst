@@ -4,7 +4,7 @@ scratchattach package
 Submodules
 ----------
 
-scratchattach.cloud module
+scratchattach.cloud
 --------------------------
 
 .. automodule:: scratchattach.cloud
@@ -12,10 +12,7 @@ scratchattach.cloud module
    :undoc-members:
    :show-inheritance:
 
-   Submodules:
-   ^^^^^^^^^^^^
-
-   scratchattach.cloud._base module
+   scratchattach.cloud._base
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.cloud._base
@@ -23,7 +20,7 @@ scratchattach.cloud module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.cloud.cloud module
+   scratchattach.cloud.cloud
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.cloud.cloud
@@ -32,7 +29,7 @@ scratchattach.cloud module
       :show-inheritance:
 
 
-scratchattach.eventhandlers module
+scratchattach.eventhandlers
 ----------------------------------
 
 .. automodule:: scratchattach.eventhandlers
@@ -40,10 +37,7 @@ scratchattach.eventhandlers module
    :undoc-members:
    :show-inheritance:
 
-   Submodules:
-   ^^^^^^^^^^^^
-
-   scratchattach.eventhandlers._base module
+   scratchattach.eventhandlers._base
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.eventhandlers._base
@@ -51,7 +45,7 @@ scratchattach.eventhandlers module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.eventhandlers.cloud_events module
+   scratchattach.eventhandlers.cloud_events
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.eventhandlers.cloud_events
@@ -59,7 +53,7 @@ scratchattach.eventhandlers module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.eventhandlers.cloud_recorder module
+   scratchattach.eventhandlers.cloud_recorder
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.eventhandlers.cloud_recorder
@@ -67,7 +61,7 @@ scratchattach.eventhandlers module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.eventhandlers.cloud_requests module
+   scratchattach.eventhandlers.cloud_requests
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.eventhandlers.cloud_requests
@@ -75,7 +69,7 @@ scratchattach.eventhandlers module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.eventhandlers.cloud_server module
+   scratchattach.eventhandlers.cloud_server
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.eventhandlers.cloud_server
@@ -83,7 +77,7 @@ scratchattach.eventhandlers module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.eventhandlers.cloud_storage module
+   scratchattach.eventhandlers.cloud_storage
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.eventhandlers.cloud_storage
@@ -99,7 +93,7 @@ scratchattach.eventhandlers module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.eventhandlers.filterbot module
+   scratchattach.eventhandlers.filterbot
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.eventhandlers.filterbot
@@ -107,7 +101,7 @@ scratchattach.eventhandlers module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.eventhandlers.message_events module
+   scratchattach.eventhandlers.message_events
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.eventhandlers.message_events
@@ -116,7 +110,7 @@ scratchattach.eventhandlers module
       :show-inheritance:
 
 
-scratchattach.other module
+scratchattach.other
 --------------------------
 
 .. automodule:: scratchattach.other
@@ -124,10 +118,7 @@ scratchattach.other module
    :undoc-members:
    :show-inheritance:
 
-   Submodules:
-   ^^^^^^^^^^^^
-
-   scratchattach.other.other_apis module
+   scratchattach.other.other_apis
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.other.other_apis
@@ -135,7 +126,7 @@ scratchattach.other module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.other.project_json_capabilities module
+   scratchattach.other.project_json_capabilities
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.other.project_json_capabilities
@@ -144,7 +135,7 @@ scratchattach.other module
       :show-inheritance:
 
 
-scratchattach.site module
+scratchattach.site
 -------------------------
 
 .. automodule:: scratchattach.site
@@ -155,7 +146,7 @@ scratchattach.site module
    Submodules:
    ^^^^^^^^^^^^
 
-   scratchattach.site._base module
+   scratchattach.site._base
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.site._base
@@ -163,7 +154,7 @@ scratchattach.site module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.site.activity module
+   scratchattach.site.activity
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.site.activity
@@ -171,7 +162,7 @@ scratchattach.site module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.site.backpack_asset module
+   scratchattach.site.backpack_asset
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.site.backpack_asset
@@ -179,7 +170,7 @@ scratchattach.site module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.site.cloud_activity module
+   scratchattach.site.cloud_activity
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.site.cloud_activity
@@ -187,7 +178,7 @@ scratchattach.site module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.site.comment module
+   scratchattach.site.comment
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.site.comment
@@ -195,7 +186,7 @@ scratchattach.site module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.site.forum module
+   scratchattach.site.forum
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.site.forum
@@ -203,7 +194,7 @@ scratchattach.site module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.site.project module
+   scratchattach.site.project
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.site.project
@@ -211,7 +202,7 @@ scratchattach.site module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.site.session module
+   scratchattach.site.session
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.site.session
@@ -219,7 +210,7 @@ scratchattach.site module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.site.studio module
+   scratchattach.site.studio
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.site.studio
@@ -227,7 +218,7 @@ scratchattach.site module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.site.user module
+   scratchattach.site.user
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.site.user
@@ -236,7 +227,7 @@ scratchattach.site module
       :show-inheritance:
 
 
-scratchattach.utils module
+scratchattach.utils
 --------------------------
 
 .. automodule:: scratchattach.utils
@@ -244,10 +235,7 @@ scratchattach.utils module
    :undoc-members:
    :show-inheritance:
 
-   Submodules:
-   ^^^^^^^^^^^^
-
-   scratchattach.utils.commons module
+   scratchattach.utils.commons
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.utils.commons
@@ -255,7 +243,7 @@ scratchattach.utils module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.utils.encoder module
+   scratchattach.utils.encoder
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.utils.encoder
@@ -263,7 +251,7 @@ scratchattach.utils module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.utils.exceptions module
+   scratchattach.utils.exceptions
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.utils.exceptions
@@ -271,7 +259,7 @@ scratchattach.utils module
       :undoc-members:
       :show-inheritance:
 
-   scratchattach.utils.requests module
+   scratchattach.utils.requests
    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
    .. automodule:: scratchattach.utils.requests
