@@ -1,5 +1,5 @@
 scratchattach package
-=====================
+======================
 
 Submodules
 ----------
@@ -12,66 +12,34 @@ scratchattach.cloud module
    :undoc-members:
    :show-inheritance:
 
-scratchattach.cloud\_requests module
-------------------------------------
+scratchattach.eventhandlers module
+----------------------------------
 
-.. automodule:: scratchattach.cloud_requests
+.. automodule:: scratchattach.eventhandlers
    :members:
    :undoc-members:
    :show-inheritance:
 
-scratchattach.encoder module
-----------------------------
-
-.. automodule:: scratchattach.encoder
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-scratchattach.exceptions module
--------------------------------
-
-.. automodule:: scratchattach.exceptions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-scratchattach.forum module
+scratchattach.other module
 --------------------------
 
-.. automodule:: scratchattach.forum
+.. automodule:: scratchattach.other
    :members:
    :undoc-members:
    :show-inheritance:
 
-scratchattach.project module
-----------------------------
-
-.. automodule:: scratchattach.project
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-scratchattach.session module
-----------------------------
-
-.. automodule:: scratchattach.session
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-scratchattach.studio module
----------------------------
-
-.. automodule:: scratchattach.studio
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-scratchattach.user module
+scratchattach.site module
 -------------------------
 
-.. automodule:: scratchattach.user
+.. automodule:: scratchattach.site
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+scratchattach.utils module
+--------------------------
+
+.. automodule:: scratchattach.utils
    :members:
    :undoc-members:
    :show-inheritance:
