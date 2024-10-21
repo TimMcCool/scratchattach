@@ -749,7 +749,6 @@ def login(username, password, *, timeout=10):
     """
 
     # Post request to login API:
-    # Post request to login API:
     data = json.dumps({"username": username, "password": password})
     _headers = dict(headers)
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"

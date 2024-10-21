@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = '1.9.9'
+VERSION = '2.0.0'
 DESCRIPTION = 'A Scratch API Wrapper'
 LONG_DESCRIPTION = DESCRIPTION
 
