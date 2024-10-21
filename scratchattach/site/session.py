@@ -749,23 +749,22 @@ def login(username, password, *, timeout=10):
     """
 
     # Post request to login API:
+    # Post request to login API:
+    data = json.dumps({"username": username, "password": password})
+    _headers = dict(headers)
+    _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     request = requests.post(
-        "https://scratch.mit.edu/accounts/login", json={"username": username, "password": password}, headers=headers,
+        "https://scratch.mit.edu/login/", data=data, headers=_headers,
         timeout = timeout,
     )
     try:
-        response = request.json()
-        if "token" in response:
-            xtoken = response["token"]
-        else:
-            xtoken = None
         session_id = str(re.search('"(.*)"', request.headers["Set-Cookie"]).group())
     except Exception:
         raise exceptions.LoginFailure(
             "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
         
     # Create session object:
-    return login_by_id(session_id, username=username, password=password, xtoken=xtoken)
+    return login_by_id(session_id, username=username, password=password)
 
 
 def login_by_session_string(session_string):
