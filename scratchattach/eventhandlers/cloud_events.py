@@ -17,6 +17,10 @@ class CloudEvents(BaseEventHandler):
         self._session = cloud._session
         self.source_cloud = type(cloud)(project_id=cloud.project_id)
         self.source_cloud._session = cloud._session
+        self.source_cloud.cookie = cloud.cookie
+        self.source_cloud.header = cloud.header
+        self.source_cloud.origin = cloud.origin
+        self.source_cloud.username = cloud.username
         self.source_cloud.ws_timeout = None # No timeout -> allows continous listening
         self.startup_time = time.time() * 1000
 
@@ -63,9 +67,13 @@ class CloudLogEvents(BaseEventHandler):
         self.source_cloud = cloud
         self.update_interval = update_interval
         self._session = cloud._session
+        self.last_timestamp = 0
 
     def _updater(self):
-        self.old_data = self.source_cloud.logs(limit=25)
+        logs = self.source_cloud.logs(limit=25)
+        self.last_timestamp = 0
+        if len(logs) != 0:
+            self.last_timestamp = logs[0].timestamp
 
         self.call_event("on_ready")
 
@@ -74,15 +82,11 @@ class CloudLogEvents(BaseEventHandler):
                 return
             try:
                 data = self.source_cloud.logs(limit=25)
-                for _a in data:
-                    if _a.timestamp < self.startup_time:
-                        continue
-                    if _a in self.old_data:
+                for _a in data[::-1]:
+                    if _a.timestamp < self.last_timestamp:
                         break
+                    self.last_timestamp = _a.timestamp
                     self.call_event("on_"+_a.type, [_a])
-                self.old_data = data
             except Exception:
                 pass
             time.sleep(self.update_interval)
-
-
