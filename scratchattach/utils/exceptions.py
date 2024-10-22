@@ -60,6 +60,13 @@ class ProjectNotFound(Exception):
 
     pass
 
+class ClassroomNotFound(Exception):
+    """
+    Raised when a non-existent Classroom is requested.
+    """
+
+    pass
+
 
 class StudioNotFound(Exception):
     """

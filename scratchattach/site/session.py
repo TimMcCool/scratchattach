@@ -20,6 +20,7 @@ from ..cloud import cloud, _base
 from . import user, project, backpack_asset
 from ..utils import exceptions
 from . import studio
+from . import classroom
 from ..eventhandlers import message_events, filterbot
 from . import activity
 from ._base import BaseSiteComponent
@@ -616,6 +617,30 @@ sess
             scratchattach.studio.Studio: An object that represents the requested studio and allows you to perform actions on the studio (like studio.follow)
         """
         return self._make_linked_object("id", int(studio_id), studio.Studio, exceptions.StudioNotFound)
+
+    def connect_classroom(self, class_id):
+        """
+        Gets a class using this session.
+
+        Args:
+            class_id (str): class id of the requested class
+
+        Returns:
+            scratchattach.classroom.Classroom: An object representing the requested classroom
+        """
+        return self._make_linked_object("id", int(class_id), classroom.Classrooms, exceptions.ClassroomNotFound)
+
+    def connect_classroom_from_token(self, class_token):
+        """
+        Gets a class using this session.
+
+        Args:
+            class_token (str): class token of the requested class
+
+        Returns:
+            scratchattach.classroom.Classroom: An object representing the requested classroom
+        """
+        return self._make_linked_object("classtoken", int(class_token), classroom.Classrooms, exceptions.ClassroomNotFound)
 
     def connect_topic(self, topic_id):
         """

@@ -1,10 +1,10 @@
-**Scratch API wrapper with support for almost all site features.** Created by [TimMcCool](https://scratch.mit.edu/users/TimMcCool/).
+**scratchattach is a Scratch API wrapper with support for almost all site features.** Created by [TimMcCool](https://scratch.mit.edu/users/TimMcCool/).
 
-This library can set cloud variables, follow Scratchers, post comments and do so much more! It has special features that make it easy to transmit data through cloud variables.
+The library allows setting cloud variables, following users, updating your profile, and
+so much more! Additionally, it provides frameworks that simplify sending data through cloud variables.
 
-<p align="left">
-  <img width="120" src="https://github.com/TimMcCool/scratchattach/blob/main/logos/logo.svg">
-</p>
+<p align="left" style="margin:10px">
+  <img width="160" src="https://github.com/TimMcCool/scratchattach/blob/main/logos/logo.svg">
 
 [![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
 [![PyPI download month](https://img.shields.io/pypi/dm/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
