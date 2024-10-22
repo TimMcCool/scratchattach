@@ -32,29 +32,30 @@ class CloudEvents(BaseEventHandler):
         
         Thread(target=self.call_event, args=["on_ready"]).start()
 
+        if self.running is False:
+            return
         while True:
-            if self.running is False:
-                return
             try:
-                data = self.source_cloud.websocket.recv().split('\n')   
-                result = []
-                for i in data:
-                    try:
-                        _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session, cloud=self.cloud)
-                        if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
-                            continue
-                        data = json.loads(i)
-                        data["name"] = data["name"].replace("☁ ", "")
-                        _a._update_from_dict(data)
-                        self.call_event("on_"+_a.type, [_a])
-                    except Exception as e:
-                        pass
+                while True:
+                    data = self.source_cloud.websocket.recv().split('\n')   
+                    result = []
+                    for i in data:
+                        try:
+                            _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session, cloud=self.cloud)
+                            if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
+                                continue
+                            data = json.loads(i)
+                            data["name"] = data["name"].replace("☁ ", "")
+                            _a._update_from_dict(data)
+                            self.call_event("on_"+_a.type, [_a])
+                        except Exception as e:
+                            pass
             except Exception:
-                time.sleep(0.1) # cooldown
                 print("CloudEvents: Disconnected. Reconnecting ...", time.time())
-                self.source_cloud.connect()
-                print("CloudEvents: Reconnected.", time.time())
-                self.call_event("on_reconnect", [])
+                time.sleep(0.1) # cooldown
+            self.source_cloud.connect()
+            print("CloudEvents: Reconnected.", time.time())
+            self.call_event("on_reconnect", [])
 
 
 class CloudLogEvents(BaseEventHandler):
