@@ -81,17 +81,28 @@ class BaseCloud(ABC):
         try:
             self.websocket.send(json.dumps(packet) + "\n")
         except Exception:
-            time.sleep(1)
+            time.sleep(0.1)
             self.connect()
+            time.sleep(0.1)
             try:
                 self.websocket.send(json.dumps(packet) + "\n")
             except Exception:
-                time.sleep(1)
+                time.sleep(0.2)
+                self.connect()
+                time.sleep(0.2)
                 self.connect()
                 try:
                     self.websocket.send(json.dumps(packet) + "\n")
                 except Exception:
-                    raise exceptions.ConnectionError(f"Sending packet failed three times in a row: {packet}")
+                    time.sleep(1.6)
+                    self.connect()
+                    time.sleep(1.4)
+                    self.connect()
+                    try:
+                        self.websocket.send(json.dumps(packet) + "\n")
+                    except Exception:
+                        self.active_connection = False
+                        raise exceptions.ConnectionError(f"Sending packet failed three times in a row: {packet}")
 
     def _send_packet_list(self, packet_list):
         packet_string = "".join([json.dumps(packet) + "\n" for packet in packet_list])
@@ -116,6 +127,7 @@ class BaseCloud(ABC):
                     try:
                         self.websocket.send(packet_string)
                     except Exception:
+                        self.active_connection = False
                         raise exceptions.ConnectionError(f"Sending packet list failed four times in a row: {packet_list}")
 
     def _handshake(self):
