@@ -15,7 +15,8 @@ class CloudEvents(BaseEventHandler):
         super().__init__()
         self.cloud = cloud
         self._session = cloud._session
-        self.source_cloud = type(cloud)(project_id=cloud.project_id, _session=cloud._session)
+        self.source_cloud = type(cloud)(project_id=cloud.project_id)
+        self.source_cloud._session = cloud._session
         self.source_cloud.ws_timeout = None # No timeout -> allows continous listening
         self.startup_time = time.time() * 1000
 

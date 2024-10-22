@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = '2.0.1'
+VERSION = '2.0.2'
 DESCRIPTION = 'A Scratch API Wrapper'
 LONG_DESCRIPTION = DESCRIPTION
 
@@ -11,7 +11,7 @@ setup(
     name="scratchattach",
     version=VERSION,
     author="TimMcCool",
-    author_email="",
+    author_email="timmccool.scratch@gmail.com",
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
     long_description=open('README.md', encoding='utf-8').read(),
