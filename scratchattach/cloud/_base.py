@@ -98,15 +98,25 @@ class BaseCloud(ABC):
         try:
             self.websocket.send(packet_string)
         except Exception:
+            time.sleep(0.1)
             self.connect()
+            time.sleep(0.1)
             try:
                 self.websocket.send(packet_string)
             except Exception:
+                time.sleep(0.2)
                 self.connect()
+                time.sleep(0.2)
                 try:
                     self.websocket.send(packet_string)
                 except Exception:
-                    raise exceptions.ConnectionError(f"Sending packet list failed three times in a row: {packet_list}")
+                    time.sleep(1.6)
+                    self.connect()
+                    time.sleep(1.4)
+                    try:
+                        self.websocket.send(packet_string)
+                    except Exception:
+                        raise exceptions.ConnectionError(f"Sending packet list failed four times in a row: {packet_list}")
 
     def _handshake(self):
         packet = {"method": "handshake", "user": self.username, "project_id": self.project_id}
