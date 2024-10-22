@@ -747,7 +747,7 @@ def login_by_id(session_id, *, username=None, password=None, xtoken=None):
     if status is not True:
         if _session.xtoken is None:
             if _session.username is None:
-                print(f"Warning: Logged in by id, but couldn't fetch XToken. Make sure the provided session id is valid.\nSetting cloud variables can still work if you provide a username='username' keyword argument to the connect_by_id function")
+                print(f"Warning: Logged in by id, but couldn't fetch XToken. Make sure the provided session id is valid. Setting cloud variables can still work if you provide a `username='username'` keyword argument to the sa.login_by_id function")
             else:
                 print(f"Warning: Logged in by id, but couldn't fetch XToken. Make sure the provided session id is valid.")
         else:
