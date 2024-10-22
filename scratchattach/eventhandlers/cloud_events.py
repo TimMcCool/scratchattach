@@ -53,7 +53,15 @@ class CloudEvents(BaseEventHandler):
             except Exception:
                 print("CloudEvents: Disconnected. Reconnecting ...", time.time())
                 time.sleep(0.1) # cooldown
-            self.source_cloud.connect()
+            while True:
+                try:
+                    self.source_cloud.connect()
+                except Exception:
+                    print("CloudEvents: Reconnecting failed, trying again in 10 seconds.", time.time())
+                    time.sleep(10)
+                else:
+                    break
+
             print("CloudEvents: Reconnected.", time.time())
             self.call_event("on_reconnect", [])
 
