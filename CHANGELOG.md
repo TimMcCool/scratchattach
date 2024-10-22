@@ -1,3 +1,7 @@
+# 2.0.5
+
+Important bug fix regarding cloud events and all features based on cloud events (cloud requests, cloud storages, cloud recorder)
+
 # 2.0.1
 
 Added `sa.Classroom` class and `sa.get_classroom(classroom_id)` and `session.connect_classroom(classroom_id)` methods
