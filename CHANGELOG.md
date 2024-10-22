@@ -1,3 +1,7 @@
+# 2.0.6
+ 
+Cloud variables: Stability improvement
+
 # 2.0.5
 
 Important bug fix regarding cloud events and all features based on cloud events (cloud requests, cloud storages, cloud recorder)
