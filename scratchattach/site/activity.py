@@ -1,4 +1,4 @@
-"""v2 ready: Activity and CloudActivity class"""
+"""Activity and CloudActivity class"""
 
 import json
 import re

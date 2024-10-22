@@ -1,4 +1,4 @@
-"""v2 ready: Other Scratch API-related functions"""
+"""Other Scratch API-related functions"""
 
 from ..utils import commons
 from ..utils.requests import Requests as requests

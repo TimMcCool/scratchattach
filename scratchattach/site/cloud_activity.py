@@ -7,17 +7,19 @@ class CloudActivity(BaseSiteComponent):
 
     Attributes:
 
-    :.user: The user who caused the cloud event (the user who added / set / deleted the cloud variable)
+    :.username: The user who caused the cloud event (the user who added / set / deleted the cloud variable)
 
     :.var: The name of the cloud variable that was updated (specified without the cloud emoji)
 
     :.name: The name of the cloud variable that was updated (specified without the cloud emoji)
 
+    :.type: The activity type
+
     :.timestamp: Then timestamp of when the action was performed
 
     :.value: If the cloud variable was set, then this attribute provides the value the cloud variable was set to
     
-    .cloud: The cloud (as object inheriting from scratchattach.Cloud.BaseCloud) that the cloud activity corresponds to
+    :.cloud: The cloud (as object inheriting from scratchattach.Cloud.BaseCloud) that the cloud activity corresponds to
     """
 
     def __init__(self, **entries):

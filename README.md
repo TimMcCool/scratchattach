@@ -4,8 +4,7 @@ The library allows setting cloud variables, following users, updating your profi
 so much more! Additionally, it provides frameworks that simplify sending data through cloud variables.
 
 <p align="left" style="margin:10px">
-  <img width="160" src="https://github.com/TimMcCool/scratchattach/blob/v2/logos/logo.svg">
-</p>
+  <img width="160" src="https://github.com/TimMcCool/scratchattach/blob/main/logos/logo.svg">
 
 [![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
 [![PyPI download month](https://img.shields.io/pypi/dm/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
@@ -13,26 +12,47 @@ so much more! Additionally, it provides frameworks that simplify sending data th
 [![GitHub license](https://badgen.net/github/license/TimMcCool/scratchattach)](https://github.com/TimMcCool/scratchattach/blob/master/LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/scratchattach/badge/?version=latest)](https://scratchattach.readthedocs.io/en/latest/?badge=latest)
 
-# Links
+# Documentation
 
-- **[Documentation](https://github.com/TimMcCool/scratchattach/wiki)**
-- [Extended documentation (WIP)](https://scratchattach.readthedocs.io/en/latest/)
+- **[Documentation](https://github.com/TimMcCool/scratchattach/wiki/Documentation)**
+
+- [Cloud Variables](https://github.com/TimMcCool/scratchattach/wiki/Documentation#cloud-variables)
+- [Cloud Requests](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Requests)
+- [Cloud Storage](https://github.com/TimMcCool/scratchattach/wiki/Cloud-Storage)
+- [Filterbot](https://github.com/TimMcCool/scratchattach/wiki/Filterbot)
+- [Self-hosting a TW cloud websocket](https://github.com/TimMcCool/scratchattach/wiki/Documentation#hosting-a-cloud-server)
+
+# Helpful resources
+
+- [Get your session id](https://github.com/TimMcCool/scratchattach/wiki/Get-your-session-id)
+
 - [Examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)
 - [Hosting](https://github.com/TimMcCool/scratchattach/wiki/Hosting)
-- [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
 
 Report bugs by opening an issue on this repository. If you need help or guideance, leave a comment in the [official forum topic](https://scratch.mit.edu/discuss/topic/603418/
 ). Projects made using scratchattach can be added to [this Scratch studio](https://scratch.mit.edu/studios/31478892/).
 
-# Example usage
+# Helpful for contributors
+
+- **[Structure of the library](https://github.com/TimMcCool/scratchattach/wiki/Structure-of-the-library)**
+
+- [Extended documentation (WIP)](https://scratchattach.readthedocs.io/en/latest/)
+
+- [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
+
+Contribute code by opening a pull request on this repository.
+
+# ️Example usage
+
+Set a cloud variable:
 
 ```py
-import scratchattach as scratch3
+import scratchattach as sa
 
-session = scratch3.login("username", "password")
-conn = session.connect_cloud("project_id")
+session = sa.login("username", "password")
+cloud = session.connect_cloud("project_id")
 
-conn.set_var("variable", value)
+cloud.set_var("variable", value)
 ```
 
 **[More examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)**
@@ -47,7 +67,7 @@ Run the following command in your command prompt / shell:
 pip install -U scratchattach
 ```
 
-If this doesn't work, pip was not added to path when you installed Python. Try running:
+If this doesn't work, try running:
 ```
 python -m pip install -U scratchattach
 ```
@@ -56,46 +76,50 @@ python -m pip install -U scratchattach
 **Logging in with username / password:**
 
 ```python
-import scratchattach as scratch3
+import scratchattach as sa
 
-session = scratch3.login("username", "password")
+session = sa.login("username", "password")
 ```
 
-`login()` returns a `Session` object that saves your login.
+`login()` returns a `Session` object that saves your login and can be used to connect objects like users, projects, clouds etc.
 
 **Logging in with a sessionId:** *You can get your session id from your browser's cookies. [More information](https://github.com/TimMcCool/scratchattach/wiki/Get-your-session-id)*
 ```python
-import scratchattach as scratch3
+import scratchattach as sa
 
-session = scratch3.Session("sessionId", username="username") #The username field is case sensitive
+session = sa.login_by_id("sessionId", username="username") #The username field is case sensitive
 ```
 
-**Connect to the Scratch cloud:**
+**Cloud variables:**
+
+```py
+cloud = session.connect_cloud("project_id") # connect to the cloud
+
+value = cloud.get_var("variable")
+cloud.set_var("variable", "value") # the variable name is specified without the cloud emoji
+```
+
+**Cloud events:**
+
+```py
+cloud = session.connect_cloud('project_id')
+events = cloud.events()
+
+@events.event
+def on_set(activity):
+    print("variable", activity.var, "was set to", activity.value)
+events.start()
+```
+
+**Follow users, love their projects and comment:**
 
 ```python
-conn = session.connect_cloud("project_id")
+user = session.connect_user('username')
+user.follow()
+
+project = user.projects()[0]
+project.love()
+project.post_comment('Great project!')
 ```
 
-**Get / Set a cloud var:**
-
-```python
-value = scratch3.get_var("project_id", "variable")
-conn.set_var("variable", "value") #the variable name is specified without the cloud emoji
-```
-
-**Follow a user / love a project:**
-
-```python
-user_to_follow = session.connect_user("username")
-user_to_follow.follow()
-project_to_love = session.connect_project("project_id")
-project_to_love.love()
-```
-
-**All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki/#cloud-variables).**
-
-# Contributors
-
-- Allmost all code by TimMcCool.
-- See the GitHub repository for full list of contributors.
-- Create a pull request to contribute code yourself.
+**All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki/Documentation).**

@@ -1,4 +1,4 @@
-"""v2 ready: CloudRecorder class (used by ScratchCloud, TwCloud and other classes inheriting from BaseCloud to deliver cloud var values)"""
+"""CloudRecorder class (used by ScratchCloud, TwCloud and other classes inheriting from BaseCloud to deliver cloud var values)"""
 
 from .cloud_events import CloudEvents
 

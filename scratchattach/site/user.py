@@ -1,4 +1,4 @@
-"""v2 ready: Session class and login function"""
+"""Session class and login function"""
 
 import json
 import random

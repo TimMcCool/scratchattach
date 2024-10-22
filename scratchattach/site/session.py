@@ -1,4 +1,4 @@
-"""v2 ready: Session class and login function"""
+"""Session class and login function"""
 
 import json
 import re
@@ -46,7 +46,7 @@ class Session(BaseSiteComponent):
 
     :.email: The email address associated with the logged in account
 
-    :.new_scratcher: Returns True if the associated account is a Scratcher
+    :.new_scratcher: Returns True if the associated account is a new Scratcher
 
     :.mute_status: Information about commenting restrictions of the associated account
 
@@ -515,12 +515,12 @@ class Session(BaseSiteComponent):
         """
         return cloud.ScratchCloud(project_id=project_id, _session=self)
 
-    def connect_tw_cloud(self, project_id, *, purpose="", contact=""):
+    def connect_tw_cloud(self, project_id, *, purpose="", contact="", cloud_host="wss://clouddata.turbowarp.org"):
         """
         Returns:
             scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
         """
-        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, _session=self)
+        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host, _session=self)
 
     # --- Connect classes inheriting from BaseSiteComponent ---
 
@@ -717,7 +717,7 @@ sess
         
 # ------ #
 
-def login_by_id(session_id, *, username=None, password=None):
+def login_by_id(session_id, *, username=None, password=None, xtoken=None):
     """
     Creates a session / log in to the Scratch website with the specified session id.
     Structured similarly to Session._connect_object method.
@@ -738,14 +738,20 @@ def login_by_id(session_id, *, username=None, password=None):
         session_string = base64.b64encode(json.dumps(session_data).encode())
     else:
         session_string = None
-    _session = Session(id=session_id, username=username, session_string=session_string)
+    _session = Session(id=session_id, username=username, session_string=session_string, xtoken=xtoken)
     try:
-        if _session.update() == "429":
-            raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
-    except KeyError as e:
-        print(f"Warning: Logged in, but couldn't fetch XToken. Key error at key "+str(e)+" when reading scratch.mit.edu/session API response")
+        status = _session.update()
     except Exception as e:
-        raise(e)
+        status = False
+        print(f"Key error at key "+str(e)+" when reading scratch.mit.edu/session API response")
+    if status is not True:
+        if _session.xtoken is None:
+            if _session.username is None:
+                print(f"Warning: Logged in by id, but couldn't fetch XToken. Make sure the provided session id is valid.\nSetting cloud variables can still work if you provide a username='username' keyword argument to the connect_by_id function")
+            else:
+                print(f"Warning: Logged in by id, but couldn't fetch XToken. Make sure the provided session id is valid.")
+        else:
+            print(f"Warning: Logged in by id, but couldn't fetch session info. This won't affect any other features.")
     return _session
 
 def login(username, password, *, timeout=10):

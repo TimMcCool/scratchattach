@@ -1,4 +1,4 @@
-"""v2 ready: ForumTopic and ForumPost classes"""
+"""ForumTopic and ForumPost classes"""
 
 from . import user
 from ..utils.commons import headers

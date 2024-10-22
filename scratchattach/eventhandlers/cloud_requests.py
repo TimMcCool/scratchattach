@@ -1,4 +1,4 @@
-"""v2 ready: CloudRequests class (threading.Event version)"""
+"""CloudRequests class (threading.Event version)"""
 
 from .cloud_events import CloudEvents
 from ..site import project
@@ -169,8 +169,8 @@ class CloudRequests(CloudEvents):
             self.cloud.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", value)
         except exceptions.ConnectionError:
             self.call_even("on_disconnect")
-        except Exception:
-            print("scratchattach: internal error while responding (please submit a bug report on GitHub):", e, f"{response_part}.{request_id}{iteration_string}1")
+        except Exception as e:
+            print("scratchattach: internal error while responding (please submit a bug report on GitHub):", e)
         self.current_var += 1
         if self.current_var == len(self.used_cloud_vars):
             self.current_var = 0
