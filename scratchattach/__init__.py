@@ -18,6 +18,7 @@ from .site.forum import ForumPost, ForumTopic, get_topic, get_topic_list
 from .site.project import Project, get_project, search_projects, explore_projects
 from .site.session import Session, login, login_by_id, login_by_session_string
 from .site.studio import Studio, get_studio, search_studios, explore_studios
+from .site.classroom import Classroom, get_classroom
 from .site.user import User, get_user
 from .site._base import BaseSiteComponent
 

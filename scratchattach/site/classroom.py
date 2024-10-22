@@ -5,7 +5,7 @@ from ..utils.commons import api_iterative, headers
 from ..utils import exceptions, commons
 from ._base import BaseSiteComponent
 
-class Classrooms(BaseSiteComponent):
+class Classroom(BaseSiteComponent):
     def __init__(self, **entries):
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
@@ -61,7 +61,7 @@ class Classrooms(BaseSiteComponent):
         ).text
         return commons.webscrape_count(text, "Students (", ")")
     
-    def students(self, *, page=1):
+    def student_names(self, *, page=1):
         """
         Returns the student on the class.
         
@@ -86,7 +86,7 @@ class Classrooms(BaseSiteComponent):
         ).text
         return commons.webscrape_count(text, "Class Studios (", ")")
     
-    def class_studios(self, *, page=1):
+    def class_studio_ids(self, *, page=1):
         """
         Returns the class studio on the class.
         
@@ -121,7 +121,7 @@ def get_classroom(class_id):
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_classroom` instead.
     """
     print("Warning: For methods that require authentication, use session.connect_classroom instead of get_classroom")
-    return commons._get_object("id", class_id, Classrooms, exceptions.ClassroomNotFound)
+    return commons._get_object("id", class_id, Classroom, exceptions.ClassroomNotFound)
 
 def get_classroom_from_token(class_token):
     """
@@ -139,4 +139,4 @@ def get_classroom_from_token(class_token):
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_classroom` instead.
     """
     print("Warning: For methods that require authentication, use session.connect_classroom instead of get_classroom")
-    return commons._get_object("classtoken", class_token, Classrooms, exceptions.ClassroomNotFound)
+    return commons._get_object("classtoken", class_token, Classroom, exceptions.ClassroomNotFound)

@@ -17,7 +17,7 @@ from . import forum
 from ..utils import commons
 
 from ..cloud import cloud, _base
-from . import user, project, backpack_asset
+from . import user, project, backpack_asset, classroom
 from ..utils import exceptions
 from . import studio
 from . import classroom
@@ -628,7 +628,7 @@ sess
         Returns:
             scratchattach.classroom.Classroom: An object representing the requested classroom
         """
-        return self._make_linked_object("id", int(class_id), classroom.Classrooms, exceptions.ClassroomNotFound)
+        return self._make_linked_object("id", int(class_id), classroom.Classroom, exceptions.ClassroomNotFound)
 
     def connect_classroom_from_token(self, class_token):
         """
@@ -640,7 +640,7 @@ sess
         Returns:
             scratchattach.classroom.Classroom: An object representing the requested classroom
         """
-        return self._make_linked_object("classtoken", int(class_token), classroom.Classrooms, exceptions.ClassroomNotFound)
+        return self._make_linked_object("classtoken", int(class_token), classroom.Classroom, exceptions.ClassroomNotFound)
 
     def connect_topic(self, topic_id):
         """
