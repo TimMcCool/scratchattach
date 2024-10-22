@@ -1,3 +1,7 @@
+# 2.0.1
+
+Added `sa.Classroom` class and `sa.get_classroom(classroom_id)` and `session.connect_classroom(classroom_id)` methods
+
 # 2.0.0
 
 Some less important changes are not listed here. [How to migrate to v2 quickly](https://github.com/TimMcCool/scratchattach/wiki/Migrating-to-v2)
