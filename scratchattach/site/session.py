@@ -352,7 +352,7 @@ class Session(BaseSiteComponent):
 
         Warning:
             Don't spam this method - it WILL get you banned from Scratch.
-            To prevendfvt accidental spam, a rate limit (5 projects per minute) is implemented for this function.
+            To prevent accidental spam, a rate limit (5 projects per minute) is implemented for this function.
         """
         global CREATE_PROJECT_USES
         if len(CREATE_PROJECT_USES) < 5:
