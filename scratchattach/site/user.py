@@ -286,7 +286,7 @@ class User(BaseSiteComponent):
             raise exceptions.BadRequest("limit parameter must be >= 0")
 
         # There are 40 projects on display per page
-        # So number of pages to view the limit is ceil(limit / 40)
+        # So number of pages to view until the limit is ceil(limit / 40)
 
         # The first page you need to view is 1 + offset // 40
         # (You have to add one because the first page is idx 1 instead of 0)
