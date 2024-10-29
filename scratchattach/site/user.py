@@ -286,15 +286,20 @@ class User(BaseSiteComponent):
             raise exceptions.BadRequest("limit parameter must be >= 0")
 
         # There are 40 projects on display per page
-        # So number of pages to view until the limit is ceil(limit / 40)
-
-        # The first page you need to view is 1 + offset // 40
+        # So the first page you need to view is 1 + offset // 40
         # (You have to add one because the first page is idx 1 instead of 0)
+
+        # The final project to view is at idx offset + limit - 1
+        # (You have to -1 because the index starts at 0)
+        # So the page number for this is 1 + (offset + limit - 1) // 40
+
+        # But this is a range so we have to add another 1 for the second argument
         pages = range(1 + offset // 40,
-                      1 + offset // 40 + math.ceil(limit / 40))
+                      2 + (offset + limit - 1) // 40)
         _projects = []
 
         for page in pages:
+            print(f"Requesting p {page}")
             # The index of the first project on page #n is just (n-1) * 40
             first_idx = (page - 1) * 40
 
