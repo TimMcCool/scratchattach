@@ -303,17 +303,26 @@ class User(BaseSiteComponent):
             first_idx = (page - 1) * 40
 
             page_content = requests.get(f"https://scratch.mit.edu/projects/all/{self.username}/loves/"
-                             f"?page={page}", headers=self._headers).content
-            if b"Whoops! Our server is Scratch'ing its head" in page_content:
-                # We've either tried to access a non-existent account or
-                # the user hasn't loved enough projects (for the requested page to exist)
-                # So we can just break out of the loop early
-                break
+                                        f"?page={page}", headers=self._headers).content
 
             soup = BeautifulSoup(
                 page_content,
                 "html.parser"
             )
+
+            # We need to check if we are out of bounds
+            # If we are, we can jump out early
+            # This is detectable if Scratch gives you a '404'
+
+            # We can't just detect if the 404 text is within the whole of the page content
+            # because it would break if someone made a project with that name
+
+            # This page only uses <h1> tags for the 404 text, so we can just use a soup for those
+            h1_tag = soup.find("h1")
+            if h1_tag is not None:
+                # Just to confirm that it's a 404, in case I am wrong. It can't hurt
+                if "Whoops! Our server is Scratch'ing its head" in h1_tag.text:
+                    break
 
             # Each project element is a list item with the class name 'project thumb item' so we can just use that
             for i, project_element in enumerate(
