@@ -299,7 +299,6 @@ class User(BaseSiteComponent):
         _projects = []
 
         for page in pages:
-            print(f"Requesting p {page}")
             # The index of the first project on page #n is just (n-1) * 40
             first_idx = (page - 1) * 40
 
