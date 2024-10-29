@@ -520,13 +520,14 @@ class Session(BaseSiteComponent):
         Returns:
             scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
         """
-        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host, _session=self)
+        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host) #, _session=self)
+                                                                                                             # PyCharm is giving a warning for this argument - unexpected argument
 
     # --- Connect classes inheriting from BaseSiteComponent ---
 
     def _make_linked_object(self, identificator_name, identificator, Class, NotFoundException):
         """
-        The Session class doesn't save the login in a ._session attribut, but IS the login ITSELF.
+        The Session class doesn't save the login in a ._session attribute, but IS the login ITSELF.
 
         Therefore the _make_linked_object method has to be adjusted
         to get it to work for in the Session class.
@@ -536,7 +537,7 @@ class Session(BaseSiteComponent):
         return commons._get_object(identificator_name, identificator, Class, NotFoundException, self)
 
 
-    def connect_user(self, username):
+    def connect_user(self, username) -> 'user.User':
         """
         Gets a user using this session, connects the session to the User object to allow authenticated actions
 
@@ -664,7 +665,7 @@ sess
 
         Args:
             category_id (str): ID of the forum category
-        
+
         Keyword Arguments:
             page (str): Page of the category topics that should be returned
 
@@ -714,10 +715,10 @@ sess
 
     def connect_filterbot(self, *, log_deletions=True):
         return filterbot.Filterbot(user.User(username=self.username, _session=self), log_deletions=log_deletions)
-        
+
 # ------ #
 
-def login_by_id(session_id, *, username=None, password=None, xtoken=None):
+def login_by_id(session_id, *, username=None, password=None, xtoken=None) -> Session:
     """
     Creates a session / log in to the Scratch website with the specified session id.
     Structured similarly to Session._connect_object method.
@@ -754,7 +755,7 @@ def login_by_id(session_id, *, username=None, password=None, xtoken=None):
             print(f"Warning: Logged in by id, but couldn't fetch session info. This won't affect any other features.")
     return _session
 
-def login(username, password, *, timeout=10):
+def login(username, password, *, timeout=10) -> Session:
     """
     Creates a session / log in to the Scratch website with the specified username and password.
 
