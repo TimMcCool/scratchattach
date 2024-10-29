@@ -3,7 +3,6 @@
 import json
 import random
 import string
-import math
 
 from ..eventhandlers import message_events
 from . import project
