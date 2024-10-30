@@ -101,13 +101,3 @@ def aprilfools_get_counter() -> int:
 
 def aprilfools_increment_counter() -> int:
     return requests.post("https://api.scratch.mit.edu/surprise")["surprise"]
-
-# --- Miscellaneous ---
-
-# I'm not sure what to label this as
-def scratch_team_members() -> dict:
-    text = requests.get("https://scratch.mit.edu/js/credits.bundle.js").text
-    text = "[{\"userName\"" + text.split("('[{\"userName\"")[1]
-    text = text.split( "\"}]')")[0] + "\"}]"
-
-    return json.loads(text)
