@@ -375,6 +375,13 @@ class User(BaseSiteComponent):
             headers=self._headers
         ).text
 
+        # If there are no loved projects, then Scratch doesn't actually display the number - so we have to catch this
+        soup = BeautifulSoup(text, "html.parser")
+
+        if not soup.find("li", {"class": "project thumb item"}):
+            # There are no projects, so there are no projects loved
+            return 0
+
         return commons.webscrape_count(text, "&raquo;\n\n (", ")")
 
     def favorites(self, *, limit=40, offset=0):
