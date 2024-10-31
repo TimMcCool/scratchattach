@@ -62,8 +62,11 @@ class ProjectBody:
             self.y = data.get("y", 0)
             
         def to_json(self):
-            return {"opcode":self.opcode,"next":self.next_id,"parent":self.parent_id,"inputs":self.input_data,"fields":self.fields,"topLevel":self.topLevel,"shadow":self.shadow,"x":self.x,"y":self.y}
-        
+            output = {"opcode":self.opcode,"next":self.next_id,"parent":self.parent_id,"inputs":self.input_data,"fields":self.fields,"topLevel":self.topLevel,"shadow":self.shadow,"x":self.x,"y":self.y}
+            if self.mutation:
+                output["mutation"] = self.mutation
+            return output
+
         def attached_block(self):
             return self.sprite.block_by_id(self.next_id)
 
@@ -423,7 +426,7 @@ class ProjectBody:
         for monitor in self.monitors:
             monitor.projectBody = self
         # Set extensions and meta attributs: 
-        self.extensions = data["meta"]
+        self.extensions = data["extensions"]
         self.meta = data["meta"]
 
     def to_json(self):

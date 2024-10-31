@@ -352,7 +352,7 @@ class Session(BaseSiteComponent):
 
         Warning:
             Don't spam this method - it WILL get you banned from Scratch.
-            To prevendfvt accidental spam, a rate limit (5 projects per minute) is implemented for this function.
+            To prevent accidental spam, a rate limit (5 projects per minute) is implemented for this function.
         """
         global CREATE_PROJECT_USES
         if len(CREATE_PROJECT_USES) < 5:
@@ -537,7 +537,7 @@ class Session(BaseSiteComponent):
         return commons._get_object(identificator_name, identificator, Class, NotFoundException, self)
 
 
-    def connect_user(self, username) -> 'user.User':
+    def connect_user(self, username) -> user.User:
         """
         Gets a user using this session, connects the session to the User object to allow authenticated actions
 
