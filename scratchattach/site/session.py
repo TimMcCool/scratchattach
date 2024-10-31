@@ -520,8 +520,7 @@ class Session(BaseSiteComponent):
         Returns:
             scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
         """
-        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host) #, _session=self)
-                                                                                                             # PyCharm is giving a warning for this argument - unexpected argument
+        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host), _session=self)
 
     # --- Connect classes inheriting from BaseSiteComponent ---
 
