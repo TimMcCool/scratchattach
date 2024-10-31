@@ -520,7 +520,7 @@ class Session(BaseSiteComponent):
         Returns:
             scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
         """
-        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host), _session=self)
+        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host, _session=self)
 
     # --- Connect classes inheriting from BaseSiteComponent ---
 

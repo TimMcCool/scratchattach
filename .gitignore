@@ -7,3 +7,4 @@ setup.py
 scratchattach/test.py
 scratchattach.code-workspace
 **/.DS_Store
+setup.py
