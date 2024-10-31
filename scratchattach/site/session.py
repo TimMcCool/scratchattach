@@ -536,7 +536,7 @@ class Session(BaseSiteComponent):
         return commons._get_object(identificator_name, identificator, Class, NotFoundException, self)
 
 
-    def connect_user(self, username) -> user.User:
+    def connect_user(self, username) -> 'user.User':
         """
         Gets a user using this session, connects the session to the User object to allow authenticated actions
 
