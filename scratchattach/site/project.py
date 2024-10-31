@@ -250,8 +250,8 @@ class Project(PartialProject):
                 f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
                 timeout=10,
             )
-            filename = filename.replace(".json", "")
-            open(f"{dir}{filename}.json", "wb").write(response.content)
+            filename = filename.replace(".sb3", "")
+            open(f"{dir}{filename}.sb3", "wb").write(response.content)
         except Exception:
             raise (
                 exceptions.FetchError(
