@@ -352,7 +352,7 @@ class Session(BaseSiteComponent):
 
         Warning:
             Don't spam this method - it WILL get you banned from Scratch.
-            To prevendfvt accidental spam, a rate limit (5 projects per minute) is implemented for this function.
+            To prevent accidental spam, a rate limit (5 projects per minute) is implemented for this function.
         """
         global CREATE_PROJECT_USES
         if len(CREATE_PROJECT_USES) < 5:
@@ -536,7 +536,7 @@ class Session(BaseSiteComponent):
         return commons._get_object(identificator_name, identificator, Class, NotFoundException, self)
 
 
-    def connect_user(self, username):
+    def connect_user(self, username) -> 'user.User':
         """
         Gets a user using this session, connects the session to the User object to allow authenticated actions
 
@@ -717,7 +717,7 @@ sess
         
 # ------ #
 
-def login_by_id(session_id, *, username=None, password=None, xtoken=None):
+def login_by_id(session_id, *, username=None, password=None, xtoken=None) -> Session:
     """
     Creates a session / log in to the Scratch website with the specified session id.
     Structured similarly to Session._connect_object method.
@@ -754,7 +754,7 @@ def login_by_id(session_id, *, username=None, password=None, xtoken=None):
             print(f"Warning: Logged in by id, but couldn't fetch session info. This won't affect any other features.")
     return _session
 
-def login(username, password, *, timeout=10):
+def login(username, password, *, timeout=10) -> Session:
     """
     Creates a session / log in to the Scratch website with the specified username and password.
 
