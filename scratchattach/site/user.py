@@ -273,6 +273,117 @@ class User(BaseSiteComponent):
             p["author"] = {"username":self.username}
         return commons.parse_object_list(_projects, project.Project, self._session)
 
+    def loves(self, *, limit=40, offset=0, get_full_project: bool = False) -> list[project.Project]:
+        """
+        Returns:
+            list<projects.projects.Project>: The user's loved projects
+        """
+        # We need to use beautifulsoup webscraping so we cant use the api_iterative function
+        if offset < 0:
+            raise exceptions.BadRequest("offset parameter must be >= 0")
+        if limit < 0:
+            raise exceptions.BadRequest("limit parameter must be >= 0")
+
+        # There are 40 projects on display per page
+        # So the first page you need to view is 1 + offset // 40
+        # (You have to add one because the first page is idx 1 instead of 0)
+
+        # The final project to view is at idx offset + limit - 1
+        # (You have to -1 because the index starts at 0)
+        # So the page number for this is 1 + (offset + limit - 1) // 40
+
+        # But this is a range so we have to add another 1 for the second argument
+        pages = range(1 + offset // 40,
+                      2 + (offset + limit - 1) // 40)
+        _projects = []
+
+        for page in pages:
+            # The index of the first project on page #n is just (n-1) * 40
+            first_idx = (page - 1) * 40
+
+            page_content = requests.get(f"https://scratch.mit.edu/projects/all/{self.username}/loves/"
+                                        f"?page={page}", headers=self._headers).content
+
+            soup = BeautifulSoup(
+                page_content,
+                "html.parser"
+            )
+
+            # We need to check if we are out of bounds
+            # If we are, we can jump out early
+            # This is detectable if Scratch gives you a '404'
+
+            # We can't just detect if the 404 text is within the whole of the page content
+            # because it would break if someone made a project with that name
+
+            # This page only uses <h1> tags for the 404 text, so we can just use a soup for those
+            h1_tag = soup.find("h1")
+            if h1_tag is not None:
+                # Just to confirm that it's a 404, in case I am wrong. It can't hurt
+                if "Whoops! Our server is Scratch'ing its head" in h1_tag.text:
+                    break
+
+            # Each project element is a list item with the class name 'project thumb item' so we can just use that
+            for i, project_element in enumerate(
+                    soup.find_all("li", {"class": "project thumb item"})):
+                # Remember we only want certain projects:
+                # The current project idx = first_idx + i
+                # We want to start at {offset} and end at {offset + limit}
+
+                # So the offset <= current project idx <= offset + limit
+                if offset <= first_idx + i <= offset + limit:
+                    # Each of these elements provides:
+                    # A project id
+                    # A thumbnail link (no need to webscrape this)
+                    # A title
+                    # An Author (called an owner for some reason)
+
+                    project_anchors = project_element.find_all("a")
+                    # Each list item has three <a> tags, the first two linking the project
+                    # 1st contains <img> tag
+                    # 2nd contains project title
+                    # 3rd links to the author & contains their username
+
+                    # This function is pretty handy!
+                    # I'll use it for an id from a string like: /projects/1070616180/
+                    project_id = commons.webscrape_count(project_anchors[0].attrs["href"],
+                                                         "/projects/", "/")
+                    title = project_anchors[1].contents[0]
+                    author = project_anchors[2].contents[0]
+
+                    # Instantiating a project with the properties that we know
+                    # This may cause issues (see below)
+                    _project = project.Project(id=project_id,
+                                               _session=self._session,
+                                               title=title,
+                                               author_name=author,
+                                               url=f"https://scratch.mit.edu/projects/{project_id}/")
+                    if get_full_project:
+                        # Put this under an if statement since making api requests for every single
+                        # project will cause the function to take a lot longer
+                        _project.update()
+
+                    _projects.append(
+                        _project
+                    )
+
+        return _projects
+
+    def loves_count(self):
+        text = requests.get(
+            f"https://scratch.mit.edu/projects/all/{self.username}/loves/",
+            headers=self._headers
+        ).text
+
+        # If there are no loved projects, then Scratch doesn't actually display the number - so we have to catch this
+        soup = BeautifulSoup(text, "html.parser")
+
+        if not soup.find("li", {"class": "project thumb item"}):
+            # There are no projects, so there are no projects loved
+            return 0
+
+        return commons.webscrape_count(text, "&raquo;\n\n (", ")")
+
     def favorites(self, *, limit=40, offset=0):
         """
         Returns:
@@ -443,7 +554,7 @@ class User(BaseSiteComponent):
 
         Warning:
             Only replies to top-level comments are shown on the Scratch website. Replies to replies are actually replies to the corresponding top-level comment in the API.
-            
+
             Therefore, parent_id should be the comment id of a top level comment.
 
         Args:
@@ -607,7 +718,7 @@ class User(BaseSiteComponent):
 
         Warning:
             For comments very far down on the user's profile, this method will take a while to find the comment. Very old comment are deleted from Scratch's database and may not appear.
-        
+
         Returns:
             scratchattach.comments.Comment: The request comment.
         """
@@ -675,11 +786,11 @@ class User(BaseSiteComponent):
             dict
         """
         return requests.get(f"https://my-ocular.jeffalo.net/api/user/{self.username}").json()
-    
+
     def verify_identity(self, *, verification_project_id=395330233):
         """
         Can be used in applications to verify a user's identity.
-        
+
         This function returns a Verifactor object. Attributs of this object:
         :.projecturl: The link to the project where the user has to go to verify
         :.project: The project where the user has to go to verify as scratchattach.Project object

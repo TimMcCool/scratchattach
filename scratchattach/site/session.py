@@ -520,13 +520,14 @@ class Session(BaseSiteComponent):
         Returns:
             scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
         """
-        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host, _session=self)
+        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host) #, _session=self)
+                                                                                                             # PyCharm is giving a warning for this argument - unexpected argument
 
     # --- Connect classes inheriting from BaseSiteComponent ---
 
     def _make_linked_object(self, identificator_name, identificator, Class, NotFoundException):
         """
-        The Session class doesn't save the login in a ._session attribut, but IS the login ITSELF.
+        The Session class doesn't save the login in a ._session attribute, but IS the login ITSELF.
 
         Therefore the _make_linked_object method has to be adjusted
         to get it to work for in the Session class.
@@ -664,7 +665,7 @@ sess
 
         Args:
             category_id (str): ID of the forum category
-        
+
         Keyword Arguments:
             page (str): Page of the category topics that should be returned
 
@@ -714,7 +715,7 @@ sess
 
     def connect_filterbot(self, *, log_deletions=True):
         return filterbot.Filterbot(user.User(username=self.username, _session=self), log_deletions=log_deletions)
-        
+
 # ------ #
 
 def login_by_id(session_id, *, username=None, password=None, xtoken=None) -> Session:
