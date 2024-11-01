@@ -97,7 +97,7 @@ def check_password(password):
 # --- April fools endpoints ---
 
 def aprilfools_get_counter() -> int:
-    return requests.get("https://api.scratch.mit.edu/surprise")["surprise"]
+    return requests.get("https://api.scratch.mit.edu/surprise").json()["surprise"]
 
 def aprilfools_increment_counter() -> int:
-    return requests.post("https://api.scratch.mit.edu/surprise")["surprise"]
+    return requests.post("https://api.scratch.mit.edu/surprise").json()["surprise"]
