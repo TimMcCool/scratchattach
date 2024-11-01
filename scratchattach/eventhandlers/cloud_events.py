@@ -94,8 +94,8 @@ class CloudLogEvents(BaseEventHandler):
             try:
                 data = self.source_cloud.logs(limit=25)
                 for _a in data[::-1]:
-                    if _a.timestamp < self.last_timestamp:
-                        break
+                    if _a.timestamp <= self.last_timestamp:
+                        continue
                     self.last_timestamp = _a.timestamp
                     self.call_event("on_"+_a.type, [_a])
             except Exception:
