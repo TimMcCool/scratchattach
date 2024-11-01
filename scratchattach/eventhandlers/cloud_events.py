@@ -30,7 +30,7 @@ class CloudEvents(BaseEventHandler):
         """
         self.source_cloud.connect()
         
-        Thread(target=self.call_event, args=["on_ready"]).start()
+        self.call_event("on_ready")
 
         if self.running is False:
             return

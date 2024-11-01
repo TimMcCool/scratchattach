@@ -24,7 +24,6 @@ class BaseEventHandler(ABC):
         if self.running is False:
             self.ignore_exceptions = ignore_exceptions
             self.running = True
-            self.call_event("on_ready")
             if thread:
                 self._thread = Thread(target=self._updater, args=())
                 self._thread.start()
