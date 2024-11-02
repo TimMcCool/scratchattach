@@ -381,6 +381,7 @@ class ProjectBody:
             return_data = dict(self.__dict__)
             return_data.pop("filename")
             return_data.pop("id")
+            return_data.pop("download_url")
             return return_data
 
         def download(self, *, filename=None, dir=""):
