@@ -6,6 +6,7 @@ from ..utils import exceptions, commons
 from ._base import BaseSiteComponent
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse, parse_qs
 
 from ..utils.requests import Requests as requests
 
@@ -383,3 +384,16 @@ def get_topic_list(category_id, *, page=1):
     except Exception as e:
         raise exceptions.ScrapeError(str(e))
 
+
+def youtube_link_to_scratch(link: str):
+    """
+    Converts a YouTube url (in multiple formats) like https://youtu.be/1JTgg4WVAX8?si=fIEskaEaOIRZyTAz
+    to a link like https://scratch.mit.edu/discuss/youtube/1JTgg4WVAX8
+    """
+    url_parse = urlparse(link)
+    query_parse = parse_qs(url_parse.query)
+    if 'v' in query_parse:
+        video_id = query_parse['v'][0]
+    else:
+        video_id = url_parse.path.split('/')[-1]
+    return f"https://scratch.mit.edu/discuss/youtube/{video_id}"
