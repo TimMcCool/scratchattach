@@ -148,8 +148,8 @@ class Session(BaseSiteComponent):
         Keyword arguments:
             password (str): Password associated with the session (not stored)
         """
-        requests.post("https://scratch.mit.edu/accounts/password_change/",
-                      data={"email_address": self.email,
+        requests.post("https://scratch.mit.edu/accounts/email_change/",
+                      data={"email_address": self.new_email_address,
                             "password": password},
                       headers=self._headers, cookies=self._cookies)
 
@@ -169,7 +169,7 @@ class Session(BaseSiteComponent):
     @property
     def new_email_address(self) -> str | None:
         """
-        Gets the (unconfirmed) email address that this session has requested to transfer to, if any
+        Gets the (unconfirmed) email address that this session has requested to transfer to, if any, otherwise the current address.
 
         Returns:
             str: The email that this session wants to switch to
@@ -178,14 +178,15 @@ class Session(BaseSiteComponent):
                                 headers=self._headers, cookies=self._cookies)
 
         soup = BeautifulSoup(response.content, "html.parser")
+
+        email = None
         for label_span in soup.find_all("span", {"class": "label"}):
             if label_span.contents[0] == "New Email Address":
                 return label_span.parent.contents[-1].text.strip("\n ")
+            elif label_span.contents[0] == "Current Email Address":
+                email = label_span.parent.contents[-1].text.strip("\n ")
 
-        return None
-
-
-
+        return email
 
     def delete_account(self, *, password: str, delete_projects: bool = False):
         """
