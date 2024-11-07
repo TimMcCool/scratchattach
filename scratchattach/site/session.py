@@ -124,6 +124,11 @@ class Session(BaseSiteComponent):
         # backwards compatibility with v1
         return self.connect_linked_user() # To avoid inconsistencies with "connect" and "get", this function was renamed
 
+    def set_country(self, country: str="Antarctica"):
+        requests.post("https://scratch.mit.edu/accounts/settings/",
+                      data={"country": country},
+                      headers=self._headers, cookies=self._cookies)
+
     def delete_account(self, *, password: str, delete_projects: bool = False):
         """
         !!! Dangerous !!!
