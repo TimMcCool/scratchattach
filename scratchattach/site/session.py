@@ -200,6 +200,13 @@ class Session(BaseSiteComponent):
                           "password": password
                       }, headers=self._headers, cookies=self._cookies)
 
+    def logout(self):
+        """
+        Sends a logout request to scratch. Might not do anything, might log out this account on other ips/sessions? I am not sure
+        """
+        requests.post("https://scratch.mit.edu/accounts/logout/",
+                      headers=self._headers, cookies=self._cookies)
+
     def messages(self, *, limit=40, offset=0, date_limit=None, filter_by=None):
         '''
         Returns the messages.
