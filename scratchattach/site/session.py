@@ -82,16 +82,28 @@ class Session(BaseSiteComponent):
         }
 
     def _update_from_dict(self, data):
+        # Note: there are a lot more things you can get from this data dict.
+        # Maybe it would be a good idea to also store the dict itself?
+        # self.data = data
+
         self.xtoken = data['user']['token']
         self._headers["X-Token"] = self.xtoken
+
+        self.has_outstanding_email_confirmation = data["flags"]["has_outstanding_email_confirmation"]
+
         self.email = data["user"]["email"]
+
         self.new_scratcher = data["permissions"]["new_scratcher"]
         self.mute_status = data["permissions"]["mute_status"]
+
         self.username = data["user"]["username"]
         self._username = data["user"]["username"]
         self.banned = data["user"]["banned"]
+
         if self.banned:
             warnings.warn(f"Warning: The account {self._username} you logged in to is BANNED. Some features may not work properly.")
+        if self.has_outstanding_email_confirmation:
+            warnings.warn(f"Warning: The account {self._username} you logged is not email confirmed. Some features may not work properly.")
         return True
 
     def connect_linked_user(self):
