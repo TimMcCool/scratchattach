@@ -100,6 +100,14 @@ class PartialProject(BaseSiteComponent):
             return False
         return True
 
+    @property
+    def embed_url(self):
+        """
+        Returns:
+             the url of the embed of the project
+        """
+        return f"{self.url}/embed"
+
     def remixes(self, *, limit=40, offset=0):
         """
         Returns:
