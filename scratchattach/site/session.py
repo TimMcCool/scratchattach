@@ -1,29 +1,32 @@
 """Session class and login function"""
 
-import base64
-import hashlib
 import json
-import pathlib
-import random
 import re
-import time
 import warnings
+import pathlib
+import hashlib
+import time
+import random
+import base64
+import secrets
 from typing import Type
+import zipfile
 
-from bs4 import BeautifulSoup
-
-from . import activity
-from . import classroom
 from . import forum
-from . import studio
-from . import user, project, backpack_asset
-from ._base import BaseSiteComponent
-from ..cloud import cloud, _base
-from ..eventhandlers import message_events, filterbot
-from ..other import project_json_capabilities
+
 from ..utils import commons
+
+from ..cloud import cloud, _base
+from . import user, project, backpack_asset, classroom
 from ..utils import exceptions
+from . import studio
+from . import classroom
+from ..eventhandlers import message_events, filterbot
+from . import activity
+from ._base import BaseSiteComponent
 from ..utils.commons import headers, empty_project_json
+from bs4 import BeautifulSoup
+from ..other import project_json_capabilities
 from ..utils.requests import Requests as requests
 
 CREATE_PROJECT_USES = []
