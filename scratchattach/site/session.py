@@ -129,6 +129,16 @@ class Session(BaseSiteComponent):
                       data={"country": country},
                       headers=self._headers, cookies=self._cookies)
 
+    def change_password(self, old_password: str, new_password: str = None):
+        if new_password is None or new_password == old_password:
+            return
+        requests.post("https://scratch.mit.edu/accounts/password_change/",
+                      data={"old_password": old_password,
+                            "new_password1": new_password,
+                            "new_password2": new_password},
+                      headers=self._headers, cookies=self._cookies)
+
+
     def delete_account(self, *, password: str, delete_projects: bool = False):
         """
         !!! Dangerous !!!
