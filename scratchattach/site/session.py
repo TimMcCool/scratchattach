@@ -1,32 +1,29 @@
 """Session class and login function"""
 
-import json
-import re
-import warnings
-import pathlib
-import hashlib
-import time
-import random
 import base64
-import secrets
+import hashlib
+import json
+import pathlib
+import random
+import re
+import time
+import warnings
 from typing import Type
-import zipfile
 
-from . import forum
-
-from ..utils import commons
-
-from ..cloud import cloud, _base
-from . import user, project, backpack_asset, classroom
-from ..utils import exceptions
-from . import studio
-from . import classroom
-from ..eventhandlers import message_events, filterbot
-from . import activity
-from ._base import BaseSiteComponent
-from ..utils.commons import headers, empty_project_json
 from bs4 import BeautifulSoup
+
+from . import activity
+from . import classroom
+from . import forum
+from . import studio
+from . import user, project, backpack_asset
+from ._base import BaseSiteComponent
+from ..cloud import cloud, _base
+from ..eventhandlers import message_events, filterbot
 from ..other import project_json_capabilities
+from ..utils import commons
+from ..utils import exceptions
+from ..utils.commons import headers, empty_project_json
 from ..utils.requests import Requests as requests
 
 CREATE_PROJECT_USES = []
@@ -114,6 +111,22 @@ class Session(BaseSiteComponent):
     def get_linked_user(self):
         # backwards compatibility with v1
         return self.connect_linked_user() # To avoid inconsistencies with "connect" and "get", this function was renamed
+
+    def delete_account(self, *, password: str, delete_projects: bool = False):
+        """
+        !!! Dangerous !!!
+        Sends a request to delete the account that is associated with this session.
+        You can cancel the deletion simply by logging back in (including using sa.login(username, password))
+
+        Keyword arguments:
+            password (str): The password associated with the account
+            delete_projects (bool): Whether to delete all the projects as well
+        """
+        requests.post("https://scratch.mit.edu/accounts/settings/delete_account/",
+                      data={
+                          "delete_state": "delbyusrwproj" if delete_projects else "delbyusr",
+                          "password": password
+                      }, headers=self._headers, cookies=self._cookies)
 
     def messages(self, *, limit=40, offset=0, date_limit=None, filter_by=None):
         '''
@@ -255,7 +268,7 @@ class Session(BaseSiteComponent):
         pb = project_json_capabilities.ProjectBody()
         pb.from_json(project_json_capabilities._load_sb3_file(path_to_file))
         return pb
-    
+
     def download_asset(asset_id_with_file_ext, *, filename=None, dir=""):
         if not (dir.endswith("/") or dir.endswith("\\")):
             dir = dir+"/"
@@ -461,7 +474,7 @@ class Session(BaseSiteComponent):
         except Exception:
             raise(exceptions.FetchError)
 
-        
+
     def backpack(self,limit=20, offset=0):
         '''
         Lists the assets that are in the backpack of the user associated with the session.
@@ -474,7 +487,7 @@ class Session(BaseSiteComponent):
             limit = limit, offset = offset, headers = self._headers
         )
         return commons.parse_object_list(data, backpack_asset.BackpackAsset, self)
-    
+
     def delete_from_backpack(self, backpack_asset_id):
         '''
         Deletes an asset from the backpack.
@@ -786,7 +799,7 @@ def login(username, password, *, timeout=10) -> Session:
     except Exception:
         raise exceptions.LoginFailure(
             "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
-        
+
     # Create session object:
     return login_by_id(session_id, username=username, password=password)
 
