@@ -138,6 +138,51 @@ class Session(BaseSiteComponent):
                             "new_password2": new_password},
                       headers=self._headers, cookies=self._cookies)
 
+    def resend_email(self, password: str):
+        """
+        Sends a request to resend a confirmation email for this session's account
+
+        Keyword arguments:
+            password (str): Password associated with the session (not stored)
+        """
+        requests.post("https://scratch.mit.edu/accounts/password_change/",
+                      data={"email_address": self.email,
+                            "password": password},
+                      headers=self._headers, cookies=self._cookies)
+
+    def change_email(self, new_email: str, password: str):
+        """
+        Sends a request to change the email of this session
+
+        Keyword arguments:
+            new_email (str): The email you want to switch to
+            password (str): Password associated with the session (not stored)
+        """
+        requests.post("https://scratch.mit.edu/accounts/email_change/",
+                      data={"email_address": new_email,
+                            "password": password},
+                      headers=self._headers, cookies=self._cookies)
+
+    @property
+    def new_email_address(self) -> str | None:
+        """
+        Gets the (unconfirmed) email address that this session has requested to transfer to, if any
+
+        Returns:
+            str: The email that this session wants to switch to
+        """
+        response = requests.get("https://scratch.mit.edu/accounts/email_change/",
+                                headers=self._headers, cookies=self._cookies)
+
+        soup = BeautifulSoup(response.content, "html.parser")
+        for label_span in soup.find_all("span", {"class": "label"}):
+            if label_span.contents[0] == "New Email Address":
+                return label_span.parent.contents[-1].text.strip("\n ")
+
+        return None
+
+
+
 
     def delete_account(self, *, password: str, delete_projects: bool = False):
         """
