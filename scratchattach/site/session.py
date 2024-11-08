@@ -85,16 +85,28 @@ class Session(BaseSiteComponent):
         }
 
     def _update_from_dict(self, data):
+        # Note: there are a lot more things you can get from this data dict.
+        # Maybe it would be a good idea to also store the dict itself?
+        # self.data = data
+
         self.xtoken = data['user']['token']
         self._headers["X-Token"] = self.xtoken
+
+        self.has_outstanding_email_confirmation = data["flags"]["has_outstanding_email_confirmation"]
+
         self.email = data["user"]["email"]
+
         self.new_scratcher = data["permissions"]["new_scratcher"]
         self.mute_status = data["permissions"]["mute_status"]
+
         self.username = data["user"]["username"]
         self._username = data["user"]["username"]
         self.banned = data["user"]["banned"]
+
         if self.banned:
             warnings.warn(f"Warning: The account {self._username} you logged in to is BANNED. Some features may not work properly.")
+        if self.has_outstanding_email_confirmation:
+            warnings.warn(f"Warning: The account {self._username} you logged is not email confirmed. Some features may not work properly.")
         return True
 
     def connect_linked_user(self) -> 'user.User':
@@ -114,6 +126,90 @@ class Session(BaseSiteComponent):
     def get_linked_user(self):
         # backwards compatibility with v1
         return self.connect_linked_user() # To avoid inconsistencies with "connect" and "get", this function was renamed
+
+    def set_country(self, country: str="Antarctica"):
+        requests.post("https://scratch.mit.edu/accounts/settings/",
+                      data={"country": country},
+                      headers=self._headers, cookies=self._cookies)
+
+    def change_password(self, old_password: str, new_password: str = None):
+        if new_password is None or new_password == old_password:
+            return
+        requests.post("https://scratch.mit.edu/accounts/password_change/",
+                      data={"old_password": old_password,
+                            "new_password1": new_password,
+                            "new_password2": new_password},
+                      headers=self._headers, cookies=self._cookies)
+
+    def resend_email(self, password: str):
+        """
+        Sends a request to resend a confirmation email for this session's account
+
+        Keyword arguments:
+            password (str): Password associated with the session (not stored)
+        """
+        requests.post("https://scratch.mit.edu/accounts/email_change/",
+                      data={"email_address": self.new_email_address,
+                            "password": password},
+                      headers=self._headers, cookies=self._cookies)
+
+    def change_email(self, new_email: str, password: str):
+        """
+        Sends a request to change the email of this session
+
+        Keyword arguments:
+            new_email (str): The email you want to switch to
+            password (str): Password associated with the session (not stored)
+        """
+        requests.post("https://scratch.mit.edu/accounts/email_change/",
+                      data={"email_address": new_email,
+                            "password": password},
+                      headers=self._headers, cookies=self._cookies)
+
+    @property
+    def new_email_address(self) -> str | None:
+        """
+        Gets the (unconfirmed) email address that this session has requested to transfer to, if any, otherwise the current address.
+
+        Returns:
+            str: The email that this session wants to switch to
+        """
+        response = requests.get("https://scratch.mit.edu/accounts/email_change/",
+                                headers=self._headers, cookies=self._cookies)
+
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        email = None
+        for label_span in soup.find_all("span", {"class": "label"}):
+            if label_span.contents[0] == "New Email Address":
+                return label_span.parent.contents[-1].text.strip("\n ")
+            elif label_span.contents[0] == "Current Email Address":
+                email = label_span.parent.contents[-1].text.strip("\n ")
+
+        return email
+
+    def delete_account(self, *, password: str, delete_projects: bool = False):
+        """
+        !!! Dangerous !!!
+        Sends a request to delete the account that is associated with this session.
+        You can cancel the deletion simply by logging back in (including using sa.login(username, password))
+
+        Keyword arguments:
+            password (str): The password associated with the account
+            delete_projects (bool): Whether to delete all the projects as well
+        """
+        requests.post("https://scratch.mit.edu/accounts/settings/delete_account/",
+                      data={
+                          "delete_state": "delbyusrwproj" if delete_projects else "delbyusr",
+                          "password": password
+                      }, headers=self._headers, cookies=self._cookies)
+
+    def logout(self):
+        """
+        Sends a logout request to scratch. Might not do anything, might log out this account on other ips/sessions? I am not sure
+        """
+        requests.post("https://scratch.mit.edu/accounts/logout/",
+                      headers=self._headers, cookies=self._cookies)
 
     def messages(self, *, limit=40, offset=0, date_limit=None, filter_by=None):
         '''
@@ -255,7 +351,7 @@ class Session(BaseSiteComponent):
         pb = project_json_capabilities.ProjectBody()
         pb.from_json(project_json_capabilities._load_sb3_file(path_to_file))
         return pb
-    
+
     def download_asset(asset_id_with_file_ext, *, filename=None, dir=""):
         if not (dir.endswith("/") or dir.endswith("\\")):
             dir = dir+"/"
@@ -463,7 +559,7 @@ class Session(BaseSiteComponent):
         except Exception:
             raise(exceptions.FetchError)
 
-        
+
     def backpack(self,limit=20, offset=0):
         '''
         Lists the assets that are in the backpack of the user associated with the session.
@@ -476,7 +572,7 @@ class Session(BaseSiteComponent):
             limit = limit, offset = offset, headers = self._headers
         )
         return commons.parse_object_list(data, backpack_asset.BackpackAsset, self)
-    
+
     def delete_from_backpack(self, backpack_asset_id):
         '''
         Deletes an asset from the backpack.
@@ -788,7 +884,7 @@ def login(username, password, *, timeout=10) -> Session:
     except Exception:
         raise exceptions.LoginFailure(
             "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
-        
+
     # Create session object:
     return login_by_id(session_id, username=username, password=password)
 

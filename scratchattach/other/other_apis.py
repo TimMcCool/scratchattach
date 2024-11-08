@@ -101,3 +101,17 @@ def aprilfools_get_counter() -> int:
 
 def aprilfools_increment_counter() -> int:
     return requests.post("https://api.scratch.mit.edu/surprise").json()["surprise"]
+
+# --- Resources ---
+def get_resource_urls():
+    return requests.get("https://resources.scratch.mit.edu/localized-urls.json").json()
+
+# --- Misc ---
+# I'm not sure what to label this as
+def scratch_team_members() -> dict:
+    # Unfortunately, the only place to find this is a js file, not a json file, which is annoying
+    text = requests.get("https://scratch.mit.edu/js/credits.bundle.js").text
+    text = "[{\"userName\"" + text.split("JSON.parse('[{\"userName\"")[1]
+    text = text.split("\"}]')")[0] + "\"}]"
+
+    return json.loads(text)
