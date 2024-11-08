@@ -890,7 +890,11 @@ def login_by_session_string(session_string) -> Session:
 
 def join_scratch(username: str, password: str, country: str = "Antarctica", birth_month: str = "1",
                  birth_year: str = "2000", gender: str = "Prefer not to say",
-                 email: str = None, panic_on_recaptcha: bool=False) -> Session:
+                 email: str = None, recaptcha_option: str = "prompt") -> Session:
+    """
+    Arguments:
+        recaptcha_option (str): Either prompt, panic or retry
+    """
     if user.User(username=username).does_exist() is not False:
         return login(username, password)
 
@@ -939,13 +943,17 @@ def join_scratch(username: str, password: str, country: str = "Antarctica", birt
         driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
 
     except ElementClickInterceptedException as e:
-        if panic_on_recaptcha:
-            raise e
-
         # Searching for the element doesn't seem to work (maybe since it's an iframe??)
-        driver.maximize_window()
-        input("Please complete the recaptcha!")
-        driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+        if recaptcha_option == "prompt":
+            driver.maximize_window()
+            input("Please complete the recaptcha!")
+            driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+        elif recaptcha_option == "retry":
+            return join_scratch(username, password, country, birth_month, birth_year, gender, email, recaptcha_option)
+
+        else:
+            raise e  # Raising an error ends the program so no need to return
 
     wait.until(ec.url_changes("https://scratch.mit.edu/"))
 
