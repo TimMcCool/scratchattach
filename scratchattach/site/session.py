@@ -279,6 +279,7 @@ class Session(BaseSiteComponent):
 
         if isinstance(asset_content, str):
             file_ext = pathlib.Path(asset_content).suffix
+        file_ext = file_ext.replace(".", "")
 
         if asset_id is None:
             asset_id = hashlib.md5(data).hexdigest()
@@ -286,6 +287,7 @@ class Session(BaseSiteComponent):
         requests.post(
             f"https://assets.scratch.mit.edu/{asset_id}.{file_ext}",
             headers=self._headers,
+            cookies = self._cookies,
             data=data,
             timeout=10,
         )

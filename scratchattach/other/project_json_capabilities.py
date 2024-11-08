@@ -50,22 +50,20 @@ class ProjectBody:
         # Thanks to @MonkeyBean2 for some scripts
 
         def from_json(self, data: dict):
-            self.opcode = data["opcode"] # The name of the block 
-            self.next_id = data["next"] # The id of the block attached below this block
+            self.opcode = data["opcode"] # The name of the block
+            self.next_id = data.get("next", None) # The id of the block attached below this block
             self.parent_id = data.get("parent", None) # The id of the block that this block is attached to
             self.input_data = data.get("inputs", None) # The blocks inside of the block (if the block is a loop or an if clause for example)
-            self.fields = data["fields"] # The values inside the block's inputs
-            self.shadow = data["shadow"] # Whether the block is displayed with a shadow
-            self.topLevel = data.get("topLevel", False)
-            self.mutation = data.get("mutation",None)
-            self.x = data.get("x", 0)
-            self.y = data.get("y", 0)
+            self.fields = data.get("fields", None) # The values inside the block's inputs
+            self.shadow = data.get("shadow", False) # Whether the block is displayed with a shadow
+            self.topLevel = data.get("topLevel", False) # Whether the block has no parent
+            self.mutation = data.get("mutation", None) # For custom blocks
+            self.x = data.get("x", None) # x position if topLevel
+            self.y = data.get("y", None) # y position if topLevel
             
         def to_json(self):
-            output = {"opcode":self.opcode,"next":self.next_id,"parent":self.parent_id,"inputs":self.input_data,"fields":self.fields,"topLevel":self.topLevel,"shadow":self.shadow,"x":self.x,"y":self.y}
-            if self.mutation:
-                output["mutation"] = self.mutation
-            return output
+            output = {"opcode":self.opcode,"next":self.next_id,"parent":self.parent_id,"inputs":self.input_data,"fields":self.fields,"shadow":self.shadow,"topLevel":self.topLevel,"mutation":self.mutation,"x":self.x,"y":self.y}
+            return {k: v for k, v in output.items() if v}
 
         def attached_block(self):
             return self.sprite.block_by_id(self.next_id)
@@ -205,13 +203,19 @@ class ProjectBody:
             load_components(data["sounds"], ProjectBody.Asset, self.sounds) # load lists
             self.volume = data["volume"]
             self.layerOrder = data["layerOrder"]
-            self.visible = data.get("visible", None)
-            self.x = data.get("x", None)
-            self.y = data.get("y", None)
-            self.size = data.get("size", None)
-            self.direction = data.get("direction", None)
-            self.draggable = data.get("draggable", None)
-            self.rotationStyle = data.get("rotationStyle", None)
+            if self.isStage:
+                self.tempo = data.get("tempo", None)
+                self.videoTransparency = data.get("videoTransparency", None)
+                self.videoState = data.get("videoState", None)
+                self.textToSpeechLanguage = data.get("textToSpeechLanguage", None)
+            else:
+                self.visible = data.get("visible", None)
+                self.x = data.get("x", None)
+                self.y = data.get("y", None)
+                self.size = data.get("size", None)
+                self.direction = data.get("direction", None)
+                self.draggable = data.get("draggable", None)
+                self.rotationStyle = data.get("rotationStyle", None)
 
         def to_json(self):
             return_data = dict(self.__dict__)
@@ -381,6 +385,7 @@ class ProjectBody:
             return_data = dict(self.__dict__)
             return_data.pop("filename")
             return_data.pop("id")
+            return_data.pop("download_url")
             return return_data
 
         def download(self, *, filename=None, dir=""):
