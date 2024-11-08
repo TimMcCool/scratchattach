@@ -113,9 +113,10 @@ class User(BaseSiteComponent):
         Returns:
             boolean : True if the user exists, False if the user is deleted, None if an error occured
         """
-        if requests.get(f"https://scratch.mit.edu/users/{self.username}/").status_code == 200:
+        status_code = requests.get(f"https://scratch.mit.edu/users/{self.username}/").status_code
+        if status_code == 200:
             return True
-        if requests.get(f"https://scratch.mit.edu/users/{self.username}/").status_code == 404:
+        elif status_code == 404:
             return False
 
     def is_new_scratcher(self):
