@@ -25,9 +25,18 @@ from ..eventhandlers import message_events, filterbot
 from . import activity
 from ._base import BaseSiteComponent
 from ..utils.commons import headers, empty_project_json
-from bs4 import BeautifulSoup
 from ..other import project_json_capabilities
 from ..utils.requests import Requests as requests
+
+from bs4 import BeautifulSoup
+
+from selenium import webdriver
+from selenium.common import NoSuchElementException
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.select import Select
+
 
 CREATE_PROJECT_USES = []
 
@@ -56,7 +65,7 @@ class Session(BaseSiteComponent):
     def __str__(self):
         return "Login for account: {self.username}"
 
-    def __init__(self, **entries):
+    def __init__(self, *, options: webdriver.ChromeOptions = None, **entries):
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.post
@@ -83,6 +92,13 @@ class Session(BaseSiteComponent):
             "accept": "application/json",
             "Content-Type": "application/json",
         }
+
+        # Setup selenium driver
+        if options is None:
+            options = webdriver.ChromeOptions()
+        self.service = Service()
+        self.driver = webdriver.Chrome(options=options, service=self.service)
+        self.driver.minimize_window()
 
     def _update_from_dict(self, data):
         # Note: there are a lot more things you can get from this data dict.
@@ -864,3 +880,69 @@ def login_by_session_string(session_string) -> Session:
     except Exception:
         pass
     raise ValueError("Couldn't log in.")
+
+
+def join_scratch(username: str, password: str, country: str = "Antarctica", birth_month: str = "1",
+                 birth_year: str = "2000", gender: str = "Prefer not to say",
+                 email: str = None) -> Session:
+    if user.User(username=username).does_exist() is not False:
+        return login(username, password)
+
+    code = check_username(username)
+    if code != "valid username":
+        raise exceptions.BadUsername(f"Bad username {username}, code: {code}")
+
+    code = check_password(password)
+    if code != "valid password":
+        raise exceptions.BadPassword(f"Bad password {password}, code: {code}")
+
+    if email is None:
+        email = email_gen()
+        warnings.warn(f"No email provided. Creating account with email of: {email}")
+
+    driver.get("https://scratch.mit.edu/join")
+    driver.find_element(By.ID, "username").send_keys(username)
+
+    driver.find_element(By.ID, "password").send_keys(password)
+    driver.find_element(By.ID, "passwordConfirm").send_keys(password)
+
+    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    wait.until(ec.visibility_of_element_located((By.NAME, "country")))
+    Select(driver.find_element(By.NAME, "country")).select_by_value(country)
+
+    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    wait.until(ec.visibility_of_element_located((By.NAME, "birth_month")))
+    Select(driver.find_element(By.NAME, "birth_month")).select_by_value(birth_month)
+    Select(driver.find_element(By.NAME, "birth_year")).select_by_value(birth_year)
+    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    wait.until(ec.visibility_of_element_located((By.ID, "GenderRadioOptionCustom")))
+    driver.find_element(By.ID, "GenderRadioOptionCustom").click()
+    driver.find_element(By.NAME, "custom").send_keys(gender)
+    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    driver.find_element(By.NAME, "email").send_keys(email)
+    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    time.sleep(3)
+    try:
+        recaptcha = driver.find_element(By.ID, "rc-imageselect")
+    except NoSuchElementException:
+        recaptcha = None
+
+    if recaptcha is not None:
+        driver.maximize_window()
+        input("Please complete the recaptcha!")
+    driver.minimize_window()
+
+    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "join-flow-welcome-title")))
+    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    time.sleep(3)
+    driver.delete_all_cookies()
+    driver.get("data:,")
+    return login(username, password)

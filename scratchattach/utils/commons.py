@@ -1,15 +1,29 @@
 """v2 ready: Common functions used by various internal modules"""
+import os
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import WebDriverWait
 
 from . import exceptions
-from threading import Thread
 from .requests import Requests as requests
 
+service = Service()
+options = webdriver.ChromeOptions()
+# options.add_argument('--headless')
+options.add_experimental_option("prefs", {"profile.default_content_settings.popups": 0,
+                                                      "download.default_directory": os.path.abspath(os.getcwd())})
+driver = webdriver.Chrome(service=service, options=options)
+wait = WebDriverWait(driver, 20)
+driver.minimize_window()
+
 headers = {
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/75.0.3770.142 Safari/537.36",
     "x-csrftoken": "a",
     "x-requested-with": "XMLHttpRequest",
     "referer": "https://scratch.mit.edu",
-} # headers recommended for accessing API endpoints that don't require verification
+}  # headers recommended for accessing API endpoints that don't require verification
 
 empty_project_json = {
     'targets': [
@@ -81,8 +95,9 @@ def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True)
     api_data = api_data[:limit]
     return api_data
 
+
 def api_iterative(
-    url, *, limit, offset, max_req_limit=40, add_params="", headers=headers, cookies={}
+        url, *, limit, offset, max_req_limit=40, add_params="", headers=headers, cookies={}
 ):
     """
     Function for getting data from one of Scratch's iterative JSON API endpoints (like /users/<user>/followers, or /users/<user>/projects)
@@ -91,7 +106,7 @@ def api_iterative(
         raise exceptions.BadRequest("offset parameter must be >= 0")
     if limit < 0:
         raise exceptions.BadRequest("limit parameter must be >= 0")
-    
+
     def fetch(o, l):
         """
         Performs a singla API request
@@ -110,37 +125,42 @@ def api_iterative(
     )
     return api_data
 
+
 def _get_object(identificator_name, identificator, Class, NotFoundException, session=None):
     # Interal function: Generalization of the process ran by get_user, get_studio etc.
     # Builds an object of class that is inheriting from BaseSiteComponent
     # # Class must inherit from BaseSiteComponent
     try:
-        _object = Class(**{identificator_name:identificator, "_session":session})
+        _object = Class(**{identificator_name: identificator, "_session": session})
         r = _object.update()
         if r == "429":
-            raise(exceptions.Response429("Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
+            raise (exceptions.Response429(
+                "Your network is blocked or rate-limited by Scratch.\nIf you're using an online IDE like replit.com, try running the code on your computer."))
         if not r:
             # Target is unshared. The cases that this can happen in are hardcoded:
             from ..site import project
-            if Class is project.Project: # Case: Target is an unshared project.
-                return project.PartialProject(**{identificator_name:identificator, "shared":False, "_session":session})
+            if Class is project.Project:  # Case: Target is an unshared project.
+                return project.PartialProject(
+                    **{identificator_name: identificator, "shared": False, "_session": session})
             else:
                 raise NotFoundException
         else:
             return _object
     except KeyError as e:
-        raise(NotFoundException("Key error at key "+str(e)+" when reading API response"))
+        raise (NotFoundException("Key error at key " + str(e) + " when reading API response"))
     except Exception as e:
-        raise(e)
+        raise (e)
+
 
 def webscrape_count(raw, text_before, text_after):
     return int(raw.split(text_before)[1].split(text_after)[0])
+
 
 def parse_object_list(raw, Class, session=None, primary_key="id"):
     results = []
     for raw_dict in raw:
         try:
-            _obj = Class(**{primary_key:raw_dict[primary_key], "_session":session})
+            _obj = Class(**{primary_key: raw_dict[primary_key], "_session": session})
             _obj._update_from_dict(raw_dict)
             results.append(_obj)
         except Exception as e:
