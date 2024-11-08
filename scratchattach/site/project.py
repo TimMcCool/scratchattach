@@ -721,7 +721,7 @@ class Project(PartialProject):
 # ------ #
 
 
-def get_project(project_id):
+def get_project(project_id) -> Project:
     """
     Gets a project without logging in.
 

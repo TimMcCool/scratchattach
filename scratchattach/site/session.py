@@ -97,7 +97,7 @@ class Session(BaseSiteComponent):
             warnings.warn(f"Warning: The account {self._username} you logged in to is BANNED. Some features may not work properly.")
         return True
 
-    def connect_linked_user(self):
+    def connect_linked_user(self) -> 'user.User':
         '''
         Gets the user associated with the log in / session.
 
@@ -241,17 +241,17 @@ class Session(BaseSiteComponent):
 
     # -- Project JSON editing capabilities ---
 
-    def connect_empty_project_pb():
+    def connect_empty_project_pb() -> 'project_json_capabilities.ProjectBody':
         pb = project_json_capabilities.ProjectBody()
         pb.from_json(empty_project_json)
         return pb
 
-    def connect_pb_from_dict(project_json:dict):
+    def connect_pb_from_dict(project_json:dict) -> 'project_json_capabilities.ProjectBody':
         pb = project_json_capabilities.ProjectBody()
         pb.from_json(project_json)
         return pb
 
-    def connect_pb_from_file(path_to_file):
+    def connect_pb_from_file(path_to_file) -> 'project_json_capabilities.ProjectBody':
         pb = project_json_capabilities.ProjectBody()
         pb.from_json(project_json_capabilities._load_sb3_file(path_to_file))
         return pb
@@ -510,14 +510,14 @@ class Session(BaseSiteComponent):
         """
         return CloudClass(project_id=project_id, _session=self)
 
-    def connect_scratch_cloud(self, project_id):
+    def connect_scratch_cloud(self, project_id) -> 'cloud.ScratchCloud':
         """
         Returns:
             scratchattach.cloud.ScratchCloud: An object representing the Scratch cloud of a project.
         """
         return cloud.ScratchCloud(project_id=project_id, _session=self)
 
-    def connect_tw_cloud(self, project_id, *, purpose="", contact="", cloud_host="wss://clouddata.turbowarp.org"):
+    def connect_tw_cloud(self, project_id, *, purpose="", contact="", cloud_host="wss://clouddata.turbowarp.org") -> 'cloud.TwCloud':
         """
         Returns:
             scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
@@ -576,7 +576,7 @@ class Session(BaseSiteComponent):
         return username
 
 
-    def connect_user_by_id(self, user_id:int):
+    def connect_user_by_id(self, user_id:int) -> 'user.User':
         """
         Gets a user using this session, connects the session to the User object to allow authenticated actions
 
@@ -596,7 +596,7 @@ class Session(BaseSiteComponent):
         """
         return self._make_linked_object("username", self.find_username_from_id(user_id), user.User, exceptions.UserNotFound)
 
-    def connect_project(self, project_id):
+    def connect_project(self, project_id) -> 'project.Project':
         """
         Gets a project using this session, connects the session to the Project object to allow authenticated actions
 sess
@@ -608,7 +608,7 @@ sess
         """
         return self._make_linked_object("id", int(project_id), project.Project, exceptions.ProjectNotFound)
 
-    def connect_studio(self, studio_id):
+    def connect_studio(self, studio_id) -> 'studio.Studio':
         """
         Gets a studio using this session, connects the session to the Studio object to allow authenticated actions
 
@@ -620,7 +620,7 @@ sess
         """
         return self._make_linked_object("id", int(studio_id), studio.Studio, exceptions.StudioNotFound)
 
-    def connect_classroom(self, class_id):
+    def connect_classroom(self, class_id) -> 'classroom.Classroom':
         """
         Gets a class using this session.
 
@@ -632,7 +632,7 @@ sess
         """
         return self._make_linked_object("id", int(class_id), classroom.Classroom, exceptions.ClassroomNotFound)
 
-    def connect_classroom_from_token(self, class_token):
+    def connect_classroom_from_token(self, class_token) -> 'classroom.Classroom':
         """
         Gets a class using this session.
 
@@ -644,7 +644,7 @@ sess
         """
         return self._make_linked_object("classtoken", int(class_token), classroom.Classroom, exceptions.ClassroomNotFound)
 
-    def connect_topic(self, topic_id):
+    def connect_topic(self, topic_id) -> 'forum.ForumTopic':
         """
         Gets a forum topic using this session, connects the session to the ForumTopic object to allow authenticated actions
         Data is up-to-date. Data received from Scratch's RSS feed XML API.
@@ -710,11 +710,11 @@ sess
 
     # --- Connect classes inheriting from BaseEventHandler ---
 
-    def connect_message_events(self, *, update_interval=2):
+    def connect_message_events(self, *, update_interval=2) -> 'message_events.MessageEvents':
         # shortcut for connect_linked_user().message_events()
         return message_events.MessageEvents(user.User(username=self.username, _session=self), update_interval=update_interval)
 
-    def connect_filterbot(self, *, log_deletions=True):
+    def connect_filterbot(self, *, log_deletions=True) -> 'filterbot.Filterbot':
         return filterbot.Filterbot(user.User(username=self.username, _session=self), log_deletions=log_deletions)
 
 # ------ #
