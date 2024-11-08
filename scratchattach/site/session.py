@@ -132,15 +132,6 @@ class Session(BaseSiteComponent):
                       data={"country": country},
                       headers=self._headers, cookies=self._cookies)
 
-    def change_password(self, old_password: str, new_password: str = None):
-        if new_password is None or new_password == old_password:
-            return
-        requests.post("https://scratch.mit.edu/accounts/password_change/",
-                      data={"old_password": old_password,
-                            "new_password1": new_password,
-                            "new_password2": new_password},
-                      headers=self._headers, cookies=self._cookies)
-
     def resend_email(self, password: str):
         """
         Sends a request to resend a confirmation email for this session's account
@@ -152,20 +143,6 @@ class Session(BaseSiteComponent):
                       data={"email_address": self.new_email_address,
                             "password": password},
                       headers=self._headers, cookies=self._cookies)
-
-    def change_email(self, new_email: str, password: str):
-        """
-        Sends a request to change the email of this session
-
-        Keyword arguments:
-            new_email (str): The email you want to switch to
-            password (str): Password associated with the session (not stored)
-        """
-        requests.post("https://scratch.mit.edu/accounts/email_change/",
-                      data={"email_address": new_email,
-                            "password": password},
-                      headers=self._headers, cookies=self._cookies)
-
     @property
     def new_email_address(self) -> str | None:
         """
@@ -187,23 +164,7 @@ class Session(BaseSiteComponent):
                 email = label_span.parent.contents[-1].text.strip("\n ")
 
         return email
-
-    def delete_account(self, *, password: str, delete_projects: bool = False):
-        """
-        !!! Dangerous !!!
-        Sends a request to delete the account that is associated with this session.
-        You can cancel the deletion simply by logging back in (including using sa.login(username, password))
-
-        Keyword arguments:
-            password (str): The password associated with the account
-            delete_projects (bool): Whether to delete all the projects as well
-        """
-        requests.post("https://scratch.mit.edu/accounts/settings/delete_account/",
-                      data={
-                          "delete_state": "delbyusrwproj" if delete_projects else "delbyusr",
-                          "password": password
-                      }, headers=self._headers, cookies=self._cookies)
-
+    
     def logout(self):
         """
         Sends a logout request to scratch. Might not do anything, might log out this account on other ips/sessions? I am not sure
