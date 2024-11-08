@@ -3,21 +3,19 @@ import os
 import random
 import string
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
+import undetected_chromedriver as uc
 from selenium.webdriver.support.ui import WebDriverWait
 
 from . import exceptions
 from .requests import Requests as requests
 
-service = Service()
-options = webdriver.ChromeOptions()
+options = uc.ChromeOptions()
 # options.add_argument('--headless')
 options.add_experimental_option("prefs", {"profile.default_content_settings.popups": 0,
                                                       "download.default_directory": os.path.abspath(os.getcwd())})
-driver = webdriver.Chrome(service=service, options=options)
+driver = uc.Chrome(options=options)
 wait = WebDriverWait(driver, 20)
-driver.minimize_window()
+# driver.minimize_window()
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "

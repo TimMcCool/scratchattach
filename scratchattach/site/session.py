@@ -32,12 +32,12 @@ from ..utils.requests import Requests as requests
 
 from bs4 import BeautifulSoup
 
-from selenium import webdriver
-from selenium.common import NoSuchElementException
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
+import undetected_chromedriver as uc
+By = uc.By
+
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.select import Select
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
 
 
 CREATE_PROJECT_USES = []
@@ -67,7 +67,7 @@ class Session(BaseSiteComponent):
     def __str__(self):
         return "Login for account: {self.username}"
 
-    def __init__(self, *, options: webdriver.ChromeOptions = None, **entries):
+    def __init__(self, *, options: uc.ChromeOptions = None, **entries):
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.post
@@ -97,13 +97,12 @@ class Session(BaseSiteComponent):
 
         # Setup selenium driver
         if options is None:
-            options = webdriver.ChromeOptions()
+            options = uc.ChromeOptions()
             # options.add_argument('--headless')
             options.add_experimental_option("prefs", {"profile.default_content_settings.popups": 0,
                                                       "download.default_directory": os.path.abspath(os.getcwd())})
 
-        self.service = Service()
-        self.driver = webdriver.Chrome(options=options, service=self.service)
+        self.driver = uc.Chrome(options=options)
 
         self.driver.minimize_window()
 
@@ -934,20 +933,18 @@ def join_scratch(username: str, password: str, country: str = "Antarctica", birt
     driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
 
     time.sleep(3)
-    try:
-        recaptcha = driver.find_element(By.ID, "rc-imageselect")
-    except NoSuchElementException:
-        recaptcha = None
+    # driver.minimize_window()
 
-    if recaptcha is not None:
+    try:
+        driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    except ElementClickInterceptedException:
+        # Searching for the element doesn't seem to work (maybe since it's an iframe??)
         driver.maximize_window()
         input("Please complete the recaptcha!")
-    driver.minimize_window()
+        driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
 
-    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
-
-    wait.until(ec.visibility_of_element_located((By.CLASS_NAME, "join-flow-welcome-title")))
-    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+    wait.until(ec.url_changes("https://scratch.mit.edu/"))
 
     time.sleep(3)
     driver.delete_all_cookies()
