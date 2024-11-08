@@ -890,7 +890,7 @@ def login_by_session_string(session_string) -> Session:
 
 def join_scratch(username: str, password: str, country: str = "Antarctica", birth_month: str = "1",
                  birth_year: str = "2000", gender: str = "Prefer not to say",
-                 email: str = None) -> Session:
+                 email: str = None, panic_on_recaptcha: bool=False) -> Session:
     if user.User(username=username).does_exist() is not False:
         return login(username, password)
 
@@ -938,7 +938,10 @@ def join_scratch(username: str, password: str, country: str = "Antarctica", birt
     try:
         driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
 
-    except ElementClickInterceptedException:
+    except ElementClickInterceptedException as e:
+        if panic_on_recaptcha:
+            raise e
+
         # Searching for the element doesn't seem to work (maybe since it's an iframe??)
         driver.maximize_window()
         input("Please complete the recaptcha!")
@@ -946,7 +949,6 @@ def join_scratch(username: str, password: str, country: str = "Antarctica", birt
 
     wait.until(ec.url_changes("https://scratch.mit.edu/"))
 
-    time.sleep(3)
     driver.delete_all_cookies()
     driver.get("data:,")
     return login(username, password)
