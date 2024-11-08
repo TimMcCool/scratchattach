@@ -818,7 +818,7 @@ class User(BaseSiteComponent):
 
 # ------ #
 
-def get_user(username):
+def get_user(username) -> User:
     """
     Gets a user without logging in.
 

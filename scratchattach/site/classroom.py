@@ -105,7 +105,7 @@ class Classroom(BaseSiteComponent):
 
 
 
-def get_classroom(class_id):
+def get_classroom(class_id) -> Classroom:
     """
     Gets a class without logging in.
 
@@ -123,7 +123,7 @@ def get_classroom(class_id):
     print("Warning: For methods that require authentication, use session.connect_classroom instead of get_classroom")
     return commons._get_object("id", class_id, Classroom, exceptions.ClassroomNotFound)
 
-def get_classroom_from_token(class_token):
+def get_classroom_from_token(class_token) -> Classroom:
     """
     Gets a class without logging in.
 

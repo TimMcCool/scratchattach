@@ -793,7 +793,7 @@ def login(username, password, *, timeout=10) -> Session:
     return login_by_id(session_id, username=username, password=password)
 
 
-def login_by_session_string(session_string):
+def login_by_session_string(session_string) -> Session:
     session_string = base64.b64decode(session_string).decode() # unobfuscate
     session_data = json.loads(session_string)
     try:

@@ -575,7 +575,7 @@ class Studio(BaseSiteComponent):
         ).json()
 
 
-def get_studio(studio_id):
+def get_studio(studio_id) -> Studio:
     """
     Gets a studio without logging in.
 

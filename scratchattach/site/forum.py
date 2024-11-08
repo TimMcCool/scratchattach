@@ -306,7 +306,7 @@ class ForumPost(BaseSiteComponent):
         )
 
 
-def get_topic(topic_id):
+def get_topic(topic_id) -> ForumTopic:
 
     """
     Gets a forum topic without logging in. Data received from Scratch's RSS feed XML API.
