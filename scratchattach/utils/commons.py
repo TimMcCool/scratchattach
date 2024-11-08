@@ -1,5 +1,7 @@
 """v2 ready: Common functions used by various internal modules"""
 import os
+import random
+import string
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -166,3 +168,14 @@ def parse_object_list(raw, Class, session=None, primary_key="id"):
         except Exception as e:
             print("Warning raised by scratchattach: failed to parse ", raw_dict, "error", e)
     return results
+
+def email_gen(length: int = 10, domains: list = None):
+    if domains is None:
+        domains = ["gmail.com", "outlook.com"]
+    domain = random.choice(domains)
+    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+    name = ''
+    for i in range(length):
+        name += random.choice(chars)
+
+    return f"{name}@{domain}"

@@ -24,8 +24,9 @@ from . import classroom
 from ..eventhandlers import message_events, filterbot
 from . import activity
 from ._base import BaseSiteComponent
-from ..utils.commons import headers, empty_project_json
+from ..utils.commons import headers, empty_project_json, driver, email_gen, wait
 from ..other import project_json_capabilities
+from ..other.other_apis import check_username, check_password
 from ..utils.requests import Requests as requests
 
 from bs4 import BeautifulSoup

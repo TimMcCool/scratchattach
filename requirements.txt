@@ -1,0 +1,8 @@
+scratchattach~=1.6.2
+setuptools~=75.3.0
+bs4~=0.0.2
+beautifulsoup4~=4.12.3
+requests~=2.32.3
+selenium~=4.21.0
+websocket-client~=1.7.0
+SimpleWebSocketServer~=0.1.2
