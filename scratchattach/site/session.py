@@ -1,6 +1,7 @@
 """Session class and login function"""
 
 import json
+import os
 import re
 import warnings
 import pathlib
@@ -97,8 +98,13 @@ class Session(BaseSiteComponent):
         # Setup selenium driver
         if options is None:
             options = webdriver.ChromeOptions()
+            # options.add_argument('--headless')
+            options.add_experimental_option("prefs", {"profile.default_content_settings.popups": 0,
+                                                      "download.default_directory": os.path.abspath(os.getcwd())})
+
         self.service = Service()
         self.driver = webdriver.Chrome(options=options, service=self.service)
+
         self.driver.minimize_window()
 
     def _update_from_dict(self, data):
