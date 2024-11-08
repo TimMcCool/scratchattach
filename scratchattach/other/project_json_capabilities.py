@@ -203,13 +203,19 @@ class ProjectBody:
             load_components(data["sounds"], ProjectBody.Asset, self.sounds) # load lists
             self.volume = data["volume"]
             self.layerOrder = data["layerOrder"]
-            self.visible = data.get("visible", None)
-            self.x = data.get("x", None)
-            self.y = data.get("y", None)
-            self.size = data.get("size", None)
-            self.direction = data.get("direction", None)
-            self.draggable = data.get("draggable", None)
-            self.rotationStyle = data.get("rotationStyle", None)
+            if self.isStage:
+                self.tempo = data.get("tempo", None)
+                self.videoTransparency = data.get("videoTransparency", None)
+                self.videoState = data.get("videoState", None)
+                self.textToSpeechLanguage = data.get("textToSpeechLanguage", None)
+            else:
+                self.visible = data.get("visible", None)
+                self.x = data.get("x", None)
+                self.y = data.get("y", None)
+                self.size = data.get("size", None)
+                self.direction = data.get("direction", None)
+                self.draggable = data.get("draggable", None)
+                self.rotationStyle = data.get("rotationStyle", None)
 
         def to_json(self):
             return_data = dict(self.__dict__)
