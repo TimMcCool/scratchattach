@@ -1,3 +1,7 @@
+"""
+Interaction with https://scratchblocks.github.io/
+"""
+
 import undetected_chromedriver as uc
 from selenium.webdriver.support import expected_conditions as ec
 
