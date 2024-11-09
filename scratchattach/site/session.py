@@ -12,6 +12,7 @@ import base64
 import secrets
 from typing import Type
 import zipfile
+import atexit
 
 from . import forum
 
@@ -105,6 +106,8 @@ class Session(BaseSiteComponent):
         self.driver = uc.Chrome(options=options)
 
         self.driver.minimize_window()
+
+        atexit.register(lambda _: self.driver.close)
 
     def _update_from_dict(self, data):
         # Note: there are a lot more things you can get from this data dict.

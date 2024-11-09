@@ -2,6 +2,7 @@
 import os
 import random
 import string
+import atexit
 
 import undetected_chromedriver as uc
 from selenium.webdriver.support.ui import WebDriverWait
@@ -16,6 +17,8 @@ options.add_experimental_option("prefs", {"profile.default_content_settings.popu
 driver = uc.Chrome(options=options)
 wait = WebDriverWait(driver, 20)
 # driver.minimize_window()
+
+atexit.register(lambda _: driver.close)
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
