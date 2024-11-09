@@ -18,7 +18,6 @@ class Unauthenticated(Exception):
     def __init__(self, message=""):
         self.message = "No login / session connected.\n\nThe object on which the method was called was created using scratchattach.get_xyz()\nUse session.connect_xyz() instead (xyz is a placeholder for user / project / cloud / ...).\n\nMore information: https://scratchattach.readthedocs.io/en/latest/scratchattach.html#scratchattach.utils.exceptions.Unauthenticated"
         super().__init__(self.message)
-    pass
 
 
 class Unauthorized(Exception):
@@ -29,10 +28,11 @@ class Unauthorized(Exception):
     """
 
     def __init__(self, message=""):
-        self.message = "The user corresponding to the connected login / session is not allowed to perform this action."
+        self.message = (
+            f"The user corresponding to the connected login / session is not allowed to perform this action. "
+            f"{message}")
         super().__init__(self.message)
 
-    pass
 
 class XTokenError(Exception):
     """
@@ -42,6 +42,7 @@ class XTokenError(Exception):
     """
 
     pass
+
 
 # Not found errors:
 
@@ -60,6 +61,7 @@ class ProjectNotFound(Exception):
 
     pass
 
+
 class ClassroomNotFound(Exception):
     """
     Raised when a non-existent Classroom is requested.
@@ -75,14 +77,17 @@ class StudioNotFound(Exception):
 
     pass
 
+
 class ForumContentNotFound(Exception):
     """
     Raised when a non-existent forum topic / post is requested.
     """
     pass
 
+
 class CommentNotFound(Exception):
     pass
+
 
 # API errors:
 
@@ -95,12 +100,14 @@ class LoginFailure(Exception):
 
     pass
 
+
 class FetchError(Exception):
     """
     Raised when getting information from the Scratch API fails. This can have various reasons. Make sure all provided arguments are valid.
     """
 
     pass
+
 
 class BadRequest(Exception):
     """
@@ -117,6 +124,7 @@ class Response429(Exception):
 
     pass
 
+
 class CommentPostFailure(Exception):
     """
     Raised when a comment fails to post. This can have various reasons.
@@ -124,11 +132,13 @@ class CommentPostFailure(Exception):
 
     pass
 
+
 class APIError(Exception):
     """
     For API errors that can't be classified into one of the above errors
     """
     pass
+
 
 class ScrapeError(Exception):
     """
@@ -137,9 +147,10 @@ class ScrapeError(Exception):
 
     pass
 
+
 # Cloud / encoding errors:
 
-class ConnectionError(Exception):
+class CloudConnectionError(Exception):
     """
     Raised when connecting to Scratch's cloud server fails. This can have various reasons.
     """
@@ -172,10 +183,10 @@ class RequestNotFound(Exception):
 
     pass
 
+
 # Websocket server errors:
 
 class WebsocketServerError(Exception):
-
     """
     Raised when the self-hosted cloud websocket server fails to start.
     """

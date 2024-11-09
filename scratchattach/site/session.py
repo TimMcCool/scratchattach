@@ -24,15 +24,16 @@ from . import classroom
 from ..eventhandlers import message_events, filterbot
 from . import activity
 from ._base import BaseSiteComponent
-from ..utils.commons import headers, empty_project_json
+from ..utils.commons import headers, empty_project_json, webscrape_count
 from bs4 import BeautifulSoup
 from ..other import project_json_capabilities
 from ..utils.requests import Requests as requests
 
 CREATE_PROJECT_USES = []
+CREATE_STUDIO_USES = []
+
 
 class Session(BaseSiteComponent):
-
     '''
     Represents a Scratch log in / session. Stores authentication data (session id and xtoken).
 
@@ -164,7 +165,7 @@ class Session(BaseSiteComponent):
                 email = label_span.parent.contents[-1].text.strip("\n ")
 
         return email
-    
+
     def logout(self):
         """
         Sends a logout request to scratch. Might not do anything, might log out this account on other ips/sessions? I am not sure
@@ -402,10 +403,9 @@ class Session(BaseSiteComponent):
             f"https://api.scratch.mit.edu/explore/studios", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
         return commons.parse_object_list(response, studio.Studio, self)
 
-
     # --- Create project API ---
 
-    def create_project(self, *, title=None, project_json=empty_project_json, parent_id=None): # not working
+    def create_project(self, *, title=None, project_json=empty_project_json, parent_id=None):  # not working
         """
         Creates a project on the Scratch website.
 
@@ -435,6 +435,41 @@ class Session(BaseSiteComponent):
 
         response = requests.post('https://projects.scratch.mit.edu/', params=params, cookies=self._cookies, headers=self._headers, json=project_json).json()
         return self.connect_project(response["content-name"])
+
+    def create_studio(self, *, title=None, description: str = None):
+        """
+        Create a project on the scratch website
+
+        Warning:
+            Don't spam this method - it WILL get you banned from Scratch.
+            To prevent accidental spam, a rate limit (5 studios per minute) is implemented for this function.
+        """
+        global CREATE_STUDIO_USES
+        if len(CREATE_STUDIO_USES) < 5:
+            CREATE_STUDIO_USES.insert(0, time.time())
+        else:
+            if CREATE_STUDIO_USES[-1] < time.time() - 300:
+                CREATE_STUDIO_USES.pop()
+            else:
+                raise exceptions.BadRequest("Rate limit for creating Scratch studios exceeded.\nThis rate limit is enforced by scratchattach, not by the Scratch API.\nFor security reasons, it cannot be turned off.\n\nDon't spam-create studios, it WILL get you banned.")
+                return
+            CREATE_STUDIO_USES.insert(0, time.time())
+
+        if self.new_scratcher:
+            raise exceptions.Unauthorized(f"\nNew scratchers (like {self.username}) cannot create studios.")
+
+        response = requests.post("https://scratch.mit.edu/studios/create/",
+                                 cookies=self._cookies, headers=self._headers)
+
+        studio_id = webscrape_count(response.json()["redirect"], "/studios/", "/")
+        new_studio = self.connect_studio(studio_id)
+
+        if title is not None:
+            new_studio.set_title(title)
+        if description is not None:
+            new_studio.set_description(description)
+
+        return new_studio
 
     # --- My stuff page ---
 
