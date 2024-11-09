@@ -438,7 +438,7 @@ class Session(BaseSiteComponent):
 
     def create_studio(self, *, title=None, description: str = None):
         """
-        Create a project on the scratch website
+        Create a studio on the scratch website
 
         Warning:
             Don't spam this method - it WILL get you banned from Scratch.
