@@ -269,7 +269,7 @@ class User(BaseSiteComponent):
             list<projects.projects.Project>: The user's shared projects
         """
         _projects = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.username}/projects/", limit=limit, offset=offset, headers = self._headers)
+            f"https://api.scratch.mit.edu/users/{self.username}/projects/", limit=limit, offset=offset, _headers= self._headers)
         for p in _projects:
             p["author"] = {"username":self.username}
         return commons.parse_object_list(_projects, project.Project, self._session)
@@ -391,7 +391,7 @@ class User(BaseSiteComponent):
             list<projects.projects.Project>: The user's favorite projects
         """
         _projects = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.username}/favorites/", limit=limit, offset=offset, headers = self._headers)
+            f"https://api.scratch.mit.edu/users/{self.username}/favorites/", limit=limit, offset=offset, _headers= self._headers)
         return commons.parse_object_list(_projects, project.Project, self._session)
 
     def favorites_count(self):
@@ -420,7 +420,7 @@ class User(BaseSiteComponent):
         """
         self._assert_permission()
         _projects = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.username}/projects/recentlyviewed", limit=limit, offset=offset, headers = self._headers)
+            f"https://api.scratch.mit.edu/users/{self.username}/projects/recentlyviewed", limit=limit, offset=offset, _headers= self._headers)
         return commons.parse_object_list(_projects, project.Project, self._session)
 
     def set_bio(self, text):

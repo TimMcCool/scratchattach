@@ -201,7 +201,7 @@ class Session(BaseSiteComponent):
 
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/messages",
-            limit=limit, offset=offset, headers=self._headers, cookies=self._cookies, add_params=add_params
+            limit=limit, offset=offset, _headers=self._headers, cookies=self._cookies, add_params=add_params
         )
         return commons.parse_object_list(data, activity.Activity, self)
 
@@ -211,7 +211,7 @@ class Session(BaseSiteComponent):
         """
         return commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/messages/admin",
-            limit=limit, offset=offset, headers=self._headers, cookies=self._cookies
+            limit=limit, offset=offset, _headers=self._headers, cookies=self._cookies
         )
 
     def clear_messages(self):
@@ -253,7 +253,7 @@ class Session(BaseSiteComponent):
             add_params = f"&dateLimit={date_limit}"
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/following/users/activity",
-            limit=limit, offset=offset, headers=self._headers, cookies=self._cookies, add_params=add_params
+            limit=limit, offset=offset, _headers=self._headers, cookies=self._cookies, add_params=add_params
         )
         return commons.parse_object_list(data, activity.Activity, self)
 
@@ -271,7 +271,7 @@ class Session(BaseSiteComponent):
         """
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/following/users/loves",
-            limit=limit, offset=offset, headers=self._headers, cookies=self._cookies
+            limit=limit, offset=offset, _headers=self._headers, cookies=self._cookies
         )
         return commons.parse_object_list(data, project.Project, self)
 
@@ -414,7 +414,8 @@ class Session(BaseSiteComponent):
             add_params=f"&language={language}&mode={mode}&q={query}")
         return commons.parse_object_list(response, project.Project, self)
 
-    def search_studios(self, *, query="", mode="trending", language="en", limit=40, offset=0):
+    def search_studios(self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40,
+                       offset: int = 0) -> list['studio.Studio']:
         if not query:
             raise ValueError("The query can't be empty for search")
         response = commons.api_iterative(
@@ -422,7 +423,8 @@ class Session(BaseSiteComponent):
             add_params=f"&language={language}&mode={mode}&q={query}")
         return commons.parse_object_list(response, studio.Studio, self)
 
-    def explore_studios(self, *, query="", mode="trending", language="en", limit=40, offset=0):
+    def explore_studios(self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40,
+                        offset: int = 0) -> list['studio.Studio']:
         if not query:
             raise ValueError("The query can't be empty for explore")
         response = commons.api_iterative(
@@ -432,7 +434,8 @@ class Session(BaseSiteComponent):
 
     # --- Create project API ---
 
-    def create_project(self, *, title=None, project_json=empty_project_json, parent_id=None):  # not working
+    def create_project(self, *, title: str = None, project_json: dict = empty_project_json,
+                       parent_id=None) -> 'project.Project':  # not working
         """
         Creates a project on the Scratch website.
 
@@ -448,7 +451,10 @@ class Session(BaseSiteComponent):
                 CREATE_PROJECT_USES.pop()
             else:
                 raise exceptions.BadRequest(
-                    "Rate limit for creating Scratch projects exceeded.\nThis rate limit is enforced by scratchattach, not by the Scratch API.\nFor security reasons, it cannot be turned off.\n\nDon't spam-create projects, it WILL get you banned.")
+                    "Rate limit for creating Scratch projects exceeded.\n"
+                    "This rate limit is enforced by scratchattach, not by the Scratch API.\n"
+                    "For security reasons, it cannot be turned off.\n\n"
+                    "Don't spam-create projects, it WILL get you banned.")
             CREATE_PROJECT_USES.insert(0, time.time())
 
         if title is None:
@@ -480,7 +486,10 @@ class Session(BaseSiteComponent):
                 CREATE_STUDIO_USES.pop()
             else:
                 raise exceptions.BadRequest(
-                    "Rate limit for creating Scratch studios exceeded.\nThis rate limit is enforced by scratchattach, not by the Scratch API.\nFor security reasons, it cannot be turned off.\n\nDon't spam-create studios, it WILL get you banned.")
+                    "Rate limit for creating Scratch studios exceeded.\n"
+                    "This rate limit is enforced by scratchattach, not by the Scratch API.\n"
+                    "For security reasons, it cannot be turned off.\n\n"
+                    "Don't spam-create studios, it WILL get you banned.")
             CREATE_STUDIO_USES.insert(0, time.time())
 
         if self.new_scratcher:
@@ -501,8 +510,9 @@ class Session(BaseSiteComponent):
 
     # --- My stuff page ---
 
-    def mystuff_projects(self, filter_arg="all", *, page=1, sort_by="", descending=True):
-        '''
+    def mystuff_projects(self, filter_arg: str = "all", *, page: int = 1, sort_by: str = '', descending: bool = True) \
+            -> list['project.Project']:
+        """
         Gets the projects from the "My stuff" page.
 
         Args:
@@ -515,7 +525,7 @@ class Session(BaseSiteComponent):
 
         Returns:
             list<scratchattach.project.Project>: A list with the projects from the "My Stuff" page, each project is represented by a Project object.
-        '''
+        """
         if descending:
             ascsort = ""
             descsort = sort_by
@@ -547,9 +557,10 @@ class Session(BaseSiteComponent):
                 ))
             return projects
         except Exception:
-            raise (exceptions.FetchError)
+            raise exceptions.FetchError()
 
-    def mystuff_studios(self, filter_arg="all", *, page=1, sort_by="", descending=True):
+    def mystuff_studios(self, filter_arg: str = "all", *, page: int = 1, sort_by: str = "", descending: bool = True) \
+            -> list['studio.Studio']:
         if descending:
             ascsort = ""
             descsort = sort_by
@@ -558,7 +569,8 @@ class Session(BaseSiteComponent):
             descsort = ""
         try:
             targets = requests.get(
-                f"https://scratch.mit.edu/site-api/galleries/{filter_arg}/?page={page}&ascsort={ascsort}&descsort={descsort}",
+                f"https://scratch.mit.edu/site-api/galleries/{filter_arg}/"
+                f"?page={page}&ascsort={ascsort}&descsort={descsort}",
                 headers=headers,
                 cookies=self._cookies,
                 timeout=10,
@@ -581,33 +593,34 @@ class Session(BaseSiteComponent):
                 ))
             return studios
         except Exception:
-            raise (exceptions.FetchError)
+            raise exceptions.FetchError()
 
-    def backpack(self, limit=20, offset=0):
-        '''
+    def backpack(self, limit: int = 20, offset: int = 0) -> list[dict]:
+        """
         Lists the assets that are in the backpack of the user associated with the session.
 
         Returns:
             list<dict>: List that contains the backpack items as dicts
-        '''
+        """
         data = commons.api_iterative(
             f"https://backpack.scratch.mit.edu/{self._username}",
-            limit=limit, offset=offset, headers=self._headers
+            limit=limit, offset=offset, _headers=self._headers
         )
         return commons.parse_object_list(data, backpack_asset.BackpackAsset, self)
 
-    def delete_from_backpack(self, backpack_asset_id):
-        '''
+    def delete_from_backpack(self, backpack_asset_id) -> 'backpack_asset.BackpackAsset':
+        """
         Deletes an asset from the backpack.
 
         Args:
             backpack_asset_id: ID of the backpack asset that will be deleted
-        '''
+        """
         return backpack_asset.BackpackAsset(id=backpack_asset_id, _session=self).delete()
 
-    def become_scratcher_invite(self):
+    def become_scratcher_invite(self) -> dict:
         """
-        If you are a new Scratcher and have been invited for becoming a Scratcher, this API endpoint will provide more info on the invite.
+        If you are a new Scratcher and have been invited for becoming a Scratcher, this API endpoint will provide
+        more info on the invite.
         """
         return requests.get(f"https://api.scratch.mit.edu/users/{self.username}/invites", headers=self._headers,
                             cookies=self._cookies).json()
@@ -615,19 +628,19 @@ class Session(BaseSiteComponent):
     # --- Connect classes inheriting from BaseCloud ---
 
     # noinspection PyPep8Naming
-    def connect_cloud(self, project_id, *, CloudClass: Type[_base.BaseCloud] = cloud.ScratchCloud) -> Type[
-        _base.BaseCloud]:
+    def connect_cloud(self, project_id, *, CloudClass: Type[_base.BaseCloud] = cloud.ScratchCloud) \
+            -> Type[_base.BaseCloud]:
         """
         Connects to a cloud (by default Scratch's cloud) as logged-in user.
 
         Args:
             project_id:
         
-        Keyword arguments:
-            CloudClass: The class that the returned object should be of. By default, this class is scratchattach.cloud.ScratchCloud.
+        Keyword arguments: CloudClass: The class that the returned object should be of. By default, this class is
+        scratchattach.cloud.ScratchCloud.
 
-        Returns:
-            Type[scratchattach._base.BaseCloud]: An object representing the cloud of a project. Can be of any class inheriting from BaseCloud.
+        Returns: Type[scratchattach._base.BaseCloud]: An object representing the cloud of a project. Can be of any
+        class inheriting from BaseCloud.
         """
         return CloudClass(project_id=project_id, _session=self)
 
@@ -652,7 +665,7 @@ class Session(BaseSiteComponent):
     # noinspection PyPep8Naming
     # Class is camelcase here
     def _make_linked_object(self, identificator_name, identificator, Class: BaseSiteComponent,
-                            NotFoundException: Exception):
+                            NotFoundException: Exception) -> BaseSiteComponent:
         """
         The Session class doesn't save the login in a ._session attribute, but IS the login ITSELF.
 
@@ -811,7 +824,7 @@ sess
 
         try:
             category_name = soup.find('h4').find("span").get_text()
-        except Exception as e:
+        except Exception:
             raise exceptions.BadRequest("Invalid category id")
 
         try:
@@ -941,7 +954,7 @@ def login(username, password, *, timeout=10) -> Session:
     return login_by_id(session_id, username=username, password=password)
 
 
-def login_by_session_string(session_string) -> Session:
+def login_by_session_string(session_string: str) -> Session:
     session_string = base64.b64decode(session_string).decode()  # unobfuscate
     session_data = json.loads(session_string)
     try:
