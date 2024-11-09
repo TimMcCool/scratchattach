@@ -2,6 +2,7 @@
 
 import json
 import re
+from typing import Literal, Self
 
 from ..utils import commons
 
@@ -23,7 +24,7 @@ class Comment(BaseSiteComponent):
     Represents a Scratch comment (on a profile, studio or project)
     '''
 
-    def str(self):
+    def str(self) -> str:
         return str(self.content)
 
     def __init__(self, **entries):
@@ -42,11 +43,11 @@ class Comment(BaseSiteComponent):
         # Update attributes from entries dict:
         self.__dict__.update(entries)
 
-    def update(self):
+    def update(self) -> Literal[False]:
         print("Warning: Comment objects can't be updated")
         return False # Objects of this type cannot be updated
 
-    def _update_from_dict(self, data):
+    def _update_from_dict(self, data) -> Literal[True]:
         try: self.id = data["id"]
         except Exception: pass
         try: self.parent_id = data["parent_id"]
@@ -73,10 +74,10 @@ class Comment(BaseSiteComponent):
 
     # Methods for getting related entities
 
-    def author(self):
+    def author(self) -> user.User:
         return self._make_linked_object("username", self.author_name, user.User, exceptions.UserNotFound)
 
-    def place(self):
+    def place(self) -> project.Project | project.PartialProject | studio.Studio | user.User:
         """
         Returns the place (the project, profile or studio) where the comment was posted as Project, User, or Studio object.
 
@@ -89,7 +90,7 @@ class Comment(BaseSiteComponent):
         if self.source == "project":
             return self._make_linked_object("id", self.source_id, project.Project, exceptions.UserNotFound)
 
-    def parent_comment(self):
+    def parent_comment(self) -> None | Self:
         if self.parent_id is None:
             return None
         if self.cached_parent_comment is not None:
@@ -104,7 +105,7 @@ class Comment(BaseSiteComponent):
             self.cached_parent_comment = studio.Studio(id=self.source_id, _session=self._session).comment_by_id(self.parent_id)
         return self.cached_parent_comment
     
-    def replies(self, *, use_cache=True, limit=40, offset=0):
+    def replies(self, *, use_cache=True, limit=40, offset=0) -> None | list[Self] :
         """
         Keyword Arguments:
             use_cache (bool): Returns the replies cached on the first reply fetch. This makes it SIGNIFICANTLY faster for profile comments. Warning: For profile comments, the replies are retrieved and cached on object creation.
@@ -122,7 +123,7 @@ class Comment(BaseSiteComponent):
     
     # Methods for dealing with the comment
 
-    def reply(self, content, *, commentee_id=None):
+    def reply(self, content, *, commentee_id=None) -> Self:
         """
         Posts a reply comment to the comment.
         
@@ -161,7 +162,7 @@ class Comment(BaseSiteComponent):
             return studio.Studio(id=self.source_id, _session=self._session).reply_comment(content, parent_id=str(parent_id), commentee_id=commentee_id)
 
 
-    def delete(self):
+    def delete(self) -> None:
         """
         Deletes the comment.
         """
@@ -175,7 +176,7 @@ class Comment(BaseSiteComponent):
         if self.source == "studio":
             studio.Studio(id=self.source_id, _session=self._session).delete_comment(comment_id=self.id)
 
-    def report(self):
+    def report(self) -> None:
         """
         Reports the comment to the Scratch team.
         """

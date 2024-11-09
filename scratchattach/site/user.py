@@ -3,6 +3,7 @@
 import json
 import random
 import string
+from typing import Literal, Self
 
 from ..eventhandlers import message_events
 from . import project
@@ -42,10 +43,10 @@ class User(BaseSiteComponent):
     :.update(): Updates the attributes
     '''
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.username)
 
-    def __init__(self, **entries):
+    def __init__(self, **entries) -> None:
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
@@ -82,7 +83,7 @@ class User(BaseSiteComponent):
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
-    def _update_from_dict(self, data):
+    def _update_from_dict(self, data) -> Literal[True]:
         try: self.id = data["id"]
         except KeyError: pass
         try: self.username = data["username"]
@@ -108,7 +109,7 @@ class User(BaseSiteComponent):
                 "You need to be authenticated as the profile owner to do this.")
 
 
-    def does_exist(self):
+    def does_exist(self) -> None | bool:
         """
         Returns:
             boolean : True if the user exists, False if the user is deleted, None if an error occured
@@ -119,7 +120,7 @@ class User(BaseSiteComponent):
         elif status_code == 404:
             return False
 
-    def is_new_scratcher(self):
+    def is_new_scratcher(self) -> bool | None:
         """
         Returns:
             boolean : True if the user has the New Scratcher status, else False
@@ -131,11 +132,11 @@ class User(BaseSiteComponent):
         except Exception:
             return None
 
-    def message_count(self):
+    def message_count(self) -> int:
 
         return json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/messages/count/?cachebust={random.randint(0,10000)}", headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',}).text)["count"]
 
-    def featured_data(self):
+    def featured_data(self) -> dict | None:
         """
         Returns:
             dict: Gets info on the user's featured project and featured label (like "Featured project", "My favorite things", etc.)
@@ -155,7 +156,7 @@ class User(BaseSiteComponent):
         except Exception:
             return None
 
-    def follower_count(self):
+    def follower_count(self) -> int:
         # follower count
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/followers/",
@@ -163,7 +164,7 @@ class User(BaseSiteComponent):
         ).text
         return commons.webscrape_count(text, "Followers (", ")")
 
-    def following_count(self):
+    def following_count(self) -> int:
         # following count
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/following/",
@@ -171,7 +172,7 @@ class User(BaseSiteComponent):
         ).text
         return commons.webscrape_count(text, "Following (", ")")
 
-    def followers(self, *, limit=40, offset=0):
+    def followers(self, *, limit=40, offset=0) -> list[Self]:
         """
         Returns:
             list<scratchattach.user.User>: The user's followers as list of scratchattach.user.User objects
@@ -180,14 +181,14 @@ class User(BaseSiteComponent):
             f"https://api.scratch.mit.edu/users/{self.username}/followers/", limit=limit, offset=offset)
         return commons.parse_object_list(response, User, self._session, "username")
 
-    def follower_names(self, *, limit=40, offset=0):
+    def follower_names(self, *, limit=40, offset=0) -> list[str]:
         """
         Returns:
             list<str>: The usernames of the user's followers
         """
         return [i.name for i in self.followers(limit=limit, offset=offset)]
 
-    def following(self, *, limit=40, offset=0):
+    def following(self, *, limit=40, offset=0) -> list[Self]:
         """
         Returns:
             list<scratchattach.user.User>: The users that the user is following as list of scratchattach.user.User objects
@@ -196,14 +197,14 @@ class User(BaseSiteComponent):
             f"https://api.scratch.mit.edu/users/{self.username}/following/", limit=limit, offset=offset)
         return commons.parse_object_list(response, User, self._session, "username")
 
-    def following_names(self, *, limit=40, offset=0):
+    def following_names(self, *, limit=40, offset=0) -> list[str]:
         """
         Returns:
             list<str>: The usernames of the users the user is following
         """
         return [i.name for i in self.following(limit=limit, offset=offset)]
 
-    def is_following(self, user):
+    def is_following(self, user) -> bool:
         """
         Returns:
             boolean: Whether the user is following the user provided as argument
@@ -225,35 +226,35 @@ class User(BaseSiteComponent):
                 return following
         return following
 
-    def is_followed_by(self, user):
+    def is_followed_by(self, user) -> bool:
         """
         Returns:
             boolean: Whether the user is followed by the user provided as argument
         """
         return User(username=user).is_following(self.username)
 
-    def project_count(self):
+    def project_count(self) -> int:
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/projects/",
             headers = self._headers
         ).text
         return commons.webscrape_count(text, "Shared Projects (", ")")
 
-    def studio_count(self):
+    def studio_count(self) -> int:
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/studios/",
             headers = self._headers
         ).text
         return commons.webscrape_count(text, "Studios I Curate (", ")")
 
-    def studios_following_count(self):
+    def studios_following_count(self) -> int:
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/studios/",
             headers = self._headers
         ).text
         return commons.webscrape_count(text, "Studios I Follow (", ")")
 
-    def studios(self, *, limit=40, offset=0):
+    def studios(self, *, limit=40, offset=0) -> list[studio.Studio]:
         _studios = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self.username}/studios/curate", limit=limit, offset=offset)
         studios = []
@@ -263,7 +264,7 @@ class User(BaseSiteComponent):
             studios.append(_studio)
         return studios
 
-    def projects(self, *, limit=40, offset=0):
+    def projects(self, *, limit=40, offset=0) -> list[project.Project]:
         """
         Returns:
             list<projects.projects.Project>: The user's shared projects
@@ -274,7 +275,7 @@ class User(BaseSiteComponent):
             p["author"] = {"username":self.username}
         return commons.parse_object_list(_projects, project.Project, self._session)
 
-    def loves(self, *, limit=40, offset=0, get_full_project: bool = False) -> list[project.Project]:
+    def loves(self, *, limit=40, offset=0, get_full_project: bool = False) -> list[project.Project|project.PartialProject]:
         """
         Returns:
             list<projects.projects.Project>: The user's loved projects
@@ -370,7 +371,7 @@ class User(BaseSiteComponent):
 
         return _projects
 
-    def loves_count(self):
+    def loves_count(self) -> int:
         text = requests.get(
             f"https://scratch.mit.edu/projects/all/{self.username}/loves/",
             headers=self._headers
@@ -385,7 +386,7 @@ class User(BaseSiteComponent):
 
         return commons.webscrape_count(text, "&raquo;\n\n (", ")")
 
-    def favorites(self, *, limit=40, offset=0):
+    def favorites(self, *, limit=40, offset=0) -> list[project.Project|project.PartialProject]:
         """
         Returns:
             list<projects.projects.Project>: The user's favorite projects
@@ -394,14 +395,14 @@ class User(BaseSiteComponent):
             f"https://api.scratch.mit.edu/users/{self.username}/favorites/", limit=limit, offset=offset, headers = self._headers)
         return commons.parse_object_list(_projects, project.Project, self._session)
 
-    def favorites_count(self):
+    def favorites_count(self) -> int:
         text = requests.get(
             f"https://scratch.mit.edu/users/{self.username}/favorites/",
             headers = self._headers
         ).text
         return commons.webscrape_count(text, "Favorites (", ")")
 
-    def toggle_commenting(self):
+    def toggle_commenting(self) -> None:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
@@ -411,7 +412,7 @@ class User(BaseSiteComponent):
             cookies = self._cookies
         )
 
-    def viewed_projects(self, limit=24, offset=0):
+    def viewed_projects(self, limit=24, offset=0) -> list[project.Project|project.PartialProject]:
         """
         Returns:
             list<projects.projects.Project>: The user's recently viewed projects
@@ -423,7 +424,7 @@ class User(BaseSiteComponent):
             f"https://api.scratch.mit.edu/users/{self.username}/projects/recentlyviewed", limit=limit, offset=offset, headers = self._headers)
         return commons.parse_object_list(_projects, project.Project, self._session)
 
-    def set_bio(self, text):
+    def set_bio(self, text) -> None:
         """
         Sets the user's "About me" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
@@ -442,7 +443,7 @@ class User(BaseSiteComponent):
             ))
         )
 
-    def set_wiwo(self, text):
+    def set_wiwo(self, text) -> None:
         """
         Sets the user's "What I'm working on" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
@@ -461,7 +462,7 @@ class User(BaseSiteComponent):
             ))
         )
 
-    def set_featured(self, project_id, *, label=""):
+    def set_featured(self, project_id, *, label="") -> None:
         """
         Sets the user's featured project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
 
@@ -479,7 +480,7 @@ class User(BaseSiteComponent):
             data = json.dumps({"featured_project":int(project_id),"featured_project_label":label})
         )
 
-    def set_forum_signature(self, text):
+    def set_forum_signature(self, text) -> None:
         """
         Sets the user's discuss forum signature. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
@@ -498,7 +499,7 @@ class User(BaseSiteComponent):
         }
         response = requests.post(f'https://scratch.mit.edu/discuss/settings/{self.username}/', cookies=self._cookies, headers=headers, data=data)
 
-    def post_comment(self, content, *, parent_id="", commentee_id=""):
+    def post_comment(self, content, *, parent_id="", commentee_id="") -> comment.Comment:
         """
         Posts a comment on the user's profile. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
 
@@ -549,7 +550,7 @@ class User(BaseSiteComponent):
             else:
                 raise(exceptions.FetchError("Couldn't parse API response"))
 
-    def reply_comment(self, content, *, parent_id, commentee_id=""):
+    def reply_comment(self, content, *, parent_id, commentee_id="") -> comment.Comment:
         """
         Replies to a comment given by its id
 
@@ -567,7 +568,7 @@ class User(BaseSiteComponent):
         """
         return self.post_comment(content, parent_id=parent_id, commentee_id=commentee_id)
 
-    def activity(self, *, limit=1000):
+    def activity(self, *, limit=1000) -> list[activity.Activity]:
         """
         Returns:
             list<scratchattach.Activity>: The user's activity data as parsed list of scratchattach.activity.Activity objects
@@ -585,7 +586,7 @@ class User(BaseSiteComponent):
         return activities
 
 
-    def activity_html(self, *, limit=1000):
+    def activity_html(self, *, limit=1000) -> str:
         """
         Returns:
             str: The raw user activity HTML data
@@ -593,7 +594,7 @@ class User(BaseSiteComponent):
         return requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text
 
 
-    def follow(self):
+    def follow(self) -> None:
         """
         Follows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
@@ -604,7 +605,7 @@ class User(BaseSiteComponent):
             cookies = self._cookies,
         )
 
-    def unfollow(self):
+    def unfollow(self) -> None:
         """
         Unfollows the user represented by the User object. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
@@ -645,7 +646,7 @@ class User(BaseSiteComponent):
             data = json.dumps({"id":str(comment_id)})
         )
 
-    def comments(self, *, page=1, limit=None):
+    def comments(self, *, page=1, limit=None) -> None | list[comment.Comment]:
         """
         Returns the comments posted on the user's profile (with replies).
 
@@ -713,7 +714,7 @@ class User(BaseSiteComponent):
             DATA.append(_comment)
         return DATA
 
-    def comment_by_id(self, comment_id):
+    def comment_by_id(self, comment_id) -> comment.Comment:
         """
         Gets a comment on this user's profile by id.
 
@@ -738,7 +739,7 @@ class User(BaseSiteComponent):
             page_content = self.comments(page=page)
         raise exceptions.CommentNotFound()
 
-    def message_events(self):
+    def message_events(self) -> message_events.MessageEvents[Self]:
         return message_events.MessageEvents(self)
 
     def stats(self):
@@ -779,7 +780,7 @@ class User(BaseSiteComponent):
         except Exception:
             return {"country":{"loves":0,"favorites":0,"comments":0,"views":0,"followers":0,"following":0},"loves":0,"favorites":0,"comments":0,"views":0,"followers":0,"following":0}
 
-    def ocular_status(self):
+    def ocular_status(self) -> dict:
         """
         Gets information about the user's ocular status. Ocular is a website developed by jeffalo: https://ocular.jeffalo.net/
 

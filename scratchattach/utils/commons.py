@@ -1,5 +1,6 @@
 """v2 ready: Common functions used by various internal modules"""
 
+from typing import Any
 from . import exceptions
 from threading import Thread
 from .requests import Requests as requests
@@ -57,7 +58,7 @@ empty_project_json = {
 }
 
 
-def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True):
+def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True) -> list:
     """
     Iteratively gets data by calling fetch_func with a moving offset and a limit.
     Once fetch_func returns None, the retrieval is completed.
@@ -83,7 +84,7 @@ def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True)
 
 def api_iterative(
     url, *, limit, offset, max_req_limit=40, add_params="", headers=headers, cookies={}
-):
+) -> list:
     """
     Function for getting data from one of Scratch's iterative JSON API endpoints (like /users/<user>/followers, or /users/<user>/projects)
     """
@@ -110,7 +111,7 @@ def api_iterative(
     )
     return api_data
 
-def _get_object(identificator_name, identificator, Class, NotFoundException, session=None):
+def _get_object(identificator_name, identificator, Class, NotFoundException, session=None) -> Any:
     # Interal function: Generalization of the process ran by get_user, get_studio etc.
     # Builds an object of class that is inheriting from BaseSiteComponent
     # # Class must inherit from BaseSiteComponent
@@ -133,10 +134,10 @@ def _get_object(identificator_name, identificator, Class, NotFoundException, ses
     except Exception as e:
         raise(e)
 
-def webscrape_count(raw, text_before, text_after):
+def webscrape_count(raw, text_before, text_after) -> int:
     return int(raw.split(text_before)[1].split(text_after)[0])
 
-def parse_object_list(raw, Class, session=None, primary_key="id"):
+def parse_object_list(raw, Class, session=None, primary_key="id") -> list:
     results = []
     for raw_dict in raw:
         try:

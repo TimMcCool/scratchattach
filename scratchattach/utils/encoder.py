@@ -110,7 +110,7 @@ class Encoding:
     Class that contains tools for encoding / decoding strings. The strings encoded / decoded with these functions can be decoded / encoded with Scratch using this sprite: https://scratch3-assets.1tim.repl.co/Encoder.sprite3
     """
     @staticmethod
-    def decode(inp):
+    def decode(inp) -> str:
         """
         Args:
             inp (str): The encoded input.
@@ -129,7 +129,7 @@ class Encoding:
         return outp
 
     @staticmethod
-    def encode(inp):
+    def encode(inp) -> str:
         """
         Args:
             inp (str): The decoded input.
@@ -147,7 +147,7 @@ class Encoding:
         return outp
 
     @staticmethod
-    def replace_char(old_char, new_char):
+    def replace_char(old_char, new_char) -> None:
         """
         Replaces a character in the list that the encoder uses to encode / decode values.
         You can access this list using `scratchattach.encoder.letters`

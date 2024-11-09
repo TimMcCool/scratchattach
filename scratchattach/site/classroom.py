@@ -1,4 +1,5 @@
 import datetime
+from typing import Literal
 import requests
 from . import user, session
 from ..utils.commons import api_iterative, headers
@@ -6,7 +7,7 @@ from ..utils import exceptions, commons
 from ._base import BaseSiteComponent
 
 class Classroom(BaseSiteComponent):
-    def __init__(self, **entries):
+    def __init__(self, **entries) -> None:
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
         if "id" in entries:
@@ -36,7 +37,7 @@ class Classroom(BaseSiteComponent):
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
-    def _update_from_dict(self, classrooms):
+    def _update_from_dict(self, classrooms) -> Literal[True]:
         try: self.id = int(classrooms["id"])
         except Exception: pass
         try: self.title = classrooms["title"]
@@ -53,7 +54,7 @@ class Classroom(BaseSiteComponent):
         except Exception: pass
         return True
     
-    def student_count(self):
+    def student_count(self) -> int:
         # student count
         text = requests.get(
             f"https://scratch.mit.edu/classes/{self.id}/",
@@ -61,7 +62,7 @@ class Classroom(BaseSiteComponent):
         ).text
         return commons.webscrape_count(text, "Students (", ")")
     
-    def student_names(self, *, page=1):
+    def student_names(self, *, page=1) -> list[str]:
         """
         Returns the student on the class.
         
@@ -78,7 +79,7 @@ class Classroom(BaseSiteComponent):
         textlist = [i.split('/">')[0] for i in text.split('        <a href="/users/')[1:]]
         return textlist
     
-    def class_studio_count(self):
+    def class_studio_count(self) -> int:
         # student count
         text = requests.get(
             f"https://scratch.mit.edu/classes/{self.id}/",
@@ -86,7 +87,7 @@ class Classroom(BaseSiteComponent):
         ).text
         return commons.webscrape_count(text, "Class Studios (", ")")
     
-    def class_studio_ids(self, *, page=1):
+    def class_studio_ids(self, *, page=1) -> list[int]:
         """
         Returns the class studio on the class.
         

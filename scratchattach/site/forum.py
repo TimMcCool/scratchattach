@@ -1,5 +1,6 @@
 """ForumTopic and ForumPost classes"""
 
+from typing import Literal
 from . import user
 from ..utils.commons import headers
 from ..utils import exceptions, commons
@@ -32,7 +33,7 @@ class ForumTopic(BaseSiteComponent):
 
     :.update(): Updates the attributes
     '''
-    def __init__(self, **entries):
+    def __init__(self, **entries) -> None:
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
@@ -60,7 +61,7 @@ class ForumTopic(BaseSiteComponent):
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
-    def update(self):
+    def update(self) -> Literal['429'] | Literal[True]:
         # As there is no JSON API for getting forum topics anymore,
         # the data has to be retrieved from the XML feed.
         response = self.update_function(
@@ -92,7 +93,7 @@ class ForumTopic(BaseSiteComponent):
         ))
         
 
-    def _update_from_dict(self, data):
+    def _update_from_dict(self, data) -> Literal[True]:
         self.__dict__.update(data)
         return True
 
@@ -107,7 +108,7 @@ class ForumTopic(BaseSiteComponent):
         if order != "oldest":
             print("Warning: All post orders except for 'oldest' are deprecated and no longer work") # For backwards compatibility
 
-        posts = []
+        posts:list[ForumPost] = []
         
         try:
             url = f"https://scratch.mit.edu/discuss/topic/{self.id}/?page={page}"
@@ -155,6 +156,7 @@ class ForumTopic(BaseSiteComponent):
         posts = self.posts(page=1)
         if len(posts) > 0:
             return posts[0]
+        return None
 
 
 class ForumPost(BaseSiteComponent):
@@ -218,7 +220,7 @@ class ForumPost(BaseSiteComponent):
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
-    def update(self):
+    def update(self) -> bool:
         """
         Updates the attributes of the ForumPost object.
         As there is no API for retrieving a single post anymore, this requires reloading the forum page.
@@ -237,11 +239,11 @@ class ForumPost(BaseSiteComponent):
         
         return self._update_from_dict(this.__dict__)
 
-    def _update_from_dict(self, data):
+    def _update_from_dict(self, data) -> Literal[True]:
         self.__dict__.update(data)
         return True
 
-    def _update_from_html(self, soup_html):
+    def _update_from_html(self, soup_html) -> Literal[True]:
         self.post_index = int(soup_html.find('span', class_='conr').text.strip('#'))
         self.id = int(soup_html['id'].replace("p", ""))
         self.posted = soup_html.find('a', href=True).text.strip()
@@ -252,7 +254,7 @@ class ForumPost(BaseSiteComponent):
         self.topic_name = soup_html.find('h3').text.strip()
         return True
 
-    def topic(self):
+    def topic(self) -> ForumTopic:
         """
         Returns:
             scratchattach.forum.ForumTopic: An object representing the forum topic this post is in.
@@ -262,14 +264,14 @@ class ForumPost(BaseSiteComponent):
     def ocular_reactions(self):
         return requests.get(f"https://my-ocular.jeffalo.net/api/reactions/{self.id}", timeout=10).json()
 
-    def author(self):
+    def author(self) -> user.User:
         """
         Returns:
             scratchattach.user.User: An object representing the user who created this forum post.
         """
         return self._make_linked_object("username", self.author_name, user.User, exceptions.UserNotFound)
     
-    def edit(self, new_content):
+    def edit(self, new_content) -> None:
         """
         Changes the content of the forum post.  You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_post` or through another method that requires authentication. You must own the forum post.
         
@@ -328,7 +330,7 @@ def get_topic(topic_id) -> ForumTopic:
     return commons._get_object("id", topic_id, ForumTopic, exceptions.ForumContentNotFound)
 
 
-def get_topic_list(category_id, *, page=1):
+def get_topic_list(category_id, *, page=1) -> list[ForumTopic]:
 
     """
     Gets the topics from a forum category without logging in. Data web-scraped from Scratch's forums UI.
@@ -385,7 +387,7 @@ def get_topic_list(category_id, *, page=1):
         raise exceptions.ScrapeError(str(e))
 
 
-def youtube_link_to_scratch(link: str):
+def youtube_link_to_scratch(link: str) -> str:
     """
     Converts a YouTube url (in multiple formats) like https://youtu.be/1JTgg4WVAX8?si=fIEskaEaOIRZyTAz
     to a link like https://scratch.mit.edu/discuss/youtube/1JTgg4WVAX8

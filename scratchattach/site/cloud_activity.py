@@ -1,4 +1,5 @@
 import time
+from typing import Literal
 from ._base import BaseSiteComponent
 
 class CloudActivity(BaseSiteComponent):
@@ -22,7 +23,7 @@ class CloudActivity(BaseSiteComponent):
     :.cloud: The cloud (as object inheriting from scratchattach.Cloud.BaseCloud) that the cloud activity corresponds to
     """
 
-    def __init__(self, **entries):
+    def __init__(self, **entries) -> None:
         # Set attributes every CloudActivity object needs to have:
         self._session = None
         self.cloud = None
@@ -34,11 +35,11 @@ class CloudActivity(BaseSiteComponent):
         # Update attributes from entries dict:
         self.__dict__.update(entries)
 
-    def update(self):
+    def update(self) -> Literal[False]:
         print("Warning: CloudActivity objects can't be updated")
         return False # Objects of this type cannot be updated
 
-    def __eq__(self, activity2):
+    def __eq__(self, activity2) -> bool:
         # CloudLogEvents needs to check if two activites are equal (to finde new ones), therefore CloudActivity objects need to be comparable
         return self.user == activity2.user and self.type == activity2.type and self.timestamp == activity2.timestamp and self.value == activity2.value and self.name == activity2.name
     
@@ -63,7 +64,7 @@ class CloudActivity(BaseSiteComponent):
         except Exception: pass
         return True
 
-    def load_log_data(self):
+    def load_log_data(self) -> bool:
         if self.cloud is None:
             print("Warning: There aren't cloud logs available for this cloud, therefore the user and exact timestamp can't be loaded")
         else:
@@ -89,7 +90,8 @@ class CloudActivity(BaseSiteComponent):
             return None
         from ..site import user
         from ..utils import exceptions
-        return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
+        _user:user.User = self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
+        return _user
 
     def project(self):
         """
@@ -99,5 +101,6 @@ class CloudActivity(BaseSiteComponent):
             return None
         from ..site import project
         from ..utils import exceptions
-        return self._make_linked_object("id", self.cloud.project_id, project.Project, exceptions.ProjectNotFound)
+        _project:project.Project|project.PartialProject = self._make_linked_object("id", self.cloud.project_id, project.Project, exceptions.ProjectNotFound)
+        return _project
 

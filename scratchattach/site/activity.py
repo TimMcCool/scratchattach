@@ -3,6 +3,7 @@
 import json
 import re
 import time
+from typing import Any, Literal
 
 from . import user
 from . import session
@@ -22,10 +23,10 @@ class Activity(BaseSiteComponent):
     Represents a Scratch activity (message or other user page activity)
     '''
 
-    def str(self):
+    def str(self) -> str:
         return str(self.raw)
 
-    def __init__(self, **entries):
+    def __init__(self, **entries) -> None:
 
         # Set attributes every Activity object needs to have:
         self._session = None
@@ -34,16 +35,16 @@ class Activity(BaseSiteComponent):
         # Update attributes from entries dict:
         self.__dict__.update(entries)
 
-    def update():
+    def update() -> Literal[False]:
         print("Warning: Activity objects can't be updated")
         return False # Objects of this type cannot be updated
 
-    def _update_from_dict(self, data):
+    def _update_from_dict(self, data) -> Literal[True]:
         self.raw = data
         self.__dict__.update(data)
         return True
 
-    def _update_from_html(self, data):
+    def _update_from_html(self, data) -> Literal[True]:
 
         self.raw = data
 
@@ -76,13 +77,13 @@ class Activity(BaseSiteComponent):
 
         return True
 
-    def actor(self):
+    def actor(self) -> user.User:
         """
         Returns the user that performed the activity as User object
         """
         return self._make_linked_object("username", self.actor_username, user.User, exceptions.UserNotFound)
 
-    def target(self):
+    def target(self) -> project.Project | project.PartialProject | studio.Studio | user.User | comment.Comment:
         """
         Returns the activity's target (depending on the activity, this is either a User, Project, Studio or Comment object).
         May also return None if the activity type is unknown.

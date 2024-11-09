@@ -4,6 +4,7 @@ import json
 import random
 import base64
 import time
+from typing import Self
 from . import user, comment, studio
 from ..utils import exceptions
 from ..utils import commons
@@ -19,10 +20,10 @@ class PartialProject(BaseSiteComponent):
     Represents an unshared Scratch project that can't be accessed.
     """
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Unshared project with id {self.id}"
 
-    def __init__(self, **entries):
+    def __init__(self, **entries) -> None:
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
@@ -51,7 +52,7 @@ class PartialProject(BaseSiteComponent):
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
-    def _update_from_dict(self, data):
+    def _update_from_dict(self, data) -> bool:
         try:
             self.id = int(data["id"])
         except KeyError:
@@ -101,14 +102,14 @@ class PartialProject(BaseSiteComponent):
         return True
 
     @property
-    def embed_url(self):
+    def embed_url(self) -> str:
         """
         Returns:
              the url of the embed of the project
         """
         return f"{self.url}/embed"
 
-    def remixes(self, *, limit=40, offset=0):
+    def remixes(self, *, limit=40, offset=0) -> list[Self]:
         """
         Returns:
             list<scratchattach.project.Project>: A list containing the remixes of the project, each project is represented by a Project object.
@@ -117,7 +118,7 @@ class PartialProject(BaseSiteComponent):
             f"https://api.scratch.mit.edu/projects/{self.id}/remixes", limit=limit, offset=offset)
         return commons.parse_object_list(response, Project, self._session)
 
-    def is_shared(self):
+    def is_shared(self) -> bool:
         """
         Returns:
             boolean: Returns whether the project is currently shared
@@ -125,7 +126,7 @@ class PartialProject(BaseSiteComponent):
         p = get_project(self.id)
         return isinstance(p, Project)
     
-    def create_remix(self, *, title=None, project_json=None): # not working
+    def create_remix(self, *, title=None, project_json=None) -> Self: # not working
         """
         Creates a project on the Scratch website.
 
@@ -169,7 +170,7 @@ class PartialProject(BaseSiteComponent):
         _project.parent_title = base64.b64decode(response['content-title']).decode('utf-8').split(' remix')[0]
         return _project
     
-    def load_description(self):
+    def load_description(self) -> None:
         """
         Gets the instructions of the unshared project. Requires authentication.
         
@@ -227,20 +228,20 @@ class Project(PartialProject):
     :.update(): Updates the attributes
     """
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.title)
 
-    def _assert_permission(self):
+    def _assert_permission(self) -> None:
         self._assert_auth()
         if self._session._username != self.author_name:
             raise exceptions.Unauthorized(
                 "You need to be authenticated as the profile owner to do this.")
 
-    def load_description(self):
+    def load_description(self) -> None:
         # Overrides the load_description method that exists for unshared projects
         self.update()
 
-    def download(self, *, filename=None, dir=""):
+    def download(self, *, filename=None, dir="") -> None:
         """
         Downloads the project json to the given directory.
 
@@ -267,7 +268,7 @@ class Project(PartialProject):
                 )
             )
 
-    def body(self):
+    def body(self) -> ProjectBody:
         """
         Method only works for project created with Scratch 3.
 
@@ -279,7 +280,7 @@ class Project(PartialProject):
         pb.from_json(raw_json)
         return pb
 
-    def raw_json(self):
+    def raw_json(self) -> dict:
         """
         Method only works for project created with Scratch 3.
 
@@ -299,7 +300,7 @@ class Project(PartialProject):
                 )
             )
     
-    def creator_agent(self):
+    def creator_agent(self) -> str:
         """
         Method only works for project created with Scratch 3.
 
@@ -308,14 +309,14 @@ class Project(PartialProject):
         """
         return self.raw_json()["meta"]["agent"]
 
-    def author(self):
+    def author(self) -> user.User:
         """
         Returns:
             scratchattach.user.User: An object representing the Scratch user who created this project.
         """
         return self._make_linked_object("username", self.author_name, user.User, exceptions.UserNotFound)
 
-    def studios(self, *, limit=40, offset=0):
+    def studios(self, *, limit=40, offset=0) -> list[studio.Studio]:
         """
         Returns:
             list<scratchattach.studio.Studio>: A list containing the studios this project is in, each studio is represented by a Studio object.
@@ -324,7 +325,7 @@ class Project(PartialProject):
             f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/studios", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         return commons.parse_object_list(response, studio.Studio, self._session)
 
-    def comments(self, *, limit=40, offset=0):
+    def comments(self, *, limit=40, offset=0) -> list[comment.Comment]:
         """
         Returns the comments posted on the project (except for replies. To get replies use :meth:`scratchattach.project.Project.comment_replies`).
 
@@ -344,7 +345,7 @@ class Project(PartialProject):
         return commons.parse_object_list(response, comment.Comment, self._session)
 
 
-    def comment_replies(self, *, comment_id, limit=40, offset=0):
+    def comment_replies(self, *, comment_id, limit=40, offset=0) -> list[comment.Comment]:
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/{comment_id}/replies/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         for x in response:
@@ -353,7 +354,7 @@ class Project(PartialProject):
             x["source_id"] = self.id
         return commons.parse_object_list(response, comment.Comment, self._session)
 
-    def comment_by_id(self, comment_id):
+    def comment_by_id(self, comment_id) -> comment.Comment:
         """
         Returns:
             scratchattach.comments.Comment: A Comment object representing the requested comment.
@@ -369,7 +370,7 @@ class Project(PartialProject):
         _comment._update_from_dict(r)
         return _comment
     
-    def love(self):
+    def love(self) -> None:
         """
         Posts a love on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
@@ -385,7 +386,7 @@ class Project(PartialProject):
         else:
             raise exceptions.APIError(str(r))
 
-    def unlove(self):
+    def unlove(self) -> None:
         """
         Removes the love from this project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
@@ -401,7 +402,7 @@ class Project(PartialProject):
         else:
             raise exceptions.APIError(str(r))
 
-    def favorite(self):
+    def favorite(self) -> None:
         """
         Posts a favorite on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
@@ -417,7 +418,7 @@ class Project(PartialProject):
         else:
             raise exceptions.APIError(str(r))
 
-    def unfavorite(self):
+    def unfavorite(self) -> None:
         """
         Removes the favorite from this project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
@@ -433,7 +434,7 @@ class Project(PartialProject):
         else:
             raise exceptions.APIError(str(r))
 
-    def post_view(self):
+    def post_view(self) -> None:
         """
         Increases the project's view counter by 1. Doesn't require a login.
         """
@@ -442,7 +443,7 @@ class Project(PartialProject):
             headers=headers,
         )
 
-    def set_fields(self, fields_dict, *, use_site_api=False):
+    def set_fields(self, fields_dict, *, use_site_api=False) -> bool:
         """
         Sets fields. By default, ueses the api.scratch.mit.edu/projects/xxx/ PUT API.
 
@@ -470,28 +471,28 @@ class Project(PartialProject):
             ).json()
         return self._update_from_dict(r)
     
-    def turn_off_commenting(self):
+    def turn_off_commenting(self) -> None:
         """
         Disables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         data = {"comments_allowed": False}
         self.set_fields(data)
 
-    def turn_on_commenting(self):
+    def turn_on_commenting(self) -> None:
         """
         Enables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         data = {"comments_allowed": True}
         self.set_fields(data)
 
-    def toggle_commenting(self):
+    def toggle_commenting(self) -> None:
         """
         Switches commenting on / off on the project (If comments are on, they will be turned off, else they will be turned on). You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         data = {"comments_allowed": not self.comments_allowed}
         self.set_fields(data)
 
-    def share(self):
+    def share(self) -> None:
         """
         Shares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
@@ -502,7 +503,7 @@ class Project(PartialProject):
             cookies=self._cookies,
         )
 
-    def unshare(self):
+    def unshare(self) -> None:
         """
         Unshares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
@@ -520,7 +521,7 @@ class Project(PartialProject):
         """
         self.set_fields({"id":int(self.id), "visibility": "trshbyusr", "isPublished" : False}, use_site_api=True)'''
 
-    def set_thumbnail(self, *, file):
+    def set_thumbnail(self, *, file) -> None:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
@@ -562,7 +563,7 @@ class Project(PartialProject):
             cookies=self._cookies,
         )
 
-    def post_comment(self, content, *, parent_id="", commentee_id=""):
+    def post_comment(self, content, *, parent_id="", commentee_id="") -> comment.Comment:
         """
         Posts a comment on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
 
@@ -598,7 +599,7 @@ class Project(PartialProject):
         _comment._update_from_dict(r)
         return _comment
 
-    def reply_comment(self, content, *, parent_id, commentee_id=""):
+    def reply_comment(self, content, *, parent_id, commentee_id="") -> comment.Comment:
         """
         Posts a reply to a comment on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
 
@@ -652,7 +653,7 @@ class Project(PartialProject):
             json=json_data,
         ).json()
 
-    def upload_json_from(self, project_id):
+    def upload_json_from(self, project_id) -> None:
         """
         Uploads the project json from the project with the given id to the project represented by this Project object
         """
@@ -660,20 +661,20 @@ class Project(PartialProject):
         other_project = self._session.connect_project(project_id)
         self.set_json(other_project.get_raw_json())
 
-    def set_title(self, text):
+    def set_title(self, text) -> None:
         """
         Changes the projects title. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         self.set_fields({"title": text})
     
 
-    def set_instructions(self, text):
+    def set_instructions(self, text) -> None:
         """
         Changes the projects instructions. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         self.set_fields({"instructions": text})
 
-    def set_notes(self, text):
+    def set_notes(self, text) -> None:
         """
         Changes the projects notes and credits. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
@@ -695,7 +696,7 @@ class Project(PartialProject):
             f"https://scratchdb.lefty.one/v3/project/info/{self.id}"
         ).json()["statistics"]["ranks"]
 
-    def moderation_status(self):
+    def moderation_status(self) -> str:
         """
         Gets information about the project's moderation status. Fetched from jeffalo's API.
 
@@ -719,17 +720,17 @@ class Project(PartialProject):
         except Exception:
             raise (exceptions.FetchError)
 
-    def visibility(self):
+    def visibility(self) -> dict:
         """
         Returns info about the project's visibility. Requires authentication.
         """
-        self._assert_auth()
+        self._assert_permission()
         return requests.get(f"https://api.scratch.mit.edu/users/{self._session.username}/projects/{self.id}/visibility", headers=self._headers, cookies=self._cookies).json()
 
 # ------ #
 
 
-def get_project(project_id) -> Project:
+def get_project(project_id) -> Project|PartialProject:
     """
     Gets a project without logging in.
 
@@ -747,7 +748,7 @@ def get_project(project_id) -> Project:
     print("Warning: For methods that require authentication, use session.connect_project instead of get_project")
     return commons._get_object("id", project_id, Project, exceptions.ProjectNotFound)
 
-def search_projects(*, query="", mode="trending", language="en", limit=40, offset=0):
+def search_projects(*, query="", mode="trending", language="en", limit=40, offset=0) -> list[Project|PartialProject]:
     '''
     Uses the Scratch search to search projects.
 
@@ -767,7 +768,7 @@ def search_projects(*, query="", mode="trending", language="en", limit=40, offse
         f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
     return commons.parse_object_list(response, Project)
 
-def explore_projects(*, query="*", mode="trending", language="en", limit=40, offset=0):
+def explore_projects(*, query="*", mode="trending", language="en", limit=40, offset=0) -> list[Project|PartialProject]:
     '''
     Gets projects from the explore page.
 

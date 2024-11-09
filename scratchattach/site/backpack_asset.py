@@ -1,4 +1,5 @@
 import time
+from typing import Literal
 from ._base import BaseSiteComponent
 from ..utils.requests import Requests as requests
 from ..utils import exceptions
@@ -24,14 +25,14 @@ class BackpackAsset(BaseSiteComponent):
     :.download_url: Link that leads to a file containing the content of the backpack asset
     """
 
-    def __init__(self, **entries):
+    def __init__(self, **entries) -> None:
         # Set attributes every BackpackAsset object needs to have:
         self._session = None
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)
 
-    def update(self):
+    def update(self) -> Literal[False]:
         print("Warning: BackpackAsset objects can't be updated")
         return False # Objects of this type cannot be updated
     
@@ -52,7 +53,7 @@ class BackpackAsset(BaseSiteComponent):
         except Exception: pass
         return True
 
-    def download(self, *, dir=""):
+    def download(self, *, dir="") -> None:
         """
         Downloads the asset content to the given directory. The given filename is equal to the value saved in the .filename attribute.
 
@@ -74,7 +75,7 @@ class BackpackAsset(BaseSiteComponent):
                 )
             )
 
-    def delete(self):
+    def delete(self) -> dict:
         self._assert_auth()
 
         return requests.delete(

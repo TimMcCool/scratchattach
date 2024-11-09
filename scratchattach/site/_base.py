@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
+from typing import Any, Literal
 import requests
 from threading import Thread
 from ..utils import exceptions, commons
 
 class BaseSiteComponent(ABC):
 
-    def update(self):
+    def update(self) -> bool | Literal['429']:
         """
         Updates the attributes of the object by performing an API response. Returns True if the update was successful.
         """
@@ -32,12 +33,12 @@ class BaseSiteComponent(ABC):
         """
         pass
 
-    def _assert_auth(self):
+    def _assert_auth(self) -> None:
         if self._session is None:
             raise exceptions.Unauthenticated(
                 "You need to use session.connect_xyz (NOT get_xyz) in order to perform this operation.")
 
-    def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException):
+    def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException) -> Any:
         """
         Internal function for making a linked object (authentication kept) based on an identificator (like a project id or username)
         Class must inherit from BaseSiteComponent

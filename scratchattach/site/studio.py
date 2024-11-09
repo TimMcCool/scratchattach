@@ -2,6 +2,7 @@
 
 import json
 import random
+from typing import Literal
 from . import user, comment, project, activity
 from ..utils import exceptions, commons
 from ..utils.commons import api_iterative, headers
@@ -43,7 +44,7 @@ class Studio(BaseSiteComponent):
 
     """
 
-    def __init__(self, **entries):
+    def __init__(self, **entries) -> None:
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
@@ -69,7 +70,7 @@ class Studio(BaseSiteComponent):
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
-    def _update_from_dict(self, studio):
+    def _update_from_dict(self, studio) -> Literal[True]:
         try: self.id = int(studio["id"])
         except Exception: pass
         try: self.title = studio["title"]
@@ -96,7 +97,7 @@ class Studio(BaseSiteComponent):
         except Exception: pass
         return True
 
-    def follow(self):
+    def follow(self) -> None:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
@@ -108,7 +109,7 @@ class Studio(BaseSiteComponent):
             timeout=10,
         )
 
-    def unfollow(self):
+    def unfollow(self) -> None:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
@@ -120,7 +121,7 @@ class Studio(BaseSiteComponent):
             timeout=10,
         )
 
-    def comments(self, *, limit=40, offset=0):
+    def comments(self, *, limit=40, offset=0) -> list[comment.Comment]:
         """
         Returns the comments posted on the studio (except for replies. To get replies use :meth:`scratchattach.studio.Studio.get_comment_replies`).
 
@@ -138,7 +139,7 @@ class Studio(BaseSiteComponent):
             i["source_id"] = self.id
         return commons.parse_object_list(response, comment.Comment, self._session)
 
-    def comment_replies(self, *, comment_id, limit=40, offset=0):
+    def comment_replies(self, *, comment_id, limit=40, offset=0) -> list[comment.Comment]:
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}/replies", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         for x in response:
@@ -147,7 +148,7 @@ class Studio(BaseSiteComponent):
             x["source_id"] = self.id    
         return commons.parse_object_list(response, comment.Comment, self._session)
 
-    def comment_by_id(self, comment_id):
+    def comment_by_id(self, comment_id) -> comment.Comment:
         r = requests.get(
             f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}",
             timeout=10,
@@ -158,7 +159,7 @@ class Studio(BaseSiteComponent):
         _comment._update_from_dict(r)
         return _comment
 
-    def post_comment(self, content, *, parent_id="", commentee_id=""):
+    def post_comment(self, content, *, parent_id="", commentee_id="") -> comment.Comment:
         """
         Posts a comment on the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
 
@@ -223,7 +224,7 @@ class Studio(BaseSiteComponent):
             cookies=self._cookies,
         )
 
-    def set_thumbnail(self, *, file):
+    def set_thumbnail(self, *, file) -> str:
         """
         Sets the studio thumbnail. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
 
@@ -268,7 +269,7 @@ class Studio(BaseSiteComponent):
         else:
             return r["thumbnail_url"]
 
-    def reply_comment(self, content, *, parent_id, commentee_id=""):
+    def reply_comment(self, content, *, parent_id, commentee_id="") -> comment.Comment:
         """
         Posts a reply to a comment on the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
 
@@ -289,7 +290,7 @@ class Studio(BaseSiteComponent):
             content, parent_id=parent_id, commentee_id=commentee_id
         )
 
-    def projects(self, limit=40, offset=0):
+    def projects(self, limit=40, offset=0) -> list[project.Project|project.PartialProject]:
         """
         Gets the studio projects.
 
@@ -304,7 +305,7 @@ class Studio(BaseSiteComponent):
             f"https://api.scratch.mit.edu/studios/{self.id}/projects", limit=limit, offset=offset)
         return commons.parse_object_list(response, project.Project, self._session)
 
-    def curators(self, limit=40, offset=0):
+    def curators(self, limit=40, offset=0) -> list[user.User]:
         """
         Gets the studio curators.
 
@@ -320,7 +321,7 @@ class Studio(BaseSiteComponent):
         return commons.parse_object_list(response, user.User, self._session, "username")
 
 
-    def invite_curator(self, curator):
+    def invite_curator(self, curator) -> dict:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
@@ -335,7 +336,7 @@ class Studio(BaseSiteComponent):
         except Exception:
             raise (exceptions.Unauthorized)
 
-    def promote_curator(self, curator):
+    def promote_curator(self, curator) -> dict:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
@@ -350,7 +351,7 @@ class Studio(BaseSiteComponent):
         except Exception:
             raise (exceptions.Unauthorized)
 
-    def remove_curator(self, curator):
+    def remove_curator(self, curator) -> dict:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
@@ -391,14 +392,14 @@ class Studio(BaseSiteComponent):
             raise (exceptions.Unauthorized)
     
 
-    def leave(self):
+    def leave(self) -> dict:
         """
         Removes yourself from the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         self._assert_auth()
         return self.remove_curator(self._session._username)
 
-    def add_project(self, project_id):
+    def add_project(self, project_id) -> dict:
         """
         Adds a project to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
 
@@ -412,7 +413,7 @@ class Studio(BaseSiteComponent):
             timeout=10,
         ).json()
 
-    def remove_project(self, project_id):
+    def remove_project(self, project_id) -> dict:
         """
         Removes a project from the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
 
@@ -426,7 +427,7 @@ class Studio(BaseSiteComponent):
             timeout=10,
         ).json()
 
-    def managers(self, limit=40, offset=0):
+    def managers(self, limit=40, offset=0) -> list[user.User]:
         """
         Gets the studio managers.
 
@@ -441,7 +442,7 @@ class Studio(BaseSiteComponent):
             f"https://api.scratch.mit.edu/studios/{self.id}/managers", limit=limit, offset=offset)
         return commons.parse_object_list(response, user.User, self._session, "username")
 
-    def host(self):
+    def host(self) -> user.User | None:
         """
         Gets the studio host.
 
@@ -454,7 +455,7 @@ class Studio(BaseSiteComponent):
         except Exception:
             return None
 
-    def set_fields(self, fields_dict):
+    def set_fields(self, fields_dict) -> None:
         """
         Sets fields. Uses the scratch.mit.edu/site-api PUT API.
         """
@@ -468,19 +469,19 @@ class Studio(BaseSiteComponent):
         )
 
 
-    def set_description(self, new):
+    def set_description(self, new) -> None:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         self.set_fields({"description": new + "\n"})
 
-    def set_title(self, new):
+    def set_title(self, new) -> None:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
         self.set_fields({"title": new})
 
-    def open_projects(self):
+    def open_projects(self) -> None:
         """
         Changes the studio settings so everyone (including non-curators) is able to add projects to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
@@ -492,7 +493,7 @@ class Studio(BaseSiteComponent):
             timeout=10,
         )
 
-    def close_projects(self):
+    def close_projects(self) -> None:
         """
         Changes the studio settings so only curators can add projects to the studio. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
@@ -504,7 +505,7 @@ class Studio(BaseSiteComponent):
             timeout=10,
         )
 
-    def turn_off_commenting(self):
+    def turn_off_commenting(self) -> None:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
@@ -518,7 +519,7 @@ class Studio(BaseSiteComponent):
             )
             self.comments_allowed = not self.comments_allowed
 
-    def turn_on_commenting(self):
+    def turn_on_commenting(self) -> None:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
@@ -532,7 +533,7 @@ class Studio(BaseSiteComponent):
             )
             self.comments_allowed = not self.comments_allowed
 
-    def toggle_commenting(self):
+    def toggle_commenting(self) -> None:
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
         """
@@ -562,7 +563,7 @@ class Studio(BaseSiteComponent):
             timeout=10,
         ).json()
     
-    def your_role(self):
+    def your_role(self) -> dict:
         """
         Returns a dict with information about your role in the studio (whether you're following, curating, managing it or are invited)
         """
@@ -593,7 +594,7 @@ def get_studio(studio_id) -> Studio:
     print("Warning: For methods that require authentication, use session.connect_studio instead of get_studio")
     return commons._get_object("id", studio_id, Studio, exceptions.StudioNotFound)
 
-def search_studios(*, query="", mode="trending", language="en", limit=40, offset=0):
+def search_studios(*, query="", mode="trending", language="en", limit=40, offset=0) -> list[Studio]:
     if not query:
         raise ValueError("The query can't be empty for search")
     response = commons.api_iterative(
@@ -601,7 +602,7 @@ def search_studios(*, query="", mode="trending", language="en", limit=40, offset
     return commons.parse_object_list(response, Studio)
 
 
-def explore_studios(*, query="", mode="trending", language="en", limit=40, offset=0):
+def explore_studios(*, query="", mode="trending", language="en", limit=40, offset=0) -> list[Studio]:
     if not query:
         raise ValueError("The query can't be empty for explore")
     response = commons.api_iterative(
