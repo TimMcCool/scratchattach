@@ -1,6 +1,7 @@
 """Session class and login function"""
 
 import json
+import os
 import re
 import warnings
 import pathlib
@@ -24,10 +25,20 @@ from . import classroom
 from ..eventhandlers import message_events, filterbot
 from . import activity
 from ._base import BaseSiteComponent
-from ..utils.commons import headers, empty_project_json
-from bs4 import BeautifulSoup
+from ..utils.commons import headers, empty_project_json, driver, email_gen, wait
 from ..other import project_json_capabilities
+from ..other.other_apis import check_username, check_password
 from ..utils.requests import Requests as requests
+
+from bs4 import BeautifulSoup
+
+import undetected_chromedriver as uc
+By = uc.By
+
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.select import Select
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
+
 
 CREATE_PROJECT_USES = []
 
@@ -56,7 +67,7 @@ class Session(BaseSiteComponent):
     def __str__(self):
         return "Login for account: {self.username}"
 
-    def __init__(self, **entries):
+    def __init__(self, *, options: uc.ChromeOptions = None, **entries):
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.post
@@ -83,6 +94,17 @@ class Session(BaseSiteComponent):
             "accept": "application/json",
             "Content-Type": "application/json",
         }
+
+        # Setup selenium driver
+        if options is None:
+            options = uc.ChromeOptions()
+            # options.add_argument('--headless')
+            options.add_experimental_option("prefs", {"profile.default_content_settings.popups": 0,
+                                                      "download.default_directory": os.path.abspath(os.getcwd())})
+
+        self.driver = uc.Chrome(options=options)
+
+        self.driver.minimize_window()
 
     def _update_from_dict(self, data):
         # Note: there are a lot more things you can get from this data dict.
@@ -864,3 +886,77 @@ def login_by_session_string(session_string) -> Session:
     except Exception:
         pass
     raise ValueError("Couldn't log in.")
+
+
+def join_scratch(username: str, password: str, country: str = "Antarctica", birth_month: str = "1",
+                 birth_year: str = "2000", gender: str = "Prefer not to say",
+                 email: str = None, recaptcha_option: str = "prompt") -> Session:
+    """
+    Arguments:
+        recaptcha_option (str): Either prompt, panic or retry
+    """
+    if user.User(username=username).does_exist() is not False:
+        return login(username, password)
+
+    code = check_username(username)
+    if code != "valid username":
+        raise exceptions.BadUsername(f"Bad username {username}, code: {code}")
+
+    code = check_password(password)
+    if code != "valid password":
+        raise exceptions.BadPassword(f"Bad password {password}, code: {code}")
+
+    if email is None:
+        email = email_gen()
+        warnings.warn(f"No email provided. Creating account with email of: {email}")
+
+    driver.get("https://scratch.mit.edu/join")
+    driver.find_element(By.ID, "username").send_keys(username)
+
+    driver.find_element(By.ID, "password").send_keys(password)
+    driver.find_element(By.ID, "passwordConfirm").send_keys(password)
+
+    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    wait.until(ec.visibility_of_element_located((By.NAME, "country")))
+    Select(driver.find_element(By.NAME, "country")).select_by_value(country)
+
+    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    wait.until(ec.visibility_of_element_located((By.NAME, "birth_month")))
+    Select(driver.find_element(By.NAME, "birth_month")).select_by_value(birth_month)
+    Select(driver.find_element(By.NAME, "birth_year")).select_by_value(birth_year)
+    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    wait.until(ec.visibility_of_element_located((By.ID, "GenderRadioOptionCustom")))
+    driver.find_element(By.ID, "GenderRadioOptionCustom").click()
+    driver.find_element(By.NAME, "custom").send_keys(gender)
+    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    driver.find_element(By.NAME, "email").send_keys(email)
+    driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    time.sleep(3)
+    # driver.minimize_window()
+
+    try:
+        driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+    except ElementClickInterceptedException as e:
+        # Searching for the element doesn't seem to work (maybe since it's an iframe??)
+        if recaptcha_option == "prompt":
+            driver.maximize_window()
+            input("Please complete the recaptcha!")
+            driver.find_element(By.CLASS_NAME, "modal-flush-bottom-button").click()
+
+        elif recaptcha_option == "retry":
+            return join_scratch(username, password, country, birth_month, birth_year, gender, email, recaptcha_option)
+
+        else:
+            raise e  # Raising an error ends the program so no need to return
+
+    wait.until(ec.url_changes("https://scratch.mit.edu/"))
+
+    driver.delete_all_cookies()
+    driver.get("data:,")
+    return login(username, password)

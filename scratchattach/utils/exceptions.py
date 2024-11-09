@@ -43,6 +43,20 @@ class XTokenError(Exception):
 
     pass
 
+class BadUsername(Exception):
+    """
+    Raised when the Scratch server rejects a username when attempting to join scratch.
+    """
+
+    pass
+
+class BadPassword(Exception):
+    """
+    Raised when the Scratch server rejects a password when attempting to join scratch.
+    """
+
+    pass
+
 # Not found errors:
 
 class UserNotFound(Exception):
