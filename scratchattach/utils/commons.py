@@ -81,6 +81,7 @@ def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True)
     api_data = api_data[:limit]
     return api_data
 
+
 def api_iterative(
     url, *, limit, offset, max_req_limit=40, add_params="", headers=headers, cookies={}
 ):
@@ -92,12 +93,12 @@ def api_iterative(
     if limit < 0:
         raise exceptions.BadRequest("limit parameter must be >= 0")
     
-    def fetch(o, l):
+    def fetch(off, lim):
         """
-        Performs a singla API request
+        Performs a single API request
         """
         resp = requests.get(
-            f"{url}?limit={l}&offset={o}{add_params}", headers=headers, cookies=cookies, timeout=10
+            f"{url}?limit={lim}&offset={off}{add_params}", headers=headers, cookies=cookies, timeout=10
         ).json()
         if not resp:
             return None
@@ -109,6 +110,7 @@ def api_iterative(
         fetch, limit, offset, max_req_limit=max_req_limit, unpack=True
     )
     return api_data
+
 
 def _get_object(identificator_name, identificator, Class, NotFoundException, session=None):
     # Interal function: Generalization of the process ran by get_user, get_studio etc.
