@@ -1,9 +1,11 @@
 """v2 ready: Common functions used by various internal modules"""
+from types import FunctionType
+from typing import Final, Any
 
 from . import exceptions
 from .requests import Requests as requests
 
-headers = {
+headers: Final = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                   "(KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
     "x-csrftoken": "a",
@@ -11,7 +13,7 @@ headers = {
     "referer": "https://scratch.mit.edu",
 }  # headers recommended for accessing API endpoints that don't require verification
 
-empty_project_json = {
+empty_project_json: Final = {
     'targets': [
         {
             'isStage': True,
@@ -58,39 +60,42 @@ empty_project_json = {
 }
 
 
-def api_iterative_data(fetch_func, limit, offset, max_req_limit=40, unpack=True):
+def api_iterative_data(fetch_func: 'FunctionType', limit: int, offset: int, max_req_limit: int = 40,
+                       unpack: bool = True):
     """
     Iteratively gets data by calling fetch_func with a moving offset and a limit.
     Once fetch_func returns None, the retrieval is completed.
     """
     if limit is None:
         limit = max_req_limit
+
     end = offset + limit
     api_data = []
     for offs in range(offset, end, max_req_limit):
-        d = fetch_func(
-            offs, max_req_limit
-        )  # Mimick actual scratch by only requesting the max amount
-        if d is None:
+        # Mimic actual scratch by only requesting the max amount
+        data = fetch_func(offs, max_req_limit)
+        if data is None:
             break
+
         if unpack:
-            api_data.extend(d)
+            api_data.extend(data)
         else:
-            api_data.append(d)
-        if len(d) < max_req_limit:
+            api_data.append(data)
+
+        if len(data) < max_req_limit:
             break
+
     api_data = api_data[:limit]
     return api_data
 
 
-def api_iterative(
-        url, *, limit, offset, max_req_limit=40, add_params="", _headers=None, cookies=None
-):
+def api_iterative(url: str, *, limit: int, offset: int, max_req_limit: int = 40, add_params: str = "",
+                  _headers: dict = None, cookies: dict = None):
     """
     Function for getting data from one of Scratch's iterative JSON API endpoints (like /users/<user>/followers, or /users/<user>/projects)
     """
     if _headers is None:
-        _headers = headers
+        _headers = headers.copy()
     if cookies is None:
         cookies = {}
 
@@ -99,7 +104,7 @@ def api_iterative(
     if limit < 0:
         raise exceptions.BadRequest("limit parameter must be >= 0")
 
-    def fetch(off, lim):
+    def fetch(off: int, lim: int):
         """
         Performs a single API request
         """
@@ -109,7 +114,7 @@ def api_iterative(
         if not resp:
             return None
         if resp == {"code": "BadRequest", "message": ""}:
-            raise exceptions.BadRequest("the passed arguments are invalid")
+            raise exceptions.BadRequest("The passed arguments are invalid")
         return resp
 
     api_data = api_iterative_data(
@@ -119,7 +124,7 @@ def api_iterative(
 
 
 def _get_object(identificator_name, identificator, Class, NotFoundException, session=None):
-    # Interal function: Generalization of the process ran by get_user, get_studio etc.
+    # Internal function: Generalization of the process ran by get_user, get_studio etc.
     # Builds an object of class that is inheriting from BaseSiteComponent
     # # Class must inherit from BaseSiteComponent
     try:
@@ -140,16 +145,16 @@ def _get_object(identificator_name, identificator, Class, NotFoundException, ses
         else:
             return _object
     except KeyError as e:
-        raise NotFoundException("Key error at key " + str(e) + " when reading API response")
+        raise NotFoundException(f"Key error at key {e} when reading API response")
     except Exception as e:
         raise e
 
 
-def webscrape_count(raw, text_before, text_after):
-    return int(raw.split(text_before)[1].split(text_after)[0])
+def webscrape_count(raw, text_before, text_after, cls: type = int) -> int | Any:
+    return cls(raw.split(text_before)[1].split(text_after)[0])
 
 
-def parse_object_list(raw, Class, session=None, primary_key="id"):
+def parse_object_list(raw, Class, session=None, primary_key="id") -> list:
     results = []
     for raw_dict in raw:
         try:
