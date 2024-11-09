@@ -107,7 +107,7 @@ class Session(BaseSiteComponent):
 
         self.driver.minimize_window()
 
-        atexit.register(lambda _: self.driver.close)
+        atexit.register(lambda: self.driver.close)
 
     def _update_from_dict(self, data):
         # Note: there are a lot more things you can get from this data dict.

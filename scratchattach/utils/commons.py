@@ -18,7 +18,7 @@ driver = uc.Chrome(options=options)
 wait = WebDriverWait(driver, 20)
 # driver.minimize_window()
 
-atexit.register(lambda _: driver.close)
+atexit.register(lambda: driver.close)
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -169,6 +169,7 @@ def parse_object_list(raw, Class, session=None, primary_key="id"):
         except Exception as e:
             print("Warning raised by scratchattach: failed to parse ", raw_dict, "error", e)
     return results
+
 
 def email_gen(length: int = 10, domains: list = None):
     if domains is None:
