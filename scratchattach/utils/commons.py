@@ -1,9 +1,13 @@
 """v2 ready: Common functions used by various internal modules"""
 from types import FunctionType
-from typing import Final, Any
+from typing import Final, Any, TYPE_CHECKING
 
 from . import exceptions
 from .requests import Requests as requests
+
+if TYPE_CHECKING:
+    # Having to do this is quite inelegant, but this is commons.py, so this is done to avoid cyclic imports
+    from ..site._base import BaseSiteComponent
 
 headers: Final = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -60,7 +64,7 @@ empty_project_json: Final = {
 }
 
 
-def api_iterative_data(fetch_func: 'FunctionType', limit: int, offset: int, max_req_limit: int = 40,
+def api_iterative_data(fetch_func: FunctionType, limit: int, offset: int, max_req_limit: int = 40,
                        unpack: bool = True):
     """
     Iteratively gets data by calling fetch_func with a moving offset and a limit.
@@ -123,7 +127,7 @@ def api_iterative(url: str, *, limit: int, offset: int, max_req_limit: int = 40,
     return api_data
 
 
-def _get_object(identificator_name, identificator, Class, NotFoundException, session=None):
+def _get_object(identificator_name, identificator, Class, NotFoundException, session=None) -> 'BaseSiteComponent':
     # Internal function: Generalization of the process ran by get_user, get_studio etc.
     # Builds an object of class that is inheriting from BaseSiteComponent
     # # Class must inherit from BaseSiteComponent
