@@ -6,7 +6,7 @@ import warnings
 from ..utils import commons
 from ..utils.exceptions import BadRequest
 from ..utils.requests import Requests as requests
-from ..utils.supportedlangs import SUPPORTED_CODES, SUPPORTED_NAMES, tts_lang
+from ..utils.supportedlangs import tts_lang, TSL_CODES, TSL_NAMES
 
 
 # --- Front page ---
@@ -149,11 +149,11 @@ def scratch_team_members() -> dict:
 
 
 def translate(language: str, text: str = "hello"):
-    if language not in SUPPORTED_CODES:
-        if language.lower() in SUPPORTED_CODES:
+    if language not in TSL_CODES:
+        if language.lower() in TSL_CODES:
             language = language.lower()
-        elif language.title() in SUPPORTED_NAMES:
-            language = SUPPORTED_CODES[SUPPORTED_NAMES.index(language.title())]
+        elif language.title() in TSL_NAMES:
+            language = TSL_CODES[TSL_NAMES.index(language.title())]
         else:
             warnings.warn(f"'{language}' is probably not a supported language")
     response_json = requests.get(
@@ -185,12 +185,12 @@ def text2speech(text: str = "hello", gender: str = "female", language: str = "en
     else:
         gender = ("female", 1)
 
-    if language not in SUPPORTED_NAMES:
-        if language.lower() in SUPPORTED_NAMES:
+    if language not in TSL_NAMES:
+        if language.lower() in TSL_NAMES:
             language = language.lower()
 
-        elif language.title() in SUPPORTED_CODES:
-            language = SUPPORTED_NAMES[SUPPORTED_CODES.index(language.title())]
+        elif language.title() in TSL_CODES:
+            language = TSL_NAMES[TSL_CODES.index(language.title())]
 
     lang = tts_lang(language.title())
     if lang is None:
