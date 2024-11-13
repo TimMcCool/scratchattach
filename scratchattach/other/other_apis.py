@@ -6,7 +6,7 @@ import warnings
 from ..utils import commons
 from ..utils.exceptions import BadRequest
 from ..utils.requests import Requests as requests
-from ..utils.supportedlangs import SUPPORTED_CODES, SUPPORTED_NAMES
+from ..utils.supportedlangs import SUPPORTED_CODES, SUPPORTED_NAMES, tts_lang
 
 
 # --- Front page ---
@@ -163,3 +163,41 @@ def translate(language: str, text: str = "hello"):
         return response_json["result"]
     else:
         raise BadRequest(f"Language '{language}' does not seem to be valid.\nResponse: {response_json}")
+
+
+def text2speech(text: str = "hello", gender: str = "female", language: str = "en-US"):
+    """
+    Sends a request to Scratch's TTS synthesis service.
+    Returns:
+        - The TTS audio (mp3) as bytes
+        - The playback rate (e.g. for giant it would be 0.84)
+    """
+    if gender == "female" or gender == "alto":
+        gender = ("female", 1)
+    elif gender == "male" or gender == "tenor":
+        gender = ("male", 1)
+    elif gender == "squeak":
+        gender = ("female", 1.19)
+    elif gender == "giant":
+        gender = ("male", .84)
+    elif gender == "kitten":
+        gender = ("female", 1.41)
+    else:
+        gender = ("female", 1)
+
+    if language not in SUPPORTED_NAMES:
+        if language.lower() in SUPPORTED_NAMES:
+            language = language.lower()
+
+        elif language.title() in SUPPORTED_CODES:
+            language = SUPPORTED_NAMES[SUPPORTED_CODES.index(language.title())]
+
+    lang = tts_lang(language.title())
+    if lang is None:
+        warnings.warn(f"Language '{language}' is probably not a supported language")
+    else:
+        language = lang["speechSynthLocale"]
+
+    response = requests.get(f"https://synthesis-service.scratch.mit.edu/synth"
+                            f"?locale={language}&gender={gender[0]}&text={text}")
+    return response.content, gender[1]
