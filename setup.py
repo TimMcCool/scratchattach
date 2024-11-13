@@ -18,7 +18,7 @@ setup(
     packages=find_packages(),
     install_requires=["websocket-client","requests","bs4","SimpleWebSocketServer"],
     keywords=['scratch api', 'scratchattach', 'scratch api python', 'scratch python', 'scratch for python', 'scratch', 'scratch cloud', 'scratch cloud variables', 'scratch bot'],
-    url='https://github.com/TimMcCool/scratchattach',
+    url='https://scratchattach.tim1de.net',
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",

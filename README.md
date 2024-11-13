@@ -4,7 +4,7 @@ The library allows setting cloud variables, following users, updating your profi
 so much more! Additionally, it provides frameworks that simplify sending data through cloud variables.
 
 <p align="left" style="margin:10px">
-  <img width="160" src="https://github.com/TimMcCool/scratchattach/blob/main/logos/logo.svg">
+  <img width="160" src="https://raw.githubusercontent.com/TimMcCool/scratchattach/refs/heads/main/logos/logo.svg">
 
 [![PyPI status](https://img.shields.io/pypi/status/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
 [![PyPI download month](https://img.shields.io/pypi/dm/scratchattach.svg)](https://pypi.python.org/pypi/scratchattach/)
