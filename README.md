@@ -1,4 +1,4 @@
-Scratch API wrapper with support for almost all site features. Created by [TimMcCool](https://scratch.mit.edu/users/TimMcCool/).
+Scratch API wrapper with support for almost **all** site features. Created by [TimMcCool](https://scratch.mit.edu/users/TimMcCool/).
 
 This library can set cloud variables, follow Scratchers, post comments and do so much more! It has special features that make it easy to transmit data through cloud variables.
 
@@ -12,17 +12,17 @@ This library can set cloud variables, follow Scratchers, post comments and do so
 [![GitHub license](https://badgen.net/github/license/TimMcCool/scratchattach)](https://github.com/TimMcCool/scratchattach/blob/master/LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/scratchattach/badge/?version=latest)](https://scratchattach.readthedocs.io/en/latest/?badge=latest)
 
-# Links
+# Links 🔗
 
 - **[Documentation](https://github.com/TimMcCool/scratchattach/wiki)**
 - [Extended documentation (WIP)](https://scratchattach.readthedocs.io/en/latest/)
 - [Examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)
 - [Change log](https://github.com/TimMcCool/scratchattach/blob/main/CHANGELOG.md)
 
-Report bugs by opening an issue on this repository. If you need help or guideance, leave a comment in the [official forum topic](https://scratch.mit.edu/discuss/topic/603418/
+Fount an issue or a bug? Create an issue on this repository! If you need help or guideance, leave a comment in the [official forum topic](https://scratch.mit.edu/discuss/topic/603418/
 ). Projects made using scratchattach can be added to [this Scratch studio](https://scratch.mit.edu/studios/31478892/).
 
-# Example usage
+# Example usage 🖥️
 
 ```py
 import scratchattach as scratch3
@@ -35,9 +35,9 @@ conn.set_var("variable", value)
 
 **[More examples](https://github.com/TimMcCool/scratchattach/wiki/Examples)**
 
-# Getting started
+# Getting started 💫
 
-**Installation:**
+**Installation:** 
 
 Run the following command in your command prompt / shell:
 
@@ -86,8 +86,8 @@ project_to_love.love()
 
 **All scratchattach features are documented in the [documentation](https://github.com/TimMcCool/scratchattach/wiki/#cloud-variables).**
 
-# Contributors
+# Contributors 📚
 
-- Allmost all code by TimMcCool.
-- See the GitHub repository for full list of contributors.
-- Create a pull request to contribute code yourself.
+- Allmost all code by TimMcCool. 💻
+- See the GitHub repository for full list of contributors. 📃
+- Create a pull request to contribute code yourself. 🫵
