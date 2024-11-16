@@ -6,7 +6,7 @@ import warnings
 from ..utils import commons
 from ..utils.exceptions import BadRequest
 from ..utils.requests import Requests as requests
-from ..utils.supportedlangs import tts_lang, TSL_CODES, TSL_NAMES
+from ..utils.supportedlangs import Languages
 
 
 # --- Front page ---
@@ -148,16 +148,17 @@ def scratch_team_members() -> dict:
     return json.loads(text)
 
 
-def translate(language: str, text: str = "hello"):
-    if language not in TSL_CODES:
-        if language.lower() in TSL_CODES:
-            language = language.lower()
-        elif language.title() in TSL_NAMES:
-            language = TSL_CODES[TSL_NAMES.index(language.title())]
-        else:
-            warnings.warn(f"'{language}' is probably not a supported language")
+def translate(language: str | Languages, text: str = "hello"):
+    if language.lower() not in Languages.all_of("code", str.lower):
+        if language.lower() in Languages.all_of("name", str.lower):
+            language = Languages.find(language.lower(), apply_func=str.lower).code
+
+    lang = Languages.find(language, "code", str.lower)
+    if lang is None:
+        raise ValueError(f"{language} is not a supported translate language")
+
     response_json = requests.get(
-        f"https://translate-service.scratch.mit.edu/translate?language={language}&text={text}").json()
+        f"https://translate-service.scratch.mit.edu/translate?language={lang.code}&text={text}").json()
 
     if "result" in response_json:
         return response_json["result"]
@@ -182,22 +183,29 @@ def text2speech(text: str = "hello", gender: str = "female", language: str = "en
         gender = ("male", .84)
     elif gender == "kitten":
         gender = ("female", 1.41)
+        split = text.split(' ')
+        text = ''
+        for token in split:
+            if token.strip() != '':
+                text += "meow "
     else:
         gender = ("female", 1)
 
-    if language not in TSL_NAMES:
-        if language.lower() in TSL_NAMES:
-            language = language.lower()
+    og_lang = language
+    if isinstance(language, Languages):
+        language = language.value.tts_locale
 
-        elif language.title() in TSL_CODES:
-            language = TSL_NAMES[TSL_CODES.index(language.title())]
+    if language is None:
+        raise ValueError(f"Language '{og_lang}' is not a supported tts language")
 
-    lang = tts_lang(language.title())
-    if lang is None:
-        warnings.warn(f"Language '{language}' is probably not a supported language")
-    else:
-        language = lang["speechSynthLocale"]
+    if language.lower() not in Languages.all_of("tts_locale", str.lower):
+        if language.lower() in Languages.all_of("name", str.lower):
+            language = Languages.find(language.lower(), apply_func=str.lower).tts_locale
+
+    lang = Languages.find(language, "tts_locale")
+    if lang is None or language is None:
+        raise ValueError(f"Language '{og_lang}' is not a supported tts language")
 
     response = requests.get(f"https://synthesis-service.scratch.mit.edu/synth"
-                            f"?locale={language}&gender={gender[0]}&text={text}")
+                            f"?locale={lang.tts_locale}&gender={gender[0]}&text={text}")
     return response.content, gender[1]
