@@ -10,7 +10,7 @@ from .eventhandlers.combine import MultiEventHandler
 from .other.other_apis import *
 from .other.project_json_capabilities import ProjectBody, get_empty_project_pb, get_pb_from_dict, read_sb3_file, download_asset
 from .utils.encoder import Encoding
-from .utils.supportedlangs import TranslateSupportedLangs as TSLangs
+from .utils.supportedlangs import Languages
 
 from .site.activity import Activity
 from .site.backpack_asset import BackpackAsset

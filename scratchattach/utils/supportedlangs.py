@@ -2,245 +2,137 @@
 List of supported languages of scratch's translate and text2speech extensions.
 Adapted from https://translate-service.scratch.mit.edu/supported?language=en
 """
+
 from enum import Enum
-
-# Supported langs for translate
-_TRANSLATE_SUPPORTED_LANGS = {'sq': 'Albanian', 'am': 'Amharic', 'ar': 'Arabic', 'hy': 'Armenian', 'az': 'Azerbaijani',
-                              'eu': 'Basque', 'be': 'Belarusian', 'bg': 'Bulgarian', 'ca': 'Catalan',
-                              'zh-tw': 'Chinese (Traditional)', 'hr': 'Croatian', 'cs': 'Czech', 'da': 'Danish',
-                              'nl': 'Dutch',
-                              'en': 'English', 'eo': 'Esperanto', 'et': 'Estonian', 'fi': 'Finnish', 'fr': 'French',
-                              'gl': 'Galician', 'de': 'German', 'el': 'Greek', 'ht': 'Haitian Creole', 'hi': 'Hindi',
-                              'hu': 'Hungarian', 'is': 'Icelandic', 'id': 'Indonesian', 'ga': 'Irish', 'it': 'Italian',
-                              'ja': 'Japanese', 'kn': 'Kannada', 'ko': 'Korean', 'ku': 'Kurdish (Kurmanji)',
-                              'la': 'Latin',
-                              'lv': 'Latvian', 'lt': 'Lithuanian', 'mk': 'Macedonian', 'ms': 'Malay', 'ml': 'Malayalam',
-                              'mt': 'Maltese', 'mi': 'Maori', 'mr': 'Marathi', 'mn': 'Mongolian',
-                              'my': 'Myanmar (Burmese)',
-                              'fa': 'Persian', 'pl': 'Polish', 'pt': 'Portuguese', 'ro': 'Romanian', 'ru': 'Russian',
-                              'gd': 'Scots Gaelic', 'sr': 'Serbian', 'sk': 'Slovak', 'sl': 'Slovenian', 'es': 'Spanish',
-                              'sv': 'Swedish', 'te': 'Telugu', 'th': 'Thai', 'tr': 'Turkish', 'uk': 'Ukrainian',
-                              'uz': 'Uzbek',
-                              'vi': 'Vietnamese', 'cy': 'Welsh', 'zu': 'Zulu', 'he': 'Hebrew',
-                              'zh-cn': 'Chinese (Simplified)'}
-
-TSL_CODES = tuple(_TRANSLATE_SUPPORTED_LANGS.keys())
-TSL_NAMES = tuple(_TRANSLATE_SUPPORTED_LANGS.values())
+from typing import Callable
 
 
-class TranslateSupportedLangs(Enum):
-    Albanian = "sq"
-    Amharic = "am"
-    Arabic = "ar"
-    Armenian = "hy"
-    Azerbaijani = "az"
-    Basque = "eu"
-    Belarusian = "be"
-    Bulgarian = "bg"
-    Catalan = "ca"
-    Traditional_Chinese = "zh-tw"
-    Croatian = "hr"
-    Czech = "cs"
-    Danish = "da"
-    Dutch = "nl"
-    English = "en"
-    Esperanto = "eo"
-    Estonian = "et"
-    Finnish = "fi"
-    French = "fr"
-    Galician = "gl"
-    German = "de"
-    Greek = "el"
-    Haitian_Creole = "ht"
-    Hindi = "hi"
-    Hungarian = "hu"
-    Icelandic = "is"
-    Indonesian = "id"
-    Irish = "ga"
-    Italian = "it"
-    Japanese = "ja"
-    Kannada = "kn"
-    Korean = "ko"
-    Kurdish = "ku"
-    Kurmanji = "ku"
-    Latin = "la"
-    Latvian = "lv"
-    Lithuanian = "lt"
-    Macedonian = "mk"
-    Malay = "ms"
-    Malayalam = "ml"
-    Maltese = "mt"
-    Maori = "mi"
-    Marathi = "mr"
-    Mongolian = "mn"
-    Myanmar = "my"
-    Burmese = "my"
-    Persian = "fa"
-    Polish = "pl"
-    Portuguese = "pt"
-    Romanian = "ro"
-    Russian = "ru"
-    Scots_Gaelic = "gd"
-    Serbian = "sr"
-    Slovak = "sk"
-    Slovenian = "sl"
-    Spanish = "es"
-    Swedish = "sv"
-    Telugu = "te"
-    Thai = "th"
-    Turkish = "tr"
-    Ukrainian = "uk"
-    Uzbek = "uz"
-    Vietnamese = "vi"
-    Welsh = "cy"
-    Zulu = "zu"
-    Hebrew = "he"
-    Simplified_Chinese = "zh-cn"
+class _Language:
+    def __init__(self, name: str = None, code: str = None, locales: list[str] = None, tts_locale: str = None,
+                 single_gender: bool = None):
+        self.name = name
+        self.code = code
+        self.locales = locales
+        self.tts_locale = tts_locale
+        self.single_gender = single_gender
+
+    def __repr__(self):
+        ret = "Language("
+        for attr in self.__dict__.keys():
+            if not attr.startswith("_"):
+                val = getattr(self, attr)
+                ret += f"{repr(val)}, "
+        if ret.endswith(", "):
+            ret = ret[:-2]
+
+        ret += ')'
+        return ret
+
+    def __str__(self):
+        return f"Language<{self.name} - {self.code}>"
 
 
-# Code for generating the dict again:
-# import requests
-#
-# SUPPORTED_LANGS = {}
-# raw = requests.get("https://translate-service.scratch.mit.edu/supported").json()
-# for lang in raw:
-#     SUPPORTED_LANGS[lang["code"]] = lang["name"]
-# print(SUPPORTED_LANGS)
+class Languages(Enum):
+    Albanian = _Language('Albanian', 'sq', None, None, None)
+    Amharic = _Language('Amharic', 'am', None, None, None)
+    Arabic = _Language('Arabic', 'ar', ['ar'], 'arb', True)
+    Armenian = _Language('Armenian', 'hy', None, None, None)
+    Azerbaijani = _Language('Azerbaijani', 'az', None, None, None)
+    Basque = _Language('Basque', 'eu', None, None, None)
+    Belarusian = _Language('Belarusian', 'be', None, None, None)
+    Bulgarian = _Language('Bulgarian', 'bg', None, None, None)
+    Catalan = _Language('Catalan', 'ca', None, None, None)
+    Chinese_Traditional = _Language('Chinese (Traditional)', 'zh-tw', None, None, None)
+    Croatian = _Language('Croatian', 'hr', None, None, None)
+    Czech = _Language('Czech', 'cs', None, None, None)
+    Danish = _Language('Danish', 'da', ['da'], 'da-DK', False)
+    Dutch = _Language('Dutch', 'nl', ['nl'], 'nl-NL', False)
+    English = _Language('English', 'en', ['en'], 'en-US', False)
+    Esperanto = _Language('Esperanto', 'eo', None, None, None)
+    Estonian = _Language('Estonian', 'et', None, None, None)
+    Finnish = _Language('Finnish', 'fi', None, None, None)
+    French = _Language('French', 'fr', ['fr'], 'fr-FR', False)
+    Galician = _Language('Galician', 'gl', None, None, None)
+    German = _Language('German', 'de', ['de'], 'de-DE', False)
+    Greek = _Language('Greek', 'el', None, None, None)
+    Haitian_Creole = _Language('Haitian Creole', 'ht', None, None, None)
+    Hindi = _Language('Hindi', 'hi', ['hi'], 'hi-IN', True)
+    Hungarian = _Language('Hungarian', 'hu', None, None, None)
+    Icelandic = _Language('Icelandic', 'is', ['is'], 'is-IS', False)
+    Indonesian = _Language('Indonesian', 'id', None, None, None)
+    Irish = _Language('Irish', 'ga', None, None, None)
+    Italian = _Language('Italian', 'it', ['it'], 'it-IT', False)
+    Japanese = _Language('Japanese', 'ja', ['ja', 'ja-hira'], 'ja-JP', False)
+    Kannada = _Language('Kannada', 'kn', None, None, None)
+    Korean = _Language('Korean', 'ko', ['ko'], 'ko-KR', True)
+    Kurdish_Kurmanji = _Language('Kurdish (Kurmanji)', 'ku', None, None, None)
+    Latin = _Language('Latin', 'la', None, None, None)
+    Latvian = _Language('Latvian', 'lv', None, None, None)
+    Lithuanian = _Language('Lithuanian', 'lt', None, None, None)
+    Macedonian = _Language('Macedonian', 'mk', None, None, None)
+    Malay = _Language('Malay', 'ms', None, None, None)
+    Malayalam = _Language('Malayalam', 'ml', None, None, None)
+    Maltese = _Language('Maltese', 'mt', None, None, None)
+    Maori = _Language('Maori', 'mi', None, None, None)
+    Marathi = _Language('Marathi', 'mr', None, None, None)
+    Mongolian = _Language('Mongolian', 'mn', None, None, None)
+    Myanmar_Burmese = _Language('Myanmar (Burmese)', 'my', None, None, None)
+    Persian = _Language('Persian', 'fa', None, None, None)
+    Polish = _Language('Polish', 'pl', ['pl'], 'pl-PL', False)
+    Portuguese = _Language('Portuguese', 'pt', None, None, None)
+    Romanian = _Language('Romanian', 'ro', ['ro'], 'ro-RO', True)
+    Russian = _Language('Russian', 'ru', ['ru'], 'ru-RU', False)
+    Scots_Gaelic = _Language('Scots Gaelic', 'gd', None, None, None)
+    Serbian = _Language('Serbian', 'sr', None, None, None)
+    Slovak = _Language('Slovak', 'sk', None, None, None)
+    Slovenian = _Language('Slovenian', 'sl', None, None, None)
+    Spanish = _Language('Spanish', 'es', None, None, None)
+    Swedish = _Language('Swedish', 'sv', ['sv'], 'sv-SE', True)
+    Telugu = _Language('Telugu', 'te', None, None, None)
+    Thai = _Language('Thai', 'th', None, None, None)
+    Turkish = _Language('Turkish', 'tr', ['tr'], 'tr-TR', True)
+    Ukrainian = _Language('Ukrainian', 'uk', None, None, None)
+    Uzbek = _Language('Uzbek', 'uz', None, None, None)
+    Vietnamese = _Language('Vietnamese', 'vi', None, None, None)
+    Welsh = _Language('Welsh', 'cy', ['cy'], 'cy-GB', True)
+    Zulu = _Language('Zulu', 'zu', None, None, None)
+    Hebrew = _Language('Hebrew', 'he', None, None, None)
+    Chinese_Simplified = _Language('Chinese (Simplified)', 'zh-cn', None, None, None)
+    Mandarin = Chinese_Simplified
 
-# Language info for tts
-TTS_LANGUAGE_INFO = [
-    {
-        "name": 'Arabic',
-        "locales": ['ar'],
-        "speechSynthLocale": 'arb',
-        "singleGender": True
-    },
-    {
-        "name": 'Chinese (Mandarin)',
-        "locales": ['zh-cn', 'zh-tw'],
-        "speechSynthLocale": 'cmn-CN',
-        "singleGender": True
-    },
-    {
-        "name": 'Danish',
-        "locales": ['da'],
-        "speechSynthLocale": 'da-DK'
-    },
-    {
-        "name": 'Dutch',
-        "locales": ['nl'],
-        "speechSynthLocale": 'nl-NL'
-    },
-    {
-        "name": 'English',
-        "locales": ['en'],
-        "speechSynthLocale": 'en-US'
-    },
-    {
-        "name": 'French',
-        "locales": ['fr'],
-        "speechSynthLocale": 'fr-FR'
-    },
-    {
-        "name": 'German',
-        "locales": ['de'],
-        "speechSynthLocale": 'de-DE'
-    },
-    {
-        "name": 'Hindi',
-        "locales": ['hi'],
-        "speechSynthLocale": 'hi-IN',
-        "singleGender": True
-    },
-    {
-        "name": 'Icelandic',
-        "locales": ['is'],
-        "speechSynthLocale": 'is-IS'
-    },
-    {
-        "name": 'Italian',
-        "locales": ['it'],
-        "speechSynthLocale": 'it-IT'
-    },
-    {
-        "name": 'Japanese',
-        "locales": ['ja', 'ja-hira'],
-        "speechSynthLocale": 'ja-JP'
-    },
-    {
-        "name": 'Korean',
-        "locales": ['ko'],
-        "speechSynthLocale": 'ko-KR',
-        "singleGender": True
-    },
-    {
-        "name": 'Norwegian',
-        "locales": ['nb', 'nn'],
-        "speechSynthLocale": 'nb-NO',
-        "singleGender": True
-    },
-    {
-        "name": 'Polish',
-        "locales": ['pl'],
-        "speechSynthLocale": 'pl-PL'
-    },
-    {
-        "name": 'Portuguese (Brazilian)',
-        "locales": ['pt-br'],
-        "speechSynthLocale": 'pt-BR'
-    },
-    {
-        "name": 'Portuguese (European)',
-        "locales": ['pt'],
-        "speechSynthLocale": 'pt-PT'
-    },
-    {
-        "name": 'Romanian',
-        "locales": ['ro'],
-        "speechSynthLocale": 'ro-RO',
-        "singleGender": True
-    },
-    {
-        "name": 'Russian',
-        "locales": ['ru'],
-        "speechSynthLocale": 'ru-RU'
-    },
-    {
-        "name": 'Spanish (European)',
-        "locales": ['es'],
-        "speechSynthLocale": 'es-ES'
-    },
-    {
-        "name": 'Spanish (Latin American)',
-        "locales": ['es-419'],
-        "speechSynthLocale": 'es-US'
-    },
-    {
-        "name": 'Swedish',
-        "locales": ['sv'],
-        "speechSynthLocale": 'sv-SE',
-        "singleGender": True
-    },
-    {
-        "name": 'Turkish',
-        "locales": ['tr'],
-        "speechSynthLocale": 'tr-TR',
-        "singleGender": True
-    },
-    {
-        "name": 'Welsh',
-        "locales": ['cy'],
-        "speechSynthLocale": 'cy-GB',
-        "singleGender": True
-    }]
+    cmn_CN = _Language(None, None, ['zh-cn', 'zh-tw'], 'cmn-CN', True)
+    nb_NO = _Language(None, None, ['nb', 'nn'], 'nb-NO', True)
+    pt_BR = _Language(None, None, ['pt-br'], 'pt-BR', False)
+    Brazilian = pt_BR
+    pt_PT = _Language(None, None, ['pt'], 'pt-PT', False)
+    es_ES = _Language(None, None, ['es'], 'es-ES', False)
+    es_US = _Language(None, None, ['es-419'], 'es-US', False)
 
+    @staticmethod
+    def find(value, by: str = "name", apply_func: Callable = None) -> _Language:
+        if apply_func is None:
+            def apply_func(x):
+                return x
 
-def tts_lang(attribute: str, by: str = None):
-    for lang in TTS_LANGUAGE_INFO:
-        if by is None:
-            if attribute in lang.values():
-                return lang
-            continue
+        for lang_enum in Languages:
+            lang = lang_enum.value
+            try:
+                if apply_func(getattr(lang, by)) == value:
+                    return lang
+            except TypeError:
+                pass
 
-        if lang.get(by) == attribute:
-            return lang
+    @staticmethod
+    def all_of(attr_name: str = "name", apply_func: Callable = None):
+        if apply_func is None:
+            def apply_func(x):
+                return x
+
+        for lang_enum in Languages:
+            lang = lang_enum.value
+            attr = getattr(lang, attr_name)
+            try:
+                yield apply_func(attr)
+
+            except TypeError:
+                yield attr
