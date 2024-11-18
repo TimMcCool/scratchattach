@@ -660,6 +660,28 @@ class Session(BaseSiteComponent):
                 _session=self))
         return classes
 
+    def mystuff_ended_classes(self, mode: str = "Last created", page: int = None) -> list[classroom.Classroom]:
+        if not self.is_teacher:
+            raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have (deleted) classes")
+        ascsort, descsort = self._get_class_sort_mode(mode)
+
+        classes_data = requests.get("https://scratch.mit.edu/site-api/classrooms/closed/",
+                                    params={"page": page, "ascsort": ascsort, "descsort": descsort},
+                                    headers=self._headers, cookies=self._cookies).json()
+        classes = []
+        for data in classes_data:
+            fields = data["fields"]
+            educator_pf = fields["educator_profile"]
+            classes.append(classroom.Classroom(
+                id=data["pk"],
+                title=fields["title"],
+                classtoken=fields["token"],
+                datetime=datetime.datetime.fromisoformat(fields["datetime_created"]),
+                author=user.User(
+                    username=educator_pf["user"]["username"], id=educator_pf["user"]["pk"], _session=self),
+                _session=self))
+        return classes
+
     def backpack(self, limit: int = 20, offset: int = 0) -> list[dict]:
         """
         Lists the assets that are in the backpack of the user associated with the session.

@@ -130,6 +130,12 @@ class Classroom(BaseSiteComponent):
             raise exceptions.Unauthenticated(
                 f"Classroom {self} has no associated session. Use session.connect_classroom() instead of sa.get_classroom()")
 
+    def set_thumbnail(self, thumbnail: bytes):
+        self._check_session()
+        requests.post(f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
+                                headers=self._headers, cookies=self._cookies,
+                                files={"file": thumbnail})
+
     def set_description(self, desc: str):
         self._check_session()
         response = requests.put(f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
@@ -180,6 +186,29 @@ class Classroom(BaseSiteComponent):
             else:
                 warnings.warn(f"{self._session} may not be authenticated to edit {self}")
 
+        except Exception as e:
+            warnings.warn(f"{self._session} may not be authenticated to edit {self}")
+            raise e
+
+    def reopen(self):
+        self._check_session()
+        response = requests.put(f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
+                                headers=self._headers, cookies=self._cookies,
+                                json={"visibility": "visible"})
+
+        try:
+            response.json()
+        except Exception as e:
+            warnings.warn(f"{self._session} may not be authenticated to edit {self}")
+            raise e
+
+    def close(self):
+        self._check_session()
+        response = requests.post(f"https://scratch.mit.edu/site-api/classrooms/close_classroom/{self.id}/",
+                                 headers=self._headers, cookies=self._cookies)
+
+        try:
+            response.json()
         except Exception as e:
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
