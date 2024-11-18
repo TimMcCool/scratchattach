@@ -33,10 +33,10 @@ class Requests:
         return r
 
     @staticmethod
-    def post(url, *, data=None, json=None, headers=None, cookies=None, timeout=None, params=None):
+    def post(url, *, data=None, json=None, headers=None, cookies=None, timeout=None, params=None, files=None):
         try:
             r = requests.post(url, data=data, json=json, headers=headers, cookies=cookies, params=params,
-                              timeout=timeout, proxies=proxies)
+                              timeout=timeout, proxies=proxies, files=files)
         except Exception as e:
             raise exceptions.FetchError(e)
         Requests.check_response(r)

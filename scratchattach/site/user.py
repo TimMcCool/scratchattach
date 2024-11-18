@@ -71,10 +71,10 @@ class User(BaseSiteComponent):
 
         # Headers and cookies:
         if self._session is None:
-            self._headers = headers
+            self._headers :dict = headers
             self._cookies = {}
         else:
-            self._headers = self._session._headers
+            self._headers :dict = self._session._headers
             self._cookies = self._session._cookies
 
         # Headers for operations that require accept and Content-Type fields:
@@ -421,6 +421,18 @@ class User(BaseSiteComponent):
         _projects = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self.username}/projects/recentlyviewed", limit=limit, offset=offset, _headers= self._headers)
         return commons.parse_object_list(_projects, project.Project, self._session)
+
+    def set_pfp(self, image: bytes):
+        """
+        Sets the user's profile picture. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
+        """
+        # Teachers can set pfp! - Should update this method to check for that
+        # self._assert_permission()
+        requests.post(
+            f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
+            headers=self._headers,
+            cookies=self._cookies,
+            files={"file": image})
 
     def set_bio(self, text):
         """
