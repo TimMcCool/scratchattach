@@ -221,6 +221,31 @@ class Session(BaseSiteComponent):
             limit=limit, offset=offset, _headers=self._headers, cookies=self._cookies
         )
 
+    @staticmethod
+    def _get_class_sort_mode(mode: str):
+        ascsort = ''
+        descsort = ''
+
+        mode = mode.lower()
+        if mode == "last created":
+            pass
+        elif mode == "students":
+            descsort = "student_count"
+        elif mode == "a-z":
+            ascsort = "title"
+        elif mode == "z-a":
+            descsort = "title"
+
+        return ascsort, descsort
+
+    def classroom_alerts(self, mode: str = "Last created", page: int = None):
+        ascsort, descsort = self._get_class_sort_mode(mode)
+
+        data = requests.get("https://scratch.mit.edu/site-api/classrooms/alerts/",
+                            params={"page": page, "ascsort": ascsort, "descsort": descsort},
+                            headers=self._headers, cookies=self._cookies).json()
+        return data
+
     def clear_messages(self):
         """
         Clears all messages.
@@ -519,8 +544,9 @@ class Session(BaseSiteComponent):
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't create class")
 
-        data = requests.post("https://scratch.mit.edu/classes/create_classroom/", json={"title": title, "description": desc},
-                                 headers=self._headers, cookies=self._cookies).json()
+        data = requests.post("https://scratch.mit.edu/classes/create_classroom/",
+                             json={"title": title, "description": desc},
+                             headers=self._headers, cookies=self._cookies).json()
 
         class_id = data[0]["id"]
         return self.connect_classroom(class_id)
@@ -615,19 +641,7 @@ class Session(BaseSiteComponent):
     def mystuff_classes(self, mode: str = "Last created", page: int = None) -> list[classroom.Classroom]:
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have classes")
-
-        ascsort = ''
-        descsort = ''
-
-        mode = mode.lower()
-        if mode == "last created":
-            pass
-        elif mode == "students":
-            descsort = "student_count"
-        elif mode == "a-z":
-            ascsort = "title"
-        elif mode == "z-a":
-            descsort = "title"
+        ascsort, descsort = self._get_class_sort_mode(mode)
 
         classes_data = requests.get("https://scratch.mit.edu/site-api/classrooms/all/",
                                     params={"page": page, "ascsort": ascsort, "descsort": descsort},
