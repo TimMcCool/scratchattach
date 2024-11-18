@@ -28,7 +28,7 @@ from ..eventhandlers import message_events, filterbot
 from ..other import project_json_capabilities
 from ..utils import commons
 from ..utils import exceptions
-from ..utils.commons import headers, empty_project_json, webscrape_count
+from ..utils.commons import headers, empty_project_json, webscrape_count, get_class_sort_mode
 from ..utils.requests import Requests as requests
 
 CREATE_PROJECT_USES = []
@@ -221,27 +221,18 @@ class Session(BaseSiteComponent):
             limit=limit, offset=offset, _headers=self._headers, cookies=self._cookies
         )
 
-    @staticmethod
-    def _get_class_sort_mode(mode: str):
-        ascsort = ''
-        descsort = ''
+    def classroom_alerts(self, _classroom: classroom.Classroom | int = None, mode: str = "Last created", page: int = None):
+        if isinstance(_classroom, classroom.Classroom):
+            _classroom = _classroom.id
 
-        mode = mode.lower()
-        if mode == "last created":
-            pass
-        elif mode == "students":
-            descsort = "student_count"
-        elif mode == "a-z":
-            ascsort = "title"
-        elif mode == "z-a":
-            descsort = "title"
+        if _classroom is None:
+            _classroom = ''
+        else:
+            _classroom = f"{_classroom}/"
 
-        return ascsort, descsort
+        ascsort, descsort = get_class_sort_mode(mode)
 
-    def classroom_alerts(self, mode: str = "Last created", page: int = None):
-        ascsort, descsort = self._get_class_sort_mode(mode)
-
-        data = requests.get("https://scratch.mit.edu/site-api/classrooms/alerts/",
+        data = requests.get(f"https://scratch.mit.edu/site-api/classrooms/alerts/{_classroom}",
                             params={"page": page, "ascsort": ascsort, "descsort": descsort},
                             headers=self._headers, cookies=self._cookies).json()
         return data
@@ -641,7 +632,7 @@ class Session(BaseSiteComponent):
     def mystuff_classes(self, mode: str = "Last created", page: int = None) -> list[classroom.Classroom]:
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have classes")
-        ascsort, descsort = self._get_class_sort_mode(mode)
+        ascsort, descsort = get_class_sort_mode(mode)
 
         classes_data = requests.get("https://scratch.mit.edu/site-api/classrooms/all/",
                                     params={"page": page, "ascsort": ascsort, "descsort": descsort},
@@ -663,7 +654,7 @@ class Session(BaseSiteComponent):
     def mystuff_ended_classes(self, mode: str = "Last created", page: int = None) -> list[classroom.Classroom]:
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have (deleted) classes")
-        ascsort, descsort = self._get_class_sort_mode(mode)
+        ascsort, descsort = get_class_sort_mode(mode)
 
         classes_data = requests.get("https://scratch.mit.edu/site-api/classrooms/closed/",
                                     params={"page": page, "ascsort": ascsort, "descsort": descsort},

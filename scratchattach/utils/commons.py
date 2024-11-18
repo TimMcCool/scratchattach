@@ -169,3 +169,23 @@ def parse_object_list(raw, Class, session=None, primary_key="id") -> list:
         except Exception as e:
             print("Warning raised by scratchattach: failed to parse ", raw_dict, "error", e)
     return results
+
+
+def get_class_sort_mode(mode: str):
+    """
+    Returns the sort mode for the given mode for classes only
+    """
+    ascsort = ''
+    descsort = ''
+
+    mode = mode.lower()
+    if mode == "last created":
+        pass
+    elif mode == "students":
+        descsort = "student_count"
+    elif mode == "a-z":
+        ascsort = "title"
+    elif mode == "z-a":
+        descsort = "title"
+
+    return ascsort, descsort

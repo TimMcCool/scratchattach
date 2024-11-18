@@ -14,6 +14,7 @@ from ..utils.commons import headers
 
 from bs4 import BeautifulSoup
 
+
 class Classroom(BaseSiteComponent):
     def __init__(self, **entries):
         # Info on how the .update method has to fetch the data:
@@ -134,8 +135,8 @@ class Classroom(BaseSiteComponent):
     def set_thumbnail(self, thumbnail: bytes):
         self._check_session()
         requests.post(f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
-                                headers=self._headers, cookies=self._cookies,
-                                files={"file": thumbnail})
+                      headers=self._headers, cookies=self._cookies,
+                      files={"file": thumbnail})
 
     def set_description(self, desc: str):
         self._check_session()
@@ -221,7 +222,9 @@ class Classroom(BaseSiteComponent):
         """
         if limit > 20:
             warnings.warn("The limit is set to more than 20. There may be an error")
-        soup = BeautifulSoup(requests.get(f"https://scratch.mit.edu/site-api/classrooms/activity/public/{self.id}/?limit={limit}").text, 'html.parser')
+        soup = BeautifulSoup(
+            requests.get(f"https://scratch.mit.edu/site-api/classrooms/activity/public/{self.id}/?limit={limit}").text,
+            'html.parser')
 
         activities = []
         source = soup.find_all("li")
@@ -233,14 +236,18 @@ class Classroom(BaseSiteComponent):
 
         return activities
 
-    def activity(self):
+    def activity(self, student: str="all", mode: str = "Last created", page: int = None):
         """
         Get a list of actvity raw dictionaries. However, they are in a very annoying format. This method should be updated
         """
 
         self._check_session()
 
-        data = requests.get(f"https://scratch.mit.edu/site-api/classrooms/activity/{self.id}/all/", headers=self._headers, cookies=self._cookies).json()
+        ascsort, descsort = commons.get_class_sort_mode(mode)
+
+        data = requests.get(f"https://scratch.mit.edu/site-api/classrooms/activity/{self.id}/{student}/",
+                            params={"page": page, "ascsort": ascsort, "descsort": descsort},
+                            headers=self._headers, cookies=self._cookies).json()
 
         return data
 
