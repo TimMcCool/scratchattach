@@ -1,6 +1,7 @@
 """Session class and login function"""
 
 import base64
+import datetime
 import hashlib
 import json
 import pathlib
@@ -49,7 +50,7 @@ class Session(BaseSiteComponent):
     """
 
     def __str__(self):
-        return "Login for account: {self.username}"
+        return f"Login for account: {self.username}"
 
     def __init__(self, **entries):
         # Info on how the .update method has to fetch the data:
@@ -63,7 +64,7 @@ class Session(BaseSiteComponent):
         self.new_scratcher = None
 
         # Set attributes that Session object may get
-        self._user = None
+        self._user: user.User = None
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)
@@ -94,6 +95,8 @@ class Session(BaseSiteComponent):
         self.email = data["user"]["email"]
 
         self.new_scratcher = data["permissions"]["new_scratcher"]
+        self.is_teacher = data["permissions"]["educator"]
+
         self.mute_status = data["permissions"]["mute_status"]
 
         self.username = data["user"]["username"]
@@ -118,7 +121,11 @@ class Session(BaseSiteComponent):
         Returns:
             scratchattach.user.User: Object representing the user associated with the session.
         """
-        if not hasattr(self, "_user"):
+        cached = hasattr(self, "_user")
+        if cached:
+            cached = self._user is not None
+
+        if not cached:
             self._user = self.connect_user(self._username)
         return self._user
 
@@ -508,6 +515,16 @@ class Session(BaseSiteComponent):
 
         return new_studio
 
+    def create_class(self, title: str, desc: str = ''):
+        if not self.is_teacher:
+            raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't create class")
+
+        data = requests.post("https://scratch.mit.edu/classes/create_classroom/", json={"title": title, "description": desc},
+                                 headers=self._headers, cookies=self._cookies).json()
+
+        class_id = data[0]["id"]
+        return self.connect_classroom(class_id)
+
     # --- My stuff page ---
 
     def mystuff_projects(self, filter_arg: str = "all", *, page: int = 1, sort_by: str = '', descending: bool = True) \
@@ -594,6 +611,40 @@ class Session(BaseSiteComponent):
             return studios
         except Exception:
             raise exceptions.FetchError()
+
+    def mystuff_classes(self, mode: str = "Last created", page: int = None) -> list[classroom.Classroom]:
+        if not self.is_teacher:
+            raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have classes")
+
+        ascsort = ''
+        descsort = ''
+
+        mode = mode.lower()
+        if mode == "last created":
+            pass
+        elif mode == "students":
+            descsort = "student_count"
+        elif mode == "a-z":
+            ascsort = "title"
+        elif mode == "z-a":
+            descsort = "title"
+
+        classes_data = requests.get("https://scratch.mit.edu/site-api/classrooms/all/",
+                                    params={"page": page, "ascsort": ascsort, "descsort": descsort},
+                                    headers=self._headers, cookies=self._cookies).json()
+        classes = []
+        for data in classes_data:
+            fields = data["fields"]
+            educator_pf = fields["educator_profile"]
+            classes.append(classroom.Classroom(
+                id=data["pk"],
+                title=fields["title"],
+                classtoken=fields["token"],
+                datetime=datetime.datetime.fromisoformat(fields["datetime_created"]),
+                author=user.User(
+                    username=educator_pf["user"]["username"], id=educator_pf["user"]["pk"], _session=self),
+                _session=self))
+        return classes
 
     def backpack(self, limit: int = 20, offset: int = 0) -> list[dict]:
         """

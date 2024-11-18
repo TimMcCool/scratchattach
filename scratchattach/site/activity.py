@@ -34,9 +34,9 @@ class Activity(BaseSiteComponent):
         # Update attributes from entries dict:
         self.__dict__.update(entries)
 
-    def update():
+    def update(self):
         print("Warning: Activity objects can't be updated")
-        return False # Objects of this type cannot be updated
+        return False  # Objects of this type cannot be updated
 
     def _update_from_dict(self, data):
         self.raw = data
