@@ -18,6 +18,7 @@ from bs4 import BeautifulSoup
 class Classroom(BaseSiteComponent):
     def __init__(self, **entries):
         # Info on how the .update method has to fetch the data:
+        # NOTE: THIS DOESN'T WORK WITH CLOSED CLASSES!
         self.update_function = requests.get
         if "id" in entries:
             self.update_API = f"https://api.scratch.mit.edu/classrooms/{entries['id']}"
@@ -45,6 +46,9 @@ class Classroom(BaseSiteComponent):
         self._json_headers = dict(self._headers)
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
+
+    def __repr__(self):
+        return f"classroom called '{self.title}'"
 
     def _update_from_dict(self, classrooms):
         try:
@@ -215,6 +219,25 @@ class Classroom(BaseSiteComponent):
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
 
+    def register_user(self, username: str, password: str, birth_month: int, birth_year: int,
+                      gender: str, country: str, is_robot: bool = False):
+        return register_user(self.id, self.classtoken, username, password, birth_month, birth_year, gender, country, is_robot)
+
+    def generate_signup_link(self):
+        if self.classtoken is not None:
+            return f"https://scratch.mit.edu/signup/{self.classtoken}"
+
+        self._check_session()
+
+        response = requests.get(f"https://scratch.mit.edu/site-api/classrooms/generate_registration_link/{self.id}/", headers=self._headers, cookies=self._cookies)
+        # Should really check for '404' page
+        data = response.json()
+        if "reg_link" in data:
+            return data["reg_link"]
+        else:
+            raise exceptions.Unauthorized(f"{self._session} is not authorised to generate a signup link of {self}")
+
+
     def public_activity(self, *, limit=20):
         """
         Returns:
@@ -288,3 +311,25 @@ def get_classroom_from_token(class_token) -> Classroom:
     """
     warnings.warn("For methods that require authentication, use session.connect_classroom instead of get_classroom")
     return commons._get_object("classtoken", class_token, Classroom, exceptions.ClassroomNotFound)
+
+
+def register_user(class_id: int, class_token: str, username: str, password: str, birth_month: int, birth_year: int, gender: str, country: str, is_robot: bool = False):
+    data = {"classroom_id": class_id,
+                        "classroom_token": class_token,
+
+                        "username": username,
+                        "password": password,
+                        "birth_month": birth_month,
+                        "birth_year": birth_year,
+                        "gender": gender,
+                        "country": country,
+                        "is_robot": is_robot}
+
+    response = requests.post("https://scratch.mit.edu/classes/register_new_student/",
+                             data=data, headers=headers, cookies={"scratchcsrftoken": 'a'})
+    ret = response.json()[0]
+
+    if "username" in ret:
+        return
+    else:
+        raise exceptions.Unauthorized(f"Can't create account: {response.text}")
