@@ -7,11 +7,12 @@ if TYPE_CHECKING:
     from ..site.session import Session
 
 from ..utils.commons import requests
-from . import user
+from . import user, activity
 from ._base import BaseSiteComponent
 from ..utils import exceptions, commons
 from ..utils.commons import headers
 
+from bs4 import BeautifulSoup
 
 class Classroom(BaseSiteComponent):
     def __init__(self, **entries):
@@ -212,6 +213,36 @@ class Classroom(BaseSiteComponent):
         except Exception as e:
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
+
+    def public_activity(self, *, limit=20):
+        """
+        Returns:
+            list<scratchattach.Activity>: The user's activity data as parsed list of scratchattach.activity.Activity objects
+        """
+        if limit > 20:
+            warnings.warn("The limit is set to more than 20. There may be an error")
+        soup = BeautifulSoup(requests.get(f"https://scratch.mit.edu/site-api/classrooms/activity/public/{self.id}/?limit={limit}").text, 'html.parser')
+
+        activities = []
+        source = soup.find_all("li")
+
+        for data in source:
+            _activity = activity.Activity(_session=self._session, raw=data)
+            _activity._update_from_html(data)
+            activities.append(_activity)
+
+        return activities
+
+    def activity(self):
+        """
+        Get a list of actvity raw dictionaries. However, they are in a very annoying format. This method should be updated
+        """
+
+        self._check_session()
+
+        data = requests.get(f"https://scratch.mit.edu/site-api/classrooms/activity/{self.id}/all/", headers=self._headers, cookies=self._cookies).json()
+
+        return data
 
 
 def get_classroom(class_id) -> Classroom:

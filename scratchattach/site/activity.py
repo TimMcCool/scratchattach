@@ -16,11 +16,11 @@ from bs4 import BeautifulSoup
 
 from ..utils.requests import Requests as requests
 
-class Activity(BaseSiteComponent):
 
-    '''
+class Activity(BaseSiteComponent):
+    """
     Represents a Scratch activity (message or other user page activity)
-    '''
+    """
 
     def str(self):
         return str(self.raw)
@@ -47,28 +47,33 @@ class Activity(BaseSiteComponent):
 
         self.raw = data
 
-        time=data.find('div').find('span').findNext().findNext().text.strip()
+        _time = data.find('div').find('span').findNext().findNext().text.strip()
 
-        if '\xa0' in time:
-            while '\xa0' in time: time=time.replace('\xa0', ' ')
+        if '\xa0' in _time:
+            while '\xa0' in _time:
+                _time = _time.replace('\xa0', ' ')
 
-        self.time = time
-        self.actor_username=(data.find('div').find('span').text)
+        self.time = _time
+        self.actor_username = data.find('div').find('span').text
 
-        self.target_name=(data.find('div').find('span').findNext().text)
-        self.target_link=(data.find('div').find('span').findNext()["href"])
-        self.target_id=(data.find('div').find('span').findNext()["href"].split("/")[-2])
+        self.target_name = data.find('div').find('span').findNext().text
+        self.target_link = data.find('div').find('span').findNext()["href"]
+        self.target_id = data.find('div').find('span').findNext()["href"].split("/")[-2]
 
-        self.type=data.find('div').find_all('span')[0].next_sibling.strip()
+        self.type = data.find('div').find_all('span')[0].next_sibling.strip()
         if self.type == "loved":
             self.type = "loveproject"
-        if self.type == "favorited":
+
+        elif self.type == "favorited":
             self.type = "favoriteproject"
-        if "curator" in self.type:
+
+        elif "curator" in self.type:
             self.type = "becomecurator"
-        if "shared" in self.type:
+
+        elif "shared" in self.type:
             self.type = "shareproject"
-        if "is now following" in self.type:
+
+        elif "is now following" in self.type:
             if "users" in self.target_link:
                 self.type = "followuser"
             else:
