@@ -4,32 +4,18 @@ Adapted from https://translate-service.scratch.mit.edu/supported?language=en
 """
 
 from enum import Enum
+from dataclasses import dataclass
+
 from typing import Callable
 
 
+@dataclass(init=True, repr=True)
 class _Language:
-    def __init__(self, name: str = None, code: str = None, locales: list[str] = None, tts_locale: str = None,
-                 single_gender: bool = None):
-        self.name = name
-        self.code = code
-        self.locales = locales
-        self.tts_locale = tts_locale
-        self.single_gender = single_gender
-
-    def __repr__(self):
-        ret = "Language("
-        for attr in self.__dict__.keys():
-            if not attr.startswith("_"):
-                val = getattr(self, attr)
-                ret += f"{repr(val)}, "
-        if ret.endswith(", "):
-            ret = ret[:-2]
-
-        ret += ')'
-        return ret
-
-    def __str__(self):
-        return f"Language<{self.name} - {self.code}>"
+    name: str = None
+    code: str = None
+    locales: list[str] = None
+    tts_locale: str = None
+    single_gender: bool = None
 
 
 class Languages(Enum):
