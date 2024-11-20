@@ -152,10 +152,10 @@ def translate(language: str | Languages, text: str = "hello"):
     lang = language
     if isinstance(language, str):
         if language.lower() in Languages.all_of("code", str.lower):
-            lang = Languages.find(language.lower(), "code", apply_func=str.lower)
+            lang = Languages.find(language.lower(), "code", str.lower)
 
         elif language.lower() in Languages.all_of("name", str.lower):
-            lang = Languages.find(language.lower(), apply_func=str.lower)
+            lang = Languages.find(language.lower(), "name", str.lower)
 
     elif isinstance(language, Languages):
         lang = language.value

@@ -96,6 +96,13 @@ class Languages(Enum):
 
     @staticmethod
     def find(value, by: str = "name", apply_func: Callable = None) -> _Language:
+        """
+        Finds the language with the given attribute that is equal to the given value.
+        the apply_func will be applied to the attribute of each language object before comparison.
+
+        i.e. Languages.find("ukranian", "name", str.lower) will return the Ukrainian language dataclass object
+        (even though Ukrainian was spelt lowercase, since str.lower will convert the "Ukrainian" string to lowercase)
+        """
         if apply_func is None:
             def apply_func(x):
                 return x
@@ -111,6 +118,16 @@ class Languages(Enum):
 
     @staticmethod
     def all_of(attr_name: str = "name", apply_func: Callable = None):
+        """
+        Returns the list of each listed language's specified attribute by "attr_name"
+
+        i.e. Languages.all_of("name") will return a list of names:
+        ["Albanian", "Amharic", ...]
+
+        The apply_func function will be applied to every list item,
+        i.e. Languages.all_of("name", str.lower) will return the same except in lowercase:
+        ["albanian", "amharic", ...]
+        """
         if apply_func is None:
             def apply_func(x):
                 return x
