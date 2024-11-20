@@ -149,14 +149,24 @@ def scratch_team_members() -> dict:
 
 
 def translate(language: str | Languages, text: str = "hello"):
-    if language.lower() not in Languages.all_of("code", str.lower):
-        if language.lower() in Languages.all_of("name", str.lower):
-            language = Languages.find(language.lower(), apply_func=str.lower).code
+    lang = language
+    if isinstance(language, str):
+        if language.lower() in Languages.all_of("code", str.lower):
+            lang = Languages.find(language.lower(), "code", apply_func=str.lower)
 
-    lang = Languages.find(language, "code", str.lower)
+        elif language.lower() in Languages.all_of("name", str.lower):
+            lang = Languages.find(language.lower(), apply_func=str.lower)
+
+    elif isinstance(language, Languages):
+        lang = language.value
+    else:
+        # The code will work so long as the language has a 'code' attribute, however, this is bad practice.
+        warnings.warn(f"{language} is not {str} or {Languages}, but {type(language)}.")
+
     if lang is None:
         raise ValueError(f"{language} is not a supported translate language")
 
+    print(lang.__dict__)
     response_json = requests.get(
         f"https://translate-service.scratch.mit.edu/translate?language={lang.code}&text={text}").json()
 
