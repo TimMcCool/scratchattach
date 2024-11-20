@@ -1,7 +1,6 @@
 """Other Scratch API-related functions"""
 
 import json
-import warnings
 
 from ..utils import commons
 from ..utils.exceptions import BadRequest, InvalidLanguage, InvalidTTSGender
@@ -157,7 +156,10 @@ def translate(language: str | Languages, text: str = "hello"):
         lang = language
 
     if not isinstance(lang, Language):
-        raise InvalidLanguage(f"{language} is not a supported translate language")
+        raise InvalidLanguage(f"{language} is not a language")
+
+    if lang.code is None:
+        raise InvalidLanguage(f"{lang} is not a valid translate language")
 
     response_json = requests.get(
         f"https://translate-service.scratch.mit.edu/translate?language={lang.code}&text={text}").json()
