@@ -166,7 +166,6 @@ def translate(language: str | Languages, text: str = "hello"):
     if lang is None:
         raise ValueError(f"{language} is not a supported translate language")
 
-    print(lang.__dict__)
     response_json = requests.get(
         f"https://translate-service.scratch.mit.edu/translate?language={lang.code}&text={text}").json()
 
