@@ -28,7 +28,7 @@ class Languages(Enum):
     Belarusian = _Language('Belarusian', 'be', None, None, None)
     Bulgarian = _Language('Bulgarian', 'bg', None, None, None)
     Catalan = _Language('Catalan', 'ca', None, None, None)
-    Chinese_Traditional = _Language('Chinese (Traditional)', 'zh-tw', None, None, None)
+    Chinese_Traditional = _Language('Chinese (Traditional)', 'zh-tw', ['zh-cn', 'zh-tw'], 'cmn-CN', True)
     Croatian = _Language('Croatian', 'hr', None, None, None)
     Czech = _Language('Czech', 'cs', None, None, None)
     Danish = _Language('Danish', 'da', ['da'], 'da-DK', False)
@@ -65,7 +65,7 @@ class Languages(Enum):
     Myanmar_Burmese = _Language('Myanmar (Burmese)', 'my', None, None, None)
     Persian = _Language('Persian', 'fa', None, None, None)
     Polish = _Language('Polish', 'pl', ['pl'], 'pl-PL', False)
-    Portuguese = _Language('Portuguese', 'pt', None, None, None)
+    Portuguese = _Language('Portuguese', 'pt', ['pt'], 'pt-PT', False)
     Romanian = _Language('Romanian', 'ro', ['ro'], 'ro-RO', True)
     Russian = _Language('Russian', 'ru', ['ru'], 'ru-RU', False)
     Scots_Gaelic = _Language('Scots Gaelic', 'gd', None, None, None)
@@ -83,14 +83,12 @@ class Languages(Enum):
     Welsh = _Language('Welsh', 'cy', ['cy'], 'cy-GB', True)
     Zulu = _Language('Zulu', 'zu', None, None, None)
     Hebrew = _Language('Hebrew', 'he', None, None, None)
-    Chinese_Simplified = _Language('Chinese (Simplified)', 'zh-cn', None, None, None)
+    Chinese_Simplified = _Language('Chinese (Simplified)', 'zh-cn', ['zh-cn', 'zh-tw'], 'cmn-CN', True)
     Mandarin = Chinese_Simplified
 
-    cmn_CN = _Language(None, None, ['zh-cn', 'zh-tw'], 'cmn-CN', True)
     nb_NO = _Language(None, None, ['nb', 'nn'], 'nb-NO', True)
     pt_BR = _Language(None, None, ['pt-br'], 'pt-BR', False)
     Brazilian = pt_BR
-    pt_PT = _Language(None, None, ['pt'], 'pt-PT', False)
     es_ES = _Language(None, None, ['es'], 'es-ES', False)
     es_US = _Language(None, None, ['es-419'], 'es-US', False)
 
