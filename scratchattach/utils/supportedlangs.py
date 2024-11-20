@@ -116,6 +116,7 @@ class Languages(Enum):
 
         for lang_enum in Languages:
             lang = lang_enum.value
+
             try:
                 if apply_func(getattr(lang, by)) == value:
                     return lang
