@@ -4,9 +4,9 @@ import json
 import warnings
 
 from ..utils import commons
-from ..utils.exceptions import BadRequest
+from ..utils.exceptions import BadRequest, InvalidLanguage, InvalidTTSGender
 from ..utils.requests import Requests as requests
-from ..utils.supportedlangs import Languages
+from ..utils.enums import Languages, Language, TTSVoices, TTSVoice
 
 
 # --- Front page ---
@@ -149,22 +149,15 @@ def scratch_team_members() -> dict:
 
 
 def translate(language: str | Languages, text: str = "hello"):
-    lang = language
     if isinstance(language, str):
-        if language.lower() in Languages.all_of("code", str.lower):
-            lang = Languages.find(language.lower(), "code", str.lower)
-
-        elif language.lower() in Languages.all_of("name", str.lower):
-            lang = Languages.find(language.lower(), "name", str.lower)
-
+        lang = Languages.find_by_attrs(language.lower(), ["code", "tts_locale", "name"], str.lower)
     elif isinstance(language, Languages):
         lang = language.value
     else:
-        # The code will work so long as the language has a 'code' attribute, however, this is bad practice.
-        warnings.warn(f"{language} is not {str} or {Languages}, but {type(language)}.")
+        lang = language
 
-    if lang is None:
-        raise ValueError(f"{language} is not a supported translate language")
+    if not isinstance(lang, Language):
+        raise InvalidLanguage(f"{language} is not a supported translate language")
 
     response_json = requests.get(
         f"https://translate-service.scratch.mit.edu/translate?language={lang.code}&text={text}").json()
@@ -175,46 +168,43 @@ def translate(language: str | Languages, text: str = "hello"):
         raise BadRequest(f"Language '{language}' does not seem to be valid.\nResponse: {response_json}")
 
 
-def text2speech(text: str = "hello", gender: str = "female", language: str = "en-US"):
+def text2speech(text: str = "hello", voice_name: str = "female", language: str = "en-US"):
     """
     Sends a request to Scratch's TTS synthesis service.
     Returns:
         - The TTS audio (mp3) as bytes
         - The playback rate (e.g. for giant it would be 0.84)
     """
-    if gender == "female" or gender == "alto":
-        gender = ("female", 1)
-    elif gender == "male" or gender == "tenor":
-        gender = ("male", 1)
-    elif gender == "squeak":
-        gender = ("female", 1.19)
-    elif gender == "giant":
-        gender = ("male", .84)
-    elif gender == "kitten":
-        gender = ("female", 1.41)
-        split = text.split(' ')
-        text = ''
-        for token in split:
-            if token.strip() != '':
-                text += "meow "
+    if isinstance(voice_name, str):
+        voice = TTSVoices.find_by_attrs(voice_name.lower(), ["name", "gender"], str.lower)
+    elif isinstance(voice_name, TTSVoices):
+        voice = voice_name.value
     else:
-        gender = ("female", 1)
+        voice = voice_name
 
-    og_lang = language
-    if isinstance(language, Languages):
-        language = language.value.tts_locale
+    if not isinstance(voice, TTSVoice):
+        raise InvalidTTSGender(f"TTS Gender {voice_name} is not supported.")
 
-    if language is None:
-        raise ValueError(f"Language '{og_lang}' is not a supported tts language")
+    # If it's kitten, make sure to change everything to just meows
+    if voice.name == "kitten":
+        text = ''
+        for word in text.split(' '):
+            if word.strip() != '':
+                text += "meow "
 
-    if language.lower() not in Languages.all_of("tts_locale", str.lower):
-        if language.lower() in Languages.all_of("name", str.lower):
-            language = Languages.find(language.lower(), apply_func=str.lower).tts_locale
+    if isinstance(language, str):
+        lang = Languages.find_by_attrs(language.lower(), ["code", "tts_locale", "name"], str.lower)
+    elif isinstance(language, Languages):
+        lang = language.value
+    else:
+        lang = language
 
-    lang = Languages.find(language, "tts_locale")
-    if lang is None or language is None:
-        raise ValueError(f"Language '{og_lang}' is not a supported tts language")
+    if not isinstance(lang, Language):
+        raise InvalidLanguage(f"Language '{language}' is not a language")
+
+    if lang.tts_locale is None:
+        raise InvalidLanguage(f"Language '{language}' is not a valid TTS language")
 
     response = requests.get(f"https://synthesis-service.scratch.mit.edu/synth"
-                            f"?locale={lang.tts_locale}&gender={gender[0]}&text={text}")
-    return response.content, gender[1]
+                            f"?locale={lang.tts_locale}&gender={voice.gender}&text={text}")
+    return response.content, voice.playback_rate
