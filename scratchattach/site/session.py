@@ -1015,11 +1015,10 @@ def login(username, password, *, timeout=10) -> Session:
     """
 
     # Post request to login API:
-    data = json.dumps({"username": username, "password": password})
-    _headers = dict(headers)
+    _headers = headers.copy()
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     request = requests.post(
-        "https://scratch.mit.edu/login/", data=data, headers=_headers,
+        "https://scratch.mit.edu/login/", json={"username": username, "password": password}, headers=_headers,
         timeout=timeout,
     )
     try:
