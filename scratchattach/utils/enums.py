@@ -68,6 +68,9 @@ class _EnumWrapper(Enum):
 
     @classmethod
     def find_by_attrs(cls, value, bys: list[str], apply_func: Callable = None) -> list:
+        """
+        Calls the EnumWrapper.by function multiple times until a match is found, using the provided 'by' attribute names
+        """
         for by in bys:
             ret = cls.find(value, by, apply_func)
             if ret is not None:
