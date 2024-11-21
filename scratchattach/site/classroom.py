@@ -1,7 +1,8 @@
 import datetime
 import warnings
-
 from typing import TYPE_CHECKING
+
+import bs4
 
 if TYPE_CHECKING:
     from ..site.session import Session
@@ -50,6 +51,39 @@ class Classroom(BaseSiteComponent):
     def __repr__(self):
         return f"classroom called '{self.title}'"
 
+    def update(self):
+        try:
+            success = super().update()
+        except exceptions.ClassroomNotFound:
+            success = False
+
+        if not success:
+            response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
+            soup = BeautifulSoup(response.text, "html.parser")
+            # id, title, description, status, date_start (iso str), educator/username
+            title = soup.find("title").contents[0][:-len(" on Scratch")]
+
+            overviews = soup.find_all("p", {"class": "overview"})
+            description, status = overviews[0].text, overviews[1].text
+
+            educator_username = None
+            pfx = "Scratch.INIT_DATA.PROFILE = {\n  model: {\n    id: '"
+            sfx = "',\n    userId: "
+            for script in soup.find_all("script"):
+                if pfx in script.text:
+                    educator_username = commons.webscrape_count(script.text, pfx, sfx, str)
+
+            ret = {"id": self.id,
+                   "title": title,
+                   "description": description,
+                   "status": status,
+                   "educator": {"username": educator_username},
+                   "is_closed": True
+                   }
+
+            return self._update_from_dict(ret)
+        return success
+
     def _update_from_dict(self, classrooms):
         try:
             self.id = int(classrooms["id"])
@@ -79,6 +113,7 @@ class Classroom(BaseSiteComponent):
             self.author._update_from_dict(classrooms["educator"])
         except Exception:
             pass
+        self.is_closed = classrooms.get("is_closed", False)
         return True
 
     def student_count(self):
@@ -99,6 +134,22 @@ class Classroom(BaseSiteComponent):
         Returns:
             list<str>: The usernames of the class students
         """
+        if self.is_closed:
+            ret = []
+            response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            for scrollable in soup.find_all("ul", {"class": "scroll-content"}):
+                if len(scrollable.contents) > 0:
+                    for item in scrollable.contents:
+                        if not isinstance(item, bs4.NavigableString):
+                            if "user" in item.attrs["class"]:
+                                anchors = item.find_all("a")
+                                if len(anchors) == 2:
+                                    ret.append(anchors[1].text.strip())
+
+            return ret
+
         text = requests.get(
             f"https://scratch.mit.edu/classes/{self.id}/students/?page={page}",
             headers=self._headers
@@ -114,7 +165,7 @@ class Classroom(BaseSiteComponent):
         ).text
         return commons.webscrape_count(text, "Class Studios (", ")")
 
-    def class_studio_ids(self, *, page=1):
+    def class_studio_ids(self, *, page=1) -> list[int]:
         """
         Returns the class studio on the class.
         
@@ -124,6 +175,21 @@ class Classroom(BaseSiteComponent):
         Returns:
             list<str>: The id of the class studios
         """
+        if self.is_closed:
+            ret = []
+            response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            for scrollable in soup.find_all("ul", {"class": "scroll-content"}):
+                if len(scrollable.contents) > 0:
+                    for item in scrollable.contents:
+                        if not isinstance(item, bs4.NavigableString):
+                            if "gallery" in item.attrs["class"]:
+                                anchor = item.find("a")
+                                if "href" in anchor.attrs:
+                                    ret.append(commons.webscrape_count(anchor.attrs["href"], "/studios/", "/"))
+            return ret
+
         text = requests.get(
             f"https://scratch.mit.edu/classes/{self.id}/studios/?page={page}",
             headers=self._headers
@@ -219,9 +285,10 @@ class Classroom(BaseSiteComponent):
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
 
-    def register_user(self, username: str, password: str, birth_month: int, birth_year: int,
-                      gender: str, country: str, is_robot: bool = False):
-        return register_user(self.id, self.classtoken, username, password, birth_month, birth_year, gender, country, is_robot)
+    def register_student(self, username: str, password: str = '', birth_month: int = None, birth_year: int = None,
+                         gender: str = None, country: str = None, is_robot: bool = False):
+        return register_by_token(self.id, self.classtoken, username, password, birth_month, birth_year, gender, country,
+                                 is_robot)
 
     def generate_signup_link(self):
         if self.classtoken is not None:
@@ -229,14 +296,14 @@ class Classroom(BaseSiteComponent):
 
         self._check_session()
 
-        response = requests.get(f"https://scratch.mit.edu/site-api/classrooms/generate_registration_link/{self.id}/", headers=self._headers, cookies=self._cookies)
+        response = requests.get(f"https://scratch.mit.edu/site-api/classrooms/generate_registration_link/{self.id}/",
+                                headers=self._headers, cookies=self._cookies)
         # Should really check for '404' page
         data = response.json()
         if "reg_link" in data:
             return data["reg_link"]
         else:
             raise exceptions.Unauthorized(f"{self._session} is not authorised to generate a signup link of {self}")
-
 
     def public_activity(self, *, limit=20):
         """
@@ -259,7 +326,7 @@ class Classroom(BaseSiteComponent):
 
         return activities
 
-    def activity(self, student: str="all", mode: str = "Last created", page: int = None):
+    def activity(self, student: str = "all", mode: str = "Last created", page: int = None):
         """
         Get a list of actvity raw dictionaries. However, they are in a very annoying format. This method should be updated
         """
@@ -313,17 +380,18 @@ def get_classroom_from_token(class_token) -> Classroom:
     return commons._get_object("classtoken", class_token, Classroom, exceptions.ClassroomNotFound)
 
 
-def register_user(class_id: int, class_token: str, username: str, password: str, birth_month: int, birth_year: int, gender: str, country: str, is_robot: bool = False):
+def register_by_token(class_id: int, class_token: str, username: str, password: str, birth_month: int, birth_year: int,
+                      gender: str, country: str, is_robot: bool = False):
     data = {"classroom_id": class_id,
-                        "classroom_token": class_token,
+            "classroom_token": class_token,
 
-                        "username": username,
-                        "password": password,
-                        "birth_month": birth_month,
-                        "birth_year": birth_year,
-                        "gender": gender,
-                        "country": country,
-                        "is_robot": is_robot}
+            "username": username,
+            "password": password,
+            "birth_month": birth_month,
+            "birth_year": birth_year,
+            "gender": gender,
+            "country": country,
+            "is_robot": is_robot}
 
     response = requests.post("https://scratch.mit.edu/classes/register_new_student/",
                              data=data, headers=headers, cookies={"scratchcsrftoken": 'a'})
