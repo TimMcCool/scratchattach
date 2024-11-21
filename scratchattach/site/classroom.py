@@ -47,6 +47,7 @@ class Classroom(BaseSiteComponent):
         self._json_headers = dict(self._headers)
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
+        self.is_closed = False
 
     def __repr__(self):
         return f"classroom called '{self.title}'"
@@ -140,13 +141,12 @@ class Classroom(BaseSiteComponent):
             soup = BeautifulSoup(response.text, "html.parser")
 
             for scrollable in soup.find_all("ul", {"class": "scroll-content"}):
-                if len(scrollable.contents) > 0:
-                    for item in scrollable.contents:
-                        if not isinstance(item, bs4.NavigableString):
-                            if "user" in item.attrs["class"]:
-                                anchors = item.find_all("a")
-                                if len(anchors) == 2:
-                                    ret.append(anchors[1].text.strip())
+                for item in scrollable.contents:
+                    if not isinstance(item, bs4.NavigableString):
+                        if "user" in item.attrs["class"]:
+                            anchors = item.find_all("a")
+                            if len(anchors) == 2:
+                                ret.append(anchors[1].text.strip())
 
             return ret
 
@@ -181,13 +181,12 @@ class Classroom(BaseSiteComponent):
             soup = BeautifulSoup(response.text, "html.parser")
 
             for scrollable in soup.find_all("ul", {"class": "scroll-content"}):
-                if len(scrollable.contents) > 0:
-                    for item in scrollable.contents:
-                        if not isinstance(item, bs4.NavigableString):
-                            if "gallery" in item.attrs["class"]:
-                                anchor = item.find("a")
-                                if "href" in anchor.attrs:
-                                    ret.append(commons.webscrape_count(anchor.attrs["href"], "/studios/", "/"))
+                for item in scrollable.contents:
+                    if not isinstance(item, bs4.NavigableString):
+                        if "gallery" in item.attrs["class"]:
+                            anchor = item.find("a")
+                            if "href" in anchor.attrs:
+                                ret.append(commons.webscrape_count(anchor.attrs["href"], "/studios/", "/"))
             return ret
 
         text = requests.get(
@@ -261,6 +260,16 @@ class Classroom(BaseSiteComponent):
         except Exception as e:
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
+
+    def add_studio(self, name: str, description: str = ''):
+        self._check_session()
+        requests.post("https://scratch.mit.edu/classes/create_classroom_gallery/",
+                      json=
+                      {"classroom_id": str(self.id),
+                       "classroom_token": self.classtoken,
+                       "title": name,
+                       "description": description},
+                      headers=self._headers, cookies=self._cookies)
 
     def reopen(self):
         self._check_session()
