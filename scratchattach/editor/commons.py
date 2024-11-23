@@ -2,6 +2,7 @@
 Shared functions used by the editor module
 """
 
+import copy
 import json
 from typing import Final
 
@@ -129,3 +130,10 @@ def is_valid_json(string: str) -> bool:
         return True
     except ValueError:
         return False
+
+
+def noneless_update(obj: dict, update: dict) -> None:
+    for key, value in update.items():
+        if value is not None:
+            obj[key] = value
+

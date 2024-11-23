@@ -22,7 +22,7 @@ class Monitor(base.ProjectPart):
         Represents a variable/list monitor
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Monitors
         """
-        assert isinstance(reporter, base.SpriteSubComponent)
+        assert isinstance(reporter, base.SpriteSubComponent) or reporter is None
 
         self.reporter = reporter
         if params is None:
@@ -51,6 +51,8 @@ class Monitor(base.ProjectPart):
     @staticmethod
     def from_json(data: dict | list | Any):
         _id = data["id"]
+        # ^^ NEED TO FIND REPORTER OBJECT
+
         mode = data["mode"]
 
         opcode = data["opcode"]
@@ -71,7 +73,7 @@ class Monitor(base.ProjectPart):
         else:
             slider_min, slider_max, is_discrete = None, None, None
 
-        return Monitor(_id, mode, opcode, params, sprite_name, value, width, height, x, y, visible, slider_min,
+        return Monitor(None, mode, opcode, params, sprite_name, value, width, height, x, y, visible, slider_min,
                        slider_max, is_discrete)
 
     def to_json(self):

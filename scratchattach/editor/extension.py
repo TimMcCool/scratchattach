@@ -21,7 +21,6 @@ class Extension(base.ProjectPart):
 
         return _extension
 
-
     def to_json(self) -> str:
         return self.code
 
