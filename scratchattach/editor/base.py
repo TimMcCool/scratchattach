@@ -57,6 +57,7 @@ class VLB(IDComponent, ABC):
     """
     Base class for Variables, Lists and Broadcasts (Name + ID + sprite)
     """
+
     def __init__(self, _id: str, name: str, _sprite: sprite.Sprite | None):
         self.name = name
         super().__init__(_id, _sprite)

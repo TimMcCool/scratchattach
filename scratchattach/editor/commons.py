@@ -1,8 +1,8 @@
 """
 Shared functions used by the editor module
 """
+from __future__ import annotations
 
-import copy
 import json
 from typing import Final
 

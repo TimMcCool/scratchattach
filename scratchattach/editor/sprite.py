@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from . import base, project, vlb, asset, comment, primitive
+from typing import Generator
+
+from . import base, project, vlb, asset, comment, prim
 
 
 class Sprite(base.ProjectSubcomponent):
@@ -9,7 +11,7 @@ class Sprite(base.ProjectSubcomponent):
                  _broadcasts: list[vlb.Broadcast] = None,
                  _variables: list[vlb.Variable] = None, _lists: list[vlb.List] = None,
                  _costumes: list[asset.Costume] = None, _sounds: list[asset.Sound] = None,
-                 _comments: list[comment.Comment] = None,
+                 _comments: list[comment.Comment] = None, _prims: dict[str, prim.Prim] = None,
                  # Stage only:
                  _tempo: int | float = 60, _video_state: str = "off", _video_transparency: int | float = 50,
                  _text_to_speech_language: str = "en", _visible: bool = True,
@@ -35,6 +37,8 @@ class Sprite(base.ProjectSubcomponent):
             _sounds = []
         if _comments is None:
             _comments = []
+        if _prims is None:
+            _prims = []
 
         self.is_stage = is_stage
         self.name = name
@@ -50,6 +54,7 @@ class Sprite(base.ProjectSubcomponent):
         self.sounds = _sounds
 
         self.comments = _comments
+        self.prims = _prims
 
         self.tempo = _tempo
         self.video_state = _video_state
@@ -64,8 +69,15 @@ class Sprite(base.ProjectSubcomponent):
 
         super().__init__(_project)
 
+        # Assign sprite
         for sub_component in self.vlbs + self.comments + self.assets:
             sub_component.sprite = self
+
+        # Link prims to vars/lists/broadcasts
+        for _id, _prim in self.prims.items():
+            _prim.sprite = self
+            if _prim.is_vlb:
+                pass
 
     def __repr__(self):
         return f"Sprite<{self.name}>"
@@ -75,7 +87,7 @@ class Sprite(base.ProjectSubcomponent):
         return self.variables + self.lists + self.broadcasts
 
     @property
-    def assets(self) -> list[ asset.Costume | asset.Sound]:
+    def assets(self) -> list[asset.Costume | asset.Sound]:
         return self.costumes + self.sounds
 
     @staticmethod
@@ -114,7 +126,7 @@ class Sprite(base.ProjectSubcomponent):
         for _block_id, _block_data in data.get("blocks", {}).items():
             if isinstance(_block_data, list):
                 # Prim
-                _prims[_block_id] = primitive.Primitive.from_json(_block_data)
+                _prims[_block_id] = prim.Prim.from_json(_block_data)
             else:
                 # Block
                 pass
@@ -138,7 +150,7 @@ class Sprite(base.ProjectSubcomponent):
 
         return Sprite(_is_stage, _name, _current_costume, _layer_order, _volume, _broadcasts, _variables, _lists,
                       _costumes,
-                      _sounds, _comments,
+                      _sounds, _comments, _prims,
 
                       _tempo, _video_state, _video_transparency, _text_to_speech_language,
                       _visible, _x, _y, _size, _direction, _draggable, _rotation_style
@@ -146,3 +158,49 @@ class Sprite(base.ProjectSubcomponent):
 
     def to_json(self) -> dict:
         pass
+
+    # Finding/getting from list/dict attributes
+    def find_var(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Variable | Generator[
+        vlb.Variable, None, None]:
+        by = by.lower()
+        for _variable in self.variables:
+            if by == "id":
+                compare = _variable.id
+            else:
+                # Defaulting
+                compare = _variable.name
+            if compare == value:
+                if multiple:
+                    yield _variable
+                else:
+                    return _variable
+
+    def find_list(self, value: str, by: str = "name", multiple: bool = False) -> vlb.List | Generator[
+        vlb.List, None, None]:
+        by = by.lower()
+        for _list in self.lists:
+            if by == "id":
+                compare = _list.id
+            else:
+                # Defaulting
+                compare = _list.name
+            if compare == value:
+                if multiple:
+                    yield _list
+                else:
+                    return _list
+
+    def find_broadcast(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Broadcast | Generator[
+        vlb.Broadcast, None, None]:
+        by = by.lower()
+        for _broadcast in self.broadcasts:
+            if by == "id":
+                compare = _broadcast.id
+            else:
+                # Defaulting
+                compare = _broadcast.name
+            if compare == value:
+                if multiple:
+                    yield _broadcast
+                else:
+                    return _broadcast
