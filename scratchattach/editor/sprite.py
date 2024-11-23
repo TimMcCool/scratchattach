@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Generator
-
 from . import base, project, vlb, asset, comment, prim
+from ..utils import exceptions
 
 
 class Sprite(base.ProjectSubcomponent):
@@ -77,7 +76,17 @@ class Sprite(base.ProjectSubcomponent):
         for _id, _prim in self.prims.items():
             _prim.sprite = self
             if _prim.is_vlb:
-                pass
+                if _prim.type.name == "variable":
+                    _prim.value = self.find_variable(_prim.id, "id")
+                elif _prim.type.name == "list":
+                    _prim.value = self.find_list(_prim.id, "id")
+                elif _prim.type.name == "broadcast":
+                    _prim.value = self.find_broadcast(_prim.id, "id")
+                else:
+                    # This should never happen
+                    raise exceptions.BadVLBPrimitiveError(f"{_prim} claims to be VLB, but is {_prim.type.name}")
+                _prim.name = None
+                _prim.id = None
 
     def __repr__(self):
         return f"Sprite<{self.name}>"
@@ -160,8 +169,8 @@ class Sprite(base.ProjectSubcomponent):
         pass
 
     # Finding/getting from list/dict attributes
-    def find_var(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Variable | Generator[
-        vlb.Variable, None, None]:
+    def find_variable(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Variable | list[vlb.Variable]:
+        _ret = []
         by = by.lower()
         for _variable in self.variables:
             if by == "id":
@@ -171,12 +180,14 @@ class Sprite(base.ProjectSubcomponent):
                 compare = _variable.name
             if compare == value:
                 if multiple:
-                    yield _variable
+                    _ret.append(_variable)
                 else:
                     return _variable
+        if multiple:
+            return _ret
 
-    def find_list(self, value: str, by: str = "name", multiple: bool = False) -> vlb.List | Generator[
-        vlb.List, None, None]:
+    def find_list(self, value: str, by: str = "name", multiple: bool = False) -> vlb.List | list[vlb.List]:
+        _ret = []
         by = by.lower()
         for _list in self.lists:
             if by == "id":
@@ -186,12 +197,14 @@ class Sprite(base.ProjectSubcomponent):
                 compare = _list.name
             if compare == value:
                 if multiple:
-                    yield _list
+                    _ret.append(_list)
                 else:
                     return _list
+        if multiple:
+            return _ret
 
-    def find_broadcast(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Broadcast | Generator[
-        vlb.Broadcast, None, None]:
+    def find_broadcast(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Broadcast | list[vlb.Broadcast]:
+        _ret = []
         by = by.lower()
         for _broadcast in self.broadcasts:
             if by == "id":
@@ -201,6 +214,8 @@ class Sprite(base.ProjectSubcomponent):
                 compare = _broadcast.name
             if compare == value:
                 if multiple:
-                    yield _broadcast
+                    _ret.append(_broadcast)
                 else:
                     return _broadcast
+        if multiple:
+            return _ret

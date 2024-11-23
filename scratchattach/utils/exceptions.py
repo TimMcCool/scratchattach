@@ -217,3 +217,10 @@ class UnclosedJSONError(Exception):
     Raised when a JSON string is never closed.
     """
     pass
+
+
+class BadVLBPrimitiveError(Exception):
+    """
+    Raised when a Primitive claiming to be a variable/list/broadcast actually isn't
+    """
+    pass

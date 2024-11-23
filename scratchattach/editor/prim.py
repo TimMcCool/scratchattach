@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Final
 
-from . import base, sprite
+from . import base, sprite, vlb
 from ..utils import enums
 
 
@@ -52,7 +52,7 @@ class PrimTypes(enums._EnumWrapper):
 
 
 class Prim(base.SpriteSubComponent):
-    def __init__(self, _primtype: PrimType, _value: str = None, _name: str = None, _id: str = None, _x: int = None,
+    def __init__(self, _primtype: PrimType, _value: str | vlb.Variable | vlb.List | vlb.Broadcast = None, _name: str = None, _id: str = None, _x: int = None,
                  _y: int = None, _sprite: sprite.Sprite = None):
         """
         Class representing a Scratch string, number, angle, variable etc.
