@@ -208,3 +208,12 @@ class WebsocketServerError(Exception):
     """
 
     pass
+
+
+# Editor errors:
+
+class UnclosedJSONError(Exception):
+    """
+    Raised when a JSON string is never closed.
+    """
+    pass
