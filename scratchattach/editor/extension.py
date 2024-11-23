@@ -5,7 +5,7 @@ from ..utils import enums
 
 
 @dataclass(init=True, repr=True)
-class Extension(base.ProjectPart):
+class Extension(base.JSONSerializable):
     code: str
     name: str = None
 

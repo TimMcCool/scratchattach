@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from . import sprite
 
 
-class ProjectPart(ABC):
+class JSONSerializable(ABC):
     @staticmethod
     @abstractmethod
     def from_json(data: dict | list | Any):
@@ -30,12 +30,12 @@ class ProjectPart(ABC):
         return copy.deepcopy(self)
 
 
-class ProjectSubcomponent(ProjectPart, ABC):
+class ProjectSubcomponent(JSONSerializable, ABC):
     def __init__(self, _project: project.Project = None):
         self.project = _project
 
 
-class SpriteSubComponent(ProjectPart, ABC):
+class SpriteSubComponent(JSONSerializable, ABC):
     def __init__(self, _sprite: sprite.Sprite | None):
         self.sprite = _sprite
 
@@ -53,7 +53,7 @@ class IDComponent(SpriteSubComponent, ABC):
         return f"<{self.__class__.__name__}: {self.id}>"
 
 
-class VLB(IDComponent, ABC):
+class NamedIDComponent(IDComponent, ABC):
     """
     Base class for Variables, Lists and Broadcasts (Name + ID + sprite)
     """

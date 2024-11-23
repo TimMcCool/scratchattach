@@ -92,7 +92,7 @@ class Sprite(base.ProjectSubcomponent):
         return f"Sprite<{self.name}>"
 
     @property
-    def vlbs(self) -> list[base.VLB]:
+    def vlbs(self) -> list[base.NamedIDComponent]:
         return self.variables + self.lists + self.broadcasts
 
     @property

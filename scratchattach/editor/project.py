@@ -9,7 +9,7 @@ from zipfile import ZipFile
 from . import base, meta, extension, monitor, sprite, asset
 
 
-class Project(base.ProjectPart):
+class Project(base.JSONSerializable):
     def __init__(self, _meta: meta.Meta = None, _extensions: Iterable[extension.Extension] = (),
                  _monitors: Iterable[monitor.Monitor] = (), _sprites: Iterable[sprite.Sprite] = (), *,
                  _asset_data: list[asset.AssetFile] = None):

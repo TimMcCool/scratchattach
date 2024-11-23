@@ -3,7 +3,7 @@ from typing import Any
 from . import base
 
 
-class Monitor(base.ProjectPart):
+class Monitor(base.JSONSerializable):
     def __init__(self, reporter: base.SpriteSubComponent = None,
                  mode: str = "default",
                  opcode: str = "data_variable",

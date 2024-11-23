@@ -8,7 +8,7 @@ from ..utils import enums
 
 
 @dataclass(init=True, repr=True)
-class PrimType(base.ProjectPart):
+class PrimType(base.JSONSerializable):
     code: int
     name: str
     attrs: list = None

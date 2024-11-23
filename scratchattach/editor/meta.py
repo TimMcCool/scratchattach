@@ -13,7 +13,7 @@ EDIT_META = True
 META_SET_PLATFORM = False
 
 
-class Meta(base.ProjectPart):
+class Meta(base.JSONSerializable):
     def __init__(self, semver: str = "3.0.0", vm: str = DEFAULT_VM, agent: str = DEFAULT_AGENT,
                  platform: dict = None):
         """

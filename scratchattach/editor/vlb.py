@@ -7,26 +7,7 @@ from __future__ import annotations
 from . import base, sprite
 
 
-class Broadcast(base.VLB):
-    def __init__(self, _id: str, _name: str, _sprite: sprite.Sprite = None):
-        """
-        Class representing a broadcast.
-        https://en.scratch-wiki.info/wiki/Scratch_File_Format#Targets:~:text=broadcasts,in%20the%20stage
-        """
-        super().__init__(_id, _name, _sprite)
-
-    @staticmethod
-    def from_json(data: tuple[str, str]):
-        assert len(data) == 2
-        _id, _name = data
-
-        return Broadcast(_id, _name)
-
-    def to_json(self) -> tuple[str, str]:
-        return self.id, self.name
-
-
-class Variable(base.VLB):
+class Variable(base.NamedIDComponent):
     def __init__(self, _id: str, _name: str, _value: str | int | float, _is_cloud: bool = False,
                  _sprite: sprite.Sprite = None):
         """
@@ -68,7 +49,7 @@ class Variable(base.VLB):
         return self.id, _ret
 
 
-class List(base.VLB):
+class List(base.NamedIDComponent):
     def __init__(self, _id: str, _name: str, _value: str | int | float,
                  _sprite: sprite.Sprite = None):
         """
@@ -96,3 +77,22 @@ class List(base.VLB):
         Returns List data as the list id, then a tuple representing it
         """
         return self.id, (self.name, self.value)
+
+
+class Broadcast(base.NamedIDComponent):
+    def __init__(self, _id: str, _name: str, _sprite: sprite.Sprite = None):
+        """
+        Class representing a broadcast.
+        https://en.scratch-wiki.info/wiki/Scratch_File_Format#Targets:~:text=broadcasts,in%20the%20stage
+        """
+        super().__init__(_id, _name, _sprite)
+
+    @staticmethod
+    def from_json(data: tuple[str, str]):
+        assert len(data) == 2
+        _id, _name = data
+
+        return Broadcast(_id, _name)
+
+    def to_json(self) -> tuple[str, str]:
+        return self.id, self.name
