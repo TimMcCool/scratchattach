@@ -231,3 +231,9 @@ class UnlinkedVLB(Exception):
     Raised when a Primitive cannot be linked to variable/list/broadcast because the provided ID does not have an associated variable/list/broadcast
     """
     pass
+
+class InvalidStageCount(Exception):
+    """
+    Raised when a project has too many or too few Stage sprites
+    """
+    pass

@@ -19,6 +19,14 @@ class Variable(base.NamedIDComponent):
 
         super().__init__(_id, _name, _sprite)
 
+    @property
+    def is_global(self):
+        """
+        Works out whethere a variable is global based on whether the sprite is a stage
+        :return: Whether this variable is a global variable.
+        """
+        return self.sprite.is_stage
+
     @staticmethod
     def from_json(data: tuple[str, tuple[str, str | int | float] | tuple[str, str | int | float, bool]]):
         """

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from . import base, project, vlb, asset, comment, prim
+from . import base, project, vlb, asset, comment, prim, block
 from ..utils import exceptions
 
 
@@ -11,6 +11,7 @@ class Sprite(base.ProjectSubcomponent):
                  _variables: list[vlb.Variable] = None, _lists: list[vlb.List] = None,
                  _costumes: list[asset.Costume] = None, _sounds: list[asset.Sound] = None,
                  _comments: list[comment.Comment] = None, _prims: dict[str, prim.Prim] = None,
+                 _blocks: dict[str, block.Block] = None,
                  # Stage only:
                  _tempo: int | float = 60, _video_state: str = "off", _video_transparency: int | float = 50,
                  _text_to_speech_language: str = "en", _visible: bool = True,
@@ -38,6 +39,8 @@ class Sprite(base.ProjectSubcomponent):
             _comments = []
         if _prims is None:
             _prims = []
+        if _blocks is None:
+            _blocks = []
 
         self.is_stage = is_stage
         self.name = name
@@ -54,6 +57,7 @@ class Sprite(base.ProjectSubcomponent):
 
         self.comments = _comments
         self.prims = _prims
+        self.blocks = _blocks
 
         self.tempo = _tempo
         self.video_state = _video_state
@@ -69,8 +73,9 @@ class Sprite(base.ProjectSubcomponent):
         super().__init__(_project)
 
         # Assign sprite
-        for sub_component in self.vlbs + self.comments + self.assets:
-            sub_component.sprite = self
+        for iterable in (self.vlbs, self.comments, self.assets, self.prims.values(), self.blocks.values()):
+            for sub_component in iterable:
+                sub_component.sprite = self
 
     def link_prims(self):
         """
@@ -80,7 +85,6 @@ class Sprite(base.ProjectSubcomponent):
 
         # Link prims to vars/lists/broadcasts
         for _id, _prim in self.prims.items():
-            _prim.sprite = self
             if _prim.is_vlb:
                 if _prim.type.name == "variable":
                     _prim.value = self.find_variable(_prim.id, "id")
@@ -96,6 +100,14 @@ class Sprite(base.ProjectSubcomponent):
                         f"Prim<name={_prim.name!r}, id={_prim.name!r}> has invalid {_prim.type.name} id")
                 _prim.name = None
                 _prim.id = None
+
+    def link_blocks(self):
+        """
+        Link blocks to sprite/to other blocks
+        """
+        for _block_id, _block in self.blocks.items():
+            _block.link_using_sprite()
+
 
     def __repr__(self):
         return f"Sprite<{self.name}>"
@@ -151,7 +163,7 @@ class Sprite(base.ProjectSubcomponent):
                 _prims[_block_id] = prim.Prim.from_json(_block_data)
             else:
                 # Block
-                pass
+                _blocks[_block_id] = block.Block.from_json(_block_data)
 
         # Stage/sprite specific vars
         _tempo, _video_state, _video_transparency, _text_to_speech_language = (None,) * 4
@@ -172,7 +184,7 @@ class Sprite(base.ProjectSubcomponent):
 
         return Sprite(_is_stage, _name, _current_costume, _layer_order, _volume, _broadcasts, _variables, _lists,
                       _costumes,
-                      _sounds, _comments, _prims,
+                      _sounds, _comments, _prims, _blocks,
 
                       _tempo, _video_state, _video_transparency, _text_to_speech_language,
                       _visible, _x, _y, _size, _direction, _draggable, _rotation_style
@@ -251,6 +263,31 @@ class Sprite(base.ProjectSubcomponent):
                 _ret += self.stage.find_broadcast(value, by, True)
             else:
                 return self.stage.find_broadcast(value, by)
+
+        if multiple:
+            return _ret
+
+    def find_block(self, value: str, by: str = "opcode", multiple: bool = False) -> vlb.Variable | list[vlb.Variable]:
+        _ret = []
+        by = by.lower()
+        for _block_id, _block in self.blocks.items():
+            if by == "id":
+                compare = _block_id
+            else:
+                # Defaulting
+                compare = _block.opcode
+
+            if compare == value:
+                if multiple:
+                    _ret.append(_block)
+                else:
+                    return _block
+        # Search in stage for global variables
+        if not self.is_stage:
+            if multiple:
+                _ret += self.stage.find_block(value, by, True)
+            else:
+                return self.stage.find_block(value, by)
 
         if multiple:
             return _ret
