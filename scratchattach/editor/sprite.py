@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from . import base, project, vlb, asset, comment, prim, block
 from ..utils import exceptions
+from typing import Any
 
 
 class Sprite(base.ProjectSubcomponent):
@@ -267,12 +268,16 @@ class Sprite(base.ProjectSubcomponent):
         if multiple:
             return _ret
 
-    def find_block(self, value: str, by: str = "opcode", multiple: bool = False) -> vlb.Variable | list[vlb.Variable]:
+    def find_block(self, value: str | Any, by: str = "opcode", multiple: bool = False) -> block.Block | list[block.Block]:
         _ret = []
         by = by.lower()
         for _block_id, _block in self.blocks.items():
+            compare = None
             if by == "id":
                 compare = _block_id
+            elif by == "argument ids":
+                if _block.mutation is not None:
+                    compare = _block.mutation.argument_ids
             else:
                 # Defaulting
                 compare = _block.opcode

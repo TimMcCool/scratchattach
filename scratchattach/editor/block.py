@@ -2,17 +2,19 @@ from __future__ import annotations
 
 import warnings
 
-from . import base, sprite
+from . import base, sprite, mutation
 
 
 class Block(base.SpriteSubComponent):
-    def __init__(self, _opcode: str, _shadow: bool = False, _top_level: bool = False, _next: Block = None,
+    def __init__(self, _opcode: str, _shadow: bool = False, _top_level: bool = False, _mutation: mutation.Mutation=None, _next: Block = None,
                  _parent: Block = None,
                  *, _next_id: str = None, _parent_id: str = None, _sprite: sprite.Sprite = None):
 
         self.opcode = _opcode
         self.is_shadow = _shadow
         self.is_top_level = _top_level
+
+        self.mutation = _mutation
 
         self._next_id = _next_id
         """
@@ -27,6 +29,10 @@ class Block(base.SpriteSubComponent):
         self.parent = _parent
 
         super().__init__(_sprite)
+
+        # Link subcomponents
+        if self.mutation:
+            self.mutation.block = self
 
     def __repr__(self):
         return f"Block<{self.opcode!r}>"
@@ -72,12 +78,20 @@ class Block(base.SpriteSubComponent):
         for _field_code, _field_data in data.get("fields", {}).items():
             _fields[_field_code] = ...
 
-        return Block(_opcode, _shadow, _top_level, _next_id=_next_id, _parent_id=_parent_id)
+        if "mutation" in data:
+            _mutation = mutation.Mutation.from_json(data["mutation"])
+        else:
+            _mutation = None
+
+        return Block(_opcode, _shadow, _top_level, _mutation, _next_id=_next_id, _parent_id=_parent_id)
 
     def to_json(self) -> dict:
         pass
 
     def link_using_sprite(self):
+        if self.mutation:
+            self.mutation.link_arguments()
+
         if self._parent_id is not None:
             self.parent = self.sprite.find_block(self._parent_id, "id")
             if self.parent is not None:

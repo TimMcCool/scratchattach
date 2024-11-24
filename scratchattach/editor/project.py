@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import warnings
 from io import BytesIO, TextIOWrapper
-from typing import Any, Iterable
+from typing import Any, Iterable, Union
 from zipfile import ZipFile
 
 from . import base, meta, extension, monitor, sprite, asset
@@ -89,10 +89,11 @@ class Project(base.JSONSerializable):
         """
         Load a project from an .sb3 file/bytes/file path
         """
+        _dir_for_name = None
 
         if _name is None:
             if hasattr(data, "name"):
-                _name = data.name
+                _dir_for_name = data.name
 
         if not isinstance(_name, str) and _name is not None:
             _name = str(_name)
@@ -101,16 +102,19 @@ class Project(base.JSONSerializable):
             data = BytesIO(data)
 
         elif isinstance(data, str):
-            if _name is None:
-                _name = data.split('/')[-1]
-                _name = '.'.join(_name.split('.')[:-1])
-
+            _dir_for_name = data
             data = open(data, "rb")
+
+        if _name is None and _dir_for_name is not None:
+            # Remove any directory names and the file extension
+            _name = _dir_for_name.split('/')[-1]
+            _name = '.'.join(_name.split('.')[:-1])
+
         with data:
             # For if the sb3 is just JSON (e.g. if it's exported from scratchattach)
             try:
                 project = Project.from_json(json.load(data))
-            except ValueError:
+            except ValueError or UnicodeDecodeError:
                 with ZipFile(data) as archive:
                     data = json.loads(archive.read("project.json"))
 

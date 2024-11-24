@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from hashlib import md5
 
 from . import base, project, commons, sprite
 
@@ -66,6 +67,16 @@ class Asset(base.SpriteSubComponent):
             "md5ext": self.file_name,
             "dataFormat": self.data_format,
         }
+
+    """
+    @staticmethod
+    def from_file(fp: str, name: str = None):
+        image_types = ("png", "jpg", "jpeg", "svg")
+        sound_types = ("wav", "mp3")
+        
+        # Should save data as well so it can be uploaded to scratch if required (add to project asset data)
+        ...
+    """
 
 
 class Costume(Asset):

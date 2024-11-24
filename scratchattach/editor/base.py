@@ -11,6 +11,7 @@ from typing import Any, TYPE_CHECKING
 if TYPE_CHECKING:
     from . import project
     from . import sprite
+    from . import block
 
 
 class Base(ABC):
@@ -31,12 +32,6 @@ class JSONSerializable(Base, ABC):
     def to_json(self) -> dict | list | Any:
         pass
 
-    def copy(self):
-        """
-        :return: A **deep** copy of this ProjectPart.
-        """
-        return copy.deepcopy(self)
-
 
 class ProjectSubcomponent(JSONSerializable, ABC):
     def __init__(self, _project: project.Project = None):
@@ -44,7 +39,7 @@ class ProjectSubcomponent(JSONSerializable, ABC):
 
 
 class SpriteSubComponent(JSONSerializable, ABC):
-    def __init__(self, _sprite: sprite.Sprite | None):
+    def __init__(self, _sprite: sprite.Sprite = None):
         self.sprite = _sprite
 
     @property
@@ -53,7 +48,7 @@ class SpriteSubComponent(JSONSerializable, ABC):
 
 
 class IDComponent(SpriteSubComponent, ABC):
-    def __init__(self, _id: str, _sprite: sprite.Sprite | None):
+    def __init__(self, _id: str, _sprite: sprite.Sprite = None):
         self.id = _id
         super().__init__(_sprite)
 
@@ -66,9 +61,22 @@ class NamedIDComponent(IDComponent, ABC):
     Base class for Variables, Lists and Broadcasts (Name + ID + sprite)
     """
 
-    def __init__(self, _id: str, name: str, _sprite: sprite.Sprite | None):
+    def __init__(self, _id: str, name: str, _sprite: sprite.Sprite = None):
         self.name = name
         super().__init__(_id, _sprite)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} '{self.name}'>"
+
+
+class BlockSubComponent(JSONSerializable, ABC):
+    def __init__(self, _block: block.Block = None):
+        self.block = _block
+
+    @property
+    def sprite(self) -> sprite.Sprite:
+        return self.block.sprite
+
+    @property
+    def project(self) -> project.Project:
+        return self.sprite.project
