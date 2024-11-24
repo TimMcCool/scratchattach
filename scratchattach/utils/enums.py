@@ -37,7 +37,12 @@ class _EnumWrapper(Enum):
             item_obj = item.value
 
             try:
-                if apply_func(getattr(item_obj, by)) == value:
+                if by is None:
+                    _val = item_obj
+                else:
+                    _val = getattr(item_obj, by)
+
+                if apply_func(_val) == value:
                     return item_obj
             except TypeError:
                 pass

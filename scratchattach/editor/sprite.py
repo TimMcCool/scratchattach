@@ -81,36 +81,17 @@ class Sprite(base.ProjectSubcomponent):
             for sub_component in iterable:
                 sub_component.sprite = self
 
+    def link_subcomponents(self):
+        self.link_prims()
+        self.link_blocks()
+        self.link_comments()
+
     def link_prims(self):
         """
         Link primitives to corresponding VLB objects (requires project attribute)
         """
-        assert self.project is not None
-
-        # Link prims to vars/lists/broadcasts
-        for _id, _prim in self.prims.items():
-            if _prim.is_vlb:
-                if _prim.type.name == "variable":
-                    _prim.value = self.find_variable(_prim.id, "id")
-                elif _prim.type.name == "list":
-                    _prim.value = self.find_list(_prim.id, "id")
-                elif _prim.type.name == "broadcast":
-                    _prim.value = self.find_broadcast(_prim.id, "id")
-                else:
-                    # This should never happen
-                    raise exceptions.BadVLBPrimitiveError(f"{_prim} claims to be VLB, but is {_prim.type.name}")
-                if _prim.value is None:
-                    if not self.project:
-                        new_vlb = vlb.construct(_prim.type.name.lower(), _prim.id, _prim.name)
-                        self._add_local_global(new_vlb)
-                        _prim.value = new_vlb
-                    else:
-                        new_vlb = vlb.construct(_prim.type.name.lower(), _prim.id, _prim.name)
-                        self.stage.add_vlb(new_vlb)
-
-                        warnings.warn(f"Prim<name={_prim.name!r}, id={_prim.name!r}> has unknown {_prim.type.name} id; adding as global variable")
-                _prim.name = None
-                _prim.id = None
+        for _prim in self.prims.values():
+            _prim.link_using_sprite()
 
     def link_blocks(self):
         """
@@ -118,6 +99,10 @@ class Sprite(base.ProjectSubcomponent):
         """
         for _block_id, _block in self.blocks.items():
             _block.link_using_sprite()
+
+    def link_comments(self):
+        for _comment in self.comments:
+            _comment.link_using_sprite()
 
     def _add_local_global(self, _vlb: base.NamedIDComponent):
         self._local_globals.append(_vlb)
@@ -328,20 +313,34 @@ class Sprite(base.ProjectSubcomponent):
                 return _ret
             return self.find_broadcast(value, by)
 
-    def find_block(self, value: str | Any, by: str = "opcode", multiple: bool = False) -> block.Block | list[
+    def find_block(self, value: str | Any, by: str, multiple: bool = False) -> block.Block | list[
         block.Block]:
         _ret = []
         by = by.lower()
-        for _block_id, _block in self.blocks.items():
+        for _block_id, _block in (self.blocks | self.prims).items():
+            is_block = isinstance(_block, block.Block)
+            is_prim = isinstance(_block, prim.Prim)
+
             compare = None
             if by == "id":
                 compare = _block_id
             elif by == "argument ids":
+                if is_prim:
+                    continue
+
                 if _block.mutation is not None:
                     compare = _block.mutation.argument_ids
-            else:
+            elif by == "opcode":
+                if is_prim:
+                    continue
+
                 # Defaulting
                 compare = _block.opcode
+            else:
+                if is_block:
+                    compare = _block.opcode
+                else:
+                    compare = _block.value
 
             if compare == value:
                 if multiple:

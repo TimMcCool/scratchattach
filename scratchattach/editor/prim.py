@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from typing import Callable, Final
 
 from . import base, sprite, vlb
-from ..utils import enums
+from ..utils import enums, exceptions
 
 
 @dataclass(init=True, repr=True)
@@ -52,7 +53,8 @@ class PrimTypes(enums._EnumWrapper):
 
 
 class Prim(base.SpriteSubComponent):
-    def __init__(self, _primtype: PrimType, _value: str | vlb.Variable | vlb.List | vlb.Broadcast = None, _name: str = None, _id: str = None, _x: int = None,
+    def __init__(self, _primtype: PrimType, _value: str | vlb.Variable | vlb.List | vlb.Broadcast = None,
+                 _name: str = None, _id: str = None, _x: int = None,
                  _y: int = None, _sprite: sprite.Sprite = None):
         """
         Class representing a Scratch string, number, angle, variable etc.
@@ -127,3 +129,33 @@ class Prim(base.SpriteSubComponent):
 
     def to_json(self) -> list:
         pass
+
+    def link_using_sprite(self):
+        # Link prim to var/list/broadcast
+        if self.is_vlb:
+            if self.type.name == "variable":
+                self.value = self.sprite.find_variable(self.id, "id")
+
+            elif self.type.name == "list":
+                self.value = self.sprite.find_list(self.id, "id")
+
+            elif self.type.name == "broadcast":
+                self.value = self.sprite.find_broadcast(self.id, "id")
+            else:
+                # This should never happen
+                raise exceptions.BadVLBPrimitiveError(f"{self} claims to be VLB, but is {self.type.name}")
+
+            if self.value is None:
+                if not self.project:
+                    new_vlb = vlb.construct(self.type.name.lower(), self.id, self.name)
+                    self.sprite._add_local_global(new_vlb)
+                    self.value = new_vlb
+
+                else:
+                    new_vlb = vlb.construct(self.type.name.lower(), self.id, self.name)
+                    self.sprite.stage.add_vlb(new_vlb)
+
+                    warnings.warn(
+                        f"Prim<name={self.name!r}, id={self.name!r}> has unknown {self.type.name} id; adding as global variable")
+            self.name = None
+            self.id = None

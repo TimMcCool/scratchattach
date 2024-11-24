@@ -151,7 +151,7 @@ def remove_nones(obj: dict) -> None:
         del obj[key]
 
 
-def safe_get(lst: list | tuple, _i: int, default: Any=None) -> Any:
+def safe_get(lst: list | tuple, _i: int, default: Any = None) -> Any:
     if len(lst) <= _i:
         return default
     else:

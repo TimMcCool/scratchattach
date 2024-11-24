@@ -6,8 +6,12 @@ from . import base, block, sprite
 class Comment(base.IDComponent):
     def __init__(self, _id: str = None, _block: block.Block = None, x: int = 0, y: int = 0, width: int = 100,
                  height: int = 100,
-                 text: str = '', *, _sprite: sprite.Sprite = None):
+                 text: str = '', *, _block_id: str = None, _sprite: sprite.Sprite = None):
         self.block = _block
+        self.block_id = _block_id
+        """
+        ID of connected block. Will be set to None upon sprite initialization when the block attribute is updated to the relevant Block.
+        """
 
         self.x = x
         self.y = y
@@ -20,7 +24,7 @@ class Comment(base.IDComponent):
         super().__init__(_id, _sprite)
 
     def __repr__(self):
-        return f"Comment<{self.text[:10]!r}>"
+        return f"Comment<{self.text[:10]!r}...>"
 
     @staticmethod
     def from_json(data: tuple[str, dict]):
@@ -28,10 +32,6 @@ class Comment(base.IDComponent):
         _id, data = data
 
         _block_id = data.get("blockId")
-        if _block_id is not None:
-            _block = block.Block(_block_id)
-        else:
-            _block = None
 
         x = data.get("x", 0)
         y = data.get("y", 0)
@@ -41,10 +41,14 @@ class Comment(base.IDComponent):
 
         text = data.get("text")
 
-        ret = Comment(_id, _block, x, y, width, height, text)
-        if _block is not None:
-            _block.comment = ret
+        ret = Comment(_id, None, x, y, width, height, text, _block_id=_block_id)
         return ret
 
     def to_json(self) -> dict:
         pass
+
+    def link_using_sprite(self):
+        if self.block_id is not None:
+            self.block = self.sprite.find_block(self.block_id, "id")
+            if self.block is not None:
+                self.block_id = None

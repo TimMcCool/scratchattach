@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import warnings
 from io import BytesIO, TextIOWrapper
-from typing import Any, Iterable, Union
+from typing import Any, Iterable
 from zipfile import ZipFile
 
 from . import base, meta, extension, monitor, sprite, asset
@@ -11,7 +11,7 @@ from ..utils import exceptions
 
 
 class Project(base.JSONSerializable):
-    def __init__(self, _name:str=None, _meta: meta.Meta = None, _extensions: Iterable[extension.Extension] = (),
+    def __init__(self, _name: str = None, _meta: meta.Meta = None, _extensions: Iterable[extension.Extension] = (),
                  _monitors: Iterable[monitor.Monitor] = (), _sprites: Iterable[sprite.Sprite] = (), *,
                  _asset_data: list[asset.AssetFile] = None):
         # Defaulting for list parameters
@@ -35,10 +35,8 @@ class Project(base.JSONSerializable):
         for _sprite in self.sprites:
             if _sprite.is_stage:
                 _stage_count += 1
-
             _sprite.project = self
-            _sprite.link_prims()
-            _sprite.link_blocks()
+            _sprite.link_subcomponents()
 
         if _stage_count != 1:
             raise exceptions.InvalidStageCount(f"Project {self}")
