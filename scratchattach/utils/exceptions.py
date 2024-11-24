@@ -224,3 +224,10 @@ class BadVLBPrimitiveError(Exception):
     Raised when a Primitive claiming to be a variable/list/broadcast actually isn't
     """
     pass
+
+
+class UnlinkedVLB(Exception):
+    """
+    Raised when a Primitive cannot be linked to variable/list/broadcast because the provided ID does not have an associated variable/list/broadcast
+    """
+    pass

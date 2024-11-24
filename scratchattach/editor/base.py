@@ -13,7 +13,15 @@ if TYPE_CHECKING:
     from . import sprite
 
 
-class JSONSerializable(ABC):
+class Base(ABC):
+    def copy(self):
+        """
+        :return: A **deep** copy of self
+        """
+        return copy.deepcopy(self)
+
+
+class JSONSerializable(Base, ABC):
     @staticmethod
     @abstractmethod
     def from_json(data: dict | list | Any):

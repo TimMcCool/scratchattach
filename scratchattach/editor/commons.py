@@ -137,3 +137,15 @@ def noneless_update(obj: dict, update: dict) -> None:
         if value is not None:
             obj[key] = value
 
+
+def remove_nones(obj: dict) -> None:
+    """
+    Removes all None values from a dict.
+    :param obj: Dictionary to remove all None values.
+    """
+    nones = []
+    for key, value in obj.items():
+        if value is None:
+            nones.append(key)
+    for key in nones:
+        del obj[key]

@@ -65,7 +65,7 @@ class Prim(base.SpriteSubComponent):
 
         self.name = _name
         """
-        Once you get the object associated with this primitive (done upon sprite initialisation), 
+        Once you get the object associated with this primitive (sprite.link_prims()), 
         the name will be removed and the value will be changed from ``None``
         """
         self.id = _id
@@ -74,7 +74,7 @@ class Prim(base.SpriteSubComponent):
         
         ----
         
-        Once you get the object associated with it (done upon sprite initialisation), 
+        Once you get the object associated with it (sprite.link_prims()), 
         the id will be removed and the value will be changed from ``None``
         """
 

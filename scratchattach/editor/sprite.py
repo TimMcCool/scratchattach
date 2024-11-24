@@ -72,6 +72,12 @@ class Sprite(base.ProjectSubcomponent):
         for sub_component in self.vlbs + self.comments + self.assets:
             sub_component.sprite = self
 
+    def link_prims(self):
+        """
+        Link primitives to corresponding VLB objects (requires project attribute)
+        """
+        assert self.project is not None
+
         # Link prims to vars/lists/broadcasts
         for _id, _prim in self.prims.items():
             _prim.sprite = self
@@ -85,6 +91,9 @@ class Sprite(base.ProjectSubcomponent):
                 else:
                     # This should never happen
                     raise exceptions.BadVLBPrimitiveError(f"{_prim} claims to be VLB, but is {_prim.type.name}")
+                if _prim.value is None:
+                    raise exceptions.UnlinkedVLB(
+                        f"Prim<name={_prim.name!r}, id={_prim.name!r}> has invalid {_prim.type.name} id")
                 _prim.name = None
                 _prim.id = None
 
@@ -98,6 +107,10 @@ class Sprite(base.ProjectSubcomponent):
     @property
     def assets(self) -> list[asset.Costume | asset.Sound]:
         return self.costumes + self.sounds
+
+    @property
+    def stage(self) -> Sprite:
+        return self.project.stage
 
     @staticmethod
     def from_json(data: dict):
@@ -183,6 +196,13 @@ class Sprite(base.ProjectSubcomponent):
                     _ret.append(_variable)
                 else:
                     return _variable
+        # Search in stage for global variables
+        if not self.is_stage:
+            if multiple:
+                _ret += self.stage.find_variable(value, by, True)
+            else:
+                return self.stage.find_variable(value, by)
+
         if multiple:
             return _ret
 
@@ -200,10 +220,18 @@ class Sprite(base.ProjectSubcomponent):
                     _ret.append(_list)
                 else:
                     return _list
+        # Search in stage for global lists
+        if not self.is_stage:
+            if multiple:
+                _ret += self.stage.find_list(value, by, True)
+            else:
+                return self.stage.find_list(value, by)
+
         if multiple:
             return _ret
 
-    def find_broadcast(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Broadcast | list[vlb.Broadcast]:
+    def find_broadcast(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Broadcast | list[
+        vlb.Broadcast]:
         _ret = []
         by = by.lower()
         for _broadcast in self.broadcasts:
@@ -217,5 +245,12 @@ class Sprite(base.ProjectSubcomponent):
                     _ret.append(_broadcast)
                 else:
                     return _broadcast
+        # Search in stage for global broadcasts
+        if not self.is_stage:
+            if multiple:
+                _ret += self.stage.find_broadcast(value, by, True)
+            else:
+                return self.stage.find_broadcast(value, by)
+
         if multiple:
             return _ret

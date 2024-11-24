@@ -29,6 +29,13 @@ class Project(base.JSONSerializable):
         # Link sprites
         for _sprite in self.sprites:
             _sprite.project = self
+            _sprite.link_prims()
+
+    @property
+    def stage(self) -> sprite.Sprite:
+        for _sprite in self.sprites:
+            if _sprite.is_stage:
+                return _sprite
 
     def to_json(self) -> dict | list | Any:
         pass
