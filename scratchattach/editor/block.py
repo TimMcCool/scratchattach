@@ -2,19 +2,23 @@ from __future__ import annotations
 
 import warnings
 
-from . import base, sprite, mutation
+from . import base, sprite, mutation, field
 
 
 class Block(base.SpriteSubComponent):
-    def __init__(self, _opcode: str, _shadow: bool = False, _top_level: bool = False, _mutation: mutation.Mutation=None, _next: Block = None,
+    def __init__(self, _opcode: str, _shadow: bool = False, _top_level: bool = False, _mutation: mutation.Mutation=None, _fields:dict[str, field.Field]=None, _next: Block = None,
                  _parent: Block = None,
                  *, _next_id: str = None, _parent_id: str = None, _sprite: sprite.Sprite = None):
+        # Defaulting for args
+        if _fields is None:
+            _fields = {}
 
         self.opcode = _opcode
         self.is_shadow = _shadow
         self.is_top_level = _top_level
 
         self.mutation = _mutation
+        self.fields = _fields
 
         self._next_id = _next_id
         """
@@ -33,6 +37,10 @@ class Block(base.SpriteSubComponent):
         # Link subcomponents
         if self.mutation:
             self.mutation.block = self
+
+        for iterable in (self.fields.values(), ):
+            for subcomponent in iterable:
+                subcomponent.block = self
 
     def __repr__(self):
         return f"Block<{self.opcode!r}>"
@@ -76,14 +84,14 @@ class Block(base.SpriteSubComponent):
 
         _fields = {}
         for _field_code, _field_data in data.get("fields", {}).items():
-            _fields[_field_code] = ...
+            _fields[_field_code] = field.Field.from_json(_field_data)
 
         if "mutation" in data:
             _mutation = mutation.Mutation.from_json(data["mutation"])
         else:
             _mutation = None
 
-        return Block(_opcode, _shadow, _top_level, _mutation, _next_id=_next_id, _parent_id=_parent_id)
+        return Block(_opcode, _shadow, _top_level, _mutation, _fields, _next_id=_next_id, _parent_id=_parent_id)
 
     def to_json(self) -> dict:
         pass
@@ -104,3 +112,12 @@ class Block(base.SpriteSubComponent):
 
         for _block in self.relatives:
             _block.sprite = self.sprite
+
+        for _field in self.fields.values():
+            if _field.id is not None:
+                new_value = self.sprite.find_vlb(_field.id, "id")
+                if new_value is None:
+                    warnings.warn(f"Could not find {_field.id!r} in {self}")
+                else:
+                    _field.value = new_value
+                    _field.id = None

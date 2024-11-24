@@ -313,6 +313,21 @@ class Sprite(base.ProjectSubcomponent):
         if multiple:
             return _ret
 
+    def find_vlb(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Variable | vlb.List | vlb.Broadcast | list[
+        vlb.Variable | vlb.List | vlb.Broadcast]:
+        if multiple:
+            return self.find_variable(value, by, True) + \
+                   self.find_list(value, by, True) + \
+                   self.find_broadcast(value, by, True)
+        else:
+            _ret = self.find_variable(value, by)
+            if _ret is not None:
+                return _ret
+            _ret = self.find_list(value, by)
+            if _ret is not None:
+                return _ret
+            return self.find_broadcast(value, by)
+
     def find_block(self, value: str | Any, by: str = "opcode", multiple: bool = False) -> block.Block | list[
         block.Block]:
         _ret = []
