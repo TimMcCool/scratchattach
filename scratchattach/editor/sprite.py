@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import warnings
+from typing import Any
+
 from . import base, project, vlb, asset, comment, prim, block
 from ..utils import exceptions
-from typing import Any
 
 
 class Sprite(base.ProjectSubcomponent):
@@ -52,6 +54,7 @@ class Sprite(base.ProjectSubcomponent):
         self.broadcasts = _broadcasts
         self.variables = _variables
         self.lists = _lists
+        self._local_globals = []
 
         self.costumes = _costumes
         self.sounds = _sounds
@@ -97,8 +100,15 @@ class Sprite(base.ProjectSubcomponent):
                     # This should never happen
                     raise exceptions.BadVLBPrimitiveError(f"{_prim} claims to be VLB, but is {_prim.type.name}")
                 if _prim.value is None:
-                    raise exceptions.UnlinkedVLB(
-                        f"Prim<name={_prim.name!r}, id={_prim.name!r}> has invalid {_prim.type.name} id")
+                    if not self.project:
+                        new_vlb = vlb.construct(_prim.type.name.lower(), _prim.id, _prim.name)
+                        self._add_local_global(new_vlb)
+                        _prim.value = new_vlb
+                    else:
+                        new_vlb = vlb.construct(_prim.type.name.lower(), _prim.id, _prim.name)
+                        self.stage.add_vlb(new_vlb)
+
+                        warnings.warn(f"Prim<name={_prim.name!r}, id={_prim.name!r}> has unknown {_prim.type.name} id; adding as global variable")
                 _prim.name = None
                 _prim.id = None
 
@@ -109,6 +119,31 @@ class Sprite(base.ProjectSubcomponent):
         for _block_id, _block in self.blocks.items():
             _block.link_using_sprite()
 
+    def _add_local_global(self, _vlb: base.NamedIDComponent):
+        self._local_globals.append(_vlb)
+        _vlb.sprite = self
+
+    def add_variable(self, _variable: vlb.Variable):
+        self.variables.append(_variable)
+        _variable.sprite = self
+
+    def add_list(self, _list: vlb.List):
+        self.variables.append(_list)
+        _list.sprite = self
+
+    def add_broadcast(self, _broadcast: vlb.Broadcast):
+        self.variables.append(_broadcast)
+        _broadcast.sprite = self
+
+    def add_vlb(self, _vlb: base.NamedIDComponent):
+        if isinstance(_vlb, vlb.Variable):
+            self.add_variable(_vlb)
+        elif isinstance(_vlb, vlb.List):
+            self.add_list(_vlb)
+        elif isinstance(_vlb, vlb.Broadcast):
+            self.add_broadcast(_vlb)
+        else:
+            warnings.warn(f"Invalid 'VLB' {_vlb} of type: {type(_vlb)}")
 
     def __repr__(self):
         return f"Sprite<{self.name}>"
@@ -198,7 +233,10 @@ class Sprite(base.ProjectSubcomponent):
     def find_variable(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Variable | list[vlb.Variable]:
         _ret = []
         by = by.lower()
-        for _variable in self.variables:
+        for _variable in self.variables + self._local_globals:
+            if not isinstance(_variable, vlb.Variable):
+                continue
+
             if by == "id":
                 compare = _variable.id
             else:
@@ -210,11 +248,12 @@ class Sprite(base.ProjectSubcomponent):
                 else:
                     return _variable
         # Search in stage for global variables
-        if not self.is_stage:
-            if multiple:
-                _ret += self.stage.find_variable(value, by, True)
-            else:
-                return self.stage.find_variable(value, by)
+        if self.project:
+            if not self.is_stage:
+                if multiple:
+                    _ret += self.stage.find_variable(value, by, True)
+                else:
+                    return self.stage.find_variable(value, by)
 
         if multiple:
             return _ret
@@ -222,7 +261,9 @@ class Sprite(base.ProjectSubcomponent):
     def find_list(self, value: str, by: str = "name", multiple: bool = False) -> vlb.List | list[vlb.List]:
         _ret = []
         by = by.lower()
-        for _list in self.lists:
+        for _list in self.lists + self._local_globals:
+            if not isinstance(_list, vlb.List):
+                continue
             if by == "id":
                 compare = _list.id
             else:
@@ -234,11 +275,12 @@ class Sprite(base.ProjectSubcomponent):
                 else:
                     return _list
         # Search in stage for global lists
-        if not self.is_stage:
-            if multiple:
-                _ret += self.stage.find_list(value, by, True)
-            else:
-                return self.stage.find_list(value, by)
+        if self.project:
+            if not self.is_stage:
+                if multiple:
+                    _ret += self.stage.find_list(value, by, True)
+                else:
+                    return self.stage.find_list(value, by)
 
         if multiple:
             return _ret
@@ -247,7 +289,9 @@ class Sprite(base.ProjectSubcomponent):
         vlb.Broadcast]:
         _ret = []
         by = by.lower()
-        for _broadcast in self.broadcasts:
+        for _broadcast in self.broadcasts + self._local_globals:
+            if not isinstance(_broadcast, vlb.Broadcast):
+                continue
             if by == "id":
                 compare = _broadcast.id
             else:
@@ -259,16 +303,18 @@ class Sprite(base.ProjectSubcomponent):
                 else:
                     return _broadcast
         # Search in stage for global broadcasts
-        if not self.is_stage:
-            if multiple:
-                _ret += self.stage.find_broadcast(value, by, True)
-            else:
-                return self.stage.find_broadcast(value, by)
+        if self.project:
+            if not self.is_stage:
+                if multiple:
+                    _ret += self.stage.find_broadcast(value, by, True)
+                else:
+                    return self.stage.find_broadcast(value, by)
 
         if multiple:
             return _ret
 
-    def find_block(self, value: str | Any, by: str = "opcode", multiple: bool = False) -> block.Block | list[block.Block]:
+    def find_block(self, value: str | Any, by: str = "opcode", multiple: bool = False) -> block.Block | list[
+        block.Block]:
         _ret = []
         by = by.lower()
         for _block_id, _block in self.blocks.items():
@@ -288,11 +334,12 @@ class Sprite(base.ProjectSubcomponent):
                 else:
                     return _block
         # Search in stage for global variables
-        if not self.is_stage:
-            if multiple:
-                _ret += self.stage.find_block(value, by, True)
-            else:
-                return self.stage.find_block(value, by)
+        if self.project:
+            if not self.is_stage:
+                if multiple:
+                    _ret += self.stage.find_block(value, by, True)
+                else:
+                    return self.stage.find_block(value, by)
 
         if multiple:
             return _ret

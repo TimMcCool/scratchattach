@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
-from . import base
+from . import base, commons
 from ..utils import enums
 
 if TYPE_CHECKING:
@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 @dataclass(init=True)
 class ArgumentPlaceholder(base.Base):
     type: str
+    proc_str: str
 
     def __eq__(self, other):
         if isinstance(other, enums._EnumWrapper):
@@ -26,10 +27,19 @@ class ArgumentPlaceholder(base.Base):
     def __repr__(self):
         return f"<Arg {self.type!r}>"
 
+    @property
+    def default(self) -> str | None:
+        if self.proc_str == "%b":
+            return "false"
+        elif self.proc_str == "%s":
+            return ''
+        else:
+            return None
+
 
 class ArgumentPlaceholders(enums._EnumWrapper):
-    BOOLEAN = ArgumentPlaceholder("boolean")
-    NUMBER_OR_TEXT = ArgumentPlaceholder("number or text")
+    BOOLEAN = ArgumentPlaceholder("boolean", "%b")
+    NUMBER_OR_TEXT = ArgumentPlaceholder("number or text", "%s")
 
 
 def parse_proc_code(_proc_code: str) -> list[str, ArgumentPlaceholder] | None:
@@ -53,9 +63,9 @@ def parse_proc_code(_proc_code: str) -> list[str, ArgumentPlaceholder] | None:
                 # Add the parameter token
                 token = f"%{char}"
                 if token == "%b":
-                    tokens.append(ArgumentPlaceholder("boolean"))
+                    tokens.append(ArgumentPlaceholders.BOOLEAN.value.copy())
                 elif token == "%s":
-                    tokens.append(ArgumentPlaceholder("number or text"))
+                    tokens.append(ArgumentPlaceholders.NUMBER_OR_TEXT.value.copy())
 
                 token = ''
                 continue
@@ -168,9 +178,9 @@ class Mutation(base.BlockSubComponent):
 
     @property
     def argument_settings(self) -> ArgSettings:
-        return ArgSettings(bool(self.argument_ids),
-                           bool(self.argument_names),
-                           bool(self.argument_defaults))
+        return ArgSettings(bool(commons.safe_get(self.argument_ids, 0)),
+                           bool(commons.safe_get(self.argument_names, 0)),
+                           bool(commons.safe_get(self.argument_defaults, 0)))
 
     @property
     def parsed_proc_code(self) -> list[str, ArgumentPlaceholder] | None:
@@ -247,7 +257,13 @@ class Mutation(base.BlockSubComponent):
                 for _use in _proc_uses:
                     if _use.mutation.argument_settings > self.argument_settings:
                         self.arguments = _use.mutation.arguments
-
                         if int(self.argument_settings) == 3:
                             # If all of our argument data is filled, we can stop early
-                            break
+                            return
+
+                # We can still work out argument defaults from parsing the proc code
+                if self.arguments[0].default is None:
+                    _parsed = self.parsed_proc_code
+                    _arg_phs: Iterable[ArgumentPlaceholder] = filter(lambda tkn: isinstance(tkn, ArgumentPlaceholder), _parsed)
+                    for i, _arg_ph in enumerate(_arg_phs):
+                        self.arguments[i].default = _arg_ph.default

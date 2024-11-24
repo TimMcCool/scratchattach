@@ -4,7 +4,7 @@ Shared functions used by the editor module
 from __future__ import annotations
 
 import json
-from typing import Final
+from typing import Final, Any
 
 from ..utils import exceptions
 
@@ -149,3 +149,10 @@ def remove_nones(obj: dict) -> None:
             nones.append(key)
     for key in nones:
         del obj[key]
+
+
+def safe_get(lst: list | tuple, _i: int, default: Any=None) -> Any:
+    if len(lst) <= _i:
+        return default
+    else:
+        return lst[_i]

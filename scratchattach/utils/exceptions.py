@@ -232,8 +232,16 @@ class UnlinkedVLB(Exception):
     """
     pass
 
+
 class InvalidStageCount(Exception):
     """
     Raised when a project has too many or too few Stage sprites
+    """
+    pass
+
+
+class InvalidVLBName(Exception):
+    """
+    Raised when an invalid VLB name is provided (not variable, list or broadcast)
     """
     pass

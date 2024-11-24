@@ -4,7 +4,10 @@ Variables, lists & broadcasts
 
 from __future__ import annotations
 
+from typing import Literal
+
 from . import base, sprite
+from ..utils import exceptions
 
 
 class Variable(base.NamedIDComponent):
@@ -104,3 +107,17 @@ class Broadcast(base.NamedIDComponent):
 
     def to_json(self) -> tuple[str, str]:
         return self.id, self.name
+
+
+def construct(vlb_type: Literal["variable", "list", "broadcast"], _id: str = None, _name: str = None,
+              _sprite: sprite.Sprite = None) -> Variable | List | Broadcast:
+    if vlb_type == "variable":
+        vlb_type = Variable
+    elif vlb_type == "list":
+        vlb_type = List
+    elif vlb_type == "broadcast":
+        vlb_type = Broadcast
+    else:
+        raise exceptions.InvalidVLBName(f"Bad VLB {vlb_type!r}")
+
+    return vlb_type(_id, _name, _sprite)
