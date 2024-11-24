@@ -45,15 +45,14 @@ class Meta(base.JSONSerializable):
         if platform is None and META_SET_PLATFORM:
             platform = DEFAULT_PLATFORM.copy()
 
-        # Thanks to TurboWarp for this pattern ↓↓↓↓, I just copied it
-        if re.match("^([0-9]+\\.[0-9]+\\.[0-9]+)($|-)", vm) is None:
-            raise ValueError(
-                f"\"{vm}\" does not match pattern \"^([0-9]+\\.[0-9]+\\.[0-9]+)($|-)\" - maybe try \"0.0.0\"?")
-
         self.semver = semver
         self.vm = vm
         self.agent = agent
         self.platform = platform
+
+        if not self.vm_is_valid:
+            raise ValueError(
+                f"{vm!r} does not match pattern '^([0-9]+\\.[0-9]+\\.[0-9]+)($|-)' - maybe try '0.0.0'?")
 
     def __repr__(self):
         data = f"{self.semver} : {self.vm} : {self.agent}"
@@ -61,6 +60,11 @@ class Meta(base.JSONSerializable):
             data += f": {self.platform}"
 
         return f"Meta<{data}>"
+
+    @property
+    def vm_is_valid(self):
+        # Thanks to TurboWarp for this pattern ↓↓↓↓, I just copied it
+        return re.match("^([0-9]+\\.[0-9]+\\.[0-9]+)($|-)", self.vm) is not None
 
     def to_json(self):
         _json = {
