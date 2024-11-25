@@ -4,7 +4,7 @@ import warnings
 from dataclasses import dataclass
 from typing import Callable, Final
 
-from . import base, sprite, vlb
+from . import base, sprite, vlb, commons
 from ..utils import enums, exceptions
 
 
@@ -34,8 +34,6 @@ VLB_ATTRS: Final = ["name", "id", "x", "y"]
 
 
 class PrimTypes(enums._EnumWrapper):
-    NULL = PrimType(1, "null")
-    BLOCK = PrimType(2, "block")
     NUMBER = PrimType(4, "number", BASIC_ATTRS)
     POSITIVE_NUMBER = PrimType(5, "positive number", BASIC_ATTRS)
     POSITIVE_INTEGER = PrimType(6, "positive integer", BASIC_ATTRS)
@@ -109,12 +107,7 @@ class Prim(base.SpriteSubComponent):
         _prim_type = PrimTypes.find(_type_idx, "code")
 
         _value, _name, _id, _x, _y = (None,) * 5
-        if _prim_type == PrimTypes.NULL:
-            pass
-        elif _prim_type == PrimTypes.BLOCK:
-            pass
-
-        elif _prim_type.attrs == BASIC_ATTRS:
+        if _prim_type.attrs == BASIC_ATTRS:
             assert len(data) == 2
             _value = data[1]
 
@@ -123,12 +116,15 @@ class Prim(base.SpriteSubComponent):
             _name, _id = data[1:3]
 
             if len(data) == 5:
-                _x, _y = data[3:5]
+                _x, _y = data[3:]
 
         return Prim(_prim_type, _value, _name, _id, _x, _y)
 
     def to_json(self) -> list:
-        pass
+        if self.type.attrs == BASIC_ATTRS:
+            return [self.type.code, self.value]
+        else:
+            return commons.trim_final_nones([self.type.code, self.value.name, self.value.id, self.x, self.y])
 
     def link_using_sprite(self):
         # Link prim to var/list/broadcast

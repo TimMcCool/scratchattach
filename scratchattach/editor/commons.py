@@ -68,6 +68,8 @@ def _read_json_number(string: str) -> float | int:
 
 def consume_json(string: str, i: int = 0) -> str | float | int | dict | list | bool | None:
     """
+    *'gobble up some JSON until we hit something not quite so tasty'*
+
     Reads a JSON string and stops at the natural end (i.e. when brackets close, or when quotes end, etc.)
     """
     # Named by ChatGPT
@@ -156,3 +158,16 @@ def safe_get(lst: list | tuple, _i: int, default: Any = None) -> Any:
         return default
     else:
         return lst[_i]
+
+
+def trim_final_nones(lst: list) -> list:
+    """
+    Removes the last None values from a list until a non-None value is hit.
+    :param lst: list which will **not** be modified.
+    """
+    i = len(lst)
+    for item in lst[::-1]:
+        if item is not None:
+            break
+        i -= 1
+    return lst[:i]

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from . import block, vlb
 
-from . import base
+from . import base, commons
 
 
 class Field(base.BlockSubComponent):
@@ -28,6 +28,23 @@ class Field(base.BlockSubComponent):
         else:
             return f"<Field {self.value!r}>"
 
+    @property
+    def value_id(self):
+        if self.id is not None:
+            return self.id
+        else:
+            if hasattr(self.value, "id"):
+                return self.value.id
+            else:
+                return None
+
+    @property
+    def value_str(self):
+        if not isinstance(self.value, base.NamedIDComponent):
+            return self.value
+        else:
+            return self.value.name
+
     @staticmethod
     def from_json(data: list[str, str | None]):
         # Sometimes you may have a stray field with no id. Not sure why
@@ -39,4 +56,6 @@ class Field(base.BlockSubComponent):
         return Field(_value, _id)
 
     def to_json(self) -> dict:
-        pass
+        return commons.trim_final_nones([
+            self.value_str, self.value_id
+        ])

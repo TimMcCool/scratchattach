@@ -1,13 +1,19 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import warnings
 from io import BytesIO, TextIOWrapper
-from typing import Any, Iterable
+from typing import Iterable, TYPE_CHECKING, Generator
 from zipfile import ZipFile
 
 from . import base, meta, extension, monitor, sprite, asset
+from ..site.project import get_project
 from ..utils import exceptions
+
+if TYPE_CHECKING:
+    from . import vlb
 
 
 class Project(base.JSONSerializable):
@@ -25,9 +31,14 @@ class Project(base.JSONSerializable):
         self.meta = _meta
         self.extensions = _extensions
         self.monitors = _monitors
-        self.sprites = _sprites
+        self.sprites = list(_sprites)
 
         self.asset_data = _asset_data
+
+        # Link subcomponents
+        for iterable in (self.monitors, self.sprites):
+            for _subcomponent in iterable:
+                _subcomponent.project = self
 
         # Link sprites
         _stage_count = 0
@@ -35,8 +46,15 @@ class Project(base.JSONSerializable):
         for _sprite in self.sprites:
             if _sprite.is_stage:
                 _stage_count += 1
-            _sprite.project = self
             _sprite.link_subcomponents()
+
+        # Link monitors to their VLBs
+        for _monitor in self.monitors:
+            if _monitor.opcode in ("data_variable", "data_listcontents", "event_broadcast_menu"):
+                new_vlb = self.find_vlb(_monitor._reporter_id, "id")
+                if new_vlb is not None:
+                    _monitor.reporter = new_vlb
+                    _monitor._reporter_id = None
 
         if _stage_count != 1:
             raise exceptions.InvalidStageCount(f"Project {self}")
@@ -55,11 +73,24 @@ class Project(base.JSONSerializable):
             if _sprite.is_stage:
                 return _sprite
 
-    def to_json(self) -> dict | list | Any:
-        pass
+    def to_json(self) -> dict:
+        _json = {
+            "targets": [_sprite.to_json() for _sprite in self.sprites],
+            "monitors": [_monitor.to_json() for _monitor in self.monitors],
+            "extensions": [_extension.to_json() for _extension in self.extensions],
+            "meta": self.meta.to_json(),
+        }
+
+        return _json
+
+    @property
+    def assets(self) -> Generator[asset.Asset, None, None]:
+        for _sprite in self.sprites:
+            for _asset in _sprite.assets:
+                yield _asset
 
     @staticmethod
-    def from_json(data: dict | list | Any):
+    def from_json(data: dict):
         assert isinstance(data, dict)
 
         # Load metadata
@@ -133,3 +164,48 @@ class Project(base.JSONSerializable):
 
             project.name = _name
             return project
+
+    @staticmethod
+    def from_id(project_id: int, _name: str = None):
+        _proj = get_project(project_id)
+        data = json.loads(_proj.get_json())
+
+        if _name is None:
+            _name = _proj.title
+        _name = str(_name)
+
+        _proj = Project.from_json(data)
+        _proj.name = _name
+        return _proj
+
+    def find_vlb(self, value: str, by: str = "name",
+                 multiple: bool = False) -> vlb.Variable | vlb.List | vlb.Broadcast | list[
+        vlb.Variable | vlb.List | vlb.Broadcast]:
+        _ret = []
+        for _sprite in self.sprites:
+            val = _sprite.find_vlb(value, by, multiple)
+            if multiple:
+                _ret += val
+            else:
+                if val is not None:
+                    return val
+        if multiple:
+            return _ret
+
+    def export(self, fp: str, auto_open: bool = False, export_as_zip: bool=True):
+        data = self.to_json()
+
+        if export_as_zip:
+            with ZipFile(fp, "w") as archive:
+                for _asset in self.assets:
+                    asset_file = _asset.asset_file
+                    if asset_file.filename not in archive.namelist():
+                        archive.writestr(asset_file.filename, asset_file.data)
+
+                archive.writestr("project.json", json.dumps(data))
+        else:
+            with open(fp, "w") as json_file:
+                json.dump(data, json_file)
+
+        if auto_open:
+            os.system(f"explorer.exe \"{fp}\"")

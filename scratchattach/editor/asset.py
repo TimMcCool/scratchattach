@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from hashlib import md5
+import requests
 
 from . import base, project, commons, sprite
 
@@ -9,10 +10,22 @@ from . import base, project, commons, sprite
 @dataclass(init=True)
 class AssetFile:
     filename: str
-    data: bytes
+    _data: bytes = None
 
     def __repr__(self):
         return f"AssetFile(filename={self.filename!r})"
+
+    @property
+    def data(self):
+        if self._data is None:
+            # Download and cache
+            rq = requests.get(f"https://assets.scratch.mit.edu/internalapi/asset/{self.filename}/get/")
+            if rq.status_code != 200:
+                raise ValueError(f"Can't download asset {self.filename}\nIs not uploaded to scratch! Response: {rq.text}")
+
+            self._data = rq.content
+
+        return self._data
 
 
 class Asset(base.SpriteSubComponent):
@@ -46,6 +59,17 @@ class Asset(base.SpriteSubComponent):
     @property
     def md5ext(self):
         return self.file_name
+
+    @property
+    def asset_file(self) -> AssetFile:
+        for asset_file in self.project.asset_data:
+            if asset_file.filename == self.file_name:
+                return asset_file
+
+        # No pre-existing asset file object; create one and add it to the project
+        asset_file = AssetFile(self.file_name)
+        self.project.asset_data.append(asset_file)
+        return asset_file
 
     @staticmethod
     def from_json(data: dict):

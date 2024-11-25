@@ -35,6 +35,11 @@ EDIT_META = True
 META_SET_PLATFORM = False
 
 
+def set_meta_platform(true_false: bool = False):
+    global META_SET_PLATFORM
+    META_SET_PLATFORM = true_false
+
+
 class Meta(base.JSONSerializable):
     def __init__(self, semver: str = "3.0.0", vm: str = DEFAULT_VM, agent: str = DEFAULT_AGENT,
                  platform: PlatformMeta = None):

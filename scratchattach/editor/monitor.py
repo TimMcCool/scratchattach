@@ -1,10 +1,15 @@
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from . import project
 
 from . import base
 
 
-class Monitor(base.JSONSerializable):
-    def __init__(self, reporter: base.SpriteSubComponent = None,
+class Monitor(base.ProjectSubcomponent):
+    def __init__(self, reporter: base.NamedIDComponent = None,
                  mode: str = "default",
                  opcode: str = "data_variable",
                  params: dict = None,
@@ -17,12 +22,17 @@ class Monitor(base.JSONSerializable):
                  visible: bool = False,
                  slider_min: int | float = 0,
                  slider_max: int | float = 100,
-                 is_discrete: bool = True):
+                 is_discrete: bool = True, *, reporter_id: str = None, _project: project.Project = None):
         """
         Represents a variable/list monitor
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Monitors
         """
         assert isinstance(reporter, base.SpriteSubComponent) or reporter is None
+
+        self._reporter_id = reporter_id
+        """
+        ID referencing the VLB being referenced. Replaced with None during project instantiation, where the reporter attribute is updated
+        """
 
         self.reporter = reporter
         if params is None:
@@ -45,18 +55,27 @@ class Monitor(base.JSONSerializable):
         self.slider_min, self.slider_max = slider_min, slider_max
         self.is_discrete = is_discrete
 
+        super().__init__(_project)
+
     def __repr__(self):
         return f"Monitor<{self.opcode}>"
 
+    @property
+    def reporter_id(self):
+        if self.reporter is not None:
+            return self.reporter.id
+        else:
+            return self._reporter_id
+
     @staticmethod
-    def from_json(data: dict | list | Any):
+    def from_json(data: dict):
         _id = data["id"]
         # ^^ NEED TO FIND REPORTER OBJECT
 
         mode = data["mode"]
 
         opcode = data["opcode"]
-        params = data["params"]
+        params: dict = data["params"]
 
         sprite_name = data["spriteName"]
 
@@ -74,11 +93,11 @@ class Monitor(base.JSONSerializable):
             slider_min, slider_max, is_discrete = None, None, None
 
         return Monitor(None, mode, opcode, params, sprite_name, value, width, height, x, y, visible, slider_min,
-                       slider_max, is_discrete)
+                       slider_max, is_discrete, reporter_id=_id)
 
     def to_json(self):
         _json = {
-            "id": f"PLEASE GET ID FROM VALUE {self.reporter}",
+            "id": self.reporter_id,
             "mode": self.mode,
 
             "opcode": self.opcode,

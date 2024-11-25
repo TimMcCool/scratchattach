@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+import warnings
+from typing import Final
 
-if TYPE_CHECKING:
-    from . import block
-
+from . import block
 from . import base, commons, prim
 from dataclasses import dataclass
 
@@ -35,8 +34,8 @@ class ShadowStatuses:
 
 
 class Input(base.BlockSubComponent):
-    def __init__(self, _shadow: ShadowStatus = ShadowStatuses.HAS_SHADOW, _value: prim.Prim = None, _id: str = None,
-                 _obscurer: block.Block = None, *, _obscurer_id: str = None, _block: block.Block = None):
+    def __init__(self, _shadow: ShadowStatus = ShadowStatuses.HAS_SHADOW, _value: prim.Prim | block.Block = None, _id: str = None,
+                 _obscurer: prim.Prim | block.Block = None, *, _obscurer_id: str = None, _block: block.Block = None):
         """
         An input for a scratch block
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Blocks:~:text=inputs,it.%5B9%5D
@@ -44,8 +43,8 @@ class Input(base.BlockSubComponent):
         super().__init__(_block)
 
         self.shadow = _shadow
-        self.value = _value
-        self.obscurer = _obscurer
+        self.value: prim.Prim | block.Block = _value
+        self.obscurer: prim.Prim | block.Block = _obscurer
 
         self._id = _id
         """
@@ -72,11 +71,36 @@ class Input(base.BlockSubComponent):
         else:
             _id = data[1]
 
-        _obscurer_id = commons.safe_get(data, 2)
-        return Input(_shadow, _value, _id, _obscurer_id)
+        _obscurer_data = commons.safe_get(data, 2)
+
+        _obscurer, _obscurer_id = None, None
+        if isinstance(_obscurer_data, list):
+            _obscurer = prim.Prim.from_json(_obscurer_data)
+        else:
+            _obscurer_id = _obscurer_data
+        return Input(_shadow, _value, _id, _obscurer, _obscurer_id=_obscurer_id)
 
     def to_json(self) -> list:
-        pass
+        data = [self.shadow.idx]
+
+        def add_pblock(pblock: prim.Prim | block.Block | None):
+            """
+            Adds a primitive or a block to the data in the right format
+            """
+            if pblock is None:
+                return
+
+            if isinstance(pblock, prim.Prim):
+                data.append(pblock.to_json())
+            elif isinstance(pblock, block.Block):
+                data.append(pblock.id)
+            else:
+                warnings.warn(f"Bad prim/block {pblock!r} of type {type(pblock)}")
+
+        add_pblock(self.value)
+        add_pblock(self.obscurer)
+
+        return data
 
     def link_using_block(self):
         if self._id is not None:
@@ -94,3 +118,6 @@ class Input(base.BlockSubComponent):
         if isinstance(self.value, prim.Prim):
             self.value.sprite = self.sprite
             self.value.link_using_sprite()
+
+        if self.obscurer is not None:
+            self.obscurer.sprite = self.sprite

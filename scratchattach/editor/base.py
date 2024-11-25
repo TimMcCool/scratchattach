@@ -5,6 +5,7 @@ Editor base classes
 from __future__ import annotations
 
 import copy
+import json
 from abc import ABC, abstractmethod
 from typing import Any, TYPE_CHECKING
 
@@ -31,6 +32,11 @@ class JSONSerializable(Base, ABC):
     @abstractmethod
     def to_json(self) -> dict | list | Any:
         pass
+
+    def save_json(self, name: str = ''):
+        data = self.to_json()
+        with open(f"{self.__class__.__name__.lower()}{name}.json", "w") as f:
+            json.dump(data, f)
 
 
 class ProjectSubcomponent(JSONSerializable, ABC):

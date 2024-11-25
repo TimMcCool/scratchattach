@@ -4,7 +4,6 @@ import warnings
 from typing import Any
 
 from . import base, project, vlb, asset, comment, prim, block
-from ..utils import exceptions
 
 
 class Sprite(base.ProjectSubcomponent):
@@ -41,9 +40,9 @@ class Sprite(base.ProjectSubcomponent):
         if _comments is None:
             _comments = []
         if _prims is None:
-            _prims = []
+            _prims = {}
         if _blocks is None:
-            _blocks = []
+            _blocks = {}
 
         self.is_stage = is_stage
         self.name = name
@@ -212,7 +211,44 @@ class Sprite(base.ProjectSubcomponent):
                       )
 
     def to_json(self) -> dict:
-        pass
+        _json = {
+            "isStage": self.is_stage,
+            "name": self.name,
+            "currentCostume": self.current_costume,
+            "volume": self.volume,
+            "layerOrder": self.layer_order,
+
+            "variables": {_variable.id: _variable.to_json() for _variable in self.variables},
+            "lists": {_list.id: _list.to_json() for _list in self.lists},
+            "broadcasts": {_broadcast.id: _broadcast.to_json() for _broadcast in self.broadcasts},
+
+            "blocks": {_block_id: _block.to_json() for _block_id, _block in (self.blocks | self.prims).items()},
+            "comments": {_comment.id: _comment.to_json() for _comment in self.comments},
+
+            "costumes": [_costume.to_json() for _costume in self.costumes],
+            "sounds": [_sound.to_json() for _sound in self.sounds]
+        }
+
+        if self.is_stage:
+            _json.update({
+                "tempo": self.tempo,
+                "videoTransparency": self.video_transparency,
+                "videoState": self.video_state,
+                "textToSpeechLanguage": self.text_to_speech_language
+            })
+        else:
+            _json.update({
+                "visible": self.visible,
+
+                "x": self.x, "y": self.y,
+                "size": self.size,
+                "direction": self.direction,
+
+                "draggable": self.draggable,
+                "rotationStyle": self.rotation_style
+            })
+
+        return _json
 
     # Finding/getting from list/dict attributes
     def find_variable(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Variable | list[vlb.Variable]:
@@ -298,12 +334,13 @@ class Sprite(base.ProjectSubcomponent):
         if multiple:
             return _ret
 
-    def find_vlb(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Variable | vlb.List | vlb.Broadcast | list[
+    def find_vlb(self, value: str, by: str = "name",
+                 multiple: bool = False) -> vlb.Variable | vlb.List | vlb.Broadcast | list[
         vlb.Variable | vlb.List | vlb.Broadcast]:
         if multiple:
             return self.find_variable(value, by, True) + \
-                   self.find_list(value, by, True) + \
-                   self.find_broadcast(value, by, True)
+                self.find_list(value, by, True) + \
+                self.find_broadcast(value, by, True)
         else:
             _ret = self.find_variable(value, by)
             if _ret is not None:
@@ -313,11 +350,13 @@ class Sprite(base.ProjectSubcomponent):
                 return _ret
             return self.find_broadcast(value, by)
 
-    def find_block(self, value: str | Any, by: str, multiple: bool = False) -> block.Block | list[
-        block.Block]:
+    def find_block(self, value: str | Any, by: str, multiple: bool = False) -> block.Block | prim.Prim | list[
+        block.Block | prim.Prim]:
         _ret = []
         by = by.lower()
         for _block_id, _block in (self.blocks | self.prims).items():
+            _block: block.Block | prim.Prim
+
             is_block = isinstance(_block, block.Block)
             is_prim = isinstance(_block, prim.Prim)
 

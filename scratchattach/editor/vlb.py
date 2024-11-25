@@ -48,16 +48,16 @@ class Variable(base.NamedIDComponent):
 
         return Variable(_id, _name, _value, _is_cloud)
 
-    def to_json(self) -> tuple[str, tuple[str, str | int | float, bool] | tuple[str, str | int | float]]:
+    def to_json(self) -> tuple[str, str | int | float, bool] | tuple[str, str | int | float]:
         """
-        Returns Variable data as the variable id, then a tuple representing it
+        Returns Variable data as a tuple
         """
         if self.is_cloud:
             _ret = self.name, self.value, True
         else:
             _ret = self.name, self.value
 
-        return self.id, _ret
+        return _ret
 
 
 class List(base.NamedIDComponent):
@@ -85,9 +85,9 @@ class List(base.NamedIDComponent):
 
     def to_json(self) -> tuple[str, tuple[str, str | int | float, bool] | tuple[str, str | int | float]]:
         """
-        Returns List data as the list id, then a tuple representing it
+        Returns List data as a tuple
         """
-        return self.id, (self.name, self.value)
+        return self.name, self.value
 
 
 class Broadcast(base.NamedIDComponent):
@@ -105,8 +105,11 @@ class Broadcast(base.NamedIDComponent):
 
         return Broadcast(_id, _name)
 
-    def to_json(self) -> tuple[str, str]:
-        return self.id, self.name
+    def to_json(self) -> str:
+        """
+        :return: Broadcast as JSON (just a string of its name)
+        """
+        return self.name
 
 
 def construct(vlb_type: Literal["variable", "list", "broadcast"], _id: str = None, _name: str = None,
