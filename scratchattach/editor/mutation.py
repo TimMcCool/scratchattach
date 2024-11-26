@@ -247,15 +247,14 @@ class Mutation(base.BlockSubComponent):
         }
         commons.noneless_update(_json, {
             "proccode": self.proc_code,
-            "argumentids": self.argument_ids,
-            "warp": self.is_warp,
-            "argumentnames": self.argument_names,
-            "argumentdefaults": self.argument_defaults,
+            "argumentids": commons.dumps_ifnn(self.argument_ids),
+            "warp": commons.dumps_ifnn(self.is_warp),
+            "argumentnames": commons.dumps_ifnn(self.argument_names),
+            "argumentdefaults": commons.dumps_ifnn(self.argument_defaults),
 
-            "hasnext": self.has_next,
+            "hasnext": commons.dumps_ifnn(self.has_next),
         })
         return _json
-
 
     def link_arguments(self):
         if self.arguments is None:

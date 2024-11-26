@@ -171,3 +171,9 @@ def trim_final_nones(lst: list) -> list:
             break
         i -= 1
     return lst[:i]
+
+def dumps_ifnn(obj: Any) -> str:
+    if obj is None:
+        return None
+    else:
+        return json.dumps(obj)
