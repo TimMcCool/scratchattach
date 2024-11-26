@@ -241,7 +241,21 @@ class Mutation(base.BlockSubComponent):
         return Mutation(_tag_name, _children, _proc_code, _is_warp, _arguments, _has_next, _argument_settings)
 
     def to_json(self) -> dict | None:
-        pass
+        _json = {
+            "tagName": self.tag_name,
+            "children": self.children,
+        }
+        commons.noneless_update(_json, {
+            "proccode": self.proc_code,
+            "argumentids": self.argument_ids,
+            "warp": self.is_warp,
+            "argumentnames": self.argument_names,
+            "argumentdefaults": self.argument_defaults,
+
+            "hasnext": self.has_next,
+        })
+        return _json
+
 
     def link_arguments(self):
         if self.arguments is None:
