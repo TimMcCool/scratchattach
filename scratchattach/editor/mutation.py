@@ -196,6 +196,8 @@ class Mutation(base.BlockSubComponent):
         # procedures_prototype & procedures_call attrs
         _proc_code = data.get("proccode")
         _is_warp = data.get("warp")
+        if isinstance(_is_warp, str):
+            _is_warp = json.loads(_is_warp)
 
         _argument_ids = data.get("argumentids")
         # For some reason these are stored as JSON strings
@@ -218,6 +220,8 @@ class Mutation(base.BlockSubComponent):
 
         # control_stop attrs
         _has_next = data.get("hasnext")
+        if isinstance(_has_next, str):
+            _has_next = json.loads(_has_next)
 
         def get(_lst: list | tuple | None, _idx: int):
             if _lst is None:
@@ -247,13 +251,14 @@ class Mutation(base.BlockSubComponent):
         }
         commons.noneless_update(_json, {
             "proccode": self.proc_code,
-            "argumentids": commons.dumps_ifnn(self.argument_ids),
             "warp": commons.dumps_ifnn(self.is_warp),
+            "argumentids": commons.dumps_ifnn(self.argument_ids),
             "argumentnames": commons.dumps_ifnn(self.argument_names),
             "argumentdefaults": commons.dumps_ifnn(self.argument_defaults),
 
-            "hasnext": commons.dumps_ifnn(self.has_next),
+            "hasNext": commons.dumps_ifnn(self.has_next)
         })
+
         return _json
 
     def link_arguments(self):

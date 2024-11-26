@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import warnings
+import json, warnings
 from typing import Any
+from zipfile import ZipFile
 
 from . import base, project, vlb, asset, comment, prim, block
 
@@ -80,7 +81,10 @@ class Sprite(base.ProjectSubcomponent):
             for sub_component in iterable:
                 sub_component.sprite = self
 
-    def link_subcomponents(self):
+    def __repr__(self):
+        return f"Sprite<{self.name}>"
+
+    def link_using_project(self):
         self.link_prims()
         self.link_blocks()
         self.link_comments()
@@ -129,8 +133,6 @@ class Sprite(base.ProjectSubcomponent):
         else:
             warnings.warn(f"Invalid 'VLB' {_vlb} of type: {type(_vlb)}")
 
-    def __repr__(self):
-        return f"Sprite<{self.name}>"
 
     @property
     def vlbs(self) -> list[base.NamedIDComponent]:
@@ -396,3 +398,18 @@ class Sprite(base.ProjectSubcomponent):
 
         if multiple:
             return _ret
+
+    def export(self, fp: str=None, *, export_as_zip: bool = True):
+        data = self.to_json()
+
+        if export_as_zip:
+            with ZipFile(fp, "w") as archive:
+                for _asset in self.assets:
+                    asset_file = _asset.asset_file
+                    if asset_file.filename not in archive.namelist():
+                        archive.writestr(asset_file.filename, asset_file.data)
+
+                archive.writestr("sprite.json", json.dumps(data))
+        else:
+            with open(fp, "w") as json_file:
+                json.dump(data, json_file)

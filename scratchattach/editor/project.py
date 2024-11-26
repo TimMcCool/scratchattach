@@ -4,26 +4,28 @@ import json
 import os
 import warnings
 from io import BytesIO, TextIOWrapper
-from typing import Iterable, TYPE_CHECKING, Generator
+from typing import Iterable, Generator, BinaryIO
 from zipfile import ZipFile
 
-from . import base, meta, extension, monitor, sprite, asset
-from ..site.project import get_project
-from ..utils import exceptions
+from . import base, meta, extension, monitor, sprite, asset, vlb
 
-if TYPE_CHECKING:
-    from . import vlb
+from ..site.project import get_project
+from ..site import session
+
+from ..utils import exceptions
 
 
 class Project(base.JSONSerializable):
     def __init__(self, _name: str = None, _meta: meta.Meta = None, _extensions: Iterable[extension.Extension] = (),
                  _monitors: Iterable[monitor.Monitor] = (), _sprites: Iterable[sprite.Sprite] = (), *,
-                 _asset_data: list[asset.AssetFile] = None):
+                 _asset_data: list[asset.AssetFile] = None, _session: session.Session = None):
         # Defaulting for list parameters
         if _meta is None:
             _meta = meta.Meta()
         if _asset_data is None:
             _asset_data = []
+
+        self._session = _session
 
         self.name = _name
 
@@ -45,15 +47,12 @@ class Project(base.JSONSerializable):
         for _sprite in self.sprites:
             if _sprite.is_stage:
                 _stage_count += 1
-            _sprite.link_subcomponents()
 
-        # Link monitors to their VLBs
+            _sprite.link_using_project()
+
+        # Link monitors
         for _monitor in self.monitors:
-            if _monitor.opcode in ("data_variable", "data_listcontents", "event_broadcast_menu"):
-                new_vlb = self.find_vlb(_monitor._reporter_id, "id")
-                if new_vlb is not None:
-                    _monitor.reporter = new_vlb
-                    _monitor._reporter_id = None
+            _monitor.link_using_project()
 
         if _stage_count != 1:
             raise exceptions.InvalidStageCount(f"Project {self}")
@@ -113,7 +112,7 @@ class Project(base.JSONSerializable):
         return Project(None, _meta, _extensions, _monitors, _sprites)
 
     @staticmethod
-    def from_sb3(data: str | bytes | TextIOWrapper, load_assets: bool = True, _name: str = None):
+    def from_sb3(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
         """
         Load a project from an .sb3 file/bytes/file path
         """
@@ -153,8 +152,10 @@ class Project(base.JSONSerializable):
                         asset_data = []
                         for filename in archive.namelist():
                             if filename != "project.json":
+                                md5_hash = filename.split('.')[0]
+
                                 asset_data.append(
-                                    asset.AssetFile(filename, archive.read(filename))
+                                    asset.AssetFile(filename, archive.read(filename), md5_hash)
                                 )
                         project.asset_data = asset_data
                     else:
@@ -177,7 +178,7 @@ class Project(base.JSONSerializable):
         _proj.name = _name
         return _proj
 
-    def find_vlb(self, value: str, by: str = "name",
+    def find_vlb(self, value: str | None, by: str = "name",
                  multiple: bool = False) -> vlb.Variable | vlb.List | vlb.Broadcast | list[
         vlb.Variable | vlb.List | vlb.Broadcast]:
         _ret = []
@@ -191,7 +192,7 @@ class Project(base.JSONSerializable):
         if multiple:
             return _ret
 
-    def export(self, fp: str, auto_open: bool = False, export_as_zip: bool=True):
+    def export(self, fp: str, *, auto_open: bool = False, export_as_zip: bool = True):
         data = self.to_json()
 
         if export_as_zip:

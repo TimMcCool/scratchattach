@@ -4,13 +4,14 @@ from dataclasses import dataclass
 from hashlib import md5
 import requests
 
-from . import base, project, commons, sprite
+from . import base, commons, sprite
 
 
 @dataclass(init=True)
 class AssetFile:
     filename: str
     _data: bytes = None
+    _md5: str = None
 
     def __repr__(self):
         return f"AssetFile(filename={self.filename!r})"
@@ -27,6 +28,12 @@ class AssetFile:
 
         return self._data
 
+    @property
+    def md5(self):
+        if self._md5 is None:
+            self._md5 = md5(self.data).hexdigest()
+
+        return self._md5
 
 class Asset(base.SpriteSubComponent):
     def __init__(self,

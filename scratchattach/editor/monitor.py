@@ -122,6 +122,15 @@ class Monitor(base.ProjectSubcomponent):
 
         return _json
 
+    def link_using_project(self):
+        assert self.project is not None
+
+        if self.opcode in ("data_variable", "data_listcontents", "event_broadcast_menu"):
+            new_vlb = self.project.find_vlb(self._reporter_id, "id")
+            if new_vlb is not None:
+                self.reporter = new_vlb
+                self._reporter_id = None
+
     # @staticmethod
     # def from_reporter(reporter: Block, _id: str = None, mode: str = "default",
     #                   opcode: str = None, sprite_name: str = None, value=0, width: int | float = 0,
