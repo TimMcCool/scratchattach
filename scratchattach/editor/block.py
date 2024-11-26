@@ -135,6 +135,11 @@ class Block(base.SpriteSubComponent):
             "y": self.y,
         })
 
+        if self.mutation is not None:
+            commons.noneless_update(_json, {
+                "mutation": self.mutation.to_json(),
+            })
+
         return _json
 
     def link_using_sprite(self):
