@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import warnings
 from io import BytesIO, TextIOWrapper
 from typing import Iterable, TYPE_CHECKING, Generator
