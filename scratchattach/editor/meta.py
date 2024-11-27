@@ -48,7 +48,7 @@ class Meta(base.JSONSerializable):
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Metadata
         """
         if platform is None and META_SET_PLATFORM:
-            platform = DEFAULT_PLATFORM.copy()
+            platform = DEFAULT_PLATFORM.dcopy()
 
         self.semver = semver
         self.vm = vm
@@ -100,6 +100,6 @@ class Meta(base.JSONSerializable):
 
         if EDIT_META:
             if META_SET_PLATFORM and not platform:
-                platform = DEFAULT_PLATFORM.copy()
+                platform = DEFAULT_PLATFORM.dcopy()
 
         return Meta(semver, vm, agent, platform)

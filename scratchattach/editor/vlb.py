@@ -1,6 +1,8 @@
 """
 Variables, lists & broadcasts
 """
+# Perhaps ids should not be stored in these objects, but in the sprite, similarly
+# to how blocks/prims are stored
 
 from __future__ import annotations
 

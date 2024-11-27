@@ -63,9 +63,9 @@ def parse_proc_code(_proc_code: str) -> list[str, ArgumentPlaceholder] | None:
                 # Add the parameter token
                 token = f"%{char}"
                 if token == "%b":
-                    tokens.append(ArgumentPlaceholders.BOOLEAN.value.copy())
+                    tokens.append(ArgumentPlaceholders.BOOLEAN.value.dcopy())
                 elif token == "%s":
-                    tokens.append(ArgumentPlaceholders.NUMBER_OR_TEXT.value.copy())
+                    tokens.append(ArgumentPlaceholders.NUMBER_OR_TEXT.value.dcopy())
 
                 token = ''
                 continue

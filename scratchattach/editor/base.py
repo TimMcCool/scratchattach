@@ -16,11 +16,17 @@ if TYPE_CHECKING:
 
 
 class Base(ABC):
-    def copy(self):
+    def dcopy(self):
         """
         :return: A **deep** copy of self
         """
         return copy.deepcopy(self)
+
+    def copy(self):
+        """
+        :return: A **shallow** copy of self
+        """
+        return copy.copy(self)
 
 
 class JSONSerializable(Base, ABC):
