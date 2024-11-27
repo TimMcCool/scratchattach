@@ -7,7 +7,7 @@ from io import BytesIO, TextIOWrapper
 from typing import Iterable, Generator, BinaryIO
 from zipfile import ZipFile
 
-from . import base, meta, extension, monitor, sprite, asset, vlb
+from . import base, meta, extension, monitor, sprite, asset, vlb, commons
 
 from ..site.project import get_project
 from ..site import session
@@ -86,6 +86,13 @@ class Project(base.JSONSerializable):
         for _sprite in self.sprites:
             for _asset in _sprite.assets:
                 yield _asset
+
+    @property
+    def all_ids(self):
+        _ret = []
+        for _sprite in self.sprites:
+            _ret += _sprite.all_ids
+        return _ret
 
     @staticmethod
     def from_json(data: dict):
@@ -209,3 +216,7 @@ class Project(base.JSONSerializable):
 
         if auto_open:
             os.system(f"explorer.exe \"{fp}\"")
+
+    @property
+    def new_id(self):
+        return commons.gen_id(self.all_ids)

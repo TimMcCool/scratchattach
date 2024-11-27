@@ -172,8 +172,19 @@ def trim_final_nones(lst: list) -> list:
         i -= 1
     return lst[:i]
 
+
 def dumps_ifnn(obj: Any) -> str:
     if obj is None:
         return None
     else:
         return json.dumps(obj)
+
+
+def gen_id(id_list: list[str]) -> str:
+    i = 0
+    new_id = None
+    while new_id in id_list or new_id is None:
+        new_id = str(i)
+        i += 1
+
+    return new_id

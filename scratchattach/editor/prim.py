@@ -68,7 +68,7 @@ class Prim(base.SpriteSubComponent):
         Once you get the object associated with this primitive (sprite.link_prims()), 
         the name will be removed and the value will be changed from ``None``
         """
-        self.id = _id
+        self.value_id = _id
         """
         It's not an object accessed by id, but it may reference an object with an id.
         
@@ -106,19 +106,19 @@ class Prim(base.SpriteSubComponent):
         _type_idx = data[0]
         _prim_type = PrimTypes.find(_type_idx, "code")
 
-        _value, _name, _id, _x, _y = (None,) * 5
+        _value, _name, _value_id, _x, _y = (None,) * 5
         if _prim_type.attrs == BASIC_ATTRS:
             assert len(data) == 2
             _value = data[1]
 
         elif _prim_type.attrs == VLB_ATTRS:
             assert len(data) in (3, 5)
-            _name, _id = data[1:3]
+            _name, _value_id = data[1:3]
 
             if len(data) == 5:
                 _x, _y = data[3:]
 
-        return Prim(_prim_type, _value, _name, _id, _x, _y)
+        return Prim(_prim_type, _value, _name, _value_id, _x, _y)
 
     def to_json(self) -> list:
         if self.type.attrs == BASIC_ATTRS:
@@ -130,28 +130,28 @@ class Prim(base.SpriteSubComponent):
         # Link prim to var/list/broadcast
         if self.is_vlb:
             if self.type.name == "variable":
-                self.value = self.sprite.find_variable(self.id, "id")
+                self.value = self.sprite.find_variable(self.value_id, "id")
 
             elif self.type.name == "list":
-                self.value = self.sprite.find_list(self.id, "id")
+                self.value = self.sprite.find_list(self.value_id, "id")
 
             elif self.type.name == "broadcast":
-                self.value = self.sprite.find_broadcast(self.id, "id")
+                self.value = self.sprite.find_broadcast(self.value_id, "id")
             else:
                 # This should never happen
                 raise exceptions.BadVLBPrimitiveError(f"{self} claims to be VLB, but is {self.type.name}")
 
             if self.value is None:
                 if not self.project:
-                    new_vlb = vlb.construct(self.type.name.lower(), self.id, self.name)
+                    new_vlb = vlb.construct(self.type.name.lower(), self.value_id, self.name)
                     self.sprite._add_local_global(new_vlb)
                     self.value = new_vlb
 
                 else:
-                    new_vlb = vlb.construct(self.type.name.lower(), self.id, self.name)
+                    new_vlb = vlb.construct(self.type.name.lower(), self.value_id, self.name)
                     self.sprite.stage.add_vlb(new_vlb)
 
                     warnings.warn(
                         f"Prim<name={self.name!r}, id={self.name!r}> has unknown {self.type.name} id; adding as global variable")
             self.name = None
-            self.id = None
+            self.value_id = None

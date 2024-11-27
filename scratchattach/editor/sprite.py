@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import json, warnings
+import json
+import warnings
 from typing import Any
 from zipfile import ZipFile
 
-from . import base, project, vlb, asset, comment, prim, block
+from . import base, project, vlb, asset, comment, prim, block, commons
 
 
 class Sprite(base.ProjectSubcomponent):
@@ -133,9 +134,11 @@ class Sprite(base.ProjectSubcomponent):
         else:
             warnings.warn(f"Invalid 'VLB' {_vlb} of type: {type(_vlb)}")
 
-
     @property
     def vlbs(self) -> list[base.NamedIDComponent]:
+        """
+        :return: All vlbs associated with the sprite. No local globals are added
+        """
         return self.variables + self.lists + self.broadcasts
 
     @property
@@ -399,7 +402,7 @@ class Sprite(base.ProjectSubcomponent):
         if multiple:
             return _ret
 
-    def export(self, fp: str=None, *, export_as_zip: bool = True):
+    def export(self, fp: str = None, *, export_as_zip: bool = True):
         data = self.to_json()
 
         if export_as_zip:
@@ -413,3 +416,17 @@ class Sprite(base.ProjectSubcomponent):
         else:
             with open(fp, "w") as json_file:
                 json.dump(data, json_file)
+
+    @property
+    def all_ids(self):
+        ret = []
+        for _vlb in self.vlbs + self._local_globals:
+            ret.append(_vlb.id)
+        for iterator in self.blocks.keys(), self.prims.keys():
+            ret += list(iterator)
+
+        return ret
+
+    @property
+    def new_id(self):
+        return commons.gen_id(self.project.all_ids if self.project else self.all_ids)
