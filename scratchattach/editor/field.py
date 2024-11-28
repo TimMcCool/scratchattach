@@ -1,11 +1,19 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
+
 
 if TYPE_CHECKING:
     from . import block, vlb
 
 from . import base, commons
+
+
+class Types:
+    VARIABLE: Final[str] = "variable"
+    LIST: Final[str] = "list"
+    BROADCAST: Final[str] = "broadcast"
+    DEFAULT: Final[str] = "default"
 
 
 class Field(base.BlockSubComponent):
@@ -44,6 +52,27 @@ class Field(base.BlockSubComponent):
             return self.value
         else:
             return self.value.name
+
+    @property
+    def name(self) -> str:
+        for _name, _field in self.block.fields.items():
+            if _field is self:
+                return _name
+
+    @property
+    def type(self):
+        """
+        Infer the type of value that this field holds
+        :return: A string (from field.Types) as a name of the type
+        """
+        if "variable" in self.name.lower():
+            return Types.VARIABLE
+        elif "list" in self.name.lower():
+            return Types.LIST
+        elif "broadcast" in self.name.lower():
+            return Types.BROADCAST
+        else:
+            return Types.DEFAULT
 
     @staticmethod
     def from_json(data: list[str, str | None]):

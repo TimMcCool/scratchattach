@@ -35,6 +35,7 @@ class AssetFile:
 
         return self._md5
 
+
 class Asset(base.SpriteSubComponent):
     def __init__(self,
                  name: str = "costume1",
@@ -68,8 +69,15 @@ class Asset(base.SpriteSubComponent):
         return self.file_name
 
     @property
+    def parent(self):
+        if self.project is None:
+            return self.sprite
+        else:
+            return self.project
+
+    @property
     def asset_file(self) -> AssetFile:
-        for asset_file in self.project.asset_data:
+        for asset_file in self.parent.asset_data:
             if asset_file.filename == self.file_name:
                 return asset_file
 

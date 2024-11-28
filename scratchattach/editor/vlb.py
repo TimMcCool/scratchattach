@@ -13,12 +13,15 @@ from ..utils import exceptions
 
 
 class Variable(base.NamedIDComponent):
-    def __init__(self, _id: str, _name: str, _value: str | int | float, _is_cloud: bool = False,
+    def __init__(self, _id: str, _name: str, _value: str | int | float = None, _is_cloud: bool = False,
                  _sprite: sprite.Sprite = None):
         """
         Class representing a variable.
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Targets:~:text=variables,otherwise%20not%20present
         """
+        if _value is None:
+            _value = 0
+
         self.value = _value
         self.is_cloud = _is_cloud
 
@@ -63,12 +66,15 @@ class Variable(base.NamedIDComponent):
 
 
 class List(base.NamedIDComponent):
-    def __init__(self, _id: str, _name: str, _value: str | int | float,
+    def __init__(self, _id: str, _name: str, _value: list[str | int | float] = None,
                  _sprite: sprite.Sprite = None):
         """
         Class representing a list.
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Targets:~:text=lists,as%20an%20array
         """
+        if _value is None:
+            _value = []
+
         self.value = _value
         super().__init__(_id, _name, _sprite)
 

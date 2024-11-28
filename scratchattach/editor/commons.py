@@ -4,6 +4,7 @@ Shared functions used by the editor module
 from __future__ import annotations
 
 import json
+import string
 from typing import Final, Any
 
 from ..utils import exceptions
@@ -188,3 +189,18 @@ def gen_id(id_list: list[str]) -> str:
         i += 1
 
     return new_id
+
+
+def sanitize_fn(filename: str):
+    """
+    Removes illegal chars from a filename
+    :return: Sanitized filename
+    """
+    # Maybe could import a slugify module, but it's a bit overkill
+    ret = ''
+    for char in filename:
+        if char in string.ascii_letters + string.digits + "-_":
+            ret += char
+        else:
+            ret += '_'
+    return ret

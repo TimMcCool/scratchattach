@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import json
 import warnings
-from typing import Any
+from io import BytesIO, TextIOWrapper
+from typing import Any, BinaryIO
 from zipfile import ZipFile
+
+from beautifulprint import bprint
 
 from . import base, project, vlb, asset, comment, prim, block, commons
 
@@ -75,6 +78,8 @@ class Sprite(base.ProjectSubcomponent):
         self.draggable = _draggable
         self.rotation_style = _rotation_style
 
+        self.asset_data = []
+
         super().__init__(_project)
 
         # Assign sprite
@@ -108,7 +113,7 @@ class Sprite(base.ProjectSubcomponent):
         for _comment in self.comments:
             _comment.link_using_sprite()
 
-    def _add_local_global(self, _vlb: base.NamedIDComponent):
+    def add_local_global(self, _vlb: base.NamedIDComponent):
         self._local_globals.append(_vlb)
         _vlb.sprite = self
 
@@ -403,6 +408,9 @@ class Sprite(base.ProjectSubcomponent):
             return _ret
 
     def export(self, fp: str = None, *, export_as_zip: bool = True):
+        if fp is None:
+            fp = commons.sanitize_fn(f"{self.name}.sprite3")
+
         data = self.to_json()
 
         if export_as_zip:
@@ -430,3 +438,46 @@ class Sprite(base.ProjectSubcomponent):
     @property
     def new_id(self):
         return commons.gen_id(self.project.all_ids if self.project else self.all_ids)
+
+    @staticmethod
+    def from_sprite3(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
+        """
+                Load a project from an .sb3 file/bytes/file path
+                """
+        _dir_for_name = None
+
+        if isinstance(data, bytes):
+            data = BytesIO(data)
+
+        elif isinstance(data, str):
+            _dir_for_name = data
+            data = open(data, "rb")
+
+        with data:
+            # For if the sprite3 is just JSON (e.g. if it's exported from scratchattach)
+            try:
+                _sprite = Sprite.from_json(json.load(data))
+
+            except ValueError or UnicodeDecodeError:
+                with ZipFile(data) as archive:
+                    data = json.loads(archive.read("sprite.json"))
+                    bprint(data)
+                    _sprite = Sprite.from_json(data)
+
+                    # Also load assets
+                    if load_assets:
+                        asset_data = []
+                        for filename in archive.namelist():
+                            if filename != "sprite.json":
+                                md5_hash = filename.split('.')[0]
+
+                                asset_data.append(
+                                    asset.AssetFile(filename, archive.read(filename), md5_hash)
+                                )
+                        _sprite.asset_data = asset_data
+                    else:
+                        warnings.warn(
+                            "Loading sb3 without loading assets. When exporting the project, there may be errors due to assets not being uploaded to the Scratch website")
+
+            return _sprite
+

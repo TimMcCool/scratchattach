@@ -144,7 +144,7 @@ class Prim(base.SpriteSubComponent):
             if self.value is None:
                 if not self.project:
                     new_vlb = vlb.construct(self.type.name.lower(), self.value_id, self.name)
-                    self.sprite._add_local_global(new_vlb)
+                    self.sprite.add_local_global(new_vlb)
                     self.value = new_vlb
 
                 else:

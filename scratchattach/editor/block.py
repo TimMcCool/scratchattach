@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 
-from . import base, sprite, mutation, field, inputs, commons
+from . import base, sprite, mutation, field, inputs, commons, vlb
 
 
 class Block(base.SpriteSubComponent):
@@ -163,8 +163,30 @@ class Block(base.SpriteSubComponent):
             if _field.id is not None:
                 new_value = self.sprite.find_vlb(_field.id, "id")
                 if new_value is None:
-                    warnings.warn(f"Could not find {_field.id!r} in {self}")
-                else:
+                    # We probably need to add a local global variable
+                    _type = _field.type
+
+                    if _type == field.Types.VARIABLE:
+                        # Create a new variable
+                        new_value = vlb.Variable(self.sprite.new_id,
+                                                  _field.value)
+                    elif _type == field.Types.LIST:
+                        # Create a list
+                        new_value = vlb.List(self.sprite.new_id,
+                                                  _field.value)
+                    elif _type == field.Types.BROADCAST:
+                        # Create a broadcast
+                        new_value = vlb.Broadcast(self.sprite.new_id,
+                                                  _field.value)
+                    else:
+                        # Something probably went wrong
+                        warnings.warn(f"Could not find {_field.id!r} in {self.sprite}. Can't create a new {_type} so we gave a warning")
+
+                    if new_value is not None:
+                        self.sprite.add_local_global(new_value)
+
+                # Check again since there may have been a newly created VLB
+                if new_value is not None:
                     _field.value = new_value
                     _field.id = None
 
