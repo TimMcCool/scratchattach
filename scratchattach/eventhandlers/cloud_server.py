@@ -223,7 +223,7 @@ def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_li
                     return False
             return True
         
-        def _update(self):
+        def _updater(self):
             try:
                 # Function called when .start() is executed (.start is inherited from BaseEventHandler)
                 print(f"Serving websocket server: ws://{hostname}:{port}")
