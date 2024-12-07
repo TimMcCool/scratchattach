@@ -9,9 +9,9 @@ class Requests:
     """
 
     @staticmethod
-    def check_response(r : requests.Response):
+    def check_response(r: requests.Response):
         if r.status_code == 403 or r.status_code == 401:
-            raise exceptions.Unauthorized
+            raise exceptions.Unauthorized(f"Request content: {r.content}")
         if r.status_code == 500:
             raise exceptions.APIError("Internal Scratch server error")
         if r.status_code == 429:
