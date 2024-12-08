@@ -32,8 +32,8 @@ class ForumTopic(BaseSiteComponent):
 
     :.update(): Updates the attributes
     '''
-    def __init__(self, **entries):
 
+    def __init__(self, **entries):
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
         self.update_API = f"https://scratch.mit.edu/discuss/feeds/topic/{entries['id']}/"

@@ -267,6 +267,25 @@ class Project(PartialProject):
                 )
             )
 
+    def get_json(self) -> str:
+        """
+        Downloads the project json and returns it as a string
+        """
+        try:
+            self.update()
+            response = requests.get(
+                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
+                timeout=10,
+            )
+            return response.text
+
+        except Exception:
+            raise (
+                exceptions.FetchError(
+                    "Method only works for projects created with Scratch 3"
+                )
+            )
+
     def body(self):
         """
         Method only works for project created with Scratch 3.
@@ -324,7 +343,7 @@ class Project(PartialProject):
             f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/studios", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         return commons.parse_object_list(response, studio.Studio, self._session)
 
-    def comments(self, *, limit=40, offset=0):
+    def comments(self, *, limit=40, offset=0) -> list['comment.Comment']:
         """
         Returns the comments posted on the project (except for replies. To get replies use :meth:`scratchattach.project.Project.comment_replies`).
 
@@ -342,7 +361,6 @@ class Project(PartialProject):
             i["source"] = "project"
             i["source_id"] = self.id
         return commons.parse_object_list(response, comment.Comment, self._session)
-
 
     def comment_replies(self, *, comment_id, limit=40, offset=0):
         response = commons.api_iterative(

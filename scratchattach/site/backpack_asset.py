@@ -1,7 +1,11 @@
-import time
+from __future__ import annotations
+
+import json
+
 from ._base import BaseSiteComponent
-from ..utils.requests import Requests as requests
 from ..utils import exceptions
+from ..utils.requests import Requests as requests
+
 
 class BackpackAsset(BaseSiteComponent):
     """
@@ -33,52 +37,78 @@ class BackpackAsset(BaseSiteComponent):
 
     def update(self):
         print("Warning: BackpackAsset objects can't be updated")
-        return False # Objects of this type cannot be updated
-    
+        return False  # Objects of this type cannot be updated
+
     def _update_from_dict(self, data) -> bool:
-        try: self.id = data["id"]
-        except Exception: pass
-        try: self.type = data["type"]
-        except Exception: pass
-        try: self.mime = data["mime"]
-        except Exception: pass
-        try: self.name = data["name"]
-        except Exception: pass
-        try: self.filename = data["body"]
-        except Exception: pass
-        try: self.thumbnail_url = "https://backpack.scratch.mit.edu/"+data["thumbnail"]
-        except Exception: pass
-        try: self.download_url = "https://backpack.scratch.mit.edu/"+data["body"]
-        except Exception: pass
+        try:
+            self.id = data["id"]
+        except Exception:
+            pass
+        try:
+            self.type = data["type"]
+        except Exception:
+            pass
+        try:
+            self.mime = data["mime"]
+        except Exception:
+            pass
+        try:
+            self.name = data["name"]
+        except Exception:
+            pass
+        try:
+            self.filename = data["body"]
+        except Exception:
+            pass
+        try:
+            self.thumbnail_url = "https://backpack.scratch.mit.edu/" + data["thumbnail"]
+        except Exception:
+            pass
+        try:
+            self.download_url = "https://backpack.scratch.mit.edu/" + data["body"]
+        except Exception:
+            pass
         return True
 
-    def download(self, *, dir=""):
+    @property
+    def _data_bytes(self) -> bytes:
+        try:
+            return requests.get(self.download_url).content
+        except Exception as e:
+            raise exceptions.FetchError(f"Failed to download asset: {e}")
+
+    @property
+    def file_ext(self):
+        return self.filename.split(".")[-1]
+
+    @property
+    def is_json(self):
+        return self.file_ext == "json"
+
+    @property
+    def data(self) -> dict | list | int | None | str | bytes | float:
+        if self.is_json:
+            return json.loads(self._data_bytes)
+        else:
+            # It's either a zip
+            return self._data_bytes
+
+    def download(self, *, fp=""):
         """
         Downloads the asset content to the given directory. The given filename is equal to the value saved in the .filename attribute.
 
         Args:
-            dir (str): The path of the directory the file will be saved in.
+            fp (str): The path of the directory the file will be saved in.
         """
-        if not (dir.endswith("/") or dir.endswith("\\")):
-            dir = dir+"/"
-        try:
-            response = requests.get(
-                self.download_url,
-                timeout=10,
-            )
-            open(f"{dir}{self.filename}", "wb").write(response.content)
-        except Exception as e:
-            raise (
-                exceptions.FetchError(
-                    "Failed to download asset: "+str(e)
-                )
-            )
+        if not (fp.endswith("/") or fp.endswith("\\")):
+            fp = fp + "/"
+        open(f"{fp}{self.filename}", "wb").write(self._data_bytes)
 
     def delete(self):
         self._assert_auth()
 
         return requests.delete(
             f"https://backpack.scratch.mit.edu/{self._session.username}/{self.id}",
-            headers = self._session._headers,
-            timeout = 10,
+            headers=self._session._headers,
+            timeout=10,
         ).json()
