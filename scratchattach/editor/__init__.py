@@ -4,3 +4,5 @@ from .extension import Extensions, Extension
 from .mutation import Mutation, Argument, parse_proc_code
 from .meta import Meta, set_meta_platform
 from .sprite import Sprite
+from .block import Block
+from .prim import Prim, PrimTypes

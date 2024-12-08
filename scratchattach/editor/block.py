@@ -2,7 +2,23 @@ from __future__ import annotations
 
 import warnings
 
-from . import base, sprite, mutation, field, inputs, commons, vlb
+from . import base, sprite, mutation, field, inputs, commons, vlb, prim
+
+# This probably should be seperated into a backpack json parser
+def parse_prim_fields(_fields: dict[str]) -> tuple[str | None, str | None, str | None]:
+    for key, value in _fields.items():
+        key: str
+        value: dict[str, str]
+        prim_value, prim_name, prim_id = (None,) * 3
+        if key == "NUM":
+            prim_value = value.get("value")
+        else:
+            prim_name = value.get("value")
+            prim_id = value.get("id")
+
+        # There really should only be 1 item, and this function can only return for that item
+        return prim_value, prim_name, prim_id
+    return (None,) * 3
 
 
 class Block(base.SpriteSubComponent):
@@ -92,8 +108,24 @@ class Block(base.SpriteSubComponent):
         return _ret
 
     @staticmethod
-    def from_json(data: dict):
+    def from_json(data: dict) -> Block | prim.Prim:
+        """
+        Load a block from the JSON dictionary. Will automatically convert block such as 'data_variable' to a primitive
+        :param data: a dictionary (not list)
+        :return: The Block/Prim object
+        """
         _opcode = data["opcode"]
+
+        _x, _y = data.get("x"), data.get("y")
+
+        if prim.is_prim(_opcode):
+            _value, _name, _id = parse_prim_fields(data.get("fields"))
+
+            return prim.Prim(
+                prim.PrimTypes.find(_opcode, "opcode"),
+                _value, _name, _id,
+                _x, _y
+            )
 
         _next_id = data.get("next")
         _parent_id = data.get("parent")
@@ -113,8 +145,6 @@ class Block(base.SpriteSubComponent):
             _mutation = mutation.Mutation.from_json(data["mutation"])
         else:
             _mutation = None
-
-        _x, _y = data.get("x"), data.get("y")
 
         return Block(_opcode, _shadow, _top_level, _mutation, _fields, _inputs, _x, _y, _next_id=_next_id,
                      _parent_id=_parent_id)
@@ -168,19 +198,20 @@ class Block(base.SpriteSubComponent):
 
                     if _type == field.Types.VARIABLE:
                         # Create a new variable
-                        new_value = vlb.Variable(self.sprite.new_id,
-                                                  _field.value)
+                        new_value = vlb.Variable(commons.gen_id(),
+                                                 _field.value)
                     elif _type == field.Types.LIST:
                         # Create a list
-                        new_value = vlb.List(self.sprite.new_id,
-                                                  _field.value)
+                        new_value = vlb.List(commons.gen_id(),
+                                             _field.value)
                     elif _type == field.Types.BROADCAST:
                         # Create a broadcast
-                        new_value = vlb.Broadcast(self.sprite.new_id,
+                        new_value = vlb.Broadcast(commons.gen_id(),
                                                   _field.value)
                     else:
                         # Something probably went wrong
-                        warnings.warn(f"Could not find {_field.id!r} in {self.sprite}. Can't create a new {_type} so we gave a warning")
+                        warnings.warn(
+                            f"Could not find {_field.id!r} in {self.sprite}. Can't create a new {_type} so we gave a warning")
 
                     if new_value is not None:
                         self.sprite.add_local_global(new_value)

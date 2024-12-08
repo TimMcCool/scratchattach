@@ -1,7 +1,9 @@
+import json
 import time
 from ._base import BaseSiteComponent
 from ..utils.requests import Requests as requests
 from ..utils import exceptions
+
 
 class BackpackAsset(BaseSiteComponent):
     """
@@ -33,7 +35,7 @@ class BackpackAsset(BaseSiteComponent):
 
     def update(self):
         print("Warning: BackpackAsset objects can't be updated")
-        return False # Objects of this type cannot be updated
+        return False  # Objects of this type cannot be updated
     
     def _update_from_dict(self, data) -> bool:
         try: self.id = data["id"]
@@ -52,27 +54,28 @@ class BackpackAsset(BaseSiteComponent):
         except Exception: pass
         return True
 
-    def download(self, *, dir=""):
+    @property
+    def _data_str(self):
+        try:
+            response = requests.get(self.download_url)
+            return response.text
+        except Exception as e:
+            raise exceptions.FetchError(f"Failed to download asset: {e}")
+
+    @property
+    def data(self):
+        return json.loads(self._data_str)
+
+    def download(self, *, fp=""):
         """
         Downloads the asset content to the given directory. The given filename is equal to the value saved in the .filename attribute.
 
         Args:
-            dir (str): The path of the directory the file will be saved in.
+            fp (str): The path of the directory the file will be saved in.
         """
-        if not (dir.endswith("/") or dir.endswith("\\")):
-            dir = dir+"/"
-        try:
-            response = requests.get(
-                self.download_url,
-                timeout=10,
-            )
-            open(f"{dir}{self.filename}", "wb").write(response.content)
-        except Exception as e:
-            raise (
-                exceptions.FetchError(
-                    "Failed to download asset: "+str(e)
-                )
-            )
+        if not (fp.endswith("/") or fp.endswith("\\")):
+            fp = fp + "/"
+        open(f"{fp}{self.filename}", "wb").write(self._data_str)
 
     def delete(self):
         self._assert_auth()

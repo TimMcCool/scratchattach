@@ -62,7 +62,11 @@ class Input(base.BlockSubComponent):
             return f"<Input {self.value!r}>"
 
     @staticmethod
-    def from_json(data: list):
+    def from_json(data: list | dict[str, str]):
+        # If this is an input from the backpack, then it will be in a dictionary format. This code is incomplete
+        if isinstance(data, dict):
+            data = [data.get("shadow", '') != '', data["block"]]
+
         _shadow = ShadowStatuses.find(data[0])
 
         _value, _id = None, None

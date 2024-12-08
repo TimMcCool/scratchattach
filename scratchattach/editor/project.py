@@ -217,6 +217,3 @@ class Project(base.JSONSerializable):
         if auto_open:
             os.system(f"explorer.exe \"{fp}\"")
 
-    @property
-    def new_id(self):
-        return commons.gen_id(self.all_ids)

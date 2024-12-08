@@ -435,10 +435,6 @@ class Sprite(base.ProjectSubcomponent):
 
         return ret
 
-    @property
-    def new_id(self):
-        return commons.gen_id(self.project.all_ids if self.project else self.all_ids)
-
     @staticmethod
     def from_sprite3(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
         """
@@ -480,4 +476,3 @@ class Sprite(base.ProjectSubcomponent):
                             "Loading sb3 without loading assets. When exporting the project, there may be errors due to assets not being uploaded to the Scratch website")
 
             return _sprite
-

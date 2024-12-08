@@ -4,6 +4,7 @@ Shared functions used by the editor module
 from __future__ import annotations
 
 import json
+import random
 import string
 from typing import Final, Any
 
@@ -181,14 +182,10 @@ def dumps_ifnn(obj: Any) -> str:
         return json.dumps(obj)
 
 
-def gen_id(id_list: list[str]) -> str:
-    i = 0
-    new_id = None
-    while new_id in id_list or new_id is None:
-        new_id = str(i)
-        i += 1
-
-    return new_id
+def gen_id() -> str:
+    # The old 'naiive' method but that chances of a repeat are so miniscule
+    # Have to check if whitespace chars break it
+    return ''.join(random.choices(string.printable, k=20))
 
 
 def sanitize_fn(filename: str):

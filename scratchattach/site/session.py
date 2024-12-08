@@ -673,12 +673,12 @@ class Session(BaseSiteComponent):
                 _session=self))
         return classes
 
-    def backpack(self, limit: int = 20, offset: int = 0) -> list[dict]:
+    def backpack(self, limit: int = 20, offset: int = 0) -> list[backpack_asset.BackpackAsset]:
         """
         Lists the assets that are in the backpack of the user associated with the session.
 
         Returns:
-            list<dict>: List that contains the backpack items as dicts
+            list<backpack_asset.BackpackAsset>: List that contains the backpack items as dicts
         """
         data = commons.api_iterative(
             f"https://backpack.scratch.mit.edu/{self._username}",
@@ -1015,7 +1015,7 @@ def login(username, password, *, timeout=10) -> Session:
     """
 
     # Post request to login API:
-    _headers = headers.dcopy()
+    _headers = headers.copy()
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     request = requests.post(
         "https://scratch.mit.edu/login/", json={"username": username, "password": password}, headers=_headers,

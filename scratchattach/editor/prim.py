@@ -13,6 +13,7 @@ class PrimType(base.JSONSerializable):
     code: int
     name: str
     attrs: list = None
+    opcode: str = None
 
     def __eq__(self, other):
         if isinstance(other, str):
@@ -34,20 +35,25 @@ VLB_ATTRS: Final = ["name", "id", "x", "y"]
 
 
 class PrimTypes(enums._EnumWrapper):
-    NUMBER = PrimType(4, "number", BASIC_ATTRS)
-    POSITIVE_NUMBER = PrimType(5, "positive number", BASIC_ATTRS)
-    POSITIVE_INTEGER = PrimType(6, "positive integer", BASIC_ATTRS)
-    INTEGER = PrimType(7, "integer", BASIC_ATTRS)
-    ANGLE = PrimType(8, "angle", BASIC_ATTRS)
-    COLOR = PrimType(9, "color", BASIC_ATTRS)
-    STRING = PrimType(10, "string", BASIC_ATTRS)
-    BROADCAST = PrimType(11, "broadcast", VLB_ATTRS)
-    VARIABLE = PrimType(12, "variable", VLB_ATTRS)
-    LIST = PrimType(13, "list", VLB_ATTRS)
+    # Yeah, they actually do have opcodes
+    NUMBER = PrimType(4, "number", BASIC_ATTRS, "math_number")
+    POSITIVE_NUMBER = PrimType(5, "positive number", BASIC_ATTRS, "math_positive_number")
+    POSITIVE_INTEGER = PrimType(6, "positive integer", BASIC_ATTRS, "math_whole_number")
+    INTEGER = PrimType(7, "integer", BASIC_ATTRS, "math_integer")
+    ANGLE = PrimType(8, "angle", BASIC_ATTRS, "math_angle")
+    COLOR = PrimType(9, "color", BASIC_ATTRS, "colour_picker")
+    STRING = PrimType(10, "string", BASIC_ATTRS, "text")
+    BROADCAST = PrimType(11, "broadcast", VLB_ATTRS, "event_broadcast_menu")
+    VARIABLE = PrimType(12, "variable", VLB_ATTRS, "data_variable")
+    LIST = PrimType(13, "list", VLB_ATTRS, "data_listcontents")
 
     @classmethod
     def find(cls, value, by: str, apply_func: Callable = None) -> PrimType:
         return super().find(value, by, apply_func=apply_func)
+
+
+def is_prim(opcode: str):
+    return opcode in PrimTypes.all_of("opcode") and opcode is not None
 
 
 class Prim(base.SpriteSubComponent):
