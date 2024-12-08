@@ -6,6 +6,9 @@
 - [ ] Dealing with stuff from the backpack (it's in a weird format): This may require a whole seperate module
 - [ ] Getter functions (`@property`) instead of directly editing attrs (make them protected attrs)
 - [ ] Check if whitespace chars break IDs
+- [ ] Maybe blockchain should be renamed to 'script'
+- [ ] Perhaps use sprites as blockchain wrappers due to their existing utility (loading of local globals etc)
+
 ## Project
 
 - [ ] Asset list

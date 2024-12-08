@@ -34,17 +34,19 @@ class ShadowStatuses:
 
 
 class Input(base.BlockSubComponent):
-    def __init__(self, _shadow: ShadowStatus = ShadowStatuses.HAS_SHADOW, _value: prim.Prim | block.Block = None, _id: str = None,
-                 _obscurer: prim.Prim | block.Block = None, *, _obscurer_id: str = None, _block: block.Block = None):
+    def __init__(self, _shadow: ShadowStatus | None = ShadowStatuses.HAS_SHADOW, _value: prim.Prim | block.Block | str = None, _id: str = None,
+                 _obscurer: prim.Prim | block.Block | str = None, *, _obscurer_id: str = None, _block: block.Block = None):
         """
         An input for a scratch block
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Blocks:~:text=inputs,it.%5B9%5D
         """
         super().__init__(_block)
 
+        # If the shadow is None, we'll have to work it out later
         self.shadow = _shadow
-        self.value: prim.Prim | block.Block = _value
-        self.obscurer: prim.Prim | block.Block = _obscurer
+        # If the value/obscurers are strings, they are ids that reference the actual value/obscurer, which need to be fetched
+        self.value: prim.Prim | block.Block | str = _value
+        self.obscurer: prim.Prim | block.Block | str = _obscurer
 
         self._id = _id
         """
@@ -62,11 +64,7 @@ class Input(base.BlockSubComponent):
             return f"<Input {self.value!r}>"
 
     @staticmethod
-    def from_json(data: list | dict[str, str]):
-        # If this is an input from the backpack, then it will be in a dictionary format. This code is incomplete
-        if isinstance(data, dict):
-            data = [data.get("shadow", '') != '', data["block"]]
-
+    def from_json(data: list):
         _shadow = ShadowStatuses.find(data[0])
 
         _value, _id = None, None
@@ -96,8 +94,10 @@ class Input(base.BlockSubComponent):
 
             if isinstance(pblock, prim.Prim):
                 data.append(pblock.to_json())
+
             elif isinstance(pblock, block.Block):
                 data.append(pblock.id)
+
             else:
                 warnings.warn(f"Bad prim/block {pblock!r} of type {type(pblock)}")
 
@@ -107,21 +107,25 @@ class Input(base.BlockSubComponent):
         return data
 
     def link_using_block(self):
+        # Link to value
         if self._id is not None:
             new_value = self.sprite.find_block(self._id, "id")
             if new_value is not None:
                 self.value = new_value
                 self._id = None
 
+        # Link to obscurer
         if self._obscurer_id is not None:
             new_block = self.sprite.find_block(self._obscurer_id, "id")
             if new_block is not None:
                 self.obscurer = new_block
                 self._obscurer_id = None
 
+        # Link value to sprite
         if isinstance(self.value, prim.Prim):
             self.value.sprite = self.sprite
             self.value.link_using_sprite()
 
+        # Link obscurer to sprite
         if self.obscurer is not None:
             self.obscurer.sprite = self.sprite

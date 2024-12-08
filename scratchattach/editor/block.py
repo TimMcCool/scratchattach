@@ -2,23 +2,7 @@ from __future__ import annotations
 
 import warnings
 
-from . import base, sprite, mutation, field, inputs, commons, vlb, prim
-
-# This probably should be seperated into a backpack json parser
-def parse_prim_fields(_fields: dict[str]) -> tuple[str | None, str | None, str | None]:
-    for key, value in _fields.items():
-        key: str
-        value: dict[str, str]
-        prim_value, prim_name, prim_id = (None,) * 3
-        if key == "NUM":
-            prim_value = value.get("value")
-        else:
-            prim_name = value.get("value")
-            prim_id = value.get("id")
-
-        # There really should only be 1 item, and this function can only return for that item
-        return prim_value, prim_name, prim_id
-    return (None,) * 3
+from . import base, sprite, mutation, field, inputs, commons, vlb
 
 
 class Block(base.SpriteSubComponent):
@@ -66,6 +50,7 @@ class Block(base.SpriteSubComponent):
             for subcomponent in iterable:
                 subcomponent.block = self
 
+
     def __repr__(self):
         return f"Block<{self.opcode!r}>"
 
@@ -108,24 +93,15 @@ class Block(base.SpriteSubComponent):
         return _ret
 
     @staticmethod
-    def from_json(data: dict) -> Block | prim.Prim:
+    def from_json(data: dict) -> Block:
         """
-        Load a block from the JSON dictionary. Will automatically convert block such as 'data_variable' to a primitive
+        Load a block from the JSON dictionary.
         :param data: a dictionary (not list)
-        :return: The Block/Prim object
+        :return: The new Block object
         """
         _opcode = data["opcode"]
 
         _x, _y = data.get("x"), data.get("y")
-
-        if prim.is_prim(_opcode):
-            _value, _name, _id = parse_prim_fields(data.get("fields"))
-
-            return prim.Prim(
-                prim.PrimTypes.find(_opcode, "opcode"),
-                _value, _name, _id,
-                _x, _y
-            )
 
         _next_id = data.get("next")
         _parent_id = data.get("parent")

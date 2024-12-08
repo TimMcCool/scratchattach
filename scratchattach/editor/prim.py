@@ -24,10 +24,10 @@ class PrimType(base.JSONSerializable):
 
     @staticmethod
     def from_json(data: int):
-        pass
+        ...
 
     def to_json(self) -> int:
-        pass
+        return self.code
 
 
 BASIC_ATTRS: Final = ["value"]
@@ -52,7 +52,7 @@ class PrimTypes(enums._EnumWrapper):
         return super().find(value, by, apply_func=apply_func)
 
 
-def is_prim(opcode: str):
+def is_prim_opcode(opcode: str):
     return opcode in PrimTypes.all_of("opcode") and opcode is not None
 
 
@@ -88,6 +88,7 @@ class Prim(base.SpriteSubComponent):
         self.y = _y
 
         super().__init__(_sprite)
+        print(self, self.__dict__)
 
     def __repr__(self):
         if self.is_basic:

@@ -48,7 +48,7 @@ class Project(base.JSONSerializable):
             if _sprite.is_stage:
                 _stage_count += 1
 
-            _sprite.link_using_project()
+            _sprite.link_subcomponents()
 
         # Link monitors
         for _monitor in self.monitors:

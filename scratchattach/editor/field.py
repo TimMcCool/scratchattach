@@ -75,11 +75,7 @@ class Field(base.BlockSubComponent):
             return Types.DEFAULT
 
     @staticmethod
-    def from_json(data: list[str, str | None] | dict[str, str]):
-        # If this is an input from the backpack, then it will be in a weird dictionary format.
-        if isinstance(data, dict):
-            data = [data["value"], data.get("id")]
-
+    def from_json(data: list[str, str | None]):
         # Sometimes you may have a stray field with no id. Not sure why
         while len(data) < 2:
             data.append(None)

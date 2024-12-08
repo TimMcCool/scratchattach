@@ -90,7 +90,7 @@ class Sprite(base.ProjectSubcomponent):
     def __repr__(self):
         return f"Sprite<{self.name}>"
 
-    def link_using_project(self):
+    def link_subcomponents(self):
         self.link_prims()
         self.link_blocks()
         self.link_comments()
