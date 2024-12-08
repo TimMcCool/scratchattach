@@ -1,5 +1,5 @@
 """
-Module to deal with the backpack's weird JSON format, and reformat it into the normal format
+Module to deal with the backpack's weird JSON format, by overriding with new load methods
 """
 from __future__ import annotations
 
@@ -100,7 +100,13 @@ class BpBlock(block.Block):
                            _parent_id=_parent_id)
 
 
-def load_script(_script_data: list[dict]):
+def load_script(_script_data: list[dict]) -> sprite.Sprite:
+    """
+    Loads a script into a sprite from the backpack JSON format
+    :param _script_data: Backpack script JSON data
+    :return: a sprite containing the script
+    """
+    # Using a sprite since it simplifies things, e.g. local global loading
     _sprite = sprite.Sprite()
     for _block_data in _script_data:
         _block = BpBlock.from_json(_block_data)
