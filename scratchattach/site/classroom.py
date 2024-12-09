@@ -61,6 +61,12 @@ class Classroom(BaseSiteComponent):
         if not success:
             response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
             soup = BeautifulSoup(response.text, "html.parser")
+
+            headings = soup.find_all("h1")
+            for heading in headings:
+                if heading.text == "Whoops! Our server is Scratch'ing its head":
+                    raise exceptions.ClassroomNotFound(f"Classroom id {self.id} is not closed and cannot be found.")
+
             # id, title, description, status, date_start (iso str), educator/username
             title = soup.find("title").contents[0][:-len(" on Scratch")]
 
