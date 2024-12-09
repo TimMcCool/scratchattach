@@ -3,18 +3,19 @@
 ## All
 
 - [ ] Docstrings
-- [ ] Dealing with stuff from the backpack (it's in a weird format): This may require a whole seperate module
+- [x] Dealing with stuff from the backpack (it's in a weird format): This may require a whole separate module
 - [ ] Getter functions (`@property`) instead of directly editing attrs (make them protected attrs)
 - [ ] Check if whitespace chars break IDs
 - [ ] Maybe blockchain should be renamed to 'script'
 - [ ] Perhaps use sprites as blockchain wrappers due to their existing utility (loading of local globals etc)
+- [ ] bs4 styled search function
 
 ## Project
 
 - [ ] Asset list
 - [ ] Obfuscation
 - [ ] Detection for twconfig
-- [ ] Edit twconfig
+- [x] Edit twconfig
 - [ ] Find targets
 
 ## Block
@@ -25,8 +26,8 @@
 - [ ] Previous chain
 - [ ] Attached chain
 - [ ] Complete chain
-- [ ] Block shape attr aka stack type (Stack/hat/c-mouth/end/reporter/boolean detection)
-- [ ] `can_next` property
+- [x] Block shape attr aka stack type (Stack/hat/c-mouth/end/reporter/boolean detection)
+- [x] `can_next` property
 - [ ] `is_input` property: Check if block is an input obscurer
 - [ ] `parent_input` property: Get input that this block obscures
 - [ ] `block_tree` old 'subtree' property: Get the 'ast' of this blockchain (a tree structure, not just a list)

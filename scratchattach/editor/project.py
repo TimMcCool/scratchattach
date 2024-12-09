@@ -70,6 +70,7 @@ class Project(base.JSONSerializable):
         for _sprite in self.sprites:
             if _sprite.is_stage:
                 return _sprite
+        warnings.warn(f"Could not find stage for {self.name}")
 
     def to_json(self) -> dict:
         _json = {

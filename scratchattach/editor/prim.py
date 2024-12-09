@@ -88,7 +88,6 @@ class Prim(base.SpriteSubComponent):
         self.y = _y
 
         super().__init__(_sprite)
-        print(self, self.__dict__)
 
     def __repr__(self):
         if self.is_basic:
@@ -162,3 +161,7 @@ class Prim(base.SpriteSubComponent):
                         f"Prim<name={self.name!r}, id={self.name!r}> has unknown {self.type.name} id; adding as global variable")
             self.name = None
             self.value_id = None
+
+    @property
+    def can_next(self):
+        return False

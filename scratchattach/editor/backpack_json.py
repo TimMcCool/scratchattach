@@ -3,7 +3,7 @@ Module to deal with the backpack's weird JSON format, by overriding with new loa
 """
 from __future__ import annotations
 
-from . import block, prim, field, inputs, mutation, sprite
+from . import block, prim, field, inputs, mutation, blockchain
 
 
 def parse_prim_fields(_fields: dict[str]) -> tuple[str | None, str | None, str | None]:
@@ -32,7 +32,6 @@ class BpField(field.Field):
 
     @staticmethod
     def from_json(data: dict[str, str]) -> field.Field:
-        print(data)
         # We can very simply convert it to the regular format
         data = [data.get("value"), data.get("id")]
         return field.Field.from_json(data)
@@ -100,18 +99,18 @@ class BpBlock(block.Block):
                            _parent_id=_parent_id)
 
 
-def load_script(_script_data: list[dict]) -> sprite.Sprite:
+def load_script(_script_data: list[dict]) -> blockchain.Blockchain:
     """
     Loads a script into a sprite from the backpack JSON format
     :param _script_data: Backpack script JSON data
-    :return: a sprite containing the script
+    :return: a blockchain object containing the script
     """
     # Using a sprite since it simplifies things, e.g. local global loading
-    _sprite = sprite.Sprite()
+    _blockchain = blockchain.Blockchain()
     for _block_data in _script_data:
         _block = BpBlock.from_json(_block_data)
-        _block.sprite = _sprite
-        _sprite.blocks[_block_data["id"]] = _block
+        _block.sprite = _blockchain
+        _blockchain.blocks[_block_data["id"]] = _block
 
-    _sprite.link_subcomponents()
-    return _sprite
+    _blockchain.link_subcomponents()
+    return _blockchain

@@ -6,8 +6,6 @@ from io import BytesIO, TextIOWrapper
 from typing import Any, BinaryIO
 from zipfile import ZipFile
 
-from beautifulprint import bprint
-
 from . import base, project, vlb, asset, comment, prim, block, commons
 
 
@@ -457,7 +455,6 @@ class Sprite(base.ProjectSubcomponent):
             except ValueError or UnicodeDecodeError:
                 with ZipFile(data) as archive:
                     data = json.loads(archive.read("sprite.json"))
-                    bprint(data)
                     _sprite = Sprite.from_json(data)
 
                     # Also load assets

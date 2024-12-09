@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 
-from . import base, sprite, mutation, field, inputs, commons, vlb
+from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape
 
 
 class Block(base.SpriteSubComponent):
@@ -50,9 +50,27 @@ class Block(base.SpriteSubComponent):
             for subcomponent in iterable:
                 subcomponent.block = self
 
-
     def __repr__(self):
         return f"Block<{self.opcode!r}>"
+
+    @property
+    def block_shape(self) -> blockshape.BlockShape:
+        """
+        Search for the blockshape stored in blockshape.py
+        :return: The block's block shape (by opcode)
+        """
+        return blockshape.BlockShapes.find(self.opcode, "opcode")
+
+    @property
+    def can_next(self):
+        """
+        :return: Whether the block *can* have a next block (basically checks if it's not a cap block, also considering the behaviour of control_stop)
+        """
+        _shape = self.block_shape
+        if _shape.is_cap is not blockshape.YESNT:
+            return _shape.is_attachable
+        else:
+            return self.mutation.has_next
 
     @property
     def id(self) -> str | None:
