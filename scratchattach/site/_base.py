@@ -1,9 +1,17 @@
 from abc import ABC, abstractmethod
+
 import requests
-from threading import Thread
+# from threading import Thread
 from ..utils import exceptions, commons
 
+
 class BaseSiteComponent(ABC):
+    @abstractmethod
+    def __init__(self):
+        self._session = None
+        self._cookies = None
+        self._headers = None
+        self.update_API = None
 
     def update(self):
         """
@@ -11,8 +19,8 @@ class BaseSiteComponent(ABC):
         """
         response = self.update_function(
             self.update_API,
-            headers = self._headers,
-            cookies = self._cookies, timeout=10
+            headers=self._headers,
+            cookies=self._cookies, timeout=10
         )
         # Check for 429 error:
         if "429" in str(response):
@@ -44,3 +52,7 @@ class BaseSiteComponent(ABC):
         """
         return commons._get_object(identificator_id, identificator, Class, NotFoundException, self._session)
 
+    update_function = requests.get
+    """
+    Internal function run on update. Function is a method of the 'requests' module/class
+    """

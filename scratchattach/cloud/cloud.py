@@ -91,9 +91,10 @@ class ScratchCloud(BaseCloud):
         else:
             return super().events()
 
-class TwCloud(BaseCloud):
 
-    def __init__(self, *, project_id, cloud_host="wss://clouddata.turbowarp.org", purpose="", contact=""):
+class TwCloud(BaseCloud):
+    def __init__(self, *, project_id, cloud_host="wss://clouddata.turbowarp.org", purpose="", contact="",
+                 _session=None):
         super().__init__()
         
         self.project_id = project_id
