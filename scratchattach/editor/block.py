@@ -74,11 +74,15 @@ class Block(base.SpriteSubComponent):
 
     @property
     def id(self) -> str | None:
+        """
+        Work out the id of this block by searching through the sprite dictionary
+        """
         # warnings.warn(f"Using block IDs can cause consistency issues and is not recommended")
         # This property is used when converting comments to JSON (we don't want random warning when exporting a project)
         for _block_id, _block in self.sprite.blocks.items():
             if _block is self:
                 return _block_id
+        return None
 
     @property
     def parent_id(self):
