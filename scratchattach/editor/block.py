@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Self, Iterable
+from typing import Iterable, Self
 
 from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape, prim
 from ..utils import exceptions
@@ -61,11 +61,13 @@ class Block(base.SpriteSubComponent):
             for subcomponent in iterable:
                 subcomponent.block = self
 
-    def add_input(self, name: str, _input: inputs.Input):
+    def add_input(self, name: str, _input: inputs.Input) -> Self:
         self.inputs[name] = _input
+        return self
 
-    def add_field(self, name: str, _field: field.Field):
+    def add_field(self, name: str, _field: field.Field) -> Self:
         self.fields[name] = _field
+        return self
 
     def check_toplevel(self):
         self.is_top_level = self.parent is None
@@ -86,7 +88,11 @@ class Block(base.SpriteSubComponent):
         Search for the blockshape stored in blockshape.py
         :return: The block's block shape (by opcode)
         """
-        return blockshape.BlockShapes.find(self.opcode, "opcode")
+        _shape = blockshape.BlockShapes.find(self.opcode, "opcode")
+        if _shape is None:
+            warnings.warn(f"No blockshape {self.opcode!r} exists! Defaulting to {blockshape.BlockShapes.UNDEFINED}")
+            return blockshape.BlockShapes.UNDEFINED
+        return _shape
 
     @property
     def can_next(self):
@@ -97,6 +103,11 @@ class Block(base.SpriteSubComponent):
         if _shape.is_cap is not blockshape.YESNT:
             return _shape.is_attachable
         else:
+            if self.mutation is None:
+                # If there's no mutation, let's just assume yes
+                warnings.warn(f"{self} has no mutation! Assuming we can add block ;-;")
+                return True
+
             return self.mutation.has_next
 
     @property
@@ -170,7 +181,7 @@ class Block(base.SpriteSubComponent):
         return [self] + self.next.attached_chain
 
     @property
-    def compelete_chain(self):
+    def complete_chain(self):
         # Both previous and attached chains start with self
         return self.previous_chain[:1:-1] + self.attached_chain
 
@@ -180,6 +191,10 @@ class Block(base.SpriteSubComponent):
         same as the old stack_parent property from sbedtior v1
         """
         return self.previous_chain[-1]
+
+    @property
+    def bottom_level_block(self):
+        return self.attached_chain[-1]
 
     @property
     def stack_tree(self):
@@ -335,8 +350,8 @@ class Block(base.SpriteSubComponent):
         for _input in self.inputs.values():
             _input.link_using_block()
 
-    # Adding blocks (return self)
-    def attach_block(self, new: Block) -> Self:
+    # Adding block
+    def attach_block(self, new: Block) -> Block:
         if not self.can_next:
             raise exceptions.BadBlockShape(f"{self.block_shape} cannot be stacked onto")
         elif new.block_shape.is_hat or not new.block_shape.is_stack:
@@ -346,16 +361,23 @@ class Block(base.SpriteSubComponent):
         new.next = self.next
 
         self.next = new
+
+        new.check_toplevel()
         self.sprite.add_block(new)
 
-        return self
+        return new
 
-    def duplicate_single_block(self) -> Self:
-        return self.attach_block(self.copy())
+    def duplicate_single_block(self) -> Block:
+        return self.attach_block(self.dcopy())
 
-    def attach_chain(self, chain: Iterable[Block]) -> Self:
+    def attach_chain(self, *chain: Iterable[Block]) -> Block:
         attaching_block = self
         for _block in chain:
             attaching_block = attaching_block.attach_block(_block)
 
-        return self
+        return attaching_block
+
+    def duplicate_chain(self) -> Block:
+        return self.bottom_level_block.attach_chain(
+            *map(Block.dcopy, self.attached_chain)
+        )

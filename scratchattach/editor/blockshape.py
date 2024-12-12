@@ -26,7 +26,7 @@ class _Yesnt:
 
 
 YESNT: Final[_Yesnt] = _Yesnt()
-"""Value used when neither True nor False is applicable"""
+"""Value used when neither True nor False is applicable (when it depends on other factors)"""
 
 
 @dataclass(init=True, repr=True)
@@ -48,7 +48,6 @@ class BlockShape:
         if self.is_cap is YESNT:
             raise TypeError("Can't tell if the block is attachable because we can't be sure if it is a cap block or not (stop block)")
         return not self.is_cap and not self.is_reporter
-
 
 
 class BlockShapes(_EnumWrapper):

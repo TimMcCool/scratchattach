@@ -45,9 +45,9 @@
 - [x] Add block to sprite
 - [x] Duplicating (single) block
 - [x] Attach block
-- [ ] Duplicating blockchain
+- [x] Duplicating blockchain
 - [ ] Slot above (if possible - raise error if not)
-- [ ] Attach blockchain
+- [x] Attach blockchain
 - [ ] Delete block
 - [ ] Delete blockchain
 - [ ] Add/edit inputs
@@ -88,7 +88,7 @@
 - [ ] Upload asset
 - [ ] Load from file (auto-detect type)
 
-## Pallete
+## Pallet
 
 - [ ] Add all block defaults (like sbuild.py)
 - [ ] Actions (objects that behave like blocks but add multiple blocks - e.g. a 'superjoin' block that you can use to
