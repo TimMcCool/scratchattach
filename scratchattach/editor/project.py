@@ -7,7 +7,7 @@ from io import BytesIO, TextIOWrapper
 from typing import Iterable, Generator, BinaryIO
 from zipfile import ZipFile
 
-from . import base, meta, extension, monitor, sprite, asset, vlb, commons
+from . import base, meta, extension, monitor, sprite, asset, vlb, commons, twconfig, comment
 
 from ..site.project import get_project
 from ..site import session
@@ -35,6 +35,8 @@ class Project(base.JSONSerializable):
         self.sprites = list(_sprites)
 
         self.asset_data = _asset_data
+
+        self._tw_config_comment = None
 
         # Link subcomponents
         for iterable in (self.monitors, self.sprites):
@@ -87,6 +89,20 @@ class Project(base.JSONSerializable):
         for _sprite in self.sprites:
             for _asset in _sprite.assets:
                 yield _asset
+
+    @property
+    def tw_config_comment(self) -> comment.Comment | None:
+        for _comment in self.stage.comments:
+            if twconfig.is_valid_twconfig(_comment.text):
+                return _comment
+        return None
+
+    @property
+    def tw_config(self) -> twconfig.TWConfig | None:
+        _comment = self.tw_config_comment
+        if _comment:
+            return twconfig.TWConfig.from_str(_comment.text)
+        return None
 
     @property
     def all_ids(self):

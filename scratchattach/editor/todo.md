@@ -12,9 +12,9 @@
 
 ## Project
 
-- [ ] Asset list
+- [x] Asset list
 - [ ] Obfuscation
-- [ ] Detection for twconfig
+- [x] Detection for twconfig
 - [x] Edit twconfig
 - [ ] Find targets
 
@@ -22,16 +22,17 @@
 
 ### Finding blocks/attrs
 
-- [ ] Top level block (stack parent)
-- [ ] Previous chain
-- [ ] Attached chain
-- [ ] Complete chain
+- [x] Top level block (stack parent)
+- [x] Previous chain
+- [x] Attached chain
+- [x] Complete chain
+- [x] Block categories
 - [x] Block shape attr aka stack type (Stack/hat/c-mouth/end/reporter/boolean detection)
 - [x] `can_next` property
-- [ ] `is_input` property: Check if block is an input obscurer
-- [ ] `parent_input` property: Get input that this block obscures
-- [ ] `block_tree` old 'subtree' property: Get the 'ast' of this blockchain (a tree structure, not just a list)
-- [ ] `children` property - list of all blocks with this block as a parent (next block + any input obscurers)
+- [x] `is_input` property: Check if block is an input obscurer
+- [x] `parent_input` property: Get input that this block obscures
+- [x] `stack_tree` old 'subtree' property: Get the 'ast' of this blockchain (a 'tree' structure - well actually a list of lists)
+- [x] `children` property - list of all blocks with this block as a parent except next block (any input obscurers)
 - [ ] Detection for scratch addons debug blocks
   (proc codes:
   `"​​log​​ %s",
@@ -41,10 +42,10 @@
 - [ ] Detection for `<is_compiled>` and `<is_turbowarp>` and `<is_forkphorus>` booleans
 
 ### Adding/removing blocks
-
-- [ ] Duplicating (single) block
+- [x] Add block to sprite
+- [x] Duplicating (single) block
+- [x] Attach block
 - [ ] Duplicating blockchain
-- [ ] Attach block
 - [ ] Slot above (if possible - raise error if not)
 - [ ] Attach blockchain
 - [ ] Delete block

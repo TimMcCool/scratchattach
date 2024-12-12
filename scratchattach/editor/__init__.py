@@ -12,3 +12,6 @@ from .block import Block
 from .prim import Prim, PrimTypes
 from .backpack_json import load_script as load_script_from_backpack
 from .twconfig import TWConfig, is_valid_twconfig
+from .inputs import Input
+from .field import Field
+from .vlb import Variable, List, Broadcast

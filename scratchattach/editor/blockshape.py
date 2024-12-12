@@ -50,6 +50,7 @@ class BlockShape:
         return not self.is_cap and not self.is_reporter
 
 
+
 class BlockShapes(_EnumWrapper):
     MOTION_MOVESTEPS = BlockShape(is_stack=True, opcode="motion_movesteps")
     MOTION_TURNRIGHT = BlockShape(is_stack=True, opcode="motion_turnright")

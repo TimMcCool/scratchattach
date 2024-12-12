@@ -10,16 +10,17 @@ from typing import Final, Any
 
 from ..utils import exceptions
 
-DIGITS: Final = tuple("0123456789")
+DIGITS: Final[tuple[str]] = tuple("0123456789")
+ID_CHARS: Final[str] = string.ascii_letters + string.digits + string.punctuation
 
 
-def _read_json_number(string: str) -> float | int:
+def _read_json_number(_str: str) -> float | int:
     ret = ''
 
-    minus = string[0] == '-'
+    minus = _str[0] == '-'
     if minus:
         ret += '-'
-        string = string[1:]
+        _str = _str[1:]
 
     def read_fraction(sub: str):
         sub_ret = ''
@@ -51,31 +52,31 @@ def _read_json_number(string: str) -> float | int:
 
         return sub_ret
 
-    if string[0] == '0':
+    if _str[0] == '0':
         ret += '0'
-        string = string[1:]
+        _str = _str[1:]
 
-    elif string[0] in DIGITS[1:9]:
-        while string[0] in DIGITS:
-            ret += string[0]
-            string = string[1:]
+    elif _str[0] in DIGITS[1:9]:
+        while _str[0] in DIGITS:
+            ret += _str[0]
+            _str = _str[1:]
 
-    frac, string = read_fraction(string)
+    frac, _str = read_fraction(_str)
     ret += frac
 
-    ret += read_exponent(string)
+    ret += read_exponent(_str)
 
     return json.loads(ret)
 
 
-def consume_json(string: str, i: int = 0) -> str | float | int | dict | list | bool | None:
+def consume_json(_str: str, i: int = 0) -> str | float | int | dict | list | bool | None:
     """
     *'gobble up some JSON until we hit something not quite so tasty'*
 
     Reads a JSON string and stops at the natural end (i.e. when brackets close, or when quotes end, etc.)
     """
     # Named by ChatGPT
-    section = ''.join(string[i:])
+    section = ''.join(_str[i:])
     if section.startswith("true"):
         return True
     elif section.startswith("false"):
@@ -116,9 +117,9 @@ def consume_json(string: str, i: int = 0) -> str | float | int | dict | list | b
     raise exceptions.UnclosedJSONError(f"Unclosed JSON string, read {json_text}")
 
 
-def is_partial_json(string: str, i: int = 0) -> bool:
+def is_partial_json(_str: str, i: int = 0) -> bool:
     try:
-        consume_json(string, i)
+        consume_json(_str, i)
         return True
 
     except exceptions.UnclosedJSONError:
@@ -128,9 +129,9 @@ def is_partial_json(string: str, i: int = 0) -> bool:
         return False
 
 
-def is_valid_json(string: str) -> bool:
+def is_valid_json(_str: str) -> bool:
     try:
-        json.loads(string)
+        json.loads(_str)
         return True
     except ValueError:
         return False
@@ -183,9 +184,10 @@ def dumps_ifnn(obj: Any) -> str:
 
 
 def gen_id() -> str:
-    # The old 'naiive' method but that chances of a repeat are so miniscule
+    # The old 'naïve' method but that chances of a repeat are so miniscule
     # Have to check if whitespace chars break it
-    return ''.join(random.choices(string.printable, k=20))
+    # May later add checking within sprites so that we don't need such long ids (we can save space this way)
+    return ''.join(random.choices(ID_CHARS, k=20))
 
 
 def sanitize_fn(filename: str):

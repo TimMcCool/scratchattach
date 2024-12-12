@@ -137,6 +137,14 @@ class Sprite(base.ProjectSubcomponent):
         else:
             warnings.warn(f"Invalid 'VLB' {_vlb} of type: {type(_vlb)}")
 
+    def add_block(self, _block: block.Block) -> block.Block:
+        _block.sprite = self
+
+        self.blocks[self.new_id] = _block
+        _block.link_using_sprite()
+
+        return _block
+
     @property
     def vlbs(self) -> list[base.NamedIDComponent]:
         """
@@ -151,6 +159,10 @@ class Sprite(base.ProjectSubcomponent):
     @property
     def stage(self) -> Sprite:
         return self.project.stage
+
+    @property
+    def new_id(self):
+        return commons.gen_id()
 
     @staticmethod
     def from_json(data: dict):

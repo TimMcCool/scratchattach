@@ -245,3 +245,10 @@ class InvalidVLBName(Exception):
     Raised when an invalid VLB name is provided (not variable, list or broadcast)
     """
     pass
+
+
+class BadBlockShape(Exception):
+    """
+    Raised when the block shape cannot allow for the operation
+    """
+    pass

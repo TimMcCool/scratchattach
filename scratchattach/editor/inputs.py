@@ -44,9 +44,9 @@ class Input(base.BlockSubComponent):
 
         # If the shadow is None, we'll have to work it out later
         self.shadow = _shadow
-        # If the value/obscurers are strings, they are ids that reference the actual value/obscurer, which need to be fetched
-        self.value: prim.Prim | block.Block | str = _value
-        self.obscurer: prim.Prim | block.Block | str = _obscurer
+
+        self.value: prim.Prim | block.Block = _value
+        self.obscurer: prim.Prim | block.Block = _obscurer
 
         self._id = _id
         """

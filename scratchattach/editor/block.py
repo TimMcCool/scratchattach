@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import warnings
+from typing import Self, Iterable
 
-from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape
+from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape, prim
+from ..utils import exceptions
 
 
 class Block(base.SpriteSubComponent):
-    def __init__(self, _opcode: str, _shadow: bool = False, _top_level: bool = False,
+    def __init__(self, _opcode: str, _shadow: bool = False, _top_level: bool = None,
                  _mutation: mutation.Mutation = None, _fields: dict[str, field.Field] = None,
-                 _inputs: dict[str, inputs.Input] = None, x: int = None, y: int = None,
+                 _inputs: dict[str, inputs.Input] = None, x: int = 0, y: int = 0, pos: tuple[int, int] = None,
 
                  _next: Block = None, _parent: Block = None,
                  *, _next_id: str = None, _parent_id: str = None, _sprite: sprite.Sprite = None):
@@ -17,6 +19,9 @@ class Block(base.SpriteSubComponent):
             _fields = {}
         if _inputs is None:
             _inputs = {}
+
+        if pos is not None:
+            x, y = pos
 
         self.opcode = _opcode
         self.is_shadow = _shadow
@@ -40,9 +45,15 @@ class Block(base.SpriteSubComponent):
         self.next = _next
         self.parent = _parent
 
-        super().__init__(_sprite)
+        self.check_toplevel()
 
-        # Link subcomponents
+        super().__init__(_sprite)
+        self.link_subcomponents()
+
+    def __repr__(self):
+        return f"Block<{self.opcode!r}>"
+
+    def link_subcomponents(self):
         if self.mutation:
             self.mutation.block = self
 
@@ -50,8 +61,24 @@ class Block(base.SpriteSubComponent):
             for subcomponent in iterable:
                 subcomponent.block = self
 
-    def __repr__(self):
-        return f"Block<{self.opcode!r}>"
+    def add_input(self, name: str, _input: inputs.Input):
+        self.inputs[name] = _input
+
+    def add_field(self, name: str, _field: field.Field):
+        self.fields[name] = _field
+
+    def check_toplevel(self):
+        self.is_top_level = self.parent is None
+
+        if not self.is_top_level:
+            self.x, self.y = None, None
+
+    @property
+    def target(self):
+        """
+        Alias for sprite
+        """
+        return self.sprite
 
     @property
     def block_shape(self) -> blockshape.BlockShape:
@@ -114,6 +141,87 @@ class Block(base.SpriteSubComponent):
 
         return _ret
 
+    @property
+    def children(self) -> list[Block | prim.Prim]:
+        """
+        :return: A list of blocks that are inside of this block, **NOT INCLUDING THE ATTACHED BLOCK**
+        """
+        _children = []
+        for _input in self.inputs.values():
+            if isinstance(_input.value, Block) or isinstance(_input.value, prim.Prim):
+                _children.append(_input.value)
+
+            if _input.obscurer is not None:
+                _children.append(_input.obscurer)
+        return _children
+
+    @property
+    def previous_chain(self):
+        if self.parent is None:
+            return [self]
+
+        return [self] + self.parent.previous_chain
+
+    @property
+    def attached_chain(self):
+        if self.next is None:
+            return [self]
+
+        return [self] + self.next.attached_chain
+
+    @property
+    def compelete_chain(self):
+        # Both previous and attached chains start with self
+        return self.previous_chain[:1:-1] + self.attached_chain
+
+    @property
+    def top_level_block(self):
+        """
+        same as the old stack_parent property from sbedtior v1
+        """
+        return self.previous_chain[-1]
+
+    @property
+    def stack_tree(self):
+        """
+        :return: A tree-like nested list structure representing the stack of blocks, including inputs, starting at this block
+        """
+        _tree = [self]
+        for child in self.children:
+            if isinstance(child, prim.Prim):
+                _tree.append(child)
+            elif isinstance(child, Block):
+                _tree.append(child.stack_tree)
+
+        if self.next:
+            _tree += self.next.stack_tree
+
+        return _tree
+
+    @property
+    def category(self):
+        """
+        Works out what category of block this is using the opcode. Does not perform validation
+        """
+        return self.opcode.split('_')[0]
+
+    @property
+    def is_input(self):
+        """
+        :return: Whether this block is an input obscurer or value
+        """
+        return self.parent_input is not None
+
+    @property
+    def parent_input(self):
+        if not self.parent:
+            return None
+
+        for _input in self.parent.inputs.values():
+            if _input.obscurer is self or _input.value is self:
+                return _input
+        return None
+
     @staticmethod
     def from_json(data: dict) -> Block:
         """
@@ -148,6 +256,8 @@ class Block(base.SpriteSubComponent):
                      _parent_id=_parent_id)
 
     def to_json(self) -> dict:
+        self.check_toplevel()
+
         _json = {
             "opcode": self.opcode,
             "next": self.next_id,
@@ -157,11 +267,11 @@ class Block(base.SpriteSubComponent):
             "shadow": self.is_shadow,
             "topLevel": self.is_top_level,
         }
-
-        commons.noneless_update(_json, {
-            "x": self.x,
-            "y": self.y,
-        })
+        if self.is_top_level:
+            commons.noneless_update(_json, {
+                "x": self.x,
+                "y": self.y,
+            })
 
         if self.mutation is not None:
             commons.noneless_update(_json, {
@@ -170,7 +280,10 @@ class Block(base.SpriteSubComponent):
 
         return _json
 
-    def link_using_sprite(self):
+    def link_using_sprite(self, link_subs: bool = True):
+        if link_subs:
+            self.link_subcomponents()
+
         if self.mutation:
             self.mutation.link_arguments()
 
@@ -221,3 +334,28 @@ class Block(base.SpriteSubComponent):
 
         for _input in self.inputs.values():
             _input.link_using_block()
+
+    # Adding blocks (return self)
+    def attach_block(self, new: Block) -> Self:
+        if not self.can_next:
+            raise exceptions.BadBlockShape(f"{self.block_shape} cannot be stacked onto")
+        elif new.block_shape.is_hat or not new.block_shape.is_stack:
+            raise exceptions.BadBlockShape(f"{new.block_shape} is not stackable")
+
+        new.parent = self
+        new.next = self.next
+
+        self.next = new
+        self.sprite.add_block(new)
+
+        return self
+
+    def duplicate_single_block(self) -> Self:
+        return self.attach_block(self.copy())
+
+    def attach_chain(self, chain: Iterable[Block]) -> Self:
+        attaching_block = self
+        for _block in chain:
+            attaching_block = attaching_block.attach_block(_block)
+
+        return self
