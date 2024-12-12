@@ -5,7 +5,7 @@ import warnings
 from io import BytesIO, TextIOWrapper
 from typing import Any, BinaryIO
 from zipfile import ZipFile
-
+from typing import Iterable
 from . import base, project, vlb, asset, comment, prim, block, commons
 
 
@@ -144,6 +144,27 @@ class Sprite(base.ProjectSubcomponent):
         _block.link_using_sprite()
 
         return _block
+
+    def add_chain(self, *chain: Iterable[block.Block]) -> block.Block:
+        """
+        Adds a list of blocks to the sprite **AND RETURNS THE FIRST BLOCK**
+        :param chain:
+        :return:
+        """
+        chain = tuple(chain)
+
+        _prev = self.add_block(chain[0])
+
+        for _block in chain[1:]:
+            _prev = _prev.attach_block(_block)
+
+        return chain[0]
+
+    def remove_block(self, _block: block.Block):
+        for key, val in self.blocks.items():
+            if val is _block:
+                del self.blocks[key]
+                return
 
     @property
     def vlbs(self) -> list[base.NamedIDComponent]:

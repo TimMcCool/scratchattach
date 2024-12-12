@@ -63,6 +63,9 @@ class Block(base.SpriteSubComponent):
 
     def add_input(self, name: str, _input: inputs.Input) -> Self:
         self.inputs[name] = _input
+        for val in (_input.value, _input.obscurer):
+            if isinstance(val, Block):
+                val.parent = self
         return self
 
     def add_field(self, name: str, _field: field.Field) -> Self:
@@ -228,6 +231,13 @@ class Block(base.SpriteSubComponent):
         return self.parent_input is not None
 
     @property
+    def is_next_block(self):
+        """
+        :return: Whether this block is attached (as next block) to a previous block and not an input
+        """
+        return self.parent and not self.is_input
+
+    @property
     def parent_input(self):
         if not self.parent:
             return None
@@ -350,7 +360,7 @@ class Block(base.SpriteSubComponent):
         for _input in self.inputs.values():
             _input.link_using_block()
 
-    # Adding block
+    # Adding/removing block
     def attach_block(self, new: Block) -> Block:
         if not self.can_next:
             raise exceptions.BadBlockShape(f"{self.block_shape} cannot be stacked onto")
@@ -381,3 +391,36 @@ class Block(base.SpriteSubComponent):
         return self.bottom_level_block.attach_chain(
             *map(Block.dcopy, self.attached_chain)
         )
+
+    def slot_above(self, new: Block) -> Block:
+        if not new.can_next:
+            raise exceptions.BadBlockShape(f"{new.block_shape} cannot be stacked onto")
+
+        elif self.block_shape.is_hat or not self.block_shape.is_stack:
+            raise exceptions.BadBlockShape(f"{self.block_shape} is not stackable")
+
+        new.parent, new.next = self.parent, self
+
+        self.parent = new
+
+        if new.parent:
+            new.parent.next = new
+
+        return self.sprite.add_block(new)
+
+    def delete_single_block(self):
+        if self.is_next_block:
+            self.parent.next = self.next
+
+        if self.next:
+            self.next.parent = self.parent
+
+            if self.is_top_level:
+                self.next.is_top_level = True
+                self.next.x, self.next.y = self.next.x, self.next.y
+
+        self.sprite.remove_block(self)
+
+    def delete_chain(self):
+        for _block in self.attached_chain:
+            _block.delete_single_block()

@@ -9,6 +9,7 @@
 - [ ] Maybe blockchain should be renamed to 'script'
 - [ ] Perhaps use sprites as blockchain wrappers due to their existing utility (loading of local globals etc)
 - [ ] bs4 styled search function
+- [ ] ScratchJR project parser (lol)
 
 ## Project
 
@@ -31,7 +32,8 @@
 - [x] `can_next` property
 - [x] `is_input` property: Check if block is an input obscurer
 - [x] `parent_input` property: Get input that this block obscures
-- [x] `stack_tree` old 'subtree' property: Get the 'ast' of this blockchain (a 'tree' structure - well actually a list of lists)
+- [x] `stack_tree` old 'subtree' property: Get the 'ast' of this blockchain (a 'tree' structure - well actually a list
+  of lists)
 - [x] `children` property - list of all blocks with this block as a parent except next block (any input obscurers)
 - [ ] Detection for scratch addons debug blocks
   (proc codes:
@@ -42,15 +44,16 @@
 - [ ] Detection for `<is_compiled>` and `<is_turbowarp>` and `<is_forkphorus>` booleans
 
 ### Adding/removing blocks
+
 - [x] Add block to sprite
 - [x] Duplicating (single) block
 - [x] Attach block
 - [x] Duplicating blockchain
-- [ ] Slot above (if possible - raise error if not)
+- [x] Slot above (if possible - raise error if not)
 - [x] Attach blockchain
-- [ ] Delete block
-- [ ] Delete blockchain
-- [ ] Add/edit inputs
+- [x] Delete block
+- [x] Delete blockchain
+- [x] Add/edit inputs
 - [ ] Add/edit fields
 - [ ] Add mutation
 - [ ] Add comment

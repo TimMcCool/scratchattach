@@ -252,3 +252,10 @@ class BadBlockShape(Exception):
     Raised when the block shape cannot allow for the operation
     """
     pass
+
+
+class BadScript(Exception):
+    """
+    Raised when the block script cannot allow for the operation
+    """
+    pass

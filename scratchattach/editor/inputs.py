@@ -19,6 +19,7 @@ class ShadowStatus:
 
 class ShadowStatuses:
     # Not an enum so you don't need to do .value
+    # Uh why?
     HAS_SHADOW: Final[ShadowStatus] = ShadowStatus(1, "has shadow")
     NO_SHADOW: Final[ShadowStatus] = ShadowStatus(2, "no shadow")
     OBSCURED: Final[ShadowStatus] = ShadowStatus(3, "obscured")

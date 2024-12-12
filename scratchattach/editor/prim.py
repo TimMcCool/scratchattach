@@ -57,7 +57,7 @@ def is_prim_opcode(opcode: str):
 
 
 class Prim(base.SpriteSubComponent):
-    def __init__(self, _primtype: PrimType, _value: str | vlb.Variable | vlb.List | vlb.Broadcast = None,
+    def __init__(self, _primtype: PrimType | PrimTypes, _value: str | vlb.Variable | vlb.List | vlb.Broadcast = None,
                  _name: str = None, _id: str = None, _x: int = None,
                  _y: int = None, _sprite: sprite.Sprite = None):
         """
@@ -65,6 +65,9 @@ class Prim(base.SpriteSubComponent):
         Technically blocks but behave differently
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Targets:~:text=A%20few%20blocks,13
         """
+        if isinstance(_primtype, PrimTypes):
+            _primtype = _primtype.value
+
         self.type = _primtype
 
         self.value = _value
