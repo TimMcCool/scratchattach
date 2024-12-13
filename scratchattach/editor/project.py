@@ -7,7 +7,7 @@ from io import BytesIO, TextIOWrapper
 from typing import Iterable, Generator, BinaryIO
 from zipfile import ZipFile
 
-from . import base, meta, extension, monitor, sprite, asset, vlb, commons, twconfig, comment
+from . import base, meta, extension, monitor, sprite, asset, vlb, twconfig, comment
 
 from ..site.project import get_project
 from ..site import session
@@ -233,4 +233,3 @@ class Project(base.JSONSerializable):
 
         if auto_open:
             os.system(f"explorer.exe \"{fp}\"")
-

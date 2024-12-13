@@ -15,3 +15,4 @@ from .twconfig import TWConfig, is_valid_twconfig
 from .inputs import Input, ShadowStatuses
 from .field import Field
 from .vlb import Variable, List, Broadcast
+from .comment import Comment

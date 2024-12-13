@@ -10,6 +10,7 @@
 - [ ] Perhaps use sprites as blockchain wrappers due to their existing utility (loading of local globals etc)
 - [ ] bs4 styled search function
 - [ ] ScratchJR project parser (lol)
+- [ ] Error checking (for when you need to specify sprite etc)
 
 ## Project
 
@@ -54,13 +55,16 @@
 - [x] Delete block
 - [x] Delete blockchain
 - [x] Add/edit inputs
-- [ ] Add/edit fields
-- [ ] Add mutation
-- [ ] Add comment
+- [x] Add/edit fields
+- [x] Add mutation
+- [x] Add comment
+- [ ] Get comment
 
 ## Mutation
 
 - [ ] Proc code builder
+- [ ] get type of argument (bool/str) inside argument class
+- [ ] to/from json for args?
 
 ## Sprite
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from typing import Iterable, Self
 
-from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape, prim
+from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape, prim, comment
 from ..utils import exceptions
 
 
@@ -70,6 +70,18 @@ class Block(base.SpriteSubComponent):
 
     def add_field(self, name: str, _field: field.Field) -> Self:
         self.fields[name] = _field
+        return self
+
+    def set_mutation(self, _mutation: mutation.Mutation) -> Self:
+        self.mutation = _mutation
+        _mutation.block = self
+        # _mutation.link_arguments()
+        return self
+
+    def set_comment(self, _comment: comment.Comment) -> Self:
+        _comment.block = self
+        self.sprite.add_comment(_comment)
+
         return self
 
     def check_toplevel(self):
@@ -246,6 +258,10 @@ class Block(base.SpriteSubComponent):
             if _input.obscurer is self or _input.value is self:
                 return _input
         return None
+
+    @property
+    def new_id(self):
+        return self.sprite.new_id
 
     @staticmethod
     def from_json(data: dict) -> Block:

@@ -24,14 +24,14 @@ class PrimType(base.JSONSerializable):
 
     @staticmethod
     def from_json(data: int):
-        ...
+        return PrimTypes.find(data, "code")
 
     def to_json(self) -> int:
         return self.code
 
 
-BASIC_ATTRS: Final = ["value"]
-VLB_ATTRS: Final = ["name", "id", "x", "y"]
+BASIC_ATTRS: Final[tuple[str]] = ("value",)
+VLB_ATTRS: Final[tuple[str]] = ("name", "id", "x", "y")
 
 
 class PrimTypes(enums._EnumWrapper):

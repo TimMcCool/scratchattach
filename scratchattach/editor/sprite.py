@@ -138,6 +138,10 @@ class Sprite(base.ProjectSubcomponent):
             warnings.warn(f"Invalid 'VLB' {_vlb} of type: {type(_vlb)}")
 
     def add_block(self, _block: block.Block) -> block.Block:
+        if _block.sprite is self:
+            if _block in self.blocks:
+                return _block
+
         _block.sprite = self
 
         self.blocks[self.new_id] = _block
@@ -159,6 +163,16 @@ class Sprite(base.ProjectSubcomponent):
             _prev = _prev.attach_block(_block)
 
         return chain[0]
+
+    def add_comment(self, _comment: comment.Comment) -> comment.Comment:
+        _comment.sprite = self
+        if _comment.id is None:
+            _comment.id = self.new_id
+
+        self.comments.append(_comment)
+        _comment.link_using_sprite()
+
+        return _comment
 
     def remove_block(self, _block: block.Block):
         for key, val in self.blocks.items():

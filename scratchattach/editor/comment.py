@@ -5,13 +5,15 @@ from . import base, block, sprite
 
 class Comment(base.IDComponent):
     def __init__(self, _id: str = None, _block: block.Block = None, x: int = 0, y: int = 0, width: int = 100,
-                 height: int = 100, minimized: bool = False,
-                 text: str = '', *, _block_id: str = None, _sprite: sprite.Sprite = None):
+                 height: int = 100, minimized: bool = False, text: str = '', *, _block_id: str = None,
+                 _sprite: sprite.Sprite = None, pos: tuple[int, int] = None):
         self.block = _block
         self._block_id = _block_id
         """
         ID of connected block. Will be set to None upon sprite initialization when the block attribute is updated to the relevant Block.
         """
+        if pos is not None:
+            x, y = pos
 
         self.x = x
         self.y = y

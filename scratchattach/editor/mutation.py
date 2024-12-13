@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
+import warnings
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, Any
 
 from . import base, commons
 from ..utils import enums
@@ -103,7 +104,7 @@ class ArgSettings(base.Base):
 
 
 @dataclass(init=True, repr=True)
-class Argument(base.Base):
+class Argument(base.BlockSubComponent):
     name: str
     default: str = ''
 
@@ -112,7 +113,16 @@ class Argument(base.Base):
     Argument ID: Will be used to replace other parameters during block instantiation.
     """
 
-    _block: block.Block = None
+    @staticmethod
+    def from_json(data: dict | list | Any):
+        warnings.warn("No from_json method defined for Arguments (yet?)")
+
+    def to_json(self) -> dict | list | Any:
+        warnings.warn("No to_json method defined for Arguments (yet?)")
+
+    def link_using_block(self):
+        if self._id is None:
+            self._id = self.block.new_id
 
 
 class Mutation(base.BlockSubComponent):
@@ -285,3 +295,7 @@ class Mutation(base.BlockSubComponent):
                     _arg_phs: Iterable[ArgumentPlaceholder] = filter(lambda tkn: isinstance(tkn, ArgumentPlaceholder), _parsed)
                     for i, _arg_ph in enumerate(_arg_phs):
                         self.arguments[i].default = _arg_ph.default
+
+            for _argument in self.arguments:
+                _argument.block = self.block
+                _argument.link_using_block()
