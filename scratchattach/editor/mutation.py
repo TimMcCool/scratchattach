@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(init=True)
-class ArgumentPlaceholder(base.Base):
+class ArgumentType(base.Base):
     type: str
     proc_str: str
 
@@ -21,12 +21,12 @@ class ArgumentPlaceholder(base.Base):
         if isinstance(other, enums._EnumWrapper):
             other = other.value
 
-        assert isinstance(other, ArgumentPlaceholder)
+        assert isinstance(other, ArgumentType)
 
         return self.type == other.type
 
     def __repr__(self):
-        return f"<Arg {self.type!r}>"
+        return f"<ArgType {self.type!r}>"
 
     @property
     def default(self) -> str | None:
@@ -36,48 +36,6 @@ class ArgumentPlaceholder(base.Base):
             return ''
         else:
             return None
-
-
-class ArgumentPlaceholders(enums._EnumWrapper):
-    BOOLEAN = ArgumentPlaceholder("boolean", "%b")
-    NUMBER_OR_TEXT = ArgumentPlaceholder("number or text", "%s")
-
-
-def parse_proc_code(_proc_code: str) -> list[str, ArgumentPlaceholder] | None:
-    if _proc_code is None:
-        return None
-    token = ''
-    tokens = []
-
-    last_char = ''
-    for char in _proc_code:
-        if last_char == '%':
-            if char in "sb":
-                # If we've hit an %s or %b
-                token = token[:-1]
-                # Clip the % sign off the token
-
-                if token != '':
-                    # Make sure not to append an empty token
-                    tokens.append(token)
-
-                # Add the parameter token
-                token = f"%{char}"
-                if token == "%b":
-                    tokens.append(ArgumentPlaceholders.BOOLEAN.value.dcopy())
-                elif token == "%s":
-                    tokens.append(ArgumentPlaceholders.NUMBER_OR_TEXT.value.dcopy())
-
-                token = ''
-                continue
-
-        token += char
-        last_char = char
-
-    if token != '':
-        tokens.append(token)
-
-    return tokens
 
 
 @dataclass(init=True, repr=True)
@@ -104,7 +62,7 @@ class ArgSettings(base.Base):
 
 
 @dataclass(init=True, repr=True)
-class Argument(base.BlockSubComponent):
+class Argument(base.MutationSubComponent):
     name: str
     default: str = ''
 
@@ -113,6 +71,20 @@ class Argument(base.BlockSubComponent):
     Argument ID: Will be used to replace other parameters during block instantiation.
     """
 
+    @property
+    def index(self):
+        return self.mutation.arguments.index(self)
+
+    @property
+    def type(self) -> None | ArgumentType:
+        i = 0
+        goal = self.index
+        for token in parse_proc_code(self.mutation.proc_code):
+            if isinstance(token, ArgumentType):
+                if i == goal:
+                    return token
+                i += 1
+
     @staticmethod
     def from_json(data: dict | list | Any):
         warnings.warn("No from_json method defined for Arguments (yet?)")
@@ -120,9 +92,51 @@ class Argument(base.BlockSubComponent):
     def to_json(self) -> dict | list | Any:
         warnings.warn("No to_json method defined for Arguments (yet?)")
 
-    def link_using_block(self):
+    def link_using_mutation(self):
         if self._id is None:
             self._id = self.block.new_id
+
+
+class ArgTypes(enums._EnumWrapper):
+    BOOLEAN = ArgumentType("boolean", "%b")
+    NUMBER_OR_TEXT = ArgumentType("number or text", "%s")
+
+
+def parse_proc_code(_proc_code: str) -> list[str, ArgumentType] | None:
+    if _proc_code is None:
+        return None
+    token = ''
+    tokens = []
+
+    last_char = ''
+    for char in _proc_code:
+        if last_char == '%':
+            if char in "sb":
+                # If we've hit an %s or %b
+                token = token[:-1]
+                # Clip the % sign off the token
+
+                if token != '':
+                    # Make sure not to append an empty token
+                    tokens.append(token)
+
+                # Add the parameter token
+                token = f"%{char}"
+                if token == "%b":
+                    tokens.append(ArgTypes.BOOLEAN.value.dcopy())
+                elif token == "%s":
+                    tokens.append(ArgTypes.NUMBER_OR_TEXT.value.dcopy())
+
+                token = ''
+                continue
+
+        token += char
+        last_char = char
+
+    if token != '':
+        tokens.append(token)
+
+    return tokens
 
 
 class Mutation(base.BlockSubComponent):
@@ -137,6 +151,7 @@ class Mutation(base.BlockSubComponent):
         # Defaulting for args
         if _children is None:
             _children = []
+
         if _argument_settings is None:
             if _arguments:
                 _argument_settings = ArgSettings(
@@ -193,7 +208,7 @@ class Mutation(base.BlockSubComponent):
                            bool(commons.safe_get(self.argument_defaults, 0)))
 
     @property
-    def parsed_proc_code(self) -> list[str, ArgumentPlaceholder] | None:
+    def parsed_proc_code(self) -> list[str, ArgumentType] | None:
         return parse_proc_code(self.proc_code)
 
     @staticmethod
@@ -292,10 +307,11 @@ class Mutation(base.BlockSubComponent):
                 # We can still work out argument defaults from parsing the proc code
                 if self.arguments[0].default is None:
                     _parsed = self.parsed_proc_code
-                    _arg_phs: Iterable[ArgumentPlaceholder] = filter(lambda tkn: isinstance(tkn, ArgumentPlaceholder), _parsed)
+                    _arg_phs: Iterable[ArgumentType] = filter(lambda tkn: isinstance(tkn, ArgumentType),
+                                                              _parsed)
                     for i, _arg_ph in enumerate(_arg_phs):
                         self.arguments[i].default = _arg_ph.default
 
             for _argument in self.arguments:
-                _argument.block = self.block
-                _argument.link_using_block()
+                _argument.mutation = self
+                _argument.link_using_mutation()

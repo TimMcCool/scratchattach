@@ -65,7 +65,7 @@
 ## Mutation
 
 - [ ] Proc code builder
-- [ ] get type of argument (bool/str) inside argument class
+- [x] get type of argument (bool/str) inside argument class
 - [ ] to/from json for args?
 
 ## Sprite

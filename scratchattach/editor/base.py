@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from . import project
     from . import sprite
     from . import block
+    from . import mutation
 
 
 class Base(ABC):
@@ -84,6 +85,23 @@ class NamedIDComponent(IDComponent, ABC):
 class BlockSubComponent(JSONSerializable, ABC):
     def __init__(self, _block: block.Block = None):
         self.block = _block
+
+    @property
+    def sprite(self) -> sprite.Sprite:
+        return self.block.sprite
+
+    @property
+    def project(self) -> project.Project:
+        return self.sprite.project
+
+
+class MutationSubComponent(JSONSerializable, ABC):
+    def __init__(self, _mutation: mutation.Mutation = None):
+        self.mutation = _mutation
+
+    @property
+    def block(self) -> block.Block:
+        return self.mutation.block
 
     @property
     def sprite(self) -> sprite.Sprite:
