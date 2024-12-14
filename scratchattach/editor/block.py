@@ -263,6 +263,13 @@ class Block(base.SpriteSubComponent):
     def new_id(self):
         return self.sprite.new_id
 
+    @property
+    def comment(self) -> comment.Comment | None:
+        for _comment in self.sprite.comments:
+            if _comment.block is self:
+                return _comment
+        return None
+
     @staticmethod
     def from_json(data: dict) -> Block:
         """
@@ -308,6 +315,12 @@ class Block(base.SpriteSubComponent):
             "shadow": self.is_shadow,
             "topLevel": self.is_top_level,
         }
+        _comment = self.comment
+        if _comment:
+            commons.noneless_update(_json, {
+                "comment": _comment.id
+            })
+
         if self.is_top_level:
             commons.noneless_update(_json, {
                 "x": self.x,

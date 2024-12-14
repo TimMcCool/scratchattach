@@ -139,7 +139,7 @@ class Sprite(base.ProjectSubcomponent):
 
     def add_block(self, _block: block.Block) -> block.Block:
         if _block.sprite is self:
-            if _block in self.blocks:
+            if _block in self.blocks.values():
                 return _block
 
         _block.sprite = self

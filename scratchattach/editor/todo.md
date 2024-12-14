@@ -11,6 +11,8 @@
 - [ ] bs4 styled search function
 - [ ] ScratchJR project parser (lol)
 - [ ] Error checking (for when you need to specify sprite etc)
+- [ ] Split json unpacking and the use of .from_json method so that it is easy to just extract json data (but not parse
+  it)
 
 ## Project
 

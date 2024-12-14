@@ -11,7 +11,9 @@ from typing import Final, Any
 from ..utils import exceptions
 
 DIGITS: Final[tuple[str]] = tuple("0123456789")
-ID_CHARS: Final[str] = string.ascii_letters + string.digits + string.punctuation
+
+ID_CHARS: Final[str] = string.ascii_letters + string.digits  # + string.punctuation
+# Strangely enough, it seems like something in string.punctuation causes issues. Not sure why
 
 
 def _read_json_number(_str: str) -> float | int:
