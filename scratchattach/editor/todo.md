@@ -38,13 +38,13 @@
 - [x] `stack_tree` old 'subtree' property: Get the 'ast' of this blockchain (a 'tree' structure - well actually a list
   of lists)
 - [x] `children` property - list of all blocks with this block as a parent except next block (any input obscurers)
-- [ ] Detection for scratch addons debug blocks
+- [x] Detection for turbowarp debug blocks
   (proc codes:
   `"​​log​​ %s",
   "​​breakpoint​​",
   "​​error​​ %s",
   "​​warn​​ %s"` - note: they all have ZWSPs)
-- [ ] Detection for `<is_compiled>` and `<is_turbowarp>` and `<is_forkphorus>` booleans
+- [x] Detection for `<is_compiled>` and `<is_turbowarp>` and `<is_forkphorus>` booleans
 
 ### Adding/removing blocks
 
@@ -60,7 +60,7 @@
 - [x] Add/edit fields
 - [x] Add mutation
 - [x] Add comment
-- [ ] Get comment
+- [x] Get comment
 
 ## Mutation
 

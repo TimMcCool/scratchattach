@@ -270,6 +270,55 @@ class Block(base.SpriteSubComponent):
                 return _comment
         return None
 
+    @property
+    def turbowarp_block_opcode(self):
+        """
+        :return: The 'opcode' if this is a turbowarp block: e.g.
+        - log
+        - breakpoint
+        - error
+        - warn
+        - is compiled?
+        - is turbowarp?
+        - is forkphorus?
+        If it's not one, just returns None
+        """
+        if self.opcode == "procedures_call":
+            if self.mutation:
+                if self.mutation.proc_code:
+                    # \u200B is a zero-width space
+                    if self.mutation.proc_code == "\u200B\u200Bbreakpoint\u200B\u200B":
+                        return "breakpoint"
+                    elif self.mutation.proc_code == "\u200B\u200Blog\u200B\u200B %s":
+                        return "log"
+                    elif self.mutation.proc_code == "\u200B\u200Berror\u200B\u200B %s":
+                        return "error"
+                    elif self.mutation.proc_code == "\u200B\u200Bwarn\u200B\u200B %s":
+                        return "warn"
+
+        elif self.opcode == "argument_reporter_boolean":
+            arg = self.fields.get("VALUE")
+
+            if arg is not None:
+                arg = arg.value
+                if isinstance(arg, str):
+                    arg = arg.lower()
+
+                    if arg == "is turbowarp?":
+                        return "is_turbowarp?"
+
+                    elif arg == "is compiled?":
+                        return "is_compiled?"
+
+                    elif arg == "is forkphorus?":
+                        return "is_forkphorus?"
+
+        return None
+
+    @property
+    def is_turbowarp_block(self):
+        return self.turbowarp_block_opcode is not None
+
     @staticmethod
     def from_json(data: dict) -> Block:
         """
@@ -453,3 +502,4 @@ class Block(base.SpriteSubComponent):
     def delete_chain(self):
         for _block in self.attached_chain:
             _block.delete_single_block()
+

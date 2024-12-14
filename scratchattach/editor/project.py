@@ -136,9 +136,10 @@ class Project(base.JSONSerializable):
         return Project(None, _meta, _extensions, _monitors, _sprites)
 
     @staticmethod
-    def from_sb3(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
+    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
         """
-        Load a project from an .sb3 file/bytes/file path
+        Load project JSON and assets from an .sb3 file/bytes/file path
+        :return: Project name, asset data, json string
         """
         _dir_for_name = None
 
@@ -161,19 +162,17 @@ class Project(base.JSONSerializable):
             _name = _dir_for_name.split('/')[-1]
             _name = '.'.join(_name.split('.')[:-1])
 
+        asset_data = []
         with data:
             # For if the sb3 is just JSON (e.g. if it's exported from scratchattach)
             try:
                 project = Project.from_json(json.load(data))
             except ValueError or UnicodeDecodeError:
                 with ZipFile(data) as archive:
-                    data = json.loads(archive.read("project.json"))
-
-                    project = Project.from_json(data)
+                    json_str = archive.read("project.json")
 
                     # Also load assets
                     if load_assets:
-                        asset_data = []
                         for filename in archive.namelist():
                             if filename != "project.json":
                                 md5_hash = filename.split('.')[0]
@@ -181,13 +180,26 @@ class Project(base.JSONSerializable):
                                 asset_data.append(
                                     asset.AssetFile(filename, archive.read(filename), md5_hash)
                                 )
-                        project.asset_data = asset_data
+
                     else:
                         warnings.warn(
                             "Loading sb3 without loading assets. When exporting the project, there may be errors due to assets not being uploaded to the Scratch website")
 
-            project.name = _name
-            return project
+            return _name, asset_data, json_str
+
+    @classmethod
+    def from_sb3(cls, data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
+        """
+        Load a project from an .sb3 file/bytes/file path
+        """
+        _name, asset_data, json_str = cls.load_json(data, load_assets, _name)
+        data = json.loads(json_str)
+
+        project = Project.from_json(data)
+        project.name = _name
+        project.asset_data = asset_data
+
+        return project
 
     @staticmethod
     def from_id(project_id: int, _name: str = None):
