@@ -131,11 +131,13 @@ def is_partial_json(_str: str, i: int = 0) -> bool:
         return False
 
 
-def is_valid_json(_str: str) -> bool:
+def is_valid_json(_str: Any) -> bool:
     try:
         json.loads(_str)
         return True
     except ValueError:
+        return False
+    except TypeError:
         return False
 
 
@@ -205,3 +207,13 @@ def sanitize_fn(filename: str):
         else:
             ret += '_'
     return ret
+
+
+class Singleton:
+    i_list = []
+
+    def __new__(cls, *args, **kwargs):
+        if len(cls.i_list) == 0:
+            return object.__new__(cls)
+        else:
+            return cls.i_list[0]

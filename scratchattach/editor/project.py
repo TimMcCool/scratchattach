@@ -7,15 +7,13 @@ from io import BytesIO, TextIOWrapper
 from typing import Iterable, Generator, BinaryIO
 from zipfile import ZipFile
 
-from . import base, meta, extension, monitor, sprite, asset, vlb, twconfig, comment
-
-from ..site.project import get_project
+from . import base, meta, extension, monitor, sprite, asset, vlb, twconfig, comment, commons
 from ..site import session
-
+from ..site.project import get_project
 from ..utils import exceptions
 
 
-class Project(base.JSONSerializable):
+class Project(base.JSONExtractable):
     def __init__(self, _name: str = None, _meta: meta.Meta = None, _extensions: Iterable[extension.Extension] = (),
                  _monitors: Iterable[monitor.Monitor] = (), _sprites: Iterable[sprite.Sprite] = (), *,
                  _asset_data: list[asset.AssetFile] = None, _session: session.Session = None):
@@ -31,7 +29,7 @@ class Project(base.JSONSerializable):
 
         self.meta = _meta
         self.extensions = _extensions
-        self.monitors = _monitors
+        self.monitors = list(_monitors)
         self.sprites = list(_sprites)
 
         self.asset_data = _asset_data
@@ -111,6 +109,10 @@ class Project(base.JSONSerializable):
             _ret += _sprite.all_ids
         return _ret
 
+    @property
+    def new_id(self):
+        return commons.gen_id()
+
     @staticmethod
     def from_json(data: dict):
         assert isinstance(data, dict)
@@ -165,9 +167,10 @@ class Project(base.JSONSerializable):
         asset_data = []
         with data:
             # For if the sb3 is just JSON (e.g. if it's exported from scratchattach)
-            try:
-                project = Project.from_json(json.load(data))
-            except ValueError or UnicodeDecodeError:
+            if commons.is_valid_json(data):
+                json_str = data
+
+            else:
                 with ZipFile(data) as archive:
                     json_str = archive.read("project.json")
 
@@ -195,7 +198,7 @@ class Project(base.JSONSerializable):
         _name, asset_data, json_str = cls.load_json(data, load_assets, _name)
         data = json.loads(json_str)
 
-        project = Project.from_json(data)
+        project = cls.from_json(data)
         project.name = _name
         project.asset_data = asset_data
 
@@ -245,3 +248,8 @@ class Project(base.JSONSerializable):
 
         if auto_open:
             os.system(f"explorer.exe \"{fp}\"")
+
+    def add_monitor(self, _monitor: monitor.Monitor) -> monitor.Monitor:
+        _monitor.project = self
+        _monitor.reporter_id = self.new_id
+        self.monitors.append(_monitor)

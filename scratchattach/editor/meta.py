@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from . import base, commons
 
@@ -9,7 +9,7 @@ from . import base, commons
 @dataclass(init=True, repr=True)
 class PlatformMeta(base.JSONSerializable):
     name: str = None
-    url: str = None
+    url: str = field(repr=True, default=None)
 
     def __bool__(self):
         return self.name is not None or self.url is not None

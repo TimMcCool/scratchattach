@@ -4,7 +4,7 @@ import warnings
 from dataclasses import dataclass
 from typing import Callable, Final
 
-from . import base, sprite, vlb, commons
+from . import base, sprite, vlb, commons, build_defaulting
 from ..utils import enums, exceptions
 
 
@@ -59,7 +59,7 @@ def is_prim_opcode(opcode: str):
 class Prim(base.SpriteSubComponent):
     def __init__(self, _primtype: PrimType | PrimTypes, _value: str | vlb.Variable | vlb.List | vlb.Broadcast = None,
                  _name: str = None, _id: str = None, _x: int = None,
-                 _y: int = None, _sprite: sprite.Sprite = None):
+                 _y: int = None, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         Class representing a Scratch string, number, angle, variable etc.
         Technically blocks but behave differently

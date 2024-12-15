@@ -29,7 +29,7 @@ class Monitor(base.ProjectSubcomponent):
         """
         assert isinstance(reporter, base.SpriteSubComponent) or reporter is None
 
-        self._reporter_id = reporter_id
+        self.reporter_id = reporter_id
         """
         ID referencing the VLB being referenced. Replaced with None during project instantiation, where the reporter attribute is updated
         """
@@ -61,11 +61,15 @@ class Monitor(base.ProjectSubcomponent):
         return f"Monitor<{self.opcode}>"
 
     @property
-    def reporter_id(self):
+    def id(self):
         if self.reporter is not None:
             return self.reporter.id
+            # if isinstance(self.reporter, str):
+            #     return self.reporter
+            # else:
+            #     return self.reporter.id
         else:
-            return self._reporter_id
+            return self.reporter_id
 
     @staticmethod
     def from_json(data: dict):
@@ -97,7 +101,7 @@ class Monitor(base.ProjectSubcomponent):
 
     def to_json(self):
         _json = {
-            "id": self.reporter_id,
+            "id": self.id,
             "mode": self.mode,
 
             "opcode": self.opcode,
@@ -126,10 +130,10 @@ class Monitor(base.ProjectSubcomponent):
         assert self.project is not None
 
         if self.opcode in ("data_variable", "data_listcontents", "event_broadcast_menu"):
-            new_vlb = self.project.find_vlb(self._reporter_id, "id")
+            new_vlb = self.project.find_vlb(self.reporter_id, "id")
             if new_vlb is not None:
                 self.reporter = new_vlb
-                self._reporter_id = None
+                self.reporter_id = None
 
     # @staticmethod
     # def from_reporter(reporter: Block, _id: str = None, mode: str = "default",

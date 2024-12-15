@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from typing import Iterable, Self
 
-from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape, prim, comment
+from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape, prim, comment, build_defaulting
 from ..utils import exceptions
 
 
@@ -13,7 +13,7 @@ class Block(base.SpriteSubComponent):
                  _inputs: dict[str, inputs.Input] = None, x: int = 0, y: int = 0, pos: tuple[int, int] = None,
 
                  _next: Block = None, _parent: Block = None,
-                 *, _next_id: str = None, _parent_id: str = None, _sprite: sprite.Sprite = None):
+                 *, _next_id: str = None, _parent_id: str = None, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         # Defaulting for args
         if _fields is None:
             _fields = {}
@@ -75,7 +75,7 @@ class Block(base.SpriteSubComponent):
     def set_mutation(self, _mutation: mutation.Mutation) -> Self:
         self.mutation = _mutation
         _mutation.block = self
-        # _mutation.link_arguments()
+        _mutation.link_arguments()
         return self
 
     def set_comment(self, _comment: comment.Comment) -> Self:
@@ -135,7 +135,9 @@ class Block(base.SpriteSubComponent):
         for _block_id, _block in self.sprite.blocks.items():
             if _block is self:
                 return _block_id
-        return None
+
+        # Let's just automatically assign ourselves an id
+        self.sprite.add_block(self)
 
     @property
     def parent_id(self):

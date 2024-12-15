@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from . import base, block, sprite
+from . import base, block, sprite, build_defaulting
 
 
 class Comment(base.IDComponent):
     def __init__(self, _id: str = None, _block: block.Block = None, x: int = 0, y: int = 0, width: int = 200,
                  height: int = 200, minimized: bool = False, text: str = '', *, _block_id: str = None,
-                 _sprite: sprite.Sprite = None, pos: tuple[int, int] = None):
+                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT, pos: tuple[int, int] = None):
         self.block = _block
         self._block_id = _block_id
         """

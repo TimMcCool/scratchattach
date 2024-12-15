@@ -8,13 +8,13 @@ from __future__ import annotations
 
 from typing import Literal
 
-from . import base, sprite
+from . import base, sprite, build_defaulting
 from ..utils import exceptions
 
 
 class Variable(base.NamedIDComponent):
     def __init__(self, _id: str, _name: str, _value: str | int | float = None, _is_cloud: bool = False,
-                 _sprite: sprite.Sprite = None):
+                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         Class representing a variable.
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Targets:~:text=variables,otherwise%20not%20present
@@ -67,7 +67,7 @@ class Variable(base.NamedIDComponent):
 
 class List(base.NamedIDComponent):
     def __init__(self, _id: str, _name: str, _value: list[str | int | float] = None,
-                 _sprite: sprite.Sprite = None):
+                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         Class representing a list.
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Targets:~:text=lists,as%20an%20array
@@ -99,7 +99,7 @@ class List(base.NamedIDComponent):
 
 
 class Broadcast(base.NamedIDComponent):
-    def __init__(self, _id: str, _name: str, _sprite: sprite.Sprite = None):
+    def __init__(self, _id: str, _name: str, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         Class representing a broadcast.
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Targets:~:text=broadcasts,in%20the%20stage
@@ -121,7 +121,7 @@ class Broadcast(base.NamedIDComponent):
 
 
 def construct(vlb_type: Literal["variable", "list", "broadcast"], _id: str = None, _name: str = None,
-              _sprite: sprite.Sprite = None) -> Variable | List | Broadcast:
+              _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT) -> Variable | List | Broadcast:
     if vlb_type == "variable":
         vlb_type = Variable
     elif vlb_type == "list":

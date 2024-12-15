@@ -6,10 +6,10 @@ from io import BytesIO, TextIOWrapper
 from typing import Any, BinaryIO
 from zipfile import ZipFile
 from typing import Iterable
-from . import base, project, vlb, asset, comment, prim, block, commons
+from . import base, project, vlb, asset, comment, prim, block, commons, build_defaulting
 
 
-class Sprite(base.ProjectSubcomponent):
+class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
     def __init__(self, is_stage: bool = False, name: str = '', _current_costume: int = 1, _layer_order: int = None,
                  _volume: int = 100,
                  _broadcasts: list[vlb.Broadcast] = None,
@@ -88,6 +88,13 @@ class Sprite(base.ProjectSubcomponent):
     def __repr__(self):
         return f"Sprite<{self.name}>"
 
+    def __enter__(self):
+        build_defaulting.stack_add_sprite(self)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        build_defaulting.pop_sprite(self)
+
     def link_subcomponents(self):
         self.link_prims()
         self.link_blocks()
@@ -137,19 +144,24 @@ class Sprite(base.ProjectSubcomponent):
         else:
             warnings.warn(f"Invalid 'VLB' {_vlb} of type: {type(_vlb)}")
 
-    def add_block(self, _block: block.Block) -> block.Block:
+    def add_block(self, _block: block.Block | prim.Prim) -> block.Block | prim.Prim:
         if _block.sprite is self:
             if _block in self.blocks.values():
                 return _block
 
         _block.sprite = self
 
-        self.blocks[self.new_id] = _block
-        _block.link_using_sprite()
+        if isinstance(_block, block.Block):
+            self.blocks[self.new_id] = _block
+            _block.link_using_sprite()
+
+        elif isinstance(_block, prim.Prim):
+            self.prims[self.new_id] = _block
+            _block.link_using_sprite()
 
         return _block
 
-    def add_chain(self, *chain: Iterable[block.Block]) -> block.Block:
+    def add_chain(self, *chain: Iterable[block.Block | prim.Prim]) -> block.Block | prim.Prim:
         """
         Adds a list of blocks to the sprite **AND RETURNS THE FIRST BLOCK**
         :param chain:
@@ -479,13 +491,16 @@ class Sprite(base.ProjectSubcomponent):
             ret += list(iterator)
 
         return ret
-
     @staticmethod
-    def from_sprite3(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
-        """
-                Load a project from an .sb3 file/bytes/file path
-                """
+    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
         _dir_for_name = None
+
+        if _name is None:
+            if hasattr(data, "name"):
+                _dir_for_name = data.name
+
+        if not isinstance(_name, str) and _name is not None:
+            _name = str(_name)
 
         if isinstance(data, bytes):
             data = BytesIO(data)
@@ -494,19 +509,24 @@ class Sprite(base.ProjectSubcomponent):
             _dir_for_name = data
             data = open(data, "rb")
 
+        if _name is None and _dir_for_name is not None:
+            # Remove any directory names and the file extension
+            _name = _dir_for_name.split('/')[-1]
+            _name = '.'.join(_name.split('.')[:-1])
+
+        asset_data = []
         with data:
             # For if the sprite3 is just JSON (e.g. if it's exported from scratchattach)
-            try:
-                _sprite = Sprite.from_json(json.load(data))
+            if commons.is_valid_json(data):
+                json_str = data
 
-            except ValueError or UnicodeDecodeError:
+            else:
                 with ZipFile(data) as archive:
-                    data = json.loads(archive.read("sprite.json"))
-                    _sprite = Sprite.from_json(data)
+                    json_str = archive.read("sprite.json")
 
                     # Also load assets
                     if load_assets:
-                        asset_data = []
+
                         for filename in archive.namelist():
                             if filename != "sprite.json":
                                 md5_hash = filename.split('.')[0]
@@ -514,9 +534,22 @@ class Sprite(base.ProjectSubcomponent):
                                 asset_data.append(
                                     asset.AssetFile(filename, archive.read(filename), md5_hash)
                                 )
-                        _sprite.asset_data = asset_data
                     else:
                         warnings.warn(
                             "Loading sb3 without loading assets. When exporting the project, there may be errors due to assets not being uploaded to the Scratch website")
 
-            return _sprite
+            return _name, asset_data, json_str
+
+    @classmethod
+    def from_sprite3(cls, data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
+        """
+        Load a project from an .sb3 file/bytes/file path
+        """
+        _name, asset_data, json_str = cls.load_json(data, load_assets, _name)
+        data = json.loads(json_str)
+
+        sprite = cls.from_json(data)
+        # Sprites already have names, so we probably don't want to set it
+        # sprite.name = _name
+        sprite.asset_data = asset_data
+        return sprite

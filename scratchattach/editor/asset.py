@@ -1,20 +1,17 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from hashlib import md5
 import requests
 
-from . import base, commons, sprite
+from . import base, commons, sprite, build_defaulting
 
 
-@dataclass(init=True)
+@dataclass(init=True, repr=True)
 class AssetFile:
     filename: str
-    _data: bytes = None
-    _md5: str = None
-
-    def __repr__(self):
-        return f"AssetFile(filename={self.filename!r})"
+    _data: bytes = field(repr=False, default=None)
+    _md5: str = field(repr=False, default=None)
 
     @property
     def data(self):
@@ -40,7 +37,7 @@ class Asset(base.SpriteSubComponent):
     def __init__(self,
                  name: str = "costume1",
                  file_name: str = "b7853f557e4426412e64bb3da6531a99.svg",
-                 _sprite: sprite.Sprite = None):
+                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         Represents a generic asset. Can be a sound or an image.
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Assets
@@ -126,7 +123,7 @@ class Costume(Asset):
                  bitmap_resolution=None,
                  rotation_center_x: int | float = 48,
                  rotation_center_y: int | float = 50,
-                 _sprite: sprite.Sprite = None):
+                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         A costume. An asset with additional properties
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Costumes
@@ -166,7 +163,7 @@ class Sound(Asset):
 
                  rate: int = None,
                  sample_count: int = None,
-                 _sprite: sprite.Sprite = None):
+                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         A sound. An asset with additional properties
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Sounds
