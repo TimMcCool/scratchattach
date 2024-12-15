@@ -209,11 +209,12 @@ def sanitize_fn(filename: str):
     return ret
 
 
-class Singleton:
-    i_list = []
+class Singleton(object):
+    _instance: Singleton
 
     def __new__(cls, *args, **kwargs):
-        if len(cls.i_list) == 0:
-            return object.__new__(cls)
+        if hasattr(cls, "_instance"):
+            return cls._instance
         else:
-            return cls.i_list[0]
+            cls._instance = super(Singleton, cls).__new__(cls)
+            return cls._instance
