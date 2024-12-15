@@ -3,15 +3,16 @@ from . import exceptions
 
 proxies = None
 
+
 class Requests:
     """
     Centralized HTTP request handler (for better error handling and proxies)
     """
 
     @staticmethod
-    def check_response(r : requests.Response):
+    def check_response(r: requests.Response):
         if r.status_code == 403 or r.status_code == 401:
-            raise exceptions.Unauthorized
+            raise exceptions.Unauthorized(f"Request content: {r.content}")
         if r.status_code == 500:
             raise exceptions.APIError("Internal Scratch server error")
         if r.status_code == 429:
@@ -24,16 +25,18 @@ class Requests:
     @staticmethod
     def get(url, *, data=None, json=None, headers=None, cookies=None, timeout=None, params=None):
         try:
-            r = requests.get(url, data=data, json=json, headers=headers, cookies=cookies, params=params, timeout=timeout, proxies=proxies)
+            r = requests.get(url, data=data, json=json, headers=headers, cookies=cookies, params=params,
+                             timeout=timeout, proxies=proxies)
         except Exception as e:
             raise exceptions.FetchError(e)
         Requests.check_response(r)
         return r
-    
+
     @staticmethod
-    def post(url, *, data=None, json=None, headers=None, cookies=None, timeout=None, params=None):
+    def post(url, *, data=None, json=None, headers=None, cookies=None, timeout=None, params=None, files=None):
         try:
-            r = requests.post(url, data=data, json=json, headers=headers, cookies=cookies, params=params, timeout=timeout, proxies=proxies)
+            r = requests.post(url, data=data, json=json, headers=headers, cookies=cookies, params=params,
+                              timeout=timeout, proxies=proxies, files=files)
         except Exception as e:
             raise exceptions.FetchError(e)
         Requests.check_response(r)
@@ -42,7 +45,8 @@ class Requests:
     @staticmethod
     def delete(url, *, data=None, json=None, headers=None, cookies=None, timeout=None, params=None):
         try:
-            r = requests.delete(url, data=data, json=json, headers=headers, cookies=cookies, params=params, timeout=timeout, proxies=proxies)
+            r = requests.delete(url, data=data, json=json, headers=headers, cookies=cookies, params=params,
+                                timeout=timeout, proxies=proxies)
         except Exception as e:
             raise exceptions.FetchError(e)
         Requests.check_response(r)
@@ -51,8 +55,10 @@ class Requests:
     @staticmethod
     def put(url, *, data=None, json=None, headers=None, cookies=None, timeout=None, params=None):
         try:
-            r = requests.put(url, data=data, json=json, headers=headers, cookies=cookies, params=params, timeout=timeout, proxies=proxies)
+            r = requests.put(url, data=data, json=json, headers=headers, cookies=cookies, params=params,
+                             timeout=timeout, proxies=proxies)
         except Exception as e:
             raise exceptions.FetchError(e)
         Requests.check_response(r)
         return r
+

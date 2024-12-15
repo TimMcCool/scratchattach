@@ -167,8 +167,8 @@ class CloudRequests(CloudEvents):
     def _set_FROM_HOST_var(self, value):
         try:
             self.cloud.set_var(f"FROM_HOST_{self.used_cloud_vars[self.current_var]}", value)
-        except exceptions.ConnectionError:
-            self.call_even("on_disconnect")
+        except exceptions.CloudConnectionError:
+            self.call_event("on_disconnect")
         except Exception as e:
             print("scratchattach: internal error while responding (please submit a bug report on GitHub):", e)
         self.current_var += 1
