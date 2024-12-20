@@ -15,8 +15,7 @@ headers: Final = {
     "x-csrftoken": "a",
     "x-requested-with": "XMLHttpRequest",
     "referer": "https://scratch.mit.edu",
-}  # headers recommended for accessing API endpoints that don't require verification
-
+}
 empty_project_json: Final = {
     'targets': [
         {

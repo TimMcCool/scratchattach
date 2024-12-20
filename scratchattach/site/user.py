@@ -1,4 +1,5 @@
 """Session class and login function"""
+from __future__ import annotations
 
 import json
 import random
@@ -262,7 +263,7 @@ class User(BaseSiteComponent):
             studios.append(_studio)
         return studios
 
-    def projects(self, *, limit=40, offset=0):
+    def projects(self, *, limit=40, offset=0) -> list[project.Project]:
         """
         Returns:
             list<projects.projects.Project>: The user's shared projects

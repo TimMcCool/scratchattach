@@ -8,19 +8,19 @@ from dataclasses import dataclass
 from typing import Final
 
 from . import commons
-
 from ..utils.enums import _EnumWrapper
 
 
 class _Yesnt(commons.Singleton):
     """I can't really tell you if yesn't means yes or no; is it true or false? It depends."""
+
     def __bool__(self):
         raise TypeError("I can't really tell you if yesn't means yes or no; is it true or false? It depends.")
 
 
 YESNT: Final[_Yesnt] = _Yesnt()
 """Value used when neither True nor False is applicable (when it depends on other factors)"""
-print(id(YESNT.i_list))
+
 
 @dataclass(init=True, repr=True)
 class BlockShape:
@@ -39,7 +39,8 @@ class BlockShape:
     @property
     def is_attachable(self):
         if self.is_cap is YESNT:
-            raise TypeError("Can't tell if the block is attachable because we can't be sure if it is a cap block or not (stop block)")
+            raise TypeError(
+                "Can't tell if the block is attachable because we can't be sure if it is a cap block or not (stop block)")
         return not self.is_cap and not self.is_reporter
 
 

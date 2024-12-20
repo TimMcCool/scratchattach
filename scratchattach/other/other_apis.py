@@ -3,9 +3,9 @@
 import json
 
 from ..utils import commons
+from ..utils.enums import Languages, Language, TTSVoices, TTSVoice
 from ..utils.exceptions import BadRequest, InvalidLanguage, InvalidTTSGender
 from ..utils.requests import Requests as requests
-from ..utils.enums import Languages, Language, TTSVoices, TTSVoice
 
 
 # --- Front page ---
@@ -145,6 +145,13 @@ def scratch_team_members() -> dict:
     text = text.split("\"}]')")[0] + "\"}]"
 
     return json.loads(text)
+
+
+def send_password_reset_email(username: str = None, email: str = None):
+    requests.post("https://scratch.mit.edu/accounts/password_reset/", data={
+        "username": username,
+        "email": email,
+    }, headers=commons.headers, cookies={"scratchcsrftoken": 'a'})
 
 
 def translate(language: str | Languages, text: str = "hello"):
