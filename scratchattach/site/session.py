@@ -33,6 +33,8 @@ from ..utils.requests import Requests as requests
 
 CREATE_PROJECT_USES = []
 CREATE_STUDIO_USES = []
+CREATE_CLASS_USES = []
+
 
 
 class Session(BaseSiteComponent):
@@ -532,6 +534,28 @@ class Session(BaseSiteComponent):
         return new_studio
 
     def create_class(self, title: str, desc: str = ''):
+        """
+        Create a class on the scratch website
+
+        Warning:
+            Don't spam this method - it WILL get you banned from Scratch.
+            To prevent accidental spam, a rate limit (5 classes per minute) is implemented for this function.
+        """
+        global CREATE_CLASS_USES
+        if len(CREATE_CLASS_USES) < 5:
+            CREATE_CLASS_USES.insert(0, time.time())
+        else:
+            if CREATE_CLASS_USES[-1] < time.time() - 300:
+                CREATE_CLASS_USES.pop()
+            else:
+                raise exceptions.BadRequest(
+                    "Rate limit for creating Scratch classes exceeded.\n"
+                    "This rate limit is enforced by scratchattach, not by the Scratch API.\n"
+                    "For security reasons, it cannot be turned off.\n\n"
+                    "Don't spam-create classes, it WILL get you banned.")
+            CREATE_CLASS_USES.insert(0, time.time())
+
+
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't create class")
 
