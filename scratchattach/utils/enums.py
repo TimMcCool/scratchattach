@@ -2,6 +2,7 @@
 List of supported languages of scratch's translate and text2speech extensions.
 Adapted from https://translate-service.scratch.mit.edu/supported?language=en
 """
+from __future__ import annotations
 
 from enum import Enum
 from dataclasses import dataclass
@@ -36,8 +37,14 @@ class _EnumWrapper(Enum):
             item_obj = item.value
 
             try:
-                if apply_func(getattr(item_obj, by)) == value:
+                if by is None:
+                    _val = item_obj
+                else:
+                    _val = getattr(item_obj, by)
+
+                if apply_func(_val) == value:
                     return item_obj
+                  
             except TypeError:
                 pass
 

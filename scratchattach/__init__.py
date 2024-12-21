@@ -23,3 +23,5 @@ from .site.studio import Studio, get_studio, search_studios, explore_studios
 from .site.classroom import Classroom, get_classroom
 from .site.user import User, get_user
 from .site._base import BaseSiteComponent
+
+from . import editor
