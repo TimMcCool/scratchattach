@@ -54,7 +54,7 @@ class Session(BaseSiteComponent):
     '''
 
     def __str__(self):
-        return "Login for account: {self.username}"
+        return f"Login for account: {self.username}"
 
     def __init__(self, **entries):
 
