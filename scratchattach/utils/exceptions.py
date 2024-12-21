@@ -90,7 +90,6 @@ class CommentNotFound(Exception):
 
 
 # Invalid inputs
-
 class InvalidLanguage(Exception):
     """
     Raised when an invalid language/language code/language object is provided, for TTS or Translate
@@ -103,7 +102,6 @@ class InvalidTTSGender(Exception):
     Raised when an invalid TTS gender is provided.
     """
     pass
-
 
 # API errors:
 

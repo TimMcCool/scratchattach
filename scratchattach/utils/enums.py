@@ -44,6 +44,7 @@ class _EnumWrapper(Enum):
 
                 if apply_func(_val) == value:
                     return item_obj
+                  
             except TypeError:
                 pass
 
