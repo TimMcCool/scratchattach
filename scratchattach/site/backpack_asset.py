@@ -1,7 +1,12 @@
+from __future__ import annotations
+
 import time
+import logging
+
 from ._base import BaseSiteComponent
 from ..utils.requests import Requests as requests
 from ..utils import exceptions
+
 
 class BackpackAsset(BaseSiteComponent):
     """
@@ -32,8 +37,8 @@ class BackpackAsset(BaseSiteComponent):
         self.__dict__.update(entries)
 
     def update(self):
-        print("Warning: BackpackAsset objects can't be updated")
-        return False # Objects of this type cannot be updated
+        logging.warning("Warning: BackpackAsset objects can't be updated")
+        return False  # Objects of this type cannot be updated
     
     def _update_from_dict(self, data) -> bool:
         try: self.id = data["id"]
@@ -52,21 +57,21 @@ class BackpackAsset(BaseSiteComponent):
         except Exception: pass
         return True
 
-    def download(self, *, dir=""):
+    def download(self, *, fp: str = ''):
         """
         Downloads the asset content to the given directory. The given filename is equal to the value saved in the .filename attribute.
 
         Args:
-            dir (str): The path of the directory the file will be saved in.
+            fp (str): The path of the directory the file will be saved in.
         """
-        if not (dir.endswith("/") or dir.endswith("\\")):
-            dir = dir+"/"
+        if not (fp.endswith("/") or fp.endswith("\\")):
+            fp = fp + "/"
         try:
             response = requests.get(
                 self.download_url,
                 timeout=10,
             )
-            open(f"{dir}{self.filename}", "wb").write(response.content)
+            open(f"{fp}{self.filename}", "wb").write(response.content)
         except Exception as e:
             raise (
                 exceptions.FetchError(
@@ -79,6 +84,6 @@ class BackpackAsset(BaseSiteComponent):
 
         return requests.delete(
             f"https://backpack.scratch.mit.edu/{self._session.username}/{self.id}",
-            headers = self._session._headers,
-            timeout = 10,
+            headers=self._session._headers,
+            timeout=10,
         ).json()

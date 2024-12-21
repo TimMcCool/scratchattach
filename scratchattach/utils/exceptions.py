@@ -1,4 +1,5 @@
 # Authentication / Authorization:
+from __future__ import annotations
 
 class Unauthenticated(Exception):
     """
@@ -28,7 +29,9 @@ class Unauthorized(Exception):
     """
 
     def __init__(self, message=""):
-        self.message = "The user corresponding to the connected login / session is not allowed to perform this action."
+        self.message = (
+            f"The user corresponding to the connected login / session is not allowed to perform this action. "
+            f"{message}")
         super().__init__(self.message)
 
 
@@ -88,6 +91,7 @@ class CommentNotFound(Exception):
 
 
 # Invalid inputs
+
 class InvalidLanguage(Exception):
     """
     Raised when an invalid language/language code/language object is provided, for TTS or Translate
@@ -100,6 +104,7 @@ class InvalidTTSGender(Exception):
     Raised when an invalid TTS gender is provided.
     """
     pass
+
 
 # API errors:
 

@@ -1,11 +1,13 @@
 """Other Scratch API-related functions"""
+from __future__ import annotations
 
 import json
+from dataclasses import dataclass, field
 
 from ..utils import commons
+from ..utils.enums import Languages, Language, TTSVoices, TTSVoice
 from ..utils.exceptions import BadRequest, InvalidLanguage, InvalidTTSGender
 from ..utils.requests import Requests as requests
-from ..utils.enums import Languages, Language, TTSVoices, TTSVoice
 
 
 # --- Front page ---
@@ -136,6 +138,68 @@ def get_resource_urls():
     return requests.get("https://resources.scratch.mit.edu/localized-urls.json").json()
 
 
+# --- ScratchTools endpoints ---
+def scratchtools_online_status(username: str) -> bool | None:
+    """
+    Get the online status of an account.
+    :return: Boolean whether the account is online; if they do not use scratchtools, return None.
+    """
+    data = requests.get(f"https://data.scratchtools.app/isonline/{username}").json()
+
+    if data["scratchtools"]:
+        return data["online"]
+    else:
+        return None
+
+
+def scratchtools_beta_user(username: str) -> bool:
+    """
+    Get whether a user is a scratchtools beta tester (I think that's what it means)
+    """
+    return requests.get(f"https://data.scratchtools.app/isbeta/{username}").json()["beta"]
+
+
+def scratchtools_display_name(username: str) -> str | None:
+    """
+    Get the display name of a user for scratchtools. Returns none if there is no display name or the username is invalid
+    """
+    return requests.get(f"https://data.scratchtools.app/name/{username}").json().get("displayName")
+
+
+@dataclass(init=True, repr=True)
+class ScratchToolsTutorial:
+    title: str
+    description: str = field(repr=False)
+    id: str
+
+    @classmethod
+    def from_json(cls, data: dict[str, str]) -> ScratchToolsTutorial:
+        return cls(**data)
+
+    @property
+    def yt_link(self):
+        return f"https://www.youtube.com/watch?v={self.id}"
+
+
+def scratchtools_tutorials() -> list[ScratchToolsTutorial]:
+    """
+    Returns a list of scratchtools tutorials (just yt videos)
+    """
+    data_list = requests.get("https://data.scratchtools.app/tutorials/").json()
+    return [ScratchToolsTutorial.from_json(data) for data in data_list]
+
+
+def scratchtools_emoji_status(username: str) -> str | None:
+    return requests.get(f"https://data.scratchtools.app/status/{username}").json().get("status",
+                                                                                       '🍪')  # Cookie is the default status, even if the user does not use ScratchTools
+
+
+def scratchtools_pinned_comment(project_id: int) -> dict[str, str | int]:
+    data = requests.get(f"https://data.scratchtools.app/pinned/{project_id}/").json()
+    # Maybe use this info to instantiate a partial comment object?
+    return data
+
+
 # --- Misc ---
 # I'm not sure what to label this as
 def scratch_team_members() -> dict:
@@ -145,6 +209,13 @@ def scratch_team_members() -> dict:
     text = text.split("\"}]')")[0] + "\"}]"
 
     return json.loads(text)
+
+
+def send_password_reset_email(username: str = None, email: str = None):
+    requests.post("https://scratch.mit.edu/accounts/password_reset/", data={
+        "username": username,
+        "email": email,
+    }, headers=commons.headers, cookies={"scratchcsrftoken": 'a'})
 
 
 def translate(language: str | Languages, text: str = "hello"):

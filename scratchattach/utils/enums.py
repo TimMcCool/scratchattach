@@ -2,6 +2,7 @@
 List of supported languages of scratch's translate and text2speech extensions.
 Adapted from https://translate-service.scratch.mit.edu/supported?language=en
 """
+from __future__ import annotations
 
 from enum import Enum
 from dataclasses import dataclass

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from ..utils.requests import Requests as requests
 from threading import Thread

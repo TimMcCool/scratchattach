@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from threading import Thread
 from ..utils import exceptions

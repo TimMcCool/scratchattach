@@ -1,4 +1,5 @@
 """FilterBot class"""
+from __future__ import annotations
 
 from .message_events import MessageEvents
 import time
