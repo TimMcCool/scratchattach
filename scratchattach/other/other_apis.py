@@ -194,6 +194,12 @@ def scratchtools_emoji_status(username: str) -> str | None:
                                                                                        '🍪')  # Cookie is the default status, even if the user does not use ScratchTools
 
 
+def scratchtools_pinned_comment(project_id: int) -> dict[str, str | int]:
+    data = requests.get(f"https://data.scratchtools.app/pinned/{project_id}/").json()
+    # Maybe use this info to instantiate a partial comment object?
+    return data
+
+
 # --- Misc ---
 # I'm not sure what to label this as
 def scratch_team_members() -> dict:
