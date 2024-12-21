@@ -1,14 +1,7 @@
 """Activity and CloudActivity class"""
+from __future__ import annotations
 
-import json
-import re
-import time
-
-from . import user
-from . import session
-from . import project
-from . import studio
-from . import forum, comment
+from . import user, project, studio, forum, comment
 from ..utils import exceptions
 from ._base import BaseSiteComponent
 from ..utils.commons import headers
@@ -30,6 +23,17 @@ class Activity(BaseSiteComponent):
         # Set attributes every Activity object needs to have:
         self._session = None
         self.raw = None
+
+        # Possible attributes
+        self.project_id = None
+        self.gallery_id = None
+        self.username = None
+        self.followed_username = None
+        self.recipient_username = None
+        self.comment_type = None
+        self.comment_obj_id = None
+        self.comment_obj_title = None
+        self.comment_id = None
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)
@@ -93,13 +97,13 @@ class Activity(BaseSiteComponent):
         May also return None if the activity type is unknown.
         """
         
-        if "project" in self.type: # target is a project
+        if "project" in self.type:  # target is a project
             if "target_id" in self.__dict__:
                 return self._make_linked_object("id", self.target_id, project.Project, exceptions.ProjectNotFound)
             if "project_id" in self.__dict__:
                 return self._make_linked_object("id", self.project_id, project.Project, exceptions.ProjectNotFound)
             
-        if self.type == "becomecurator" or self.type == "followstudio": # target is a studio
+        if self.type == "becomecurator" or self.type == "followstudio":  # target is a studio
             if "target_id" in self.__dict__:
                 return self._make_linked_object("id", self.target_id, studio.Studio, exceptions.StudioNotFound)
             if "gallery_id" in self.__dict__:
@@ -108,20 +112,23 @@ class Activity(BaseSiteComponent):
             if "username" in self.__dict__:
                 return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
             
-        if self.type == "followuser" or "curator" in self.type: # target is a user
+        if self.type == "followuser" or "curator" in self.type:  # target is a user
             if "target_name" in self.__dict__:
                 return self._make_linked_object("username", self.target_name, user.User, exceptions.UserNotFound)
             if "followed_username" in self.__dict__:
                 return self._make_linked_object("username", self.followed_username, user.User, exceptions.UserNotFound)
-        if "recipient_username" in self.__dict__: # the recipient_username field always indicates the target is a user
+        if "recipient_username" in self.__dict__:  # the recipient_username field always indicates the target is a user
             return self._make_linked_object("username", self.recipient_username, user.User, exceptions.UserNotFound)
         
-        if self.type == "addcomment": # target is a comment
+        if self.type == "addcomment":  # target is a comment
             if self.comment_type == 0:
                 _c = project.Project(id=self.comment_obj_id, author_name=self._session.username, _session=self._session).comment_by_id(self.comment_id)
             if self.comment_type == 1:
                 _c = user.User(username=self.comment_obj_title, _session=self._session).comment_by_id(self.comment_id)
             if self.comment_type == 2:
                 _c = user.User(id=self.comment_obj_id, _session=self._session).comment_by_id(self.comment_id)          
+            else:
+                raise ValueError(f"{self.comment_type} is an invalid comment type")
+
             return _c
         

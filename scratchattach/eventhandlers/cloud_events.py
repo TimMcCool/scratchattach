@@ -1,4 +1,5 @@
 """CloudEvents class"""
+from __future__ import annotations
 
 from ..cloud import cloud
 from ._base import BaseEventHandler

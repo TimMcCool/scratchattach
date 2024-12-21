@@ -1,4 +1,5 @@
-"""Session class and login function"""
+"""User class"""
+from __future__ import annotations
 
 import json
 import random

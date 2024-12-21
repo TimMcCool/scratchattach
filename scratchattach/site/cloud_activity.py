@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 import time
 from ._base import BaseSiteComponent
+
+
 
 class CloudActivity(BaseSiteComponent):
     """

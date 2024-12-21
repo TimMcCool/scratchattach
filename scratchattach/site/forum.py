@@ -1,4 +1,5 @@
 """ForumTopic and ForumPost classes"""
+from __future__ import annotations
 
 from . import user
 from ..utils.commons import headers

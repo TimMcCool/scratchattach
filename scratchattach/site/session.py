@@ -1,4 +1,5 @@
 """Session class and login function"""
+from __future__ import annotations
 
 import base64
 import datetime
@@ -15,14 +16,9 @@ from typing import Type
 
 from bs4 import BeautifulSoup
 
-from . import activity
-from . import classroom
-from . import forum
-from . import studio
-from . import user, project, backpack_asset
-from ._base import BaseSiteComponent
+from . import activity, classroom, forum, studio, user, project, backpack_asset
 # noinspection PyProtectedMember
-# Pycharm doesn't like that you are importing a protected member '_base'
+from ._base import BaseSiteComponent
 from ..cloud import cloud, _base
 from ..eventhandlers import message_events, filterbot
 from ..other import project_json_capabilities
@@ -34,7 +30,6 @@ from ..utils.requests import Requests as requests
 CREATE_PROJECT_USES = []
 CREATE_STUDIO_USES = []
 CREATE_CLASS_USES = []
-
 
 
 class Session(BaseSiteComponent):
@@ -51,8 +46,8 @@ class Session(BaseSiteComponent):
         banned: Returns True if the associated account is banned
     """
 
-    def __str__(self):
-        return f"Login for account: {self.username}"
+    def __str__(self) -> str:
+        return f"Login for account {self.username!r}"
 
     def __init__(self, **entries):
         # Info on how the .update method has to fetch the data:
@@ -113,7 +108,7 @@ class Session(BaseSiteComponent):
                           f"Some features may not work properly.")
         return True
 
-    def connect_linked_user(self) -> 'user.User':
+    def connect_linked_user(self) -> user.User:
         """
         Gets the user associated with the login / session.
 
@@ -191,7 +186,7 @@ class Session(BaseSiteComponent):
         requests.post("https://scratch.mit.edu/accounts/logout/",
                       headers=self._headers, cookies=self._cookies)
 
-    def messages(self, *, limit: int = 40, offset: int = 0, date_limit=None, filter_by=None) -> 'activity.Activity':
+    def messages(self, *, limit: int = 40, offset: int = 0, date_limit=None, filter_by=None) -> list[activity.Activity]:
         """
         Returns the messages.
 
@@ -223,7 +218,8 @@ class Session(BaseSiteComponent):
             limit=limit, offset=offset, _headers=self._headers, cookies=self._cookies
         )
 
-    def classroom_alerts(self, _classroom: classroom.Classroom | int = None, mode: str = "Last created", page: int = None):
+    def classroom_alerts(self, _classroom: classroom.Classroom | int = None, mode: str = "Last created",
+                         page: int = None):
         if isinstance(_classroom, classroom.Classroom):
             _classroom = _classroom.id
 
@@ -266,7 +262,7 @@ class Session(BaseSiteComponent):
 
     # Front-page-related stuff:
 
-    def feed(self, *, limit=20, offset=0, date_limit=None) -> list['activity.Activity']:
+    def feed(self, *, limit=20, offset=0, date_limit=None) -> list[activity.Activity]:
         """
         Returns the "What's happening" section (frontpage).
 
@@ -286,7 +282,7 @@ class Session(BaseSiteComponent):
         # for more consistent names, this method was renamed
         return self.feed(limit=limit, offset=offset, date_limit=date_limit)  # for backwards compatibility with v1
 
-    def loved_by_followed_users(self, *, limit=40, offset=0) -> list['project.Project']:
+    def loved_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
         """
         Returns the "Projects loved by Scratchers I'm following" section (frontpage).
 
@@ -302,7 +298,7 @@ class Session(BaseSiteComponent):
 
     """
     These methods are disabled because it is unclear if there is any case in which the response is not empty. 
-    def shared_by_followed_users(self, *, limit=40, offset=0) -> list['project.Project']:
+    def shared_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
         '''
         Returns the "Projects by Scratchers I'm following" section (frontpage).
         This section is only visible to old accounts (according to the Scratch wiki).
@@ -335,21 +331,21 @@ class Session(BaseSiteComponent):
         return commons.parse_object_list(data, project.Project, self)"""
 
     # -- Project JSON editing capabilities ---
-
+    # These are set to staticmethods right now, but they probably should not be
     @staticmethod
-    def connect_empty_project_pb() -> 'project_json_capabilities.ProjectBody':
+    def connect_empty_project_pb() -> project_json_capabilities.ProjectBody:
         pb = project_json_capabilities.ProjectBody()
         pb.from_json(empty_project_json)
         return pb
 
     @staticmethod
-    def connect_pb_from_dict(project_json: dict) -> 'project_json_capabilities.ProjectBody':
+    def connect_pb_from_dict(project_json: dict) -> project_json_capabilities.ProjectBody:
         pb = project_json_capabilities.ProjectBody()
         pb.from_json(project_json)
         return pb
 
     @staticmethod
-    def connect_pb_from_file(path_to_file) -> 'project_json_capabilities.ProjectBody':
+    def connect_pb_from_file(path_to_file) -> project_json_capabilities.ProjectBody:
         pb = project_json_capabilities.ProjectBody()
         # noinspection PyProtectedMember
         # _load_sb3_file starts with an underscore
@@ -396,7 +392,7 @@ class Session(BaseSiteComponent):
     # --- Search ---
 
     def search_projects(self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40,
-                        offset: int = 0) -> list['project.Project']:
+                        offset: int = 0) -> list[project.Project]:
         """
         Uses the Scratch search to search projects.
 
@@ -417,7 +413,7 @@ class Session(BaseSiteComponent):
         return commons.parse_object_list(response, project.Project, self)
 
     def explore_projects(self, *, query: str = "*", mode: str = "trending", language: str = "en", limit: int = 40,
-                         offset: int = 0) -> list['project.Project']:
+                         offset: int = 0) -> list[project.Project]:
         """
         Gets projects from the explore page.
 
@@ -440,7 +436,7 @@ class Session(BaseSiteComponent):
         return commons.parse_object_list(response, project.Project, self)
 
     def search_studios(self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40,
-                       offset: int = 0) -> list['studio.Studio']:
+                       offset: int = 0) -> list[studio.Studio]:
         if not query:
             raise ValueError("The query can't be empty for search")
         response = commons.api_iterative(
@@ -449,7 +445,7 @@ class Session(BaseSiteComponent):
         return commons.parse_object_list(response, studio.Studio, self)
 
     def explore_studios(self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40,
-                        offset: int = 0) -> list['studio.Studio']:
+                        offset: int = 0) -> list[studio.Studio]:
         if not query:
             raise ValueError("The query can't be empty for explore")
         response = commons.api_iterative(
@@ -460,7 +456,7 @@ class Session(BaseSiteComponent):
     # --- Create project API ---
 
     def create_project(self, *, title: str = None, project_json: dict = empty_project_json,
-                       parent_id=None) -> 'project.Project':  # not working
+                       parent_id=None) -> project.Project:  # not working
         """
         Creates a project on the Scratch website.
 
@@ -495,7 +491,7 @@ class Session(BaseSiteComponent):
                                  headers=self._headers, json=project_json).json()
         return self.connect_project(response["content-name"])
 
-    def create_studio(self, *, title=None, description: str = None):
+    def create_studio(self, *, title: str = None, description: str = None) -> studio.Studio:
         """
         Create a studio on the scratch website
 
@@ -533,7 +529,7 @@ class Session(BaseSiteComponent):
 
         return new_studio
 
-    def create_class(self, title: str, desc: str = ''):
+    def create_class(self, title: str, desc: str = '') -> classroom.Classroom:
         """
         Create a class on the scratch website
 
@@ -555,7 +551,6 @@ class Session(BaseSiteComponent):
                     "Don't spam-create classes, it WILL get you banned.")
             CREATE_CLASS_USES.insert(0, time.time())
 
-
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't create class")
 
@@ -569,7 +564,7 @@ class Session(BaseSiteComponent):
     # --- My stuff page ---
 
     def mystuff_projects(self, filter_arg: str = "all", *, page: int = 1, sort_by: str = '', descending: bool = True) \
-            -> list['project.Project']:
+            -> list[project.Project]:
         """
         Gets the projects from the "My stuff" page.
 
@@ -618,7 +613,7 @@ class Session(BaseSiteComponent):
             raise exceptions.FetchError()
 
     def mystuff_studios(self, filter_arg: str = "all", *, page: int = 1, sort_by: str = "", descending: bool = True) \
-            -> list['studio.Studio']:
+            -> list[studio.Studio]:
         if descending:
             ascsort = ""
             descsort = sort_by
@@ -627,11 +622,11 @@ class Session(BaseSiteComponent):
             descsort = ""
         try:
             targets = requests.get(
-                f"https://scratch.mit.edu/site-api/galleries/{filter_arg}/"
-                f"?page={page}&ascsort={ascsort}&descsort={descsort}",
+                f"https://scratch.mit.edu/site-api/galleries/{filter_arg}/",
+                params={"page": page, "ascsort": ascsort, "descsort": descsort},
                 headers=headers,
                 cookies=self._cookies,
-                timeout=10,
+                timeout=10
             ).json()
             studios = []
             for target in targets:
@@ -697,12 +692,12 @@ class Session(BaseSiteComponent):
                 _session=self))
         return classes
 
-    def backpack(self, limit: int = 20, offset: int = 0) -> list[dict]:
+    def backpack(self, limit: int = 20, offset: int = 0) -> list[backpack_asset.BackpackAsset]:
         """
         Lists the assets that are in the backpack of the user associated with the session.
 
         Returns:
-            list<dict>: List that contains the backpack items as dicts
+            list<backpack_asset.BackpackAsset>: List that contains the backpack items
         """
         data = commons.api_iterative(
             f"https://backpack.scratch.mit.edu/{self._username}",
@@ -710,7 +705,7 @@ class Session(BaseSiteComponent):
         )
         return commons.parse_object_list(data, backpack_asset.BackpackAsset, self)
 
-    def delete_from_backpack(self, backpack_asset_id) -> 'backpack_asset.BackpackAsset':
+    def delete_from_backpack(self, backpack_asset_id) -> backpack_asset.BackpackAsset:
         """
         Deletes an asset from the backpack.
 
@@ -746,7 +741,7 @@ class Session(BaseSiteComponent):
         """
         return CloudClass(project_id=project_id, _session=self)
 
-    def connect_scratch_cloud(self, project_id) -> 'cloud.ScratchCloud':
+    def connect_scratch_cloud(self, project_id) -> cloud.ScratchCloud:
         """
         Returns:
             scratchattach.cloud.ScratchCloud: An object representing the Scratch cloud of a project.
@@ -754,7 +749,7 @@ class Session(BaseSiteComponent):
         return cloud.ScratchCloud(project_id=project_id, _session=self)
 
     def connect_tw_cloud(self, project_id, *, purpose="", contact="",
-                         cloud_host="wss://clouddata.turbowarp.org") -> 'cloud.TwCloud':
+                         cloud_host="wss://clouddata.turbowarp.org") -> cloud.TwCloud:
         """
         Returns:
             scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
@@ -780,7 +775,7 @@ class Session(BaseSiteComponent):
         # _get_object is protected
         return commons._get_object(identificator_name, identificator, Class, NotFoundException, self)
 
-    def connect_user(self, username: str) -> 'user.User':
+    def connect_user(self, username: str) -> user.User:
         """
         Gets a user using this session, connects the session to the User object to allow authenticated actions
 
@@ -792,7 +787,7 @@ class Session(BaseSiteComponent):
         """
         return self._make_linked_object("username", username, user.User, exceptions.UserNotFound)
 
-    def find_username_from_id(self, user_id: int):
+    def find_username_from_id(self, user_id: int) -> str:
         """
         Warning:
             Every time this functions is run, a comment on your profile is posted and deleted. Therefore you shouldn't run this too often.
@@ -818,7 +813,7 @@ class Session(BaseSiteComponent):
             raise exceptions.UserNotFound()
         return username
 
-    def connect_user_by_id(self, user_id: int) -> 'user.User':
+    def connect_user_by_id(self, user_id: int) -> user.User:
         """
         Gets a user using this session, connects the session to the User object to allow authenticated actions
 
@@ -828,7 +823,7 @@ class Session(BaseSiteComponent):
         3) fetches other information about the user using Scratch's api.scratch.mit.edu/users/username API.
 
         Warning:
-            Every time this functions is run, a comment on your profile is posted and deleted. Therefore you shouldn't run this too often.
+            Every time this functions is run, a comment on your profile is posted and deleted. Therefore, you shouldn't run this too often.
 
         Args:
             user_id (int): User ID of the requested user
@@ -839,7 +834,7 @@ class Session(BaseSiteComponent):
         return self._make_linked_object("username", self.find_username_from_id(user_id), user.User,
                                         exceptions.UserNotFound)
 
-    def connect_project(self, project_id) -> 'project.Project':
+    def connect_project(self, project_id) -> project.Project:
         """
         Gets a project using this session, connects the session to the Project object to allow authenticated actions
 sess
@@ -851,7 +846,7 @@ sess
         """
         return self._make_linked_object("id", int(project_id), project.Project, exceptions.ProjectNotFound)
 
-    def connect_studio(self, studio_id) -> 'studio.Studio':
+    def connect_studio(self, studio_id) -> studio.Studio:
         """
         Gets a studio using this session, connects the session to the Studio object to allow authenticated actions
 
@@ -863,7 +858,7 @@ sess
         """
         return self._make_linked_object("id", int(studio_id), studio.Studio, exceptions.StudioNotFound)
 
-    def connect_classroom(self, class_id) -> 'classroom.Classroom':
+    def connect_classroom(self, class_id) -> classroom.Classroom:
         """
         Gets a class using this session.
 
@@ -875,7 +870,7 @@ sess
         """
         return self._make_linked_object("id", int(class_id), classroom.Classroom, exceptions.ClassroomNotFound)
 
-    def connect_classroom_from_token(self, class_token) -> 'classroom.Classroom':
+    def connect_classroom_from_token(self, class_token) -> classroom.Classroom:
         """
         Gets a class using this session.
 
@@ -888,7 +883,7 @@ sess
         return self._make_linked_object("classtoken", int(class_token), classroom.Classroom,
                                         exceptions.ClassroomNotFound)
 
-    def connect_topic(self, topic_id) -> 'forum.ForumTopic':
+    def connect_topic(self, topic_id) -> forum.ForumTopic:
         """
         Gets a forum topic using this session, connects the session to the ForumTopic object to allow authenticated actions
         Data is up-to-date. Data received from Scratch's RSS feed XML API.
@@ -957,12 +952,12 @@ sess
 
     # --- Connect classes inheriting from BaseEventHandler ---
 
-    def connect_message_events(self, *, update_interval=2) -> 'message_events.MessageEvents':
+    def connect_message_events(self, *, update_interval=2) -> message_events.MessageEvents:
         # shortcut for connect_linked_user().message_events()
         return message_events.MessageEvents(user.User(username=self.username, _session=self),
                                             update_interval=update_interval)
 
-    def connect_filterbot(self, *, log_deletions=True) -> 'filterbot.Filterbot':
+    def connect_filterbot(self, *, log_deletions=True) -> filterbot.Filterbot:
         return filterbot.Filterbot(user.User(username=self.username, _session=self), log_deletions=log_deletions)
 
 
