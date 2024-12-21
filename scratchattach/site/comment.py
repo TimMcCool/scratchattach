@@ -1,17 +1,9 @@
 """Comment class"""
 from __future__ import annotations
 
-import json
-import re
-
-from ..utils import commons, exceptions
-from ..utils.commons import headers
-from ..utils.requests import Requests as requests
-
-from . import user, session, project, studio, forum
+from . import user, project, studio
 from ._base import BaseSiteComponent
-from bs4 import BeautifulSoup
-
+from ..utils import exceptions
 
 
 class Comment(BaseSiteComponent):
@@ -27,7 +19,7 @@ class Comment(BaseSiteComponent):
         # Set attributes every Comment object needs to have:
         self.id = None
         self._session = None
-        self.source=None
+        self.source = None
         self.source_id = None
         self.cached_replies = None
         self.parent_id = None
@@ -41,31 +33,53 @@ class Comment(BaseSiteComponent):
 
     def update(self):
         print("Warning: Comment objects can't be updated")
-        return False # Objects of this type cannot be updated
+        return False  # Objects of this type cannot be updated
 
     def _update_from_dict(self, data):
-        try: self.id = data["id"]
-        except Exception: pass
-        try: self.parent_id = data["parent_id"]
-        except Exception: pass
-        try: self.commentee_id = data["commentee_id"]
-        except Exception: pass
-        try: self.content = data["content"]
-        except Exception: pass
-        try: self.datetime_created = data["datetime_created"]
-        except Exception: pass
-        try: self.author_name = data["author"]["username"]
-        except Exception: pass
-        try: self.author_id = data["author"]["id"]
-        except Exception: pass
-        try: self.written_by_scratchteam = data["author"]["scratchteam"]
-        except Exception: pass
-        try: self.reply_count = data["reply_count"]
-        except Exception: pass
-        try: self.source = data["source"]
-        except Exception: pass
-        try: self.source_id = data["source_id"]
-        except Exception: pass
+        try:
+            self.id = data["id"]
+        except Exception:
+            pass
+        try:
+            self.parent_id = data["parent_id"]
+        except Exception:
+            pass
+        try:
+            self.commentee_id = data["commentee_id"]
+        except Exception:
+            pass
+        try:
+            self.content = data["content"]
+        except Exception:
+            pass
+        try:
+            self.datetime_created = data["datetime_created"]
+        except Exception:
+            pass
+        try:
+            self.author_name = data["author"]["username"]
+        except Exception:
+            pass
+        try:
+            self.author_id = data["author"]["id"]
+        except Exception:
+            pass
+        try:
+            self.written_by_scratchteam = data["author"]["scratchteam"]
+        except Exception:
+            pass
+        try:
+            self.reply_count = data["reply_count"]
+        except Exception:
+            pass
+        try:
+            self.source = data["source"]
+        except Exception:
+            pass
+        try:
+            self.source_id = data["source_id"]
+        except Exception:
+            pass
         return True
 
     # Methods for getting related entities
@@ -94,7 +108,8 @@ class Comment(BaseSiteComponent):
             return self.cached_parent_comment
 
         if self.source == "profile":
-            self.cached_parent_comment = user.User(username=self.source_id, _session=self._session).comment_by_id(self.parent_id)
+            self.cached_parent_comment = user.User(username=self.source_id, _session=self._session).comment_by_id(
+                self.parent_id)
 
         elif self.source == "project":
             p = project.Project(id=self.source_id, _session=self._session)
@@ -102,18 +117,20 @@ class Comment(BaseSiteComponent):
             self.cached_parent_comment = p.comment_by_id(self.parent_id)
 
         elif self.source == "studio":
-            self.cached_parent_comment = studio.Studio(id=self.source_id, _session=self._session).comment_by_id(self.parent_id)
+            self.cached_parent_comment = studio.Studio(id=self.source_id, _session=self._session).comment_by_id(
+                self.parent_id)
 
         return self.cached_parent_comment
-    
-    def replies(self, *, use_cache: bool=True, limit=40, offset=0):
+
+    def replies(self, *, use_cache: bool = True, limit=40, offset=0):
         """
         Keyword Arguments:
             use_cache (bool): Returns the replies cached on the first reply fetch. This makes it SIGNIFICANTLY faster for profile comments. Warning: For profile comments, the replies are retrieved and cached on object creation.
         """
         if (self.cached_replies is None) or (not use_cache):
             if self.source == "profile":
-                self.cached_replies = user.User(username=self.source_id, _session=self._session).comment_by_id(self.id).cached_replies[offset:offset+limit]
+                self.cached_replies = user.User(username=self.source_id, _session=self._session).comment_by_id(
+                    self.id).cached_replies[offset:offset + limit]
 
             elif self.source == "project":
                 p = project.Project(id=self.source_id, _session=self._session)
@@ -121,10 +138,11 @@ class Comment(BaseSiteComponent):
                 self.cached_replies = p.comment_replies(comment_id=self.id, limit=limit, offset=offset)
 
             elif self.source == "studio":
-                self.cached_replies = studio.Studio(id=self.source_id, _session=self._session).comment_replies(comment_id=self.id, limit=limit, offset=offset)
+                self.cached_replies = studio.Studio(id=self.source_id, _session=self._session).comment_replies(
+                    comment_id=self.id, limit=limit, offset=offset)
 
         return self.cached_replies
-    
+
     # Methods for dealing with the comment
 
     def reply(self, content, *, commentee_id=None):
@@ -157,13 +175,17 @@ class Comment(BaseSiteComponent):
             else:
                 commentee_id = ""
         if self.source == "profile":
-            return user.User(username=self.source_id, _session=self._session).reply_comment(content, parent_id=str(parent_id), commentee_id=commentee_id)
+            return user.User(username=self.source_id, _session=self._session).reply_comment(content,
+                                                                                            parent_id=str(parent_id),
+                                                                                            commentee_id=commentee_id)
         if self.source == "project":
             p = project.Project(id=self.source_id, _session=self._session)
             p.update()
             return p.reply_comment(content, parent_id=str(parent_id), commentee_id=commentee_id)
         if self.source == "studio":
-            return studio.Studio(id=self.source_id, _session=self._session).reply_comment(content, parent_id=str(parent_id), commentee_id=commentee_id)
+            return studio.Studio(id=self.source_id, _session=self._session).reply_comment(content,
+                                                                                          parent_id=str(parent_id),
+                                                                                          commentee_id=commentee_id)
 
     def delete(self):
         """
