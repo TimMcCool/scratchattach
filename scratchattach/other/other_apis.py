@@ -146,14 +146,6 @@ def scratch_team_members() -> dict:
 
     return json.loads(text)
 
-
-def send_password_reset_email(username: str = None, email: str = None):
-    requests.post("https://scratch.mit.edu/accounts/password_reset/", data={
-        "username": username,
-        "email": email,
-    }, headers=commons.headers, cookies={"scratchcsrftoken": 'a'})
-
-
 def translate(language: str | Languages, text: str = "hello"):
     if isinstance(language, str):
         lang = Languages.find_by_attrs(language.lower(), ["code", "tts_locale", "name"], str.lower)
