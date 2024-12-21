@@ -180,9 +180,19 @@ class ScratchToolsTutorial:
     def yt_link(self):
         return f"https://www.youtube.com/watch?v={self.id}"
 
+
 def scratchtools_tutorials() -> list[ScratchToolsTutorial]:
+    """
+    Returns a list of scratchtools tutorials (just yt videos)
+    """
     data_list = requests.get("https://data.scratchtools.app/tutorials/").json()
     return [ScratchToolsTutorial.from_json(data) for data in data_list]
+
+
+def scratchtools_emoji_status(username: str) -> str | None:
+    return requests.get(f"https://data.scratchtools.app/status/{username}").json().get("status",
+                                                                                       '🍪')  # Cookie is the default status, even if the user does not use ScratchTools
+
 
 # --- Misc ---
 # I'm not sure what to label this as
