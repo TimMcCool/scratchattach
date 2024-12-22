@@ -839,6 +839,7 @@ def login(username, password, *, timeout=10) -> Session:
     request = requests.post(
         "https://scratch.mit.edu/login/", data=data, headers=_headers,
         timeout = timeout,
+        errorhandling = False
     )
     try:
         session_id = str(re.search('"(.*)"', request.headers["Set-Cookie"]).group())
