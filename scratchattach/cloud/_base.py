@@ -48,10 +48,10 @@ class BaseCloud(ABC):
     :self.print_connect_messages: Whether to print a message on every connect to the cloud server. Defaults to False.
     """
 
-    def __init__(self):
+    def __init__(self, *, _session=None):
 
         # Required internal attributes that every object representing a cloud needs to have (no matter what cloud is represented):
-        self._session = None
+        self._session = _session
         self.active_connection = False #whether a connection to a cloud variable server is currently established
         self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
         self.recorder = None # A CloudRecorder object that records cloud activity for the values to be retrieved later will be saved in this attribute as soon as .get_var is called
