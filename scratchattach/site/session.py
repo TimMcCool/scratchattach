@@ -233,6 +233,7 @@ class Session(BaseSiteComponent):
         data = requests.get(f"https://scratch.mit.edu/site-api/classrooms/alerts/{_classroom}",
                             params={"page": page, "ascsort": ascsort, "descsort": descsort},
                             headers=self._headers, cookies=self._cookies).json()
+
         return data
 
     def clear_messages(self):
