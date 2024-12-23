@@ -353,7 +353,291 @@ class Classroom(BaseSiteComponent):
                             params={"page": page, "ascsort": ascsort, "descsort": descsort},
                             headers=self._headers, cookies=self._cookies).json()
 
-        return data
+        _activity = []
+        for activity_json in data:
+            activity_type = activity_json["type"]
+
+            time = activity_json["datetime_created"] if "datetime_created" in activity_json else None
+
+            if "actor" in activity_json:
+                username = activity_json["actor"]["username"]
+            elif "actor_username" in activity_json:
+                username = activity_json["actor_username"]
+            else:
+                username = None
+
+            if activity_json.get("recipient") is not None:
+                recipient_username = activity_json["recipient"]["username"]
+
+            if activity_json.get("recipient_username") is not None:
+                recipient_username = activity_json["recipient_username"]
+
+            elif activity_json.get("project_creator") is not None:
+                recipient_username = activity_json["project_creator"]["username"]
+            else:
+                recipient_username = None
+
+            default_case = False
+            """Whether this is 'blank'; it will default to 'user performed an action'"""
+            if activity_type == 0:
+                # follow
+                followed_username = activity_json["followed_username"]
+
+                raw = f"{username} followed user {followed_username}"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="followuser",
+
+                    username=username,
+                    followed_username=followed_username
+                ))
+
+            elif activity_type == 1:
+                # follow studio
+                studio_id = activity_json["gallery"]
+
+                raw = f"{username} followed studio https://scratch.mit.edu/studios/{studio_id}"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="followstudio",
+
+                    username=username,
+                    gallery_id=studio_id
+                ))
+
+            elif activity_type == 2:
+                # love project
+                project_id = activity_json["project"]
+
+                raw = f"{username} loved project https://scratch.mit.edu/projects/{project_id}"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="loveproject",
+
+                    username=username,
+                    project_id=project_id,
+                    recipient_username=recipient_username
+                ))
+
+            elif activity_type == 3:
+                # Favorite project
+                project_id = activity_json["project"]
+
+                raw = f"{username} favorited project https://scratch.mit.edu/projects/{project_id}"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="favoriteproject",
+
+                    username=username,
+                    project_id=project_id,
+                    recipient_username=recipient_username
+                ))
+
+            elif activity_type == 7:
+                # Add project to studio
+
+                project_id = activity_json["project"]
+                studio_id = activity_json["gallery"]
+
+                raw = f"{username} added the project https://scratch.mit.edu/projects/{project_id} to studio https://scratch.mit.edu/studios/{studio_id}"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="addprojecttostudio",
+
+                    username=username,
+                    project_id=project_id,
+                    recipient_username=recipient_username
+                ))
+
+            elif activity_type == 8:
+                default_case = True
+
+            elif activity_type == 9:
+                default_case = True
+
+            elif activity_type == 10:
+                # Share/Reshare project
+                project_id = activity_json["project"]
+                is_reshare = activity_json["is_reshare"]
+
+                raw_reshare = "reshared" if is_reshare else "shared"
+
+                raw = f"{username} {raw_reshare} the project https://scratch.mit.edu/projects/{project_id}"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="shareproject",
+
+                    username=username,
+                    project_id=project_id,
+                    recipient_username=recipient_username
+                ))
+
+            elif activity_type == 11:
+                # Remix
+                parent_id = activity_json["parent"]
+
+                raw = f"{username} remixed the project https://scratch.mit.edu/projects/{parent_id}"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="remixproject",
+
+                    username=username,
+                    project_id=parent_id,
+                    recipient_username=recipient_username
+                ))
+
+            elif activity_type == 12:
+                default_case = True
+
+            elif activity_type == 13:
+                # Create ('add') studio
+                studio_id = activity_json["gallery"]
+
+                raw = f"{username} created the studio https://scratch.mit.edu/studios/{studio_id}"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="createstudio",
+
+                    username=username,
+                    gallery_id=studio_id
+                ))
+
+            elif activity_type == 15:
+                # Update studio
+                studio_id = activity_json["gallery"]
+
+                raw = f"{username} updated the studio https://scratch.mit.edu/studios/{studio_id}"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="updatestudio",
+
+                    username=username,
+                    gallery_id=studio_id
+                ))
+
+            elif activity_type == 16:
+                default_case = True
+
+            elif activity_type == 17:
+                default_case = True
+
+            elif activity_type == 18:
+                default_case = True
+
+            elif activity_type == 19:
+                # Remove project from studio
+
+                project_id = activity_json["project"]
+                studio_id = activity_json["gallery"]
+
+                raw = f"{username} removed the project https://scratch.mit.edu/projects/{project_id} from studio https://scratch.mit.edu/studios/{studio_id}"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="removeprojectfromstudio",
+
+                    username=username,
+                    project_id=project_id,
+                ))
+
+            elif activity_type == 20:
+                default_case = True
+
+            elif activity_type == 21:
+                default_case = True
+
+            elif activity_type == 22:
+                # Was promoted to manager for studio
+                studio_id = activity_json["gallery"]
+
+                raw = f"{recipient_username} was promoted to manager by {username} for studio https://scratch.mit.edu/studios/{studio_id}"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="promotetomanager",
+
+                    username=username,
+                    recipient_username=recipient_username,
+                    gallery_id=studio_id
+                ))
+
+            elif activity_type == 23:
+                default_case = True
+
+            elif activity_type == 24:
+                default_case = True
+
+            elif activity_type == 25:
+                # Update profile
+                raw = f"{username} made a profile update"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="updateprofile",
+
+                    username=username,
+                ))
+
+            elif activity_type == 26:
+                default_case = True
+
+            elif activity_type == 27:
+                # Comment (quite complicated)
+                comment_type: int = activity_json["comment_type"]
+                fragment = activity_json["comment_fragment"]
+                comment_id = activity_json["comment_id"]
+                comment_obj_id = activity_json["comment_obj_id"]
+                comment_obj_title = activity_json["comment_obj_title"]
+
+                if comment_type == 0:
+                    # Project comment
+                    raw = f"{username} commented on project https://scratch.mit.edu/projects/{comment_obj_id}/#comments-{comment_id} {fragment!r}"
+
+                elif comment_type == 1:
+                    # Profile comment
+                    raw = f"{username} commented on user https://scratch.mit.edu/users/{comment_obj_title}/#comments-{comment_id} {fragment!r}"
+
+                elif comment_type == 2:
+                    # Studio comment
+                    # Scratch actually provides an incorrect link, but it is fixed here:
+                    raw = f"{username} commented on studio https://scratch.mit.edu/studios/{comment_obj_id}/comments/#comments-{comment_id} {fragment!r}"
+
+                else:
+                    raw = f"{username} commented {fragment!r}"  # This should never happen
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="addcomment",
+
+                    username=username,
+
+                    comment_type=comment_type,
+                    comment_obj_id=comment_obj_id,
+                    comment_obj_title=comment_obj_title,
+                    comment_id=comment_id,
+                ))
+
+            if default_case:
+                # This is coded in the scratch HTML, haven't found an example of it though
+                raw = f"{username} performed an action"
+
+                _activity.append(activity.Activity(
+                    raw=raw, _session=self._session, time=time,
+                    type="performaction",
+
+                    username=username
+                ))
+
+        return _activity
 
 
 def get_classroom(class_id: str) -> Classroom:

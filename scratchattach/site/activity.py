@@ -15,6 +15,9 @@ class Activity(BaseSiteComponent):
     Represents a Scratch activity (message or other user page activity)
     """
 
+    def __repr__(self):
+        return repr(self.raw)
+
     def str(self):
         return str(self.raw)
 
@@ -27,13 +30,18 @@ class Activity(BaseSiteComponent):
         # Possible attributes
         self.project_id = None
         self.gallery_id = None
+
         self.username = None
         self.followed_username = None
         self.recipient_username = None
+
         self.comment_type = None
         self.comment_obj_id = None
         self.comment_obj_title = None
         self.comment_id = None
+
+        self.time = None
+        self.type = None
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)
