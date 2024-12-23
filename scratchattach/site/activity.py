@@ -87,7 +87,7 @@ class Activity(BaseSiteComponent):
 
             self.raw = f"{username} followed user {followed_username}"
 
-            self.time = _time
+            self.datetime_created = _time
             self.type = "followuser"
             self.username = username
             self.followed_username = followed_username
@@ -99,7 +99,7 @@ class Activity(BaseSiteComponent):
             raw = f"{username} followed studio https://scratch.mit.edu/studios/{studio_id}"
 
             self.raw = raw
-            self.time = _time
+            self.datetime_created = _time
             self.type = "followstudio"
 
             self.username = username
@@ -112,7 +112,7 @@ class Activity(BaseSiteComponent):
             raw = f"{username} loved project https://scratch.mit.edu/projects/{project_id}"
 
             self.raw = raw
-            self.time = _time,
+            self.datetime_created = _time,
             self.type = "loveproject"
 
             self.username = username
@@ -126,7 +126,7 @@ class Activity(BaseSiteComponent):
             raw = f"{username} favorited project https://scratch.mit.edu/projects/{project_id}"
 
             self.raw = raw
-            self.time = _time
+            self.datetime_created = _time
             self.type = "favoriteproject"
 
             self.username = username
@@ -142,7 +142,7 @@ class Activity(BaseSiteComponent):
             raw = f"{username} added the project https://scratch.mit.edu/projects/{project_id} to studio https://scratch.mit.edu/studios/{studio_id}"
 
             self.raw = raw
-            self.time = _time
+            self.datetime_created = _time
             self.type = "addprojecttostudio"
 
             self.username = username
@@ -165,7 +165,7 @@ class Activity(BaseSiteComponent):
             raw = f"{username} {raw_reshare} the project https://scratch.mit.edu/projects/{project_id}"
 
             self.raw = raw
-            self.time = _time
+            self.datetime_created = _time
             self.type = "shareproject"
 
             self.username = username
@@ -179,7 +179,7 @@ class Activity(BaseSiteComponent):
             raw = f"{username} remixed the project https://scratch.mit.edu/projects/{parent_id}"
 
             self.raw = raw
-            self.time = _time
+            self.datetime_created = _time
             self.type = "remixproject"
 
             self.username = username
@@ -196,7 +196,7 @@ class Activity(BaseSiteComponent):
             raw = f"{username} created the studio https://scratch.mit.edu/studios/{studio_id}"
 
             self.raw = raw
-            self.time = _time
+            self.datetime_created = _time
             self.type = "createstudio"
 
             self.username = username
@@ -209,7 +209,7 @@ class Activity(BaseSiteComponent):
             raw = f"{username} updated the studio https://scratch.mit.edu/studios/{studio_id}"
 
             self.raw = raw
-            self.time = _time
+            self.datetime_created = _time
             self.type = "updatestudio"
 
             self.username = username
@@ -233,7 +233,7 @@ class Activity(BaseSiteComponent):
             raw = f"{username} removed the project https://scratch.mit.edu/projects/{project_id} from studio https://scratch.mit.edu/studios/{studio_id}"
 
             self.raw = raw
-            self.time = _time
+            self.datetime_created = _time
             self.type = "removeprojectfromstudio"
 
             self.username = username
@@ -252,7 +252,7 @@ class Activity(BaseSiteComponent):
             raw = f"{recipient_username} was promoted to manager by {username} for studio https://scratch.mit.edu/studios/{studio_id}"
 
             self.raw = raw
-            self.time = _time
+            self.datetime_created = _time
             self.type = "promotetomanager"
 
             self.username = username
@@ -270,10 +270,10 @@ class Activity(BaseSiteComponent):
             raw = f"{username} made a profile update"
 
             self.raw = raw
-            self.time = _time,
-            self.type = "updateprofile",
+            self.datetime_created = _time
+            self.type = "updateprofile"
 
-            self.username = username,
+            self.username = username
 
         elif activity_type == 26:
             default_case = True
@@ -303,15 +303,15 @@ class Activity(BaseSiteComponent):
                 raw = f"{username} commented {fragment!r}"  # This should never happen
 
             self.raw = raw
-            self.time = _time,
-            self.type = "addcomment",
+            self.datetime_created = _time
+            self.type = "addcomment"
 
-            self.username = username,
+            self.username = username
 
-            self.comment_type = comment_type,
-            self.comment_obj_id = comment_obj_id,
-            self.comment_obj_title = comment_obj_title,
-            self.comment_id = comment_id,
+            self.comment_type = comment_type
+            self.comment_obj_id = comment_obj_id
+            self.comment_obj_title = comment_obj_title
+            self.comment_id = comment_id
 
         else:
             default_case = True
@@ -321,8 +321,8 @@ class Activity(BaseSiteComponent):
             raw = f"{username} performed an action"
 
             self.raw = raw
-            self.time = _time,
-            self.type = "performaction",
+            self.datetime_created = _time
+            self.type = "performaction"
 
             self.username = username
 
@@ -336,7 +336,7 @@ class Activity(BaseSiteComponent):
             while '\xa0' in _time:
                 _time = _time.replace('\xa0', ' ')
 
-        self.time = _time
+        self.datetime_created = _time
         self.actor_username = data.find('div').find('span').text
 
         self.target_name = data.find('div').find('span').findNext().text
