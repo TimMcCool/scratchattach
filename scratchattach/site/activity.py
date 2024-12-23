@@ -38,6 +38,7 @@ class Activity(BaseSiteComponent):
         self.comment_obj_title = None
         self.comment_id = None
 
+        self.datetime_created = None
         self.time = None
         self.type = None
 
