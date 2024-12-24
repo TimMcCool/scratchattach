@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import requests
 from . import exceptions
 
@@ -33,8 +35,7 @@ class Requests:
         return r
 
     @staticmethod
-
-    def post(url, *, data=None, json=None, headers=None, cookies=None, timeout=None, params=None, errorhandling=True):
+    def post(url, *, data=None, json=None, headers=None, cookies=None, timeout=None, params=None, files=None, errorhandling=True, ):
         try:
             r = requests.post(url, data=data, json=json, headers=headers, cookies=cookies, params=params,
                               timeout=timeout, proxies=proxies, files=files)

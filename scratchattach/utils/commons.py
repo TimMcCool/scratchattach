@@ -1,4 +1,6 @@
 """v2 ready: Common functions used by various internal modules"""
+from __future__ import annotations
+
 from types import FunctionType
 from typing import Final, Any, TYPE_CHECKING
 
@@ -127,7 +129,7 @@ def api_iterative(url: str, *, limit: int, offset: int, max_req_limit: int = 40,
     return api_data
 
 
-def _get_object(identificator_name, identificator, Class, NotFoundException, session=None) -> 'BaseSiteComponent':
+def _get_object(identificator_name, identificator, Class: type, NotFoundException, session=None) -> BaseSiteComponent:
     # Internal function: Generalization of the process ran by get_user, get_studio etc.
     # Builds an object of class that is inheriting from BaseSiteComponent
     # # Class must inherit from BaseSiteComponent
@@ -158,7 +160,7 @@ def webscrape_count(raw, text_before, text_after, cls: type = int) -> int | Any:
     return cls(raw.split(text_before)[1].split(text_after)[0])
 
 
-def parse_object_list(raw, Class, session=None, primary_key="id") -> list:
+def parse_object_list(raw, Class, session=None, primary_key="id") -> list[BaseSiteComponent]:
     results = []
     for raw_dict in raw:
         try:
@@ -170,7 +172,7 @@ def parse_object_list(raw, Class, session=None, primary_key="id") -> list:
     return results
 
 
-def get_class_sort_mode(mode: str):
+def get_class_sort_mode(mode: str) -> tuple[str, str]:
     """
     Returns the sort mode for the given mode for classes only
     """

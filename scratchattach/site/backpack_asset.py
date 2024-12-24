@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import time
+import logging
 
 from ._base import BaseSiteComponent
 from ..utils import exceptions
 from ..utils.requests import Requests as requests
+
 
 
 class BackpackAsset(BaseSiteComponent):
@@ -39,6 +42,7 @@ class BackpackAsset(BaseSiteComponent):
         print("Warning: BackpackAsset objects can't be updated")
         return False  # Objects of this type cannot be updated
 
+    
     def _update_from_dict(self, data) -> bool:
         try:
             self.id = data["id"]
@@ -93,7 +97,7 @@ class BackpackAsset(BaseSiteComponent):
             # It's either a zip
             return self._data_bytes
 
-    def download(self, *, fp=""):
+    def download(self, *, fp: str = ''):
         """
         Downloads the asset content to the given directory. The given filename is equal to the value saved in the .filename attribute.
 
