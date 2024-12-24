@@ -1,4 +1,4 @@
-"""Session class and login function"""
+"""User class"""
 from __future__ import annotations
 
 import json
@@ -545,7 +545,7 @@ class User(BaseSiteComponent):
                 raise(exceptions.CommentPostFailure(
                     "You are being rate-limited for running this operation too often. Implement a cooldown of about 10 seconds."))
             else:
-                raise(exceptions.FetchError("Couldn't parse API response"))
+                raise(exceptions.FetchError(f"Couldn't parse API response: {r.text!r}"))
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """
@@ -711,7 +711,7 @@ class User(BaseSiteComponent):
             DATA.append(_comment)
         return DATA
 
-    def comment_by_id(self, comment_id):
+    def comment_by_id(self, comment_id) -> comment.Comment:
         """
         Gets a comment on this user's profile by id.
 

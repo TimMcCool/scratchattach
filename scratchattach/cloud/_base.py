@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import ssl
 import time
@@ -51,6 +53,7 @@ class BaseCloud(ABC):
         # Required internal attributes that every object representing a cloud needs to have (no matter what cloud is represented):
         self._session = _session
         self.active_connection = False #whether a connection to a cloud variable server is currently established
+
         self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
         self.recorder = None  # A CloudRecorder object that records cloud activity for the values to be retrieved later,
         # which will be saved in this attribute as soon as .get_var is called

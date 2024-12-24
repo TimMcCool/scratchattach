@@ -1,4 +1,5 @@
 """CloudRequests class (threading.Event version)"""
+from __future__ import annotations
 
 from .cloud_events import CloudEvents
 from ..site import project

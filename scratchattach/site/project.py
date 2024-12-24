@@ -1,4 +1,5 @@
 """Project and PartialProject classes"""
+from __future__ import annotations
 
 import json
 import random

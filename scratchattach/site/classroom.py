@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import datetime
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import bs4
 
@@ -49,8 +51,8 @@ class Classroom(BaseSiteComponent):
         self._json_headers["Content-Type"] = "application/json"
         self.is_closed = False
 
-    def __repr__(self):
-        return f"classroom called '{self.title}'"
+    def __repr__(self) -> str:
+        return f"classroom called {self.title!r}"
 
     def update(self):
         try:
@@ -67,7 +69,8 @@ class Classroom(BaseSiteComponent):
                 if heading.text == "Whoops! Our server is Scratch'ing its head":
                     raise exceptions.ClassroomNotFound(f"Classroom id {self.id} is not closed and cannot be found.")
 
-            # id, title, description, status, date_start (iso str), educator/username
+            # id, title, description, status, date_start (iso format), educator/username
+
             title = soup.find("title").contents[0][:-len(" on Scratch")]
 
             overviews = soup.find_all("p", {"class": "overview"})
@@ -123,7 +126,7 @@ class Classroom(BaseSiteComponent):
         self.is_closed = classrooms.get("is_closed", False)
         return True
 
-    def student_count(self):
+    def student_count(self) -> int:
         # student count
         text = requests.get(
             f"https://scratch.mit.edu/classes/{self.id}/",
@@ -131,7 +134,7 @@ class Classroom(BaseSiteComponent):
         ).text
         return commons.webscrape_count(text, "Students (", ")")
 
-    def student_names(self, *, page=1):
+    def student_names(self, *, page=1) -> list[str]:
         """
         Returns the student on the class.
         
@@ -163,7 +166,7 @@ class Classroom(BaseSiteComponent):
         textlist = [i.split('/">')[0] for i in text.split('        <a href="/users/')[1:]]
         return textlist
 
-    def class_studio_count(self):
+    def class_studio_count(self) -> int:
         # studio count
         text = requests.get(
             f"https://scratch.mit.edu/classes/{self.id}/",
@@ -171,7 +174,7 @@ class Classroom(BaseSiteComponent):
         ).text
         return commons.webscrape_count(text, "Class Studios (", ")")
 
-    def class_studio_ids(self, *, page=1) -> list[int]:
+    def class_studio_ids(self, *, page: int = 1) -> list[int]:
         """
         Returns the class studio on the class.
         
@@ -179,7 +182,7 @@ class Classroom(BaseSiteComponent):
             page: The page of the students that should be returned.
         
         Returns:
-            list<str>: The id of the class studios
+            list<int>: The id of the class studios
         """
         if self.is_closed:
             ret = []
@@ -202,18 +205,18 @@ class Classroom(BaseSiteComponent):
         textlist = [int(i.split('/">')[0]) for i in text.split('<span class="title">\n    <a href="/studios/')[1:]]
         return textlist
 
-    def _check_session(self):
+    def _check_session(self) -> None:
         if self._session is None:
             raise exceptions.Unauthenticated(
                 f"Classroom {self} has no associated session. Use session.connect_classroom() instead of sa.get_classroom()")
 
-    def set_thumbnail(self, thumbnail: bytes):
+    def set_thumbnail(self, thumbnail: bytes) -> None:
         self._check_session()
         requests.post(f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
                       headers=self._headers, cookies=self._cookies,
                       files={"file": thumbnail})
 
-    def set_description(self, desc: str):
+    def set_description(self, desc: str) -> None:
         self._check_session()
         response = requests.put(f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
                                 headers=self._headers, cookies=self._cookies,
@@ -231,7 +234,7 @@ class Classroom(BaseSiteComponent):
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
 
-    def set_working_on(self, status: str):
+    def set_working_on(self, status: str) -> None:
         self._check_session()
         response = requests.put(f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
                                 headers=self._headers, cookies=self._cookies,
@@ -249,7 +252,7 @@ class Classroom(BaseSiteComponent):
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
 
-    def set_title(self, title: str):
+    def set_title(self, title: str) -> None:
         self._check_session()
         response = requests.put(f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
                                 headers=self._headers, cookies=self._cookies,
@@ -267,17 +270,17 @@ class Classroom(BaseSiteComponent):
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
 
-    def add_studio(self, name: str, description: str = ''):
+    def add_studio(self, name: str, description: str = '') -> None:
         self._check_session()
         requests.post("https://scratch.mit.edu/classes/create_classroom_gallery/",
-                      json=
-                      {"classroom_id": str(self.id),
-                       "classroom_token": self.classtoken,
-                       "title": name,
-                       "description": description},
+                      json={
+                          "classroom_id": str(self.id),
+                          "classroom_token": self.classtoken,
+                          "title": name,
+                          "description": description},
                       headers=self._headers, cookies=self._cookies)
 
-    def reopen(self):
+    def reopen(self) -> None:
         self._check_session()
         response = requests.put(f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
                                 headers=self._headers, cookies=self._cookies,
@@ -285,23 +288,25 @@ class Classroom(BaseSiteComponent):
 
         try:
             response.json()
+
         except Exception as e:
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
 
-    def close(self):
+    def close(self) -> None:
         self._check_session()
         response = requests.post(f"https://scratch.mit.edu/site-api/classrooms/close_classroom/{self.id}/",
                                  headers=self._headers, cookies=self._cookies)
 
         try:
             response.json()
+
         except Exception as e:
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
 
     def register_student(self, username: str, password: str = '', birth_month: int = None, birth_year: int = None,
-                         gender: str = None, country: str = None, is_robot: bool = False):
+                         gender: str = None, country: str = None, is_robot: bool = False) -> None:
         return register_by_token(self.id, self.classtoken, username, password, birth_month, birth_year, gender, country,
                                  is_robot)
 
@@ -341,9 +346,11 @@ class Classroom(BaseSiteComponent):
 
         return activities
 
-    def activity(self, student: str = "all", mode: str = "Last created", page: int = None):
+    def activity(self, student: str = "all", mode: str = "Last created", page: int = None) -> list[dict[str, Any]]:
         """
-        Get a list of actvity raw dictionaries. However, they are in a very annoying format. This method should be updated
+        Get a list of private activity, only available to the class owner.
+        Returns:
+            list<activity.Activity> The private activity of users in the class
         """
 
         self._check_session()
@@ -354,10 +361,15 @@ class Classroom(BaseSiteComponent):
                             params={"page": page, "ascsort": ascsort, "descsort": descsort},
                             headers=self._headers, cookies=self._cookies).json()
 
-        return data
+        _activity = []
+        for activity_json in data:
+            _activity.append(activity.Activity(_session=self._session))
+            _activity[-1]._update_from_json(activity_json)
+
+        return _activity
 
 
-def get_classroom(class_id) -> Classroom:
+def get_classroom(class_id: str) -> Classroom:
     """
     Gets a class without logging in.
 
@@ -396,7 +408,7 @@ def get_classroom_from_token(class_token) -> Classroom:
 
 
 def register_by_token(class_id: int, class_token: str, username: str, password: str, birth_month: int, birth_year: int,
-                      gender: str, country: str, is_robot: bool = False):
+                      gender: str, country: str, is_robot: bool = False) -> None:
     data = {"classroom_id": class_id,
             "classroom_token": class_token,
 

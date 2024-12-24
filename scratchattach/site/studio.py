@@ -140,7 +140,7 @@ class Studio(BaseSiteComponent):
             i["source_id"] = self.id
         return commons.parse_object_list(response, comment.Comment, self._session)
 
-    def comment_replies(self, *, comment_id, limit=40, offset=0):
+    def comment_replies(self, *, comment_id, limit=40, offset=0) -> list[comment.Comment]:
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}/replies", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         for x in response:
