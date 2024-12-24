@@ -11,15 +11,13 @@ from . import commons
 from ..utils.enums import _EnumWrapper
 
 
-class _Yesnt(commons.Singleton):
-    """I can't really tell you if yesn't means yes or no; is it true or false? It depends."""
-
+class _MutationDependent(commons.Singleton):
     def __bool__(self):
-        raise TypeError("I can't really tell you if yesn't means yes or no; is it true or false? It depends.")
+        raise TypeError("Need mutation data to work out attribute value.")
 
 
-YESNT: Final[_Yesnt] = _Yesnt()
-"""Value used when neither True nor False is applicable (when it depends on other factors)"""
+MUTATION_DEPENDENT: Final[_MutationDependent] = _MutationDependent()
+"""Value used when mutation data is required to work out the attribute value"""
 
 
 @dataclass(init=True, repr=True)
@@ -27,18 +25,18 @@ class BlockShape:
     """
     A class that describes the shape of a block; e.g. is it a stack, c-mouth, cap, hat reporter, boolean or menu block?
     """
-    is_stack: bool | _Yesnt = False  # Most blocks - e.g. move [10] steps
-    is_c_mouth: bool | _Yesnt = False  # Has substack - e.g. repeat
-    is_cap: bool | _Yesnt = False  # No next - e.g. forever
-    is_hat: bool | _Yesnt = False  # No parent - e.g. when gf clicked
-    is_reporter: bool | _Yesnt = False  # (reporter)
-    is_boolean: bool | _Yesnt = False  # <reporter>
-    is_menu: bool | _Yesnt = False  # Shadow reporters, e.g. costume menu
+    is_stack: bool | _MutationDependent = False  # Most blocks - e.g. move [10] steps
+    is_c_mouth: bool | _MutationDependent = False  # Has substack - e.g. repeat
+    is_cap: bool | _MutationDependent = False  # No next - e.g. forever
+    is_hat: bool | _MutationDependent = False  # No parent - e.g. when gf clicked
+    is_reporter: bool | _MutationDependent = False  # (reporter)
+    is_boolean: bool | _MutationDependent = False  # <reporter>
+    is_menu: bool | _MutationDependent = False  # Shadow reporters, e.g. costume menu
     opcode: str = None
 
     @property
     def is_attachable(self):
-        if self.is_cap is YESNT:
+        if self.is_cap is MUTATION_DEPENDENT:
             raise TypeError(
                 "Can't tell if the block is attachable because we can't be sure if it is a cap block or not (stop block)")
         return not self.is_cap and not self.is_reporter
@@ -129,7 +127,7 @@ class BlockShapes(_EnumWrapper):
     CONTROL_IF_ELSE = BlockShape(is_c_mouth=True, is_stack=True, opcode="control_if_else")
     CONTROL_WAIT_UNTIL = BlockShape(is_stack=True, opcode="control_wait_until")
     CONTROL_REPEAT_UNTIL = BlockShape(is_c_mouth=True, is_stack=True, opcode="control_repeat_until")
-    CONTROL_STOP = BlockShape(is_stack=True, is_cap=YESNT, opcode="control_stop")
+    CONTROL_STOP = BlockShape(is_stack=True, is_cap=MUTATION_DEPENDENT, opcode="control_stop")
     CONTROL_START_AS_CLONE = BlockShape(is_hat=True, opcode="control_start_as_clone")
     CONTROL_CREATE_CLONE_OF = BlockShape(is_stack=True, opcode="control_create_clone_of")
     CONTROL_DELETE_THIS_CLONE = BlockShape(is_stack=True, is_cap=True, opcode="control_delete_this_clone")

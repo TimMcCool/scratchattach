@@ -115,7 +115,7 @@ class Block(base.SpriteSubComponent):
         :return: Whether the block *can* have a next block (basically checks if it's not a cap block, also considering the behaviour of control_stop)
         """
         _shape = self.block_shape
-        if _shape.is_cap is not blockshape.YESNT:
+        if _shape.is_cap is not blockshape.MUTATION_DEPENDENT:
             return _shape.is_attachable
         else:
             if self.mutation is None:
