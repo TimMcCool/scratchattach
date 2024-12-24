@@ -13,6 +13,8 @@ from ..utils import exceptions
 DIGITS: Final[tuple[str]] = tuple("0123456789")
 
 ID_CHARS: Final[str] = string.ascii_letters + string.digits  # + string.punctuation
+
+
 # Strangely enough, it seems like something in string.punctuation causes issues. Not sure why
 
 
@@ -207,6 +209,27 @@ def sanitize_fn(filename: str):
         else:
             ret += '_'
     return ret
+
+
+def get_folder_name(name: str) -> str | None:
+    if name.startswith('//'):
+        return None
+
+    if '//' in name:
+        return name.split('//')[0]
+    else:
+        return None
+
+
+def get_name_nofldr(name: str) -> str:
+    """
+    Get the sprite/asset name without the folder name
+    """
+    fldr = get_folder_name(name)
+    if fldr is None:
+        return name
+    else:
+        return name[len(fldr) + 2:]
 
 
 class Singleton(object):

@@ -5,9 +5,10 @@ import warnings
 from io import BytesIO, TextIOWrapper
 from typing import Any, BinaryIO
 from zipfile import ZipFile
-from typing import Iterable
+from typing import Iterable, TYPE_CHECKING
 from . import base, project, vlb, asset, comment, prim, block, commons, build_defaulting
-
+if TYPE_CHECKING:
+    from . import asset
 
 class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
     def __init__(self, is_stage: bool = False, name: str = '', _current_costume: int = 1, _layer_order: int = None,
@@ -193,6 +194,14 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
                 return
 
     @property
+    def folder(self):
+        return commons.get_folder_name(self.name)
+
+    @property
+    def name_nfldr(self):
+        return commons.get_name_nofldr(self.name)
+
+    @property
     def vlbs(self) -> list[base.NamedIDComponent]:
         """
         :return: All vlbs associated with the sprite. No local globals are added
@@ -318,6 +327,28 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
         return _json
 
     # Finding/getting from list/dict attributes
+    def find_asset(self, value: str, by: str = "name", multiple: bool = False, a_type: type=None) -> asset.Asset | asset.Sound | asset.Costume | list[asset.Asset | asset.Sound | asset.Costume]:
+        if a_type is None:
+            a_type = asset.Asset
+
+        _ret = []
+        by = by.lower()
+        for _asset in self.assets:
+            if not isinstance(_asset, a_type):
+                continue
+
+            # Defaulting
+            compare = getattr(_asset, by)
+
+            if compare == value:
+                if multiple:
+                    _ret.append(_asset)
+                else:
+                    return _asset
+
+        if multiple:
+            return _ret
+
     def find_variable(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Variable | list[vlb.Variable]:
         _ret = []
         by = by.lower()

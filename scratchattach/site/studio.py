@@ -1,4 +1,5 @@
 """Studio class"""
+from __future__ import annotations
 
 import json
 import random
@@ -8,6 +9,7 @@ from ..utils.commons import api_iterative, headers
 from ._base import BaseSiteComponent
 
 from ..utils.requests import Requests as requests
+
 
 class Studio(BaseSiteComponent):
     """
@@ -120,7 +122,7 @@ class Studio(BaseSiteComponent):
             timeout=10,
         )
 
-    def comments(self, *, limit=40, offset=0):
+    def comments(self, *, limit=40, offset=0) -> list[comment.Comment]:
         """
         Returns the comments posted on the studio (except for replies. To get replies use :meth:`scratchattach.studio.Studio.get_comment_replies`).
 

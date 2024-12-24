@@ -231,6 +231,24 @@ class Project(base.JSONExtractable):
         if multiple:
             return _ret
 
+    def find_sprite(self, value: str | None, by: str = "name",
+                 multiple: bool = False) -> sprite.Sprite | list[sprite.Sprite]:
+        _ret = []
+        for _sprite in self.sprites:
+            if by == "name":
+                _val = _sprite.name
+            else:
+                _val = getattr(_sprite, by)
+
+            if _val == value:
+                if multiple:
+                    _ret.append(_sprite)
+                else:
+                    return _sprite
+
+        if multiple:
+            return _ret
+
     def export(self, fp: str, *, auto_open: bool = False, export_as_zip: bool = True):
         data = self.to_json()
 

@@ -55,7 +55,15 @@ class Asset(base.SpriteSubComponent):
         super().__init__(_sprite)
 
     def __repr__(self):
-        return f"Asset<{self.file_name}>"
+        return f"Asset<{self.name!r}>"
+
+    @property
+    def folder(self):
+        return commons.get_folder_name(self.name)
+
+    @property
+    def name_nfldr(self):
+        return commons.get_name_nofldr(self.name)
 
     @property
     def file_name(self):
