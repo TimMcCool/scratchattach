@@ -1039,6 +1039,7 @@ def login(username, password, *, timeout=10) -> Session:
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     request = requests.post(
         "https://scratch.mit.edu/login/", json={"username": username, "password": password}, headers=_headers,
+
         timeout=timeout, errorhandling = False
     )
     try:

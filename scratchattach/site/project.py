@@ -268,6 +268,25 @@ class Project(PartialProject):
                 )
             )
 
+    def get_json(self) -> str:
+        """
+        Downloads the project json and returns it as a string
+        """
+        try:
+            self.update()
+            response = requests.get(
+                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
+                timeout=10,
+            )
+            return response.text
+
+        except Exception:
+            raise (
+                exceptions.FetchError(
+                    "Method only works for projects created with Scratch 3"
+                )
+            )
+
     def body(self):
         """
         Method only works for project created with Scratch 3.

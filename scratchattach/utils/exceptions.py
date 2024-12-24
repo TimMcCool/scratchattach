@@ -91,7 +91,6 @@ class CommentNotFound(Exception):
 
 
 # Invalid inputs
-
 class InvalidLanguage(Exception):
     """
     Raised when an invalid language/language code/language object is provided, for TTS or Translate
@@ -104,7 +103,6 @@ class InvalidTTSGender(Exception):
     Raised when an invalid TTS gender is provided.
     """
     pass
-
 
 # API errors:
 
@@ -208,4 +206,55 @@ class WebsocketServerError(Exception):
     Raised when the self-hosted cloud websocket server fails to start.
     """
 
+    pass
+
+
+# Editor errors:
+
+class UnclosedJSONError(Exception):
+    """
+    Raised when a JSON string is never closed.
+    """
+    pass
+
+
+class BadVLBPrimitiveError(Exception):
+    """
+    Raised when a Primitive claiming to be a variable/list/broadcast actually isn't
+    """
+    pass
+
+
+class UnlinkedVLB(Exception):
+    """
+    Raised when a Primitive cannot be linked to variable/list/broadcast because the provided ID does not have an associated variable/list/broadcast
+    """
+    pass
+
+
+class InvalidStageCount(Exception):
+    """
+    Raised when a project has too many or too few Stage sprites
+    """
+    pass
+
+
+class InvalidVLBName(Exception):
+    """
+    Raised when an invalid VLB name is provided (not variable, list or broadcast)
+    """
+    pass
+
+
+class BadBlockShape(Exception):
+    """
+    Raised when the block shape cannot allow for the operation
+    """
+    pass
+
+
+class BadScript(Exception):
+    """
+    Raised when the block script cannot allow for the operation
+    """
     pass
