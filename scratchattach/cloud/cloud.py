@@ -1,13 +1,15 @@
 """v2 ready: ScratchCloud, TwCloud and CustomCloud classes"""
 
+from __future__ import annotations
+
 from ._base import BaseCloud
 from typing import Type
 from ..utils.requests import Requests as requests
 from ..utils import exceptions, commons
 from ..site import cloud_activity
 
-class ScratchCloud(BaseCloud):
 
+class ScratchCloud(BaseCloud):
     def __init__(self, *, project_id, _session=None):
         super().__init__()
         
@@ -91,9 +93,10 @@ class ScratchCloud(BaseCloud):
         else:
             return super().events()
 
-class TwCloud(BaseCloud):
 
-    def __init__(self, *, project_id, cloud_host="wss://clouddata.turbowarp.org", purpose="", contact=""):
+class TwCloud(BaseCloud):
+    def __init__(self, *, project_id, cloud_host="wss://clouddata.turbowarp.org", purpose="", contact="",
+                 _session=None):
         super().__init__()
         
         self.project_id = project_id

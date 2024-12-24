@@ -1,4 +1,5 @@
-"""Session class and login function"""
+"""User class"""
+from __future__ import annotations
 
 import json
 import random
@@ -71,10 +72,10 @@ class User(BaseSiteComponent):
 
         # Headers and cookies:
         if self._session is None:
-            self._headers = headers
+            self._headers :dict = headers
             self._cookies = {}
         else:
-            self._headers = self._session._headers
+            self._headers :dict = self._session._headers
             self._cookies = self._session._cookies
 
         # Headers for operations that require accept and Content-Type fields:
@@ -106,7 +107,6 @@ class User(BaseSiteComponent):
         if self._session._username != self.username:
             raise exceptions.Unauthorized(
                 "You need to be authenticated as the profile owner to do this.")
-
 
     def does_exist(self):
         """
@@ -269,7 +269,7 @@ class User(BaseSiteComponent):
             list<projects.projects.Project>: The user's shared projects
         """
         _projects = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.username}/projects/", limit=limit, offset=offset, headers = self._headers)
+            f"https://api.scratch.mit.edu/users/{self.username}/projects/", limit=limit, offset=offset, _headers= self._headers)
         for p in _projects:
             p["author"] = {"username":self.username}
         return commons.parse_object_list(_projects, project.Project, self._session)
@@ -391,7 +391,7 @@ class User(BaseSiteComponent):
             list<projects.projects.Project>: The user's favorite projects
         """
         _projects = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.username}/favorites/", limit=limit, offset=offset, headers = self._headers)
+            f"https://api.scratch.mit.edu/users/{self.username}/favorites/", limit=limit, offset=offset, _headers= self._headers)
         return commons.parse_object_list(_projects, project.Project, self._session)
 
     def favorites_count(self):
@@ -420,46 +420,44 @@ class User(BaseSiteComponent):
         """
         self._assert_permission()
         _projects = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.username}/projects/recentlyviewed", limit=limit, offset=offset, headers = self._headers)
+            f"https://api.scratch.mit.edu/users/{self.username}/projects/recentlyviewed", limit=limit, offset=offset, _headers= self._headers)
         return commons.parse_object_list(_projects, project.Project, self._session)
+
+    def set_pfp(self, image: bytes):
+        """
+        Sets the user's profile picture. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
+        """
+        # Teachers can set pfp! - Should update this method to check for that
+        # self._assert_permission()
+        requests.post(
+            f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
+            headers=self._headers,
+            cookies=self._cookies,
+            files={"file": image})
 
     def set_bio(self, text):
         """
         Sets the user's "About me" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
-        self._assert_permission()
+        # Teachers can set bio! - Should update this method to check for that
+        # self._assert_permission()
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
-            headers = self._json_headers,
-            cookies = self._cookies,
-            data = json.dumps(dict(
-                comments_allowed = True,
-                id = self.username,
-                bio = text,
-                thumbnail_url = self.icon_url,
-                userId = self.id,
-                username = self.username
-            ))
-        )
+            headers=self._json_headers,
+            cookies=self._cookies,
+            json={"bio": text})
 
     def set_wiwo(self, text):
         """
         Sets the user's "What I'm working on" section. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
         """
-        self._assert_permission()
+        # Teachers can also change your wiwo
+        # self._assert_permission()
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
-            headers = self._json_headers,
-            cookies = self._cookies,
-            data = json.dumps(dict(
-                comments_allowed = True,
-                id = self.username,
-                status = text,
-                thumbnail_url = self.icon_url,
-                userId = self.id,
-                username = self.username
-            ))
-        )
+            headers=self._json_headers,
+            cookies=self._cookies,
+            json={"status": text})
 
     def set_featured(self, project_id, *, label=""):
         """
@@ -474,9 +472,9 @@ class User(BaseSiteComponent):
         self._assert_permission()
         requests.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
-            headers = self._json_headers,
-            cookies = self._cookies,
-            data = json.dumps({"featured_project":int(project_id),"featured_project_label":label})
+            headers=self._json_headers,
+            cookies=self._cookies,
+            json={"featured_project": int(project_id), "featured_project_label": label}
         )
 
     def set_forum_signature(self, text):
@@ -514,14 +512,14 @@ class User(BaseSiteComponent):
         """
         self._assert_auth()
         data = {
-        "commentee_id": commentee_id,
-        "content": str(content),
-        "parent_id": parent_id,
+                "commentee_id": commentee_id,
+                "content": str(content),
+                "parent_id": parent_id,
         }
         r = requests.post(
             f"https://scratch.mit.edu/site-api/comments/user/{self.username}/add/",
-            headers = headers,
-            cookies = self._cookies,
+            headers=headers,
+            cookies=self._cookies,
             data=json.dumps(data),
         )
         if r.status_code != 200:
@@ -534,7 +532,7 @@ class User(BaseSiteComponent):
             text = r.text
             data = {
                 'id': text.split('<div id="comments-')[1].split('" class="comment')[0],
-                'author': {"username":text.split('" data-comment-user="')[1].split('"><img class')[0]},
+                'author': {"username": text.split('" data-comment-user="')[1].split('"><img class')[0]},
                 'content': text.split('<div class="content">')[1].split('"</div>')[0],
                 'reply_count': 0,
                 'cached_replies': []
@@ -547,7 +545,7 @@ class User(BaseSiteComponent):
                 raise(exceptions.CommentPostFailure(
                     "You are being rate-limited for running this operation too often. Implement a cooldown of about 10 seconds."))
             else:
-                raise(exceptions.FetchError("Couldn't parse API response"))
+                raise(exceptions.FetchError(f"Couldn't parse API response: {r.text!r}"))
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """
@@ -713,7 +711,7 @@ class User(BaseSiteComponent):
             DATA.append(_comment)
         return DATA
 
-    def comment_by_id(self, comment_id):
+    def comment_by_id(self, comment_id) -> comment.Comment:
         """
         Gets a comment on this user's profile by id.
 

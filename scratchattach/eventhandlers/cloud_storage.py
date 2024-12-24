@@ -1,4 +1,5 @@
 """CloudStorage class"""
+from __future__ import annotations
 
 from .cloud_requests import CloudRequests
 import json

@@ -1,4 +1,5 @@
 """MessageEvents class"""
+from __future__ import annotations
 
 from ..site import user
 from ._base import BaseEventHandler
