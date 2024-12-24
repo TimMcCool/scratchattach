@@ -1,3 +1,8 @@
+# 2.1.7
+
+- Fixed self-hosting TW cloud ws servers feature
+- Added sa.translate and sa.text2speech functions
+
 # 2.0.6
  
 Cloud variables: Stability improvement
