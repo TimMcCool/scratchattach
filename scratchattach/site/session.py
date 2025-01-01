@@ -13,6 +13,10 @@ import warnings
 # import secrets
 # import zipfile
 from typing import Type
+try:
+    from warnings import deprecated
+except ImportError:
+    deprecated = lambda x: (lambda y: y)
 
 from bs4 import BeautifulSoup
 
@@ -788,6 +792,7 @@ class Session(BaseSiteComponent):
         """
         return self._make_linked_object("username", username, user.User, exceptions.UserNotFound)
 
+    @deprecated("Finding usernames by user ids has been fixed.")
     def find_username_from_id(self, user_id: int) -> str:
         """
         Warning:
@@ -814,6 +819,7 @@ class Session(BaseSiteComponent):
             raise exceptions.UserNotFound()
         return username
 
+    @deprecated("Finding usernames by user ids has been fixed.")
     def connect_user_by_id(self, user_id: int) -> user.User:
         """
         Gets a user using this session, connects the session to the User object to allow authenticated actions
