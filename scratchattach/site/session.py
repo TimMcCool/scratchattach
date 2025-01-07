@@ -12,7 +12,8 @@ import time
 import warnings
 # import secrets
 # import zipfile
-from typing import Type
+# from typing import Type
+Type = type
 try:
     from warnings import deprecated
 except ImportError:
