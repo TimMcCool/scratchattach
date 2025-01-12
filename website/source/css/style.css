@@ -1,23 +1,11 @@
-
-
-@media only screen and (max-width: 800px) {
+@media (max-width: 768px) {
     .nav-buttons {
         display: none; /* Hides the navigation buttons */
-    }
-    #menu-button {
-        display: block!important;
-    }
-    .nav-buttons {
-        display: none!important; /* Hides the navigation buttons */
     }
 
     /* You can also hide the logo if needed */
     .logo {
-        display: block; /* Hides the logo */
-    }
-
-    .logo img {
-        width: 100px!important;
+        display: none; /* Hides the logo */
     }
 
     /* Stack columns in section 1 */
@@ -38,20 +26,12 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    /* overflow-x: hidden; */
-}
-
-#menu-button {
-    background-color: rgba(107, 0, 0, 0);
-    color: white;
-    border: none;
 }
 
 body {
     font-family: 'IBM Plex Sans', sans-serif;
     background-color: #121212;
     color: #ffffff;
-    overflow-x: hidden;
 }
 
 /* Sticky Header */
@@ -64,9 +44,8 @@ header {
     border-bottom: 1px solid #333;
     position: sticky;
     top: 0;
-    z-index: 10000000000000000000000000000000000000;
+    z-index: 1000;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25); /* Added shadow for the header */
-    height: 6vh;
 }
 
 .logo-section {
@@ -488,20 +467,4 @@ a {
     font-size: 14px; /* Font size for author */
     color: #aaa; /* Slightly lighter color for author */
     margin: 0;
-}
-
-.menu {
-    top: 6vh;
-    position: absolute;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.767);
-    backdrop-filter: blur(10px);
-    margin: 0;
-    left: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10%;
 }

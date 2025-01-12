@@ -28,42 +28,7 @@
                 <i data-feather="download" class="icon"></i> Install
             </button>
         </div>
-
-        <button onclick="openorclose();" class=" filled-btn" id="menu-button" style="display: none">
-            <i data-feather="more-vertical" class="icon"></i>
-        </button>
-
-        <div class="menu" style="display: none" id="menu">
-            <button onclick="openwin('https://github.com/TimMcCool/scratchattach/wiki/Documentation', '_blank');" class="">
-            </i>Documentation
-        </button>
-        <button onclick="openwin('https://github.com/TimMcCool/scratchattach/', '_blank');" class="">
-            <i data-feather="github" class="icon"></i> Source
-        </button>
-        <button onclick="scrollToSection('installation');" class="filled-btn">
-            <i data-feather="download" class="icon"></i> Install
-        </button>
-        </div>
     </header>
-
-    <script>
-    let open = 0;
-    function openorclose() {
-        if (open === 0) {
-            document.getElementById('menu').style = "display: flex;";
-            open = 1;
-        } else { 
-            document.getElementById('menu').style = "display: none;";
-            open = 0;
-        }
-    }
-
-    function openwin(win, target) {
-        window.open(win, target);
-    }
-    </script>
-
-
     <div class="background-container">
         <div class="background-image"></div> <!-- New div for the background image -->
         <section class="section-1" id="intro">
@@ -206,19 +171,19 @@
         <div class="content">
             <h2 style="padding-top:20px">Getting started</h2>
             <p style="margin-bottom:20px">Log in with your Scratch account:</p>
-            <div class="expand-box" data-width="90%" id="logInCmd">
+            <div class="expand-box" data-width="700px" id="logInCmd">
                 <p id="expandText0" data-text="import scratchattach as sa" margin="0"></p>
                 <p id="expandText1" data-text="session = sa.login('username', 'password')" margin="0"></p>
             </div>                    
             <p style="margin-bottom:20px">Set and get cloud variables anytime:</p>
-            <div class="expand-box" data-width="90%" id="cloudCmd">
+            <div class="expand-box" data-width="700px" id="cloudCmd">
                 <p id="expandText0" data-text="cloud = session.connect_cloud('project_id')"></p>
                 <p id="expandText1" data-text="‎"></p>
                 <p id="expandText2" data-text="cloud.set_var('variable', 'value')"></p>
                 <p id="expandText3" data-text="cloud.get_var('variable')"></p>
             </div>                    
             <p style="margin-bottom:20px">Follow users, love their projects and comment:</p>
-            <div class="expand-box" data-width="90%" id="siteCmd">
+            <div class="expand-box" data-width="700px" id="siteCmd">
                 <p id="expandText0" data-text="user = session.connect_user('username')"></p>
                 <p id="expandText1" data-text="user.follow()"></p>
                 <p id="expandText2" data-text="‎"></p>
@@ -277,8 +242,6 @@
             const section = document.getElementById(sectionId);
             const elementPosition = section.getBoundingClientRect().top + window.scrollY; // Add current scroll position
             window.scrollTo({ behavior: 'smooth', top: elementPosition-75});
-            document.getElementById('menu').style = "display: none;";
-            open = 0;
         }
 
     </script>
