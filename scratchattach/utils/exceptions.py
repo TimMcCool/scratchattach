@@ -42,8 +42,6 @@ class XTokenError(Exception):
     This error can occur if the xtoken couldn't be fetched when the session was created. Some actions (like loving projects) require providing this token.
     """
 
-    pass
-
 
 # Not found errors:
 
@@ -52,23 +50,16 @@ class UserNotFound(Exception):
     Raised when a non-existent user is requested.
     """
 
-    pass
-
 
 class ProjectNotFound(Exception):
     """
     Raised when a non-existent project is requested.
     """
 
-    pass
-
-
 class ClassroomNotFound(Exception):
     """
     Raised when a non-existent Classroom is requested.
     """
-
-    pass
 
 
 class StudioNotFound(Exception):
@@ -76,14 +67,11 @@ class StudioNotFound(Exception):
     Raised when a non-existent studio is requested.
     """
 
-    pass
-
 
 class ForumContentNotFound(Exception):
     """
     Raised when a non-existent forum topic / post is requested.
     """
-    pass
 
 
 class CommentNotFound(Exception):
@@ -95,14 +83,12 @@ class InvalidLanguage(Exception):
     """
     Raised when an invalid language/language code/language object is provided, for TTS or Translate
     """
-    pass
 
 
 class InvalidTTSGender(Exception):
     """
     Raised when an invalid TTS gender is provided.
     """
-    pass
 
 # API errors:
 
@@ -113,15 +99,11 @@ class LoginFailure(Exception):
     This could be caused by an invalid username / password. Another cause could be that your IP address was banned from logging in to Scratch. If you're using an online IDE (like replit), try running the code on your computer.
     """
 
-    pass
-
 
 class FetchError(Exception):
     """
     Raised when getting information from the Scratch API fails. This can have various reasons. Make sure all provided arguments are valid.
     """
-
-    pass
 
 
 class BadRequest(Exception):
@@ -129,15 +111,15 @@ class BadRequest(Exception):
     Raised when the Scratch API responds with a "Bad Request" error message. This can have various reasons. Make sure all provided arguments are valid.
     """
 
-    pass
-
+class RateLimitedError(Exception):
+    """
+    Indicates a ratelimit enforced by scratchattach
+    """
 
 class Response429(Exception):
     """
     Raised when the Scratch API responds with a 429 error. This means that your network was ratelimited or blocked by Scratch. If you're using an online IDE (like replit.com), try running the code on your computer.
     """
-
-    pass
 
 
 class CommentPostFailure(Exception):
@@ -145,14 +127,11 @@ class CommentPostFailure(Exception):
     Raised when a comment fails to post. This can have various reasons.
     """
 
-    pass
-
 
 class APIError(Exception):
     """
     For API errors that can't be classified into one of the above errors
     """
-    pass
 
 
 class ScrapeError(Exception):
@@ -160,7 +139,6 @@ class ScrapeError(Exception):
     Raised when something goes wrong while web-scraping a page with bs4.
     """
 
-    pass
 
 
 # Cloud / encoding errors:
@@ -170,7 +148,6 @@ class CloudConnectionError(Exception):
     Raised when connecting to Scratch's cloud server fails. This can have various reasons.
     """
 
-    pass
 
 
 class InvalidCloudValue(Exception):
@@ -178,7 +155,6 @@ class InvalidCloudValue(Exception):
     Raised when a cloud variable is set to an invalid value.
     """
 
-    pass
 
 
 class InvalidDecodeInput(Exception):
@@ -186,7 +162,6 @@ class InvalidDecodeInput(Exception):
     Raised when the built-in decoder :meth:`scratchattach.encoder.Encoding.decode` receives an invalid input.
     """
 
-    pass
 
 
 # Cloud Requests errors:
@@ -196,7 +171,6 @@ class RequestNotFound(Exception):
     Cloud Requests: Raised when a non-existent cloud request is edited using :meth:`scratchattach.cloud_requests.CloudRequests.edit_request`.
     """
 
-    pass
 
 
 # Websocket server errors:
@@ -206,7 +180,6 @@ class WebsocketServerError(Exception):
     Raised when the self-hosted cloud websocket server fails to start.
     """
 
-    pass
 
 
 # Editor errors:
@@ -215,46 +188,46 @@ class UnclosedJSONError(Exception):
     """
     Raised when a JSON string is never closed.
     """
-    pass
 
 
 class BadVLBPrimitiveError(Exception):
     """
     Raised when a Primitive claiming to be a variable/list/broadcast actually isn't
     """
-    pass
 
 
 class UnlinkedVLB(Exception):
     """
     Raised when a Primitive cannot be linked to variable/list/broadcast because the provided ID does not have an associated variable/list/broadcast
     """
-    pass
 
 
 class InvalidStageCount(Exception):
     """
     Raised when a project has too many or too few Stage sprites
     """
-    pass
 
 
 class InvalidVLBName(Exception):
     """
     Raised when an invalid VLB name is provided (not variable, list or broadcast)
     """
-    pass
 
 
 class BadBlockShape(Exception):
     """
     Raised when the block shape cannot allow for the operation
     """
-    pass
 
 
 class BadScript(Exception):
     """
     Raised when the block script cannot allow for the operation
     """
-    pass
+
+# Warnings
+
+class LoginDataWarning(UserWarning):
+    """
+    Warns you not to accidentally share your login data.
+    """

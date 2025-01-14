@@ -10,6 +10,8 @@ import random
 import re
 import time
 import warnings
+from typing import Optional, TypeVar
+
 # import secrets
 # import zipfile
 # from typing import Type
@@ -32,10 +34,25 @@ from ..utils import exceptions
 from ..utils.commons import headers, empty_project_json, webscrape_count, get_class_sort_mode
 from ..utils.requests import Requests as requests
 
-CREATE_PROJECT_USES = []
-CREATE_STUDIO_USES = []
-CREATE_CLASS_USES = []
+ratelimit_cache: dict[str, list[float]] = {}
 
+def enforce_ratelimit(__type: str, name: str, amount: int = 5, duration: int = 60) -> None:
+    cache = ratelimit_cache
+    cache.setdefault(__type, [])
+    uses = cache[__type]
+    while uses[-1] < time.time() - duration:
+        uses.pop()
+    if len(uses) < amount:
+        uses.insert(0, time.time())
+        return
+    raise exceptions.RateLimitedError(
+        f"Rate limit for {name} exceeded.\n"
+        "This rate limit is enforced by scratchattach, not by the Scratch API.\n"
+        "For security reasons, it cannot be turned off.\n\n"
+        "Don't spam-create studios or similar, it WILL get you banned."
+    )
+   
+C = TypeVar("C", bound=BaseSiteComponent) 
 
 class Session(BaseSiteComponent):
     """
@@ -181,7 +198,7 @@ class Session(BaseSiteComponent):
 
             elif label_span.contents[0] == "Current Email Address":
                 email = label_span.parent.contents[-1].text.strip("\n ")
-
+        assert email is not None
         return email
 
     def logout(self):
@@ -223,19 +240,19 @@ class Session(BaseSiteComponent):
             limit=limit, offset=offset, _headers=self._headers, cookies=self._cookies
         )
 
-    def classroom_alerts(self, _classroom: classroom.Classroom | int = None, mode: str = "Last created",
-                         page: int = None):
+    def classroom_alerts(self, _classroom: Optional[classroom.Classroom | int] = None, mode: str = "Last created",
+                         page: Optional[int] = None):
         if isinstance(_classroom, classroom.Classroom):
             _classroom = _classroom.id
 
         if _classroom is None:
-            _classroom = ''
+            _classroom_str = ''
         else:
-            _classroom = f"{_classroom}/"
+            _classroom_str = f"{_classroom}/"
 
         ascsort, descsort = get_class_sort_mode(mode)
 
-        data = requests.get(f"https://scratch.mit.edu/site-api/classrooms/alerts/{_classroom}",
+        data = requests.get(f"https://scratch.mit.edu/site-api/classrooms/alerts/{_classroom_str}",
                             params={"page": page, "ascsort": ascsort, "descsort": descsort},
                             headers=self._headers, cookies=self._cookies).json()
 
@@ -359,7 +376,7 @@ class Session(BaseSiteComponent):
         return pb
 
     @staticmethod
-    def download_asset(asset_id_with_file_ext, *, filename: str = None, fp=""):
+    def download_asset(asset_id_with_file_ext, *, filename: Optional[str] = None, fp=""):
         if not (fp.endswith("/") or fp.endswith("\\")):
             fp = fp + "/"
         try:
@@ -461,7 +478,7 @@ class Session(BaseSiteComponent):
 
     # --- Create project API ---
 
-    def create_project(self, *, title: str = None, project_json: dict = empty_project_json,
+    def create_project(self, *, title: Optional[str] = None, project_json: dict = empty_project_json,
                        parent_id=None) -> project.Project:  # not working
         """
         Creates a project on the Scratch website.
@@ -470,22 +487,10 @@ class Session(BaseSiteComponent):
             Don't spam this method - it WILL get you banned from Scratch.
             To prevent accidental spam, a rate limit (5 projects per minute) is implemented for this function.
         """
-        global CREATE_PROJECT_USES
-        if len(CREATE_PROJECT_USES) < 5:
-            CREATE_PROJECT_USES.insert(0, time.time())
-        else:
-            if CREATE_PROJECT_USES[-1] < time.time() - 300:
-                CREATE_PROJECT_USES.pop()
-            else:
-                raise exceptions.BadRequest(
-                    "Rate limit for creating Scratch projects exceeded.\n"
-                    "This rate limit is enforced by scratchattach, not by the Scratch API.\n"
-                    "For security reasons, it cannot be turned off.\n\n"
-                    "Don't spam-create projects, it WILL get you banned.")
-            CREATE_PROJECT_USES.insert(0, time.time())
+        enforce_ratelimit("create_scratch_project", "creating Scratch projects")
 
         if title is None:
-            title = f'Untitled-{random.randint(0, 200)}'
+            title = f'Untitled-{random.randint(0, 1<<16)}'
 
         params = {
             'is_remix': '0' if parent_id is None else "1",
@@ -497,7 +502,7 @@ class Session(BaseSiteComponent):
                                  headers=self._headers, json=project_json).json()
         return self.connect_project(response["content-name"])
 
-    def create_studio(self, *, title: str = None, description: str = None) -> studio.Studio:
+    def create_studio(self, *, title: Optional[str] = None, description: Optional[str] = None) -> studio.Studio:
         """
         Create a studio on the scratch website
 
@@ -505,20 +510,8 @@ class Session(BaseSiteComponent):
             Don't spam this method - it WILL get you banned from Scratch.
             To prevent accidental spam, a rate limit (5 studios per minute) is implemented for this function.
         """
-        global CREATE_STUDIO_USES
-        if len(CREATE_STUDIO_USES) < 5:
-            CREATE_STUDIO_USES.insert(0, time.time())
-        else:
-            if CREATE_STUDIO_USES[-1] < time.time() - 300:
-                CREATE_STUDIO_USES.pop()
-            else:
-                raise exceptions.BadRequest(
-                    "Rate limit for creating Scratch studios exceeded.\n"
-                    "This rate limit is enforced by scratchattach, not by the Scratch API.\n"
-                    "For security reasons, it cannot be turned off.\n\n"
-                    "Don't spam-create studios, it WILL get you banned.")
-            CREATE_STUDIO_USES.insert(0, time.time())
-
+        enforce_ratelimit("create_scratch_studio", "creating Scratch studios")
+        
         if self.new_scratcher:
             raise exceptions.Unauthorized(f"\nNew scratchers (like {self.username}) cannot create studios.")
 
@@ -543,19 +536,7 @@ class Session(BaseSiteComponent):
             Don't spam this method - it WILL get you banned from Scratch.
             To prevent accidental spam, a rate limit (5 classes per minute) is implemented for this function.
         """
-        global CREATE_CLASS_USES
-        if len(CREATE_CLASS_USES) < 5:
-            CREATE_CLASS_USES.insert(0, time.time())
-        else:
-            if CREATE_CLASS_USES[-1] < time.time() - 300:
-                CREATE_CLASS_USES.pop()
-            else:
-                raise exceptions.BadRequest(
-                    "Rate limit for creating Scratch classes exceeded.\n"
-                    "This rate limit is enforced by scratchattach, not by the Scratch API.\n"
-                    "For security reasons, it cannot be turned off.\n\n"
-                    "Don't spam-create classes, it WILL get you banned.")
-            CREATE_CLASS_USES.insert(0, time.time())
+        enforce_ratelimit("create_scratch_class", "creating Scratch classes")
 
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't create class")
@@ -654,7 +635,7 @@ class Session(BaseSiteComponent):
         except Exception:
             raise exceptions.FetchError()
 
-    def mystuff_classes(self, mode: str = "Last created", page: int = None) -> list[classroom.Classroom]:
+    def mystuff_classes(self, mode: str = "Last created", page: Optional[int] = None) -> list[classroom.Classroom]:
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have classes")
         ascsort, descsort = get_class_sort_mode(mode)
@@ -676,7 +657,7 @@ class Session(BaseSiteComponent):
                 _session=self))
         return classes
 
-    def mystuff_ended_classes(self, mode: str = "Last created", page: int = None) -> list[classroom.Classroom]:
+    def mystuff_ended_classes(self, mode: str = "Last created", page: Optional[int] = None) -> list[classroom.Classroom]:
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have (deleted) classes")
         ascsort, descsort = get_class_sort_mode(mode)
@@ -731,8 +712,8 @@ class Session(BaseSiteComponent):
     # --- Connect classes inheriting from BaseCloud ---
 
     # noinspection PyPep8Naming
-    def connect_cloud(self, project_id, *, CloudClass: Type[_base.BaseCloud] = cloud.ScratchCloud) \
-            -> Type[_base.BaseCloud]:
+    def connect_cloud(self, project_id, *, cloud_class: type[_base.BaseCloud] = cloud.ScratchCloud) \
+            -> _base.BaseCloud:
         """
         Connects to a cloud (by default Scratch's cloud) as logged-in user.
 
@@ -745,7 +726,7 @@ class Session(BaseSiteComponent):
         Returns: Type[scratchattach._base.BaseCloud]: An object representing the cloud of a project. Can be of any
         class inheriting from BaseCloud.
         """
-        return CloudClass(project_id=project_id, _session=self)
+        return cloud_class(project_id=project_id, _session=self)
 
     def connect_scratch_cloud(self, project_id) -> cloud.ScratchCloud:
         """
@@ -767,8 +748,8 @@ class Session(BaseSiteComponent):
 
     # noinspection PyPep8Naming
     # Class is camelcase here
-    def _make_linked_object(self, identificator_name, identificator, Class: BaseSiteComponent,
-                            NotFoundException: Exception) -> BaseSiteComponent:
+    def _make_linked_object(self, identificator_name, identificator, __class: type[C],
+                            NotFoundException: type[Exception]) -> C:
         """
         The Session class doesn't save the login in a ._session attribute, but IS the login ITSELF.
 
@@ -779,7 +760,7 @@ class Session(BaseSiteComponent):
         """
         # noinspection PyProtectedMember
         # _get_object is protected
-        return commons._get_object(identificator_name, identificator, Class, NotFoundException, self)
+        return commons._get_object(identificator_name, identificator, __class, NotFoundException, self)
 
     def connect_user(self, username: str) -> user.User:
         """
@@ -971,7 +952,19 @@ sess
 
 # ------ #
 
-def login_by_id(session_id: str, *, username: str = None, password: str = None, xtoken=None) -> Session:
+def issue_login_warning() -> None:
+    """
+    Issue a login data warning.
+    """
+    warnings.warn(
+        "IMPORTANT: If you included login credentials directly in your code (e.g. session_id, session_string, ...), \
+        then make sure to EITHER instead load them from environment variables or files OR remember to remove them before \
+        you share your code with anyone else. If you want to remove this warning, \
+        use `warnings.filterwarnings('ignore', category=scratchattach.LoginDataWarning)`",
+        exceptions.LoginDataWarning
+    )
+
+def login_by_id(session_id: str, *, username: Optional[str] = None, password: Optional[str] = None, xtoken=None) -> Session:
     """
     Creates a session / log in to the Scratch website with the specified session id.
     Structured similarly to Session._connect_object method.
@@ -993,6 +986,7 @@ def login_by_id(session_id: str, *, username: str = None, password: str = None, 
     # but you still want to use cloud variables.
 
     # Generate session_string (a scratchattach-specific authentication method)
+    issue_login_warning()
     if password is not None:
         session_data = dict(session_id=session_id, username=username, password=password)
         session_string = base64.b64encode(json.dumps(session_data).encode())
@@ -1040,6 +1034,7 @@ def login(username, password, *, timeout=10) -> Session:
     Returns:
         scratchattach.session.Session: An object that represents the created login / session
     """
+    issue_login_warning()
 
     # Post request to login API:
     _headers = headers.copy()
@@ -1051,7 +1046,7 @@ def login(username, password, *, timeout=10) -> Session:
     )
     try:
         session_id = str(re.search('"(.*)"', request.headers["Set-Cookie"]).group())
-    except Exception:
+    except (AttributeError, Exception):
         raise exceptions.LoginFailure(
             "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
 
@@ -1060,6 +1055,7 @@ def login(username, password, *, timeout=10) -> Session:
 
 
 def login_by_session_string(session_string: str) -> Session:
+    issue_login_warning()
     session_string = base64.b64decode(session_string).decode()  # unobfuscate
     session_data = json.loads(session_string)
     try:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import ssl
 import time
+from typing import Optional, Union
 from abc import ABC
 
 import websocket
@@ -48,7 +49,7 @@ class BaseCloud(ABC):
     """
 
 
-    def __init__(self, *, _session=None):
+    def __init__(self, *, project_id: Optional[Union[int, str]] = None, _session=None):
 
         # Required internal attributes that every object representing a cloud needs to have (no matter what cloud is represented):
         self._session = _session
@@ -74,6 +75,8 @@ class BaseCloud(ABC):
         self.cookie = None
         self.origin = None
         self.print_connect_message = False
+        
+        self.project_id = project_id
 
     def _assert_auth(self):
         if self._session is None:

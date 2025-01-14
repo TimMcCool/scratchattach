@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from types import FunctionType
-from typing import Final, Any, TYPE_CHECKING
+from typing import Final, Any, TYPE_CHECKING, TypeVar
 
 from . import exceptions
 from .requests import Requests as requests
@@ -128,13 +128,12 @@ def api_iterative(url: str, *, limit: int, offset: int, max_req_limit: int = 40,
     )
     return api_data
 
-
-def _get_object(identificator_name, identificator, Class: type, NotFoundException, session=None) -> BaseSiteComponent:
+def _get_object(identificator_name, identificator, __class: type[C], NotFoundException, session=None) -> C:
     # Internal function: Generalization of the process ran by get_user, get_studio etc.
     # Builds an object of class that is inheriting from BaseSiteComponent
     # # Class must inherit from BaseSiteComponent
     try:
-        _object = Class(**{identificator_name: identificator, "_session": session})
+        _object = __class(**{identificator_name: identificator, "_session": session})
         r = _object.update()
         if r == "429":
             raise exceptions.Response429(
@@ -160,11 +159,13 @@ def webscrape_count(raw, text_before, text_after, cls: type = int) -> int | Any:
     return cls(raw.split(text_before)[1].split(text_after)[0])
 
 
-def parse_object_list(raw, Class, session=None, primary_key="id") -> list[BaseSiteComponent]:
+C = TypeVar("C", bound=BaseSiteComponent)
+
+def parse_object_list(raw, __class: type[C], session=None, primary_key="id") -> list[C]:
     results = []
     for raw_dict in raw:
         try:
-            _obj = Class(**{primary_key: raw_dict[primary_key], "_session": session})
+            _obj = __class(**{primary_key: raw_dict[primary_key], "_session": session})
             _obj._update_from_dict(raw_dict)
             results.append(_obj)
         except Exception as e:

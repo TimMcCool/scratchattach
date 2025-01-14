@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import TYPE_CHECKING, Any
+from typing import Optional, TYPE_CHECKING, Any
 
 import bs4
 
@@ -305,8 +305,8 @@ class Classroom(BaseSiteComponent):
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
 
-    def register_student(self, username: str, password: str = '', birth_month: int = None, birth_year: int = None,
-                         gender: str = None, country: str = None, is_robot: bool = False) -> None:
+    def register_student(self, username: str, password: str = '', birth_month: Optional[int] = None, birth_year: Optional[int] = None,
+                         gender: Optional[str] = None, country: Optional[str] = None, is_robot: bool = False) -> None:
         return register_by_token(self.id, self.classtoken, username, password, birth_month, birth_year, gender, country,
                                  is_robot)
 
@@ -346,7 +346,7 @@ class Classroom(BaseSiteComponent):
 
         return activities
 
-    def activity(self, student: str = "all", mode: str = "Last created", page: int = None) -> list[dict[str, Any]]:
+    def activity(self, student: str = "all", mode: str = "Last created", page: Optional[int] = None) -> list[dict[str, Any]]:
         """
         Get a list of private activity, only available to the class owner.
         Returns:
