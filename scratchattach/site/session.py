@@ -10,7 +10,9 @@ import random
 import re
 import time
 import warnings
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, TYPE_CHECKING
+from contextlib import contextmanager
+from threading import local
 
 # import secrets
 # import zipfile
@@ -20,6 +22,8 @@ try:
     from warnings import deprecated
 except ImportError:
     deprecated = lambda x: (lambda y: y)
+if TYPE_CHECKING:
+    from _typeshed import FileDescriptorOrPath, SupportsRead
 
 from bs4 import BeautifulSoup
 
@@ -952,10 +956,26 @@ sess
 
 # ------ #
 
+suppressed_login_warning = local()
+
+@contextmanager
+def suppress_login_warning():
+    """
+    Suppress the login warning.
+    """
+    suppressed_login_warning.suppressed = getattr(suppressed_login_warning, "suppressed", 0)
+    try:
+        suppressed_login_warning.suppressed += 1
+        yield
+    finally:
+        suppressed_login_warning.suppressed -= 1
+
 def issue_login_warning() -> None:
     """
     Issue a login data warning.
     """
+    if getattr(suppressed_login_warning, "suppressed", 0):
+        return
     warnings.warn(
         "IMPORTANT: If you included login credentials directly in your code (e.g. session_id, session_string, ...), \
         then make sure to EITHER instead load them from environment variables or files OR remember to remove them before \
@@ -1051,22 +1071,41 @@ def login(username, password, *, timeout=10) -> Session:
             "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
 
     # Create session object:
-    return login_by_id(session_id, username=username, password=password)
-
+    with suppress_login_warning():
+        return login_by_id(session_id, username=username, password=password)
 
 def login_by_session_string(session_string: str) -> Session:
+    """
+    Login using a session string.
+    """
     issue_login_warning()
     session_string = base64.b64decode(session_string).decode()  # unobfuscate
     session_data = json.loads(session_string)
     try:
         assert session_data.get("session_id")
-        return login_by_id(session_data["session_id"], username=session_data.get("username"),
+        with suppress_login_warning():
+            return login_by_id(session_data["session_id"], username=session_data.get("username"),
                            password=session_data.get("password"))
     except Exception:
         pass
     try:
         assert session_data.get("username") and session_data.get("password")
-        return login(username=session_data["username"], password=session_data["password"])
+        with suppress_login_warning():
+            return login(username=session_data["username"], password=session_data["password"])
     except Exception:
         pass
     raise ValueError("Couldn't log in.")
+
+def login_by_io(file: SupportsRead[str]) -> Session:
+    """
+    Login using a file object.
+    """
+    with suppress_login_warning():
+        return login_by_session_string(file.read())
+
+def login_by_file(file: FileDescriptorOrPath) -> Session:
+    """
+    Login using a path to a file.
+    """
+    with suppress_login_warning(), open(file, encoding="utf-8") as f:
+        return login_by_io(f)
