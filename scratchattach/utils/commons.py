@@ -1,15 +1,13 @@
 """v2 ready: Common functions used by various internal modules"""
 from __future__ import annotations
 
-from types import FunctionType
-from typing import Optional, Final, Any, TYPE_CHECKING, TypeVar
+from typing import Optional, Final, Any, TypeVar, Callable, TYPE_CHECKING, Union
+from threading import Lock
 
 from . import exceptions
 from .requests import Requests as requests
 
-if TYPE_CHECKING:
-    # Having to do this is quite inelegant, but this is commons.py, so this is done to avoid cyclic imports
-    from ..site._base import BaseSiteComponent
+from ..site import _base
 
 headers: Final = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -65,8 +63,8 @@ empty_project_json: Final = {
 }
 
 
-def api_iterative_data(fetch_func: FunctionType, limit: int, offset: int, max_req_limit: int = 40,
-                       unpack: bool = True):
+def api_iterative_data(fetch_func: Callable[[int, int], list], limit: int, offset: int, max_req_limit: int = 40,
+                       unpack: bool = True) -> list:
     """
     Iteratively gets data by calling fetch_func with a moving offset and a limit.
     Once fetch_func returns None, the retrieval is completed.
@@ -132,8 +130,13 @@ def _get_object(identificator_name, identificator, __class: type[C], NotFoundExc
     # Internal function: Generalization of the process ran by get_user, get_studio etc.
     # Builds an object of class that is inheriting from BaseSiteComponent
     # # Class must inherit from BaseSiteComponent
+    from ..site import project
     try:
-        _object = __class(**{identificator_name: identificator, "_session": session})
+        use_class: type = __class
+        if __class is project.PartialProject:
+            use_class = project.Project
+            assert issubclass(use_class, __class)
+        _object = use_class(**{identificator_name: identificator, "_session": session})
         r = _object.update()
         if r == "429":
             raise exceptions.Response429(
@@ -141,10 +144,11 @@ def _get_object(identificator_name, identificator, __class: type[C], NotFoundExc
                 "If you're using an online IDE like replit.com, try running the code on your computer.")
         if not r:
             # Target is unshared. The cases that this can happen in are hardcoded:
-            from ..site import project
-            if Class is project.Project:  # Case: Target is an unshared project.
-                return project.PartialProject(**{identificator_name: identificator,
+            if __class is project.PartialProject:  # Case: Target is an unshared project.
+                _object = project.PartialProject(**{identificator_name: identificator,
                                                  "shared": False, "_session": session})
+                assert isinstance(_object, __class)
+                return _object
             else:
                 raise NotFoundException
         else:
@@ -159,7 +163,8 @@ def webscrape_count(raw, text_before, text_after, cls: type = int) -> int | Any:
     return cls(raw.split(text_before)[1].split(text_after)[0])
 
 
-C = TypeVar("C", bound=BaseSiteComponent)
+if TYPE_CHECKING:
+    C = TypeVar("C", bound=_base.BaseSiteComponent)
 
 def parse_object_list(raw, __class: type[C], session=None, primary_key="id") -> list[C]:
     results = []
@@ -172,6 +177,51 @@ def parse_object_list(raw, __class: type[C], session=None, primary_key="id") -> 
             print("Warning raised by scratchattach: failed to parse ", raw_dict, "error", e)
     return results
 
+
+class LockEvent:
+    """
+    Can be waited on and triggered. Not to be confused with threading.Event, which has to be reset.
+    """
+    locks: list[Lock]
+    def __init__(self):
+        self.locks = []
+        self.use_locks = Lock()
+
+    def wait(self, blocking: bool = True, timeout: Optional[Union[int, float]] = None) -> bool:
+        """
+        Wait for the event.
+        """
+        timeout = -1 if timeout is None else timeout
+        if not blocking:
+            timeout = 0
+        return self.on().acquire(timeout=timeout)
+
+    def trigger(self):
+        """
+        Trigger all threads waiting on this event to continue.
+        """
+        with self.use_locks:
+            for lock in self.locks:
+                try:
+                    lock.release() # Unlock the lock once to trigger the event.
+                except RuntimeError:
+                    lock.acquire(timeout=0) # Lock the lock again.
+            for lock in self.locks.copy():
+                try:
+                    lock.release() # Unlock the lock once more to make sure it was waited on.
+                    self.locks.remove(lock)
+                except RuntimeError:
+                    lock.acquire(timeout=0) # Lock the lock again.
+
+    def on(self) -> Lock:
+        """
+        Return a lock that will unlock once the event takes place.
+        """
+        lock = Lock()
+        with self.use_locks:
+            self.locks.append(lock)
+        lock.acquire(timeout=0)
+        return lock
 
 def get_class_sort_mode(mode: str) -> tuple[str, str]:
     """
