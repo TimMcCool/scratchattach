@@ -1,5 +1,5 @@
 from .cloud.cloud import ScratchCloud, TwCloud, get_cloud, get_scratch_cloud, get_tw_cloud
-from .cloud._base import BaseCloud
+from .cloud._base import BaseCloud, AnyCloud
 
 from .eventhandlers.cloud_server import init_cloud_server
 from .eventhandlers._base import BaseEventHandler

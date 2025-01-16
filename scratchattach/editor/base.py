@@ -8,7 +8,7 @@ import copy
 import json
 from abc import ABC, abstractmethod
 from io import TextIOWrapper
-from typing import Any, TYPE_CHECKING, BinaryIO
+from typing import Optional, Any, TYPE_CHECKING, BinaryIO
 
 if TYPE_CHECKING:
     from . import project, sprite, block, mutation, asset
@@ -49,7 +49,7 @@ class JSONSerializable(Base, ABC):
 class JSONExtractable(JSONSerializable, ABC):
     @staticmethod
     @abstractmethod
-    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None) -> tuple[
+    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None) -> tuple[
         str, list[asset.AssetFile], str]:
         """
         Automatically extracts the JSON data as a string, as well as providing auto naming
@@ -62,7 +62,7 @@ class JSONExtractable(JSONSerializable, ABC):
 
 
 class ProjectSubcomponent(JSONSerializable, ABC):
-    def __init__(self, _project: project.Project = None):
+    def __init__(self, _project: Optional[project.Project] = None):
         self.project = _project
 
 
@@ -113,7 +113,7 @@ class NamedIDComponent(IDComponent, ABC):
 
 
 class BlockSubComponent(JSONSerializable, ABC):
-    def __init__(self, _block: block.Block = None):
+    def __init__(self, _block: Optional[block.Block] = None):
         self.block = _block
 
     @property
@@ -126,7 +126,7 @@ class BlockSubComponent(JSONSerializable, ABC):
 
 
 class MutationSubComponent(JSONSerializable, ABC):
-    def __init__(self, _mutation: mutation.Mutation = None):
+    def __init__(self, _mutation: Optional[mutation.Mutation] = None):
         self.mutation = _mutation
 
     @property

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from . import project
@@ -9,11 +9,11 @@ from . import base
 
 
 class Monitor(base.ProjectSubcomponent):
-    def __init__(self, reporter: base.NamedIDComponent = None,
+    def __init__(self, reporter: Optional[base.NamedIDComponent] = None,
                  mode: str = "default",
                  opcode: str = "data_variable",
-                 params: dict = None,
-                 sprite_name: str = None,
+                 params: Optional[dict] = None,
+                 sprite_name: Optional[str] = None,
                  value=0,
                  width: int | float = 0,
                  height: int | float = 0,
@@ -22,7 +22,7 @@ class Monitor(base.ProjectSubcomponent):
                  visible: bool = False,
                  slider_min: int | float = 0,
                  slider_max: int | float = 100,
-                 is_discrete: bool = True, *, reporter_id: str = None, _project: project.Project = None):
+                 is_discrete: bool = True, *, reporter_id: Optional[str] = None, _project: Optional[project.Project] = None):
         """
         Represents a variable/list monitor
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Monitors

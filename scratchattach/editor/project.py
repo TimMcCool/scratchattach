@@ -4,7 +4,7 @@ import json
 import os
 import warnings
 from io import BytesIO, TextIOWrapper
-from typing import Iterable, Generator, BinaryIO
+from typing import Optional, Iterable, Generator, BinaryIO
 from zipfile import ZipFile
 
 from . import base, meta, extension, monitor, sprite, asset, vlb, twconfig, comment, commons
@@ -14,9 +14,9 @@ from ..utils import exceptions
 
 
 class Project(base.JSONExtractable):
-    def __init__(self, _name: str = None, _meta: meta.Meta = None, _extensions: Iterable[extension.Extension] = (),
+    def __init__(self, _name: Optional[str] = None, _meta: Optional[meta.Meta] = None, _extensions: Iterable[extension.Extension] = (),
                  _monitors: Iterable[monitor.Monitor] = (), _sprites: Iterable[sprite.Sprite] = (), *,
-                 _asset_data: list[asset.AssetFile] = None, _session: session.Session = None):
+                 _asset_data: Optional[list[asset.AssetFile]] = None, _session: Optional[session.Session] = None):
         # Defaulting for list parameters
         if _meta is None:
             _meta = meta.Meta()
@@ -138,7 +138,7 @@ class Project(base.JSONExtractable):
         return Project(None, _meta, _extensions, _monitors, _sprites)
 
     @staticmethod
-    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
+    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None):
         """
         Load project JSON and assets from an .sb3 file/bytes/file path
         :return: Project name, asset data, json string
@@ -191,7 +191,7 @@ class Project(base.JSONExtractable):
             return _name, asset_data, json_str
 
     @classmethod
-    def from_sb3(cls, data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
+    def from_sb3(cls, data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None):
         """
         Load a project from an .sb3 file/bytes/file path
         """
@@ -205,7 +205,7 @@ class Project(base.JSONExtractable):
         return project
 
     @staticmethod
-    def from_id(project_id: int, _name: str = None):
+    def from_id(project_id: int, _name: Optional[str] = None):
         _proj = get_project(project_id)
         data = json.loads(_proj.get_json())
 

@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import random
 import string
-from typing import Final, Any
+from typing import Optional, Final, Any
 
 from ..utils import exceptions
 
@@ -162,7 +162,7 @@ def remove_nones(obj: dict) -> None:
         del obj[key]
 
 
-def safe_get(lst: list | tuple, _i: int, default: Any = None) -> Any:
+def safe_get(lst: list | tuple, _i: int, default: Optional[Any] = None) -> Any:
     if len(lst) <= _i:
         return default
     else:

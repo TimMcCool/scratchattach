@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Final
+from typing import Optional, Final
 
 from . import block
 from . import base, commons, prim
@@ -35,8 +35,8 @@ class ShadowStatuses:
 
 
 class Input(base.BlockSubComponent):
-    def __init__(self, _shadow: ShadowStatus | None = ShadowStatuses.HAS_SHADOW, _value: prim.Prim | block.Block | str = None, _id: str = None,
-                 _obscurer: prim.Prim | block.Block | str = None, *, _obscurer_id: str = None, _block: block.Block = None):
+    def __init__(self, _shadow: ShadowStatus | None = ShadowStatuses.HAS_SHADOW, _value: Optional[prim.Prim | block.Block | str] = None, _id: Optional[str] = None,
+                 _obscurer: Optional[prim.Prim | block.Block | str] = None, *, _obscurer_id: Optional[str] = None, _block: Optional[block.Block] = None):
         """
         An input for a scratch block
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Blocks:~:text=inputs,it.%5B9%5D

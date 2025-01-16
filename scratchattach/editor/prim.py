@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass
-from typing import Callable, Final
+from typing import Optional, Callable, Final
 
 from . import base, sprite, vlb, commons, build_defaulting
 from ..utils import enums, exceptions
@@ -48,7 +48,7 @@ class PrimTypes(enums._EnumWrapper):
     LIST = PrimType(13, "list", VLB_ATTRS, "data_listcontents")
 
     @classmethod
-    def find(cls, value, by: str, apply_func: Callable = None) -> PrimType:
+    def find(cls, value, by: str, apply_func: Optional[Callable] = None) -> PrimType:
         return super().find(value, by, apply_func=apply_func)
 
 
@@ -57,9 +57,9 @@ def is_prim_opcode(opcode: str):
 
 
 class Prim(base.SpriteSubComponent):
-    def __init__(self, _primtype: PrimType | PrimTypes, _value: str | vlb.Variable | vlb.List | vlb.Broadcast = None,
-                 _name: str = None, _id: str = None, _x: int = None,
-                 _y: int = None, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
+    def __init__(self, _primtype: PrimType | PrimTypes, _value: Optional[str | vlb.Variable | vlb.List | vlb.Broadcast] = None,
+                 _name: Optional[str] = None, _id: Optional[str] = None, _x: Optional[int] = None,
+                 _y: Optional[int] = None, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         Class representing a Scratch string, number, angle, variable etc.
         Technically blocks but behave differently

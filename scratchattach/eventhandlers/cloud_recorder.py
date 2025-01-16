@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from .cloud_events import CloudEvents
+from typing import Optional
 
 
 class CloudRecorder(CloudEvents):
-    def __init__(self, cloud, *, initial_values: dict = None):
+    def __init__(self, cloud, *, initial_values: Optional[dict] = None):
         if initial_values is None:
             initial_values = {}
 

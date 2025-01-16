@@ -6,14 +6,14 @@ Variables, lists & broadcasts
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Optional, Literal
 
 from . import base, sprite, build_defaulting
 from ..utils import exceptions
 
 
 class Variable(base.NamedIDComponent):
-    def __init__(self, _id: str, _name: str, _value: str | int | float = None, _is_cloud: bool = False,
+    def __init__(self, _id: str, _name: str, _value: Optional[str | int | float] = None, _is_cloud: bool = False,
                  _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         Class representing a variable.
@@ -66,7 +66,7 @@ class Variable(base.NamedIDComponent):
 
 
 class List(base.NamedIDComponent):
-    def __init__(self, _id: str, _name: str, _value: list[str | int | float] = None,
+    def __init__(self, _id: str, _name: str, _value: Optional[list[str | int | float]] = None,
                  _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         Class representing a list.
@@ -120,7 +120,7 @@ class Broadcast(base.NamedIDComponent):
         return self.name
 
 
-def construct(vlb_type: Literal["variable", "list", "broadcast"], _id: str = None, _name: str = None,
+def construct(vlb_type: Literal["variable", "list", "broadcast"], _id: Optional[str] = None, _name: Optional[str] = None,
               _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT) -> Variable | List | Broadcast:
     if vlb_type == "variable":
         vlb_type = Variable

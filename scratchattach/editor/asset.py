@@ -5,6 +5,7 @@ from hashlib import md5
 import requests
 
 from . import base, commons, sprite, build_defaulting
+from typing import Optional
 
 
 @dataclass(init=True, repr=True)
@@ -169,8 +170,8 @@ class Sound(Asset):
                  name: str = "pop",
                  file_name: str = "83a9787d4cb6f3b7632b4ddfebf74367.wav",
 
-                 rate: int = None,
-                 sample_count: int = None,
+                 rate: Optional[int] = None,
+                 sample_count: Optional[int] = None,
                  _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         A sound. An asset with additional properties

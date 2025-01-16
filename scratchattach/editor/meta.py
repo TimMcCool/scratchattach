@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass, field
 
 from . import base, commons
+from typing import Optional
 
 
 @dataclass(init=True, repr=True)
@@ -42,7 +43,7 @@ def set_meta_platform(true_false: bool = False):
 
 class Meta(base.JSONSerializable):
     def __init__(self, semver: str = "3.0.0", vm: str = DEFAULT_VM, agent: str = DEFAULT_AGENT,
-                 platform: PlatformMeta = None):
+                 platform: Optional[PlatformMeta] = None):
         """
         Represents metadata of the project
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Metadata

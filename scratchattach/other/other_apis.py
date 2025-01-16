@@ -8,6 +8,7 @@ from ..utils import commons
 from ..utils.enums import Languages, Language, TTSVoices, TTSVoice
 from ..utils.exceptions import BadRequest, InvalidLanguage, InvalidTTSGender
 from ..utils.requests import Requests as requests
+from typing import Optional
 
 
 # --- Front page ---
@@ -211,7 +212,7 @@ def scratch_team_members() -> dict:
     return json.loads(text)
 
 
-def send_password_reset_email(username: str = None, email: str = None):
+def send_password_reset_email(username: Optional[str] = None, email: Optional[str] = None):
     requests.post("https://scratch.mit.edu/accounts/password_reset/", data={
         "username": username,
         "email": email,

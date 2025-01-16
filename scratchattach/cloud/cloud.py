@@ -36,7 +36,7 @@ class ScratchCloud(BaseCloud):
         self._assert_auth() 
         super().set_vars(var_value_dict, intelligent_waits=intelligent_waits)
 
-    def logs(self, *, filter_by_var_named=None, limit=100, offset=0):
+    def logs(self, *, filter_by_var_named=None, limit=100, offset=0) -> list[cloud_activity.CloudActivity]:
         """
         Gets the data from Scratch's clouddata logs.
         
@@ -55,7 +55,7 @@ class ScratchCloud(BaseCloud):
                 x["name"] = x["name"][2:]
             return commons.parse_object_list(data, cloud_activity.CloudActivity, self._session, "name")
         except Exception as e:
-            return exceptions.FetchError(str(e))
+            raise exceptions.FetchError(str(e))
 
     def get_var(self, var, *, use_logs=False):
         if self._session is None or use_logs:
@@ -128,7 +128,7 @@ class CustomCloud(BaseCloud):
         # If even more customization is needed, the developer can create a class inheriting from cloud._base.BaseCloud to override functions like .set_var etc.
 
 
-def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> Type[BaseCloud]:
+def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> BaseCloud:
     """
     Connects to a cloud (by default Scratch's cloud) as logged out user.
 

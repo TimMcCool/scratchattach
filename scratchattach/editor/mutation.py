@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import warnings
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Iterable, Any
+from typing import Optional, TYPE_CHECKING, Iterable, Any
 
 from . import base, commons
 from ..utils import enums
@@ -140,10 +140,10 @@ def parse_proc_code(_proc_code: str) -> list[str, ArgumentType] | None:
 
 
 class Mutation(base.BlockSubComponent):
-    def __init__(self, _tag_name: str = "mutation", _children: list = None, _proc_code: str = None,
-                 _is_warp: bool = None, _arguments: list[Argument] = None, _has_next: bool = None,
-                 _argument_settings: ArgSettings = None, *,
-                 _block: block.Block = None):
+    def __init__(self, _tag_name: str = "mutation", _children: Optional[list] = None, _proc_code: Optional[str] = None,
+                 _is_warp: Optional[bool] = None, _arguments: Optional[list[Argument]] = None, _has_next: Optional[bool] = None,
+                 _argument_settings: Optional[ArgSettings] = None, *,
+                 _block: Optional[block.Block] = None):
         """
         Mutation for Control:stop block and procedures
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Mutations

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from types import FunctionType
-from typing import Final, Any, TYPE_CHECKING, TypeVar
+from typing import Optional, Final, Any, TYPE_CHECKING, TypeVar
 
 from . import exceptions
 from .requests import Requests as requests
@@ -95,7 +95,7 @@ def api_iterative_data(fetch_func: FunctionType, limit: int, offset: int, max_re
 
 
 def api_iterative(url: str, *, limit: int, offset: int, max_req_limit: int = 40, add_params: str = "",
-                  _headers: dict = None, cookies: dict = None):
+                  _headers: Optional[dict] = None, cookies: Optional[dict] = None):
     """
     Function for getting data from one of Scratch's iterative JSON API endpoints (like /users/<user>/followers, or /users/<user>/projects)
     """

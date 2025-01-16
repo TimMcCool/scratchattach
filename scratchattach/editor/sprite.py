@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import warnings
 from io import BytesIO, TextIOWrapper
-from typing import Any, BinaryIO
+from typing import Optional, Any, BinaryIO
 from zipfile import ZipFile
 from typing import Iterable, TYPE_CHECKING
 from . import base, project, vlb, asset, comment, prim, block, commons, build_defaulting
@@ -11,13 +11,13 @@ if TYPE_CHECKING:
     from . import asset
 
 class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
-    def __init__(self, is_stage: bool = False, name: str = '', _current_costume: int = 1, _layer_order: int = None,
+    def __init__(self, is_stage: bool = False, name: str = '', _current_costume: int = 1, _layer_order: Optional[int] = None,
                  _volume: int = 100,
-                 _broadcasts: list[vlb.Broadcast] = None,
-                 _variables: list[vlb.Variable] = None, _lists: list[vlb.List] = None,
-                 _costumes: list[asset.Costume] = None, _sounds: list[asset.Sound] = None,
-                 _comments: list[comment.Comment] = None, _prims: dict[str, prim.Prim] = None,
-                 _blocks: dict[str, block.Block] = None,
+                 _broadcasts: Optional[list[vlb.Broadcast]] = None,
+                 _variables: Optional[list[vlb.Variable]] = None, _lists: Optional[list[vlb.List]] = None,
+                 _costumes: Optional[list[asset.Costume]] = None, _sounds: Optional[list[asset.Sound]] = None,
+                 _comments: Optional[list[comment.Comment]] = None, _prims: Optional[dict[str, prim.Prim]] = None,
+                 _blocks: Optional[dict[str, block.Block]] = None,
                  # Stage only:
                  _tempo: int | float = 60, _video_state: str = "off", _video_transparency: int | float = 50,
                  _text_to_speech_language: str = "en", _visible: bool = True,
@@ -25,7 +25,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
                  _x: int | float = 0, _y: int | float = 0, _size: int | float = 100, _direction: int | float = 90,
                  _draggable: bool = False, _rotation_style: str = "all around",
 
-                 *, _project: project.Project = None):
+                 *, _project: Optional[project.Project] = None):
         """
         Represents a sprite or the stage (known internally as a Target)
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Targets
@@ -327,7 +327,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
         return _json
 
     # Finding/getting from list/dict attributes
-    def find_asset(self, value: str, by: str = "name", multiple: bool = False, a_type: type=None) -> asset.Asset | asset.Sound | asset.Costume | list[asset.Asset | asset.Sound | asset.Costume]:
+    def find_asset(self, value: str, by: str = "name", multiple: bool = False, a_type: Optional[type]=None) -> asset.Asset | asset.Sound | asset.Costume | list[asset.Asset | asset.Sound | asset.Costume]:
         if a_type is None:
             a_type = asset.Asset
 
@@ -495,7 +495,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
         if multiple:
             return _ret
 
-    def export(self, fp: str = None, *, export_as_zip: bool = True):
+    def export(self, fp: Optional[str] = None, *, export_as_zip: bool = True):
         if fp is None:
             fp = commons.sanitize_fn(f"{self.name}.sprite3")
 
@@ -523,7 +523,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
 
         return ret
     @staticmethod
-    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
+    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None):
         _dir_for_name = None
 
         if _name is None:
@@ -572,7 +572,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
             return _name, asset_data, json_str
 
     @classmethod
-    def from_sprite3(cls, data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str = None):
+    def from_sprite3(cls, data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None):
         """
         Load a project from an .sb3 file/bytes/file path
         """

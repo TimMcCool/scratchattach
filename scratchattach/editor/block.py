@@ -1,19 +1,19 @@
 from __future__ import annotations
 
 import warnings
-from typing import Iterable, Self
+from typing import Optional, Iterable, Self
 
 from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape, prim, comment, build_defaulting
 from ..utils import exceptions
 
 
 class Block(base.SpriteSubComponent):
-    def __init__(self, _opcode: str, _shadow: bool = False, _top_level: bool = None,
-                 _mutation: mutation.Mutation = None, _fields: dict[str, field.Field] = None,
-                 _inputs: dict[str, inputs.Input] = None, x: int = 0, y: int = 0, pos: tuple[int, int] = None,
+    def __init__(self, _opcode: str, _shadow: bool = False, _top_level: Optional[bool] = None,
+                 _mutation: Optional[mutation.Mutation] = None, _fields: Optional[dict[str, field.Field]] = None,
+                 _inputs: Optional[dict[str, inputs.Input]] = None, x: int = 0, y: int = 0, pos: Optional[tuple[int, int]] = None,
 
-                 _next: Block = None, _parent: Block = None,
-                 *, _next_id: str = None, _parent_id: str = None, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
+                 _next: Optional[Block] = None, _parent: Optional[Block] = None,
+                 *, _next_id: Optional[str] = None, _parent_id: Optional[str] = None, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         # Defaulting for args
         if _fields is None:
             _fields = {}

@@ -3,16 +3,164 @@ from __future__ import annotations
 import json
 import ssl
 import time
-from typing import Optional, Union
-from abc import ABC
+from typing import Optional, Union, TypeVar, Generic, TYPE_CHECKING, Any
+from abc import ABC, abstractmethod
+from threading import Lock
+from collections.abc import Iterator
+
+if TYPE_CHECKING:
+    from _typeshed import SupportsRead
+else:
+    T = TypeVar("T")
+    class SupportsRead(ABC, Generic[T]):
+        @abstractmethod
+        def read(self) -> T:
+            pass
+
+class SupportsClose(ABC):
+    @abstractmethod
+    def close(self) -> None:
+        pass
 
 import websocket
 
+from ..site.session import Session
 from ..eventhandlers import cloud_recorder
 from ..utils import exceptions
+from ..eventhandlers.cloud_requests import CloudRequests
+from ..eventhandlers.cloud_events import CloudEvents
+from ..eventhandlers.cloud_storage import CloudStorage
+from ..site import cloud_activity
 
+T = TypeVar("T")
 
-class BaseCloud(ABC):
+class EventStream(SupportsRead[Iterator[dict[str, Any]]], SupportsClose):
+    """
+    Allows you to stream events
+    """
+
+class AnyCloud(ABC, Generic[T]):
+    """
+    Represents a cloud that is not necessarily using a websocket.
+    """
+    active_connection: bool
+    var_stets_since_first: int
+    _session: Optional[Session]
+    
+    @abstractmethod
+    def connect(self):
+        pass
+
+    @abstractmethod
+    def disconnect(self):
+        pass
+
+    def reconnect(self):
+        self.disconnect()
+        self.connect()
+        
+    @abstractmethod
+    def _enforce_ratelimit(self, *, n: int) -> None:
+        pass
+
+    @abstractmethod
+    def set_var(self, variable: str, value: T) -> None:
+        """
+        Sets a cloud variable.
+
+        Args:
+            variable (str): The name of the cloud variable that should be set (provided without the cloud emoji)
+            value (Any): The value the cloud variable should be set to
+        """
+
+    @abstractmethod
+    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True):
+        """
+        Sets multiple cloud variables at once (works for an unlimited amount of variables).
+
+        Args:
+            var_value_dict (dict): variable:value dictionary with the variables / values to set. The dict should like this: {"var1":"value1", "var2":"value2", ...}
+        
+        Kwargs:
+            intelligent_waits (boolean): When enabled, the method will automatically decide how long to wait before performing this cloud variable set, to make sure no rate limits are triggered
+        """
+
+    @abstractmethod
+    def get_var(self, var, *, recorder_initial_values={}) -> T:
+        pass
+
+    @abstractmethod
+    def get_all_vars(self, *, recorder_initial_values={}) -> dict[str, T]:
+        pass
+
+    def events(self) -> CloudEvents:
+        return CloudEvents(self)
+
+    def requests(self, *, no_packet_loss: bool = False, used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+                 respond_order="receive") -> CloudRequests:
+        return CloudRequests(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss,
+                             respond_order=respond_order)
+
+    def storage(self, *, no_packet_loss: bool = False, used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]) -> CloudStorage:
+        return CloudStorage(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
+    
+    @abstractmethod
+    def create_event_stream(self) -> EventStream:
+        pass
+
+class WebSocketEventStream(EventStream):
+    packets_left: list[Union[str, bytes]]
+    source_cloud: BaseCloud
+    reading: Lock
+    def __init__(self, cloud: BaseCloud):
+        super().__init__()
+        self.source_cloud = type(cloud)(project_id=cloud.project_id)
+        self.source_cloud._session = cloud._session
+        self.source_cloud.cookie = cloud.cookie
+        self.source_cloud.header = cloud.header
+        self.source_cloud.origin = cloud.origin
+        self.source_cloud.username = cloud.username
+        self.source_cloud.ws_timeout = None # No timeout -> allows continous listening
+        self.reading = Lock()
+        self.source_cloud.connect()
+        self.packets_left = []
+
+    def receive_new(self, non_blocking: bool = False):
+        if non_blocking:
+            self.source_cloud.websocket.settimeout(0)
+            try:
+                received = self.source_cloud.websocket.recv().splitlines()
+                self.packets_left.extend(received)
+            except Exception:
+                pass
+            return
+        self.source_cloud.websocket.settimeout(None)
+        received = self.source_cloud.websocket.recv().splitlines()
+        self.packets_left.extend(received)
+    
+    def read(self, amount: int = -1) -> Iterator[dict[str, Any]]:
+        i = 0
+        with self.reading:
+            try:
+                self.receive_new(True)
+                while (self.packets_left and amount == -1) or (amount != -1 and i < amount):
+                    if not self.packets_left and amount != -1:
+                        self.receive_new()
+                    yield json.loads(self.packets_left.pop(0))
+                    i += 1
+            except Exception:
+                self.source_cloud.reconnect()
+                self.receive_new(True)
+                while (self.packets_left and amount == -1) or (amount != -1 and i < amount):
+                    if not self.packets_left and amount != -1:
+                        self.receive_new()
+                    yield json.loads(self.packets_left.pop(0))
+                    i += 1
+    
+    def close(self) -> None:
+        self.source_cloud.disconnect()
+
+class BaseCloud(AnyCloud[Union[str, int]]):
     """
     Base class for a project's cloud variables. Represents a cloud.
 
@@ -47,7 +195,19 @@ class BaseCloud(ABC):
 
         print_connect_messages: Whether to print a message on every connect to the cloud server. Defaults to False.
     """
-
+    project_id: Optional[Union[str, int]]
+    cloud_host: str
+    ws_shortterm_ratelimit: float
+    ws_longterm_ratelimit: float
+    allow_non_numeric: bool
+    length_limit: int
+    username: str
+    header: Optional[dict]
+    cookie: Optional[dict]
+    origin: Optional[str]
+    print_connect_message: bool
+    ws_timeout: Optional[int]
+    websocket: websocket.WebSocket
 
     def __init__(self, *, project_id: Optional[Union[int, str]] = None, _session=None):
 
@@ -158,16 +318,12 @@ class BaseCloud(ABC):
         self.active_connection = False
         if self.recorder is not None:
             self.recorder.stop()
-            self.recorder.source_cloud.disconnect()
+            self.recorder.disconnect()
             self.recorder = None
         try:
             self.websocket.close()
         except Exception:
             pass
-
-    def reconnect(self):
-        self.disconnect()
-        self.connect()
 
     def _assert_valid_value(self, value):
         if not (value in [True, False, float('inf'), -float('inf')]):
@@ -276,16 +432,16 @@ class BaseCloud(ABC):
                 time.sleep(0.01)
         return self.recorder.get_all_vars()
 
-    def events(self):
-        from ..eventhandlers.cloud_events import CloudEvents
-        return CloudEvents(self)
+    def create_event_stream(self):
+        return 
 
-    def requests(self, *, no_packet_loss=False, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-                 respond_order="receive"):
-        from ..eventhandlers.cloud_requests import CloudRequests
-        return CloudRequests(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss,
-                             respond_order=respond_order)
+class LogCloud(BaseCloud):
+    @classmethod
+    def __instancecheck__(cls, instance) -> bool:
+        if hasattr(instance, "logs"):
+            return True
+        return False
 
-    def storage(self, *, no_packet_loss=False, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"]):
-        from ..eventhandlers.cloud_storage import CloudStorage
-        return CloudStorage(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
+    @abstractmethod
+    def logs(self, *, filter_by_var_named: Optional[str] = None, limit: int = 100, offset: int = 0) -> list[cloud_activity.CloudActivity]:
+        pass

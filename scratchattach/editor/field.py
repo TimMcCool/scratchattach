@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from typing import Optional, TYPE_CHECKING, Final
 
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ class Types:
 
 
 class Field(base.BlockSubComponent):
-    def __init__(self, _value: str | vlb.Variable | vlb.List | vlb.Broadcast, _id: str = None, *, _block: block.Block = None):
+    def __init__(self, _value: str | vlb.Variable | vlb.List | vlb.Broadcast, _id: Optional[str] = None, *, _block: Optional[block.Block] = None):
         """
         A field for a scratch block
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Blocks:~:text=it.%5B9%5D-,fields,element%2C%20which%20is%20the%20ID%20of%20the%20field%27s%20value.%5B10%5D,-shadow
