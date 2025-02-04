@@ -208,6 +208,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
     print_connect_message: bool
     ws_timeout: Optional[int]
     websocket: websocket.WebSocket
+    event_stream: Optional[EventStream] = None
 
     def __init__(self, *, project_id: Optional[Union[int, str]] = None, _session=None):
 
@@ -433,7 +434,10 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         return self.recorder.get_all_vars()
 
     def create_event_stream(self):
-        return WebSocketEventStream(self)
+        if self.event_stream:
+            raise ValueError("Cloud already has an event stream.")
+        self.event_stream = WebSocketEventStream(self)
+        return self.event_stream
 
 class LogCloudMeta(type(BaseCloud)):
     def __instancecheck__(cls, instance) -> bool:
