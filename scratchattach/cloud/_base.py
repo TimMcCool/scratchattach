@@ -440,7 +440,7 @@ class LogCloud(BaseCloud):
     def __instancecheck__(cls, instance) -> bool:
         if hasattr(instance, "logs"):
             return True
-        return False
+        return super().__instancecheck__(instance)
 
     @abstractmethod
     def logs(self, *, filter_by_var_named: Optional[str] = None, limit: int = 100, offset: int = 0) -> list[cloud_activity.CloudActivity]:
