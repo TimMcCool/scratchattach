@@ -56,8 +56,8 @@ class ManualCloudLogEvents:
     """
     Class that calls events on cloud updates that are received from a clouddata log.
     """
-    def __init__(self, cloud: _base.AnyCloud):
-        if not hasattr(cloud, "logs"):
+    def __init__(self, cloud: _base.LogCloud):
+        if not isinstance(cloud, _base.LogCloud):
             raise ValueError("Cloud log events can't be used with a cloud that has no logs available")
         self.cloud = cloud
         self.source_cloud = cloud
@@ -83,9 +83,9 @@ class CloudLogEvents(BaseEventHandler):
     """
     Class that calls events on cloud updates that are received from a clouddata log.
     """
-    def __init__(self, cloud: _base.AnyCloud, *, update_interval=0.1):
+    def __init__(self, cloud: _base.LogCloud, *, update_interval=0.1):
         super().__init__()
-        if not hasattr(cloud, "logs"):
+        if not isinstance(cloud, _base.LogCloud):
             raise ValueError("Cloud log events can't be used with a cloud that has no logs available")
         self.cloud = cloud
         self.source_cloud = cloud
