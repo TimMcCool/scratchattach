@@ -435,13 +435,13 @@ class BaseCloud(AnyCloud[Union[str, int]]):
     def create_event_stream(self):
         return 
 
-class LogCloud(BaseCloud):
-    @classmethod
+class LogCloudMeta(type(BaseCloud)):
     def __instancecheck__(cls, instance) -> bool:
         if hasattr(instance, "logs"):
-            return True
-        return super().__instancecheck__(instance)
+            return isinstance(instance, BaseCloud)
+        return False
 
+class LogCloud(BaseCloud, metaclass=LogCloudMeta):
     @abstractmethod
     def logs(self, *, filter_by_var_named: Optional[str] = None, limit: int = 100, offset: int = 0) -> list[cloud_activity.CloudActivity]:
         pass
