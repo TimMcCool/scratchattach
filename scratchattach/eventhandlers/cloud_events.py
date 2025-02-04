@@ -1,7 +1,7 @@
 """CloudEvents class"""
 from __future__ import annotations
 
-from ..cloud._base import AnyCloud
+from ..cloud import _base
 from ._base import BaseEventHandler
 from ..site import cloud_activity
 import time
@@ -12,7 +12,7 @@ class CloudEvents(BaseEventHandler):
     """
     Class that calls events when on cloud updates that are received through a websocket connection.
     """
-    def __init__(self, cloud: AnyCloud):
+    def __init__(self, cloud: _base.AnyCloud):
         super().__init__()
         self.cloud = cloud
         self._session = cloud._session
@@ -56,7 +56,7 @@ class ManualCloudLogEvents:
     """
     Class that calls events on cloud updates that are received from a clouddata log.
     """
-    def __init__(self, cloud: AnyCloud):
+    def __init__(self, cloud: _base.AnyCloud):
         if not hasattr(cloud, "logs"):
             raise ValueError("Cloud log events can't be used with a cloud that has no logs available")
         self.cloud = cloud
@@ -83,7 +83,7 @@ class CloudLogEvents(BaseEventHandler):
     """
     Class that calls events on cloud updates that are received from a clouddata log.
     """
-    def __init__(self, cloud: AnyCloud, *, update_interval=0.1):
+    def __init__(self, cloud: _base.AnyCloud, *, update_interval=0.1):
         super().__init__()
         if not hasattr(cloud, "logs"):
             raise ValueError("Cloud log events can't be used with a cloud that has no logs available")
