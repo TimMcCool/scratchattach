@@ -433,7 +433,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         return self.recorder.get_all_vars()
 
     def create_event_stream(self):
-        return 
+        return WebSocketEventStream(self)
 
 class LogCloudMeta(type(BaseCloud)):
     def __instancecheck__(cls, instance) -> bool:
