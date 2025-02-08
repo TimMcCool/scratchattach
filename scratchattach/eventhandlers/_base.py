@@ -1,18 +1,22 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from ..utils.requests import Requests as requests
+from collections import defaultdict
 from threading import Thread
-from ..utils import exceptions
+from collections.abc import Callable
 import traceback
+from ..utils.requests import Requests as requests
+from ..utils import exceptions
 
 class BaseEventHandler(ABC):
+    _events: defaultdict[str, list[Callable]]
+    _threaded_events: defaultdict[str, list[Callable]]
 
     def __init__(self):
         self._thread = None
         self.running = False
-        self._events = {}
-        self._threaded_events = {}
+        self._events = defaultdict(list)
+        self._threaded_events = defaultdict(list)
 
     def start(self, *, thread=True, ignore_exceptions=True):
         """
@@ -35,9 +39,11 @@ class BaseEventHandler(ABC):
     def call_event(self, event_name, args=[]):
         try:
             if event_name in self._threaded_events:
-                Thread(target=self._threaded_events[event_name], args=args).start()
+                for func in self._threaded_events[event_name]:
+                    Thread(target=func, args=args).start()
             if event_name in self._events:
-                self._events[event_name](*args)
+                for func in self._events[event_name]:
+                    func(*args)
         except Exception as e:
             if self.ignore_exceptions:
                 print(
@@ -82,9 +88,9 @@ class BaseEventHandler(ABC):
         def inner(function):
             # called directly if the decorator provides arguments
             if thread is True:
-                self._threaded_events[function.__name__] = function
+                self._threaded_events[function.__name__].append(function)
             else:
-                self._events[function.__name__] = function
+                self._events[function.__name__].append(function)
 
         if function is None:
             # => the decorator provides arguments
