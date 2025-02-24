@@ -44,7 +44,7 @@ class Request:
             else:
                 print(f"Exception in request '{self.name}':")
                 raise(e)
-            self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":[f"Error in request {self.name}","Check the Python console"], "priority":self.response_priority})
+            self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":[f"Error in request {self.name}","Check the Python console", e], "priority":self.response_priority})
         self.cloud_requests.responder_event.set() # Activate the .cloud_requests._responder process so it sends back the data to Scratch
 
 class ReceivedRequest:
