@@ -1091,7 +1091,7 @@ def login(username, password, *, timeout=10) -> Session:
         session_id = str(re.search('"(.*)"', request.headers["Set-Cookie"]).group())
     except (AttributeError, Exception):
         raise exceptions.LoginFailure(
-            "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
+            "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
 
     # Create session object:
     with suppress_login_warning():
