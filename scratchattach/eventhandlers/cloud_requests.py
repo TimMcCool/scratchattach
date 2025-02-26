@@ -46,7 +46,7 @@ class Request:
                 print(f"Exception in request '{self.name}':")
                 raise(e)
             if self.debug:
-                traceback_full = traceback.format_exc().splitlines("\n")
+                traceback_full = traceback.format_exc().splitlines()
                 output = [f"Error in request {self.name}", "Traceback: "]
                 output.extend(traceback_full)
                 self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":output, "priority":self.response_priority})
