@@ -97,7 +97,7 @@ class AnyCloud(ABC, Generic[T]):
         return CloudEvents(self)
 
     def requests(self, *, no_packet_loss: bool = False, used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-                 respond_order="receive", debug: bool = True) -> CloudRequests:
+                 respond_order="receive", debug: bool = False) -> CloudRequests:
         return CloudRequests(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss,
                              respond_order=respond_order, debug=debug)
 
