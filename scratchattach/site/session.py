@@ -10,7 +10,7 @@ import random
 import re
 import time
 import warnings
-from typing import Optional, TypeVar, TYPE_CHECKING
+from typing import Optional, TypeVar, TYPE_CHECKING, overload
 from contextlib import contextmanager
 from threading import local
 
@@ -24,6 +24,10 @@ except ImportError:
     deprecated = lambda x: (lambda y: y)
 if TYPE_CHECKING:
     from _typeshed import FileDescriptorOrPath, SupportsRead
+    from ..cloud._base import BaseCloud
+    T = TypeVar("T", bound=BaseCloud)
+else:
+    T = TypeVar("T")
 
 from bs4 import BeautifulSoup
 
@@ -715,9 +719,24 @@ class Session(BaseSiteComponent):
 
     # --- Connect classes inheriting from BaseCloud ---
 
-    # noinspection PyPep8Naming
-    def connect_cloud(self, project_id, *, cloud_class: type[_base.BaseCloud] = cloud.ScratchCloud) \
-            -> _base.BaseCloud:
+    
+    @overload
+    def connect_cloud(self, project_id, *, cloud_class: type[T]) -> T:
+        """
+        Connects to a cloud as logged-in user.
+
+        Args:
+            project_id:
+        
+        Keyword arguments: CloudClass: The class that the returned object should be of. By default, this class is
+        scratchattach.cloud.ScratchCloud.
+
+        Returns: Type[scratchattach.cloud._base.BaseCloud]: An object representing the cloud of a project. Can be of any
+        class inheriting from BaseCloud.
+        """
+    
+    @overload
+    def connect_cloud(self, project_id) -> cloud.ScratchCloud:
         """
         Connects to a cloud (by default Scratch's cloud) as logged-in user.
 
@@ -727,9 +746,13 @@ class Session(BaseSiteComponent):
         Keyword arguments: CloudClass: The class that the returned object should be of. By default, this class is
         scratchattach.cloud.ScratchCloud.
 
-        Returns: Type[scratchattach._base.BaseCloud]: An object representing the cloud of a project. Can be of any
+        Returns: Type[scratchattach.cloud._base.BaseCloud]: An object representing the cloud of a project. Can be of any
         class inheriting from BaseCloud.
         """
+    # noinspection PyPep8Naming
+    def connect_cloud(self, project_id, *, cloud_class: Optional[type[_base.BaseCloud]] = None) \
+            -> _base.BaseCloud:
+        cloud_class = cloud_class or cloud.ScratchCloud
         return cloud_class(project_id=project_id, _session=self)
 
     def connect_scratch_cloud(self, project_id) -> cloud.ScratchCloud:
@@ -1068,7 +1091,7 @@ def login(username, password, *, timeout=10) -> Session:
         session_id = str(re.search('"(.*)"', request.headers["Set-Cookie"]).group())
     except (AttributeError, Exception):
         raise exceptions.LoginFailure(
-            "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP adress. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
+            "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
 
     # Create session object:
     with suppress_login_warning():

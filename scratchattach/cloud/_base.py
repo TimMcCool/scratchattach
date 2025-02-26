@@ -4,7 +4,7 @@ import json
 import ssl
 import time
 from typing import Optional, Union, TypeVar, Generic, TYPE_CHECKING, Any
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from threading import Lock
 from collections.abc import Iterator
 
@@ -24,7 +24,7 @@ class SupportsClose(ABC):
 
 import websocket
 
-from ..site.session import Session
+from ..site import session
 from ..eventhandlers import cloud_recorder
 from ..utils import exceptions
 from ..eventhandlers.cloud_requests import CloudRequests
@@ -45,7 +45,7 @@ class AnyCloud(ABC, Generic[T]):
     """
     active_connection: bool
     var_stets_since_first: int
-    _session: Optional[Session]
+    _session: Optional[session.Session]
     
     @abstractmethod
     def connect(self):
@@ -97,9 +97,9 @@ class AnyCloud(ABC, Generic[T]):
         return CloudEvents(self)
 
     def requests(self, *, no_packet_loss: bool = False, used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-                 respond_order="receive") -> CloudRequests:
+                 respond_order="receive", debug: bool = False) -> CloudRequests:
         return CloudRequests(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss,
-                             respond_order=respond_order)
+                             respond_order=respond_order, debug=debug)
 
     def storage(self, *, no_packet_loss: bool = False, used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]) -> CloudStorage:
         return CloudStorage(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
@@ -175,7 +175,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
 
     Attributes that can, but don't have to be specified in the __init__ function:
 
-        _session: Either None or a site.session.Session object. Defaults to None.
+        _session: Either None or a scratchattach.site.session.Session object. Defaults to None.
 
         ws_shortterm_ratelimit: The wait time between cloud variable sets. Defaults to 0.1
 
@@ -208,6 +208,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
     print_connect_message: bool
     ws_timeout: Optional[int]
     websocket: websocket.WebSocket
+    event_stream: Optional[EventStream] = None
 
     def __init__(self, *, project_id: Optional[Union[int, str]] = None, _session=None):
 
@@ -433,15 +434,18 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         return self.recorder.get_all_vars()
 
     def create_event_stream(self):
-        return 
+        if self.event_stream:
+            raise ValueError("Cloud already has an event stream.")
+        self.event_stream = WebSocketEventStream(self)
+        return self.event_stream
 
-class LogCloud(BaseCloud):
-    @classmethod
+class LogCloudMeta(ABCMeta):
     def __instancecheck__(cls, instance) -> bool:
         if hasattr(instance, "logs"):
-            return True
+            return isinstance(instance, BaseCloud)
         return False
 
+class LogCloud(BaseCloud, metaclass=LogCloudMeta):
     @abstractmethod
     def logs(self, *, filter_by_var_named: Optional[str] = None, limit: int = 100, offset: int = 0) -> list[cloud_activity.CloudActivity]:
         pass

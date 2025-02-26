@@ -135,7 +135,7 @@ def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> BaseClo
     Warning:
         Since this method doesn't connect a login / session to the returned object, setting Scratch cloud variables won't be possible with it.
 
-        To set Scratch cloud variables, use `scratchattach.Session.connect_scratch_cloud` instead.
+        To set Scratch cloud variables, use `scratchattach.site.session.Session.connect_scratch_cloud` instead.
 
     Args:
         project_id:
@@ -144,7 +144,7 @@ def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> BaseClo
         CloudClass: The class that the returned object should be of. By default this class is scratchattach.cloud.ScratchCloud.
 
     Returns:
-        Type[scratchattach._base.BaseCloud]: An object representing the cloud of a project. Can be of any class inheriting from BaseCloud.
+        Type[scratchattach.cloud._base.BaseCloud]: An object representing the cloud of a project. Can be of any class inheriting from BaseCloud.
     """
     print("Warning: To set Scratch cloud variables, use session.connect_cloud instead of get_cloud")
     return CloudClass(project_id=project_id)
