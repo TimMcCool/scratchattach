@@ -418,6 +418,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self.last_var_set = time.time()
 
     def get_var(self, var, *, recorder_initial_values={}):
+        var = var.removeprefix("☁ ")
         if self.recorder is None:
             self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
             self.recorder.start()
