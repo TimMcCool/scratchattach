@@ -58,6 +58,7 @@ class ScratchCloud(BaseCloud):
             raise exceptions.FetchError(str(e))
 
     def get_var(self, var, *, use_logs=False):
+        var = var.removeprefix("☁ ")
         if self._session is None or use_logs:
             logs = self.logs(limit=100)
             filtered = list(filter(lambda k: k.name == "☁ "+var, logs))
@@ -77,7 +78,7 @@ class ScratchCloud(BaseCloud):
             logs.reverse()
             clouddata = {}
             for activity in logs:
-                clouddata[activity.name.replace("☁ ", "")] = activity.value
+                clouddata[activity.name.removeprefix("☁ ")] = activity.value
             return clouddata
         else:
             if self.recorder is None:
