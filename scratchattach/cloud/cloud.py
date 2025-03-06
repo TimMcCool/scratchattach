@@ -53,7 +53,6 @@ class ScratchCloud(BaseCloud):
                 data = list(filter(lambda k: k["name"] == "☁ "+filter_by_var_named, data))
             for x in data:
                 x["cloud"] = self
-                x["name"] = x["name"][2:]
             return commons.parse_object_list(data, cloud_activity.CloudActivity, self._session, "name")
         except Exception as e:
             raise exceptions.FetchError(str(e))
@@ -61,17 +60,16 @@ class ScratchCloud(BaseCloud):
     def get_var(self, var, *, use_logs=False):
         var = var.removeprefix("☁ ")
         if self._session is None or use_logs:
-            logs = self.logs(limit=100)
-            filtered = list(filter(lambda k: k.name == "☁ "+var, logs))
+            filtered = self.logs(limit=100, filter_by_var_named="☁ "+var)
             if len(filtered) == 0:
                 return None
             return filtered[0].value
         else:
             if self.recorder is None:
                 initial_values = self.get_all_vars(use_logs=True)
-                return super().get_var(var, recorder_initial_values=initial_values)
+                return super().get_var("☁ "+var, recorder_initial_values=initial_values)
             else:
-                return super().get_var(var)
+                return super().get_var("☁ "+var)
 
     def get_all_vars(self, *, use_logs=False):
         if self._session is None or use_logs:
