@@ -401,8 +401,8 @@ class BaseCloud(AnyCloud[Union[str, int]]):
 
         packet_list = []
         for variable in var_value_dict:
-            variable = variable.removeprefix("☁ ")
             value = var_value_dict[variable]
+            variable = variable.removeprefix("☁ ")
             self._assert_valid_value(value)
             if not isinstance(variable, str):
                 raise ValueError("cloud var name must be a string")
