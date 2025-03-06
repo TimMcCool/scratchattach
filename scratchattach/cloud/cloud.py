@@ -49,6 +49,7 @@ class ScratchCloud(BaseCloud):
         try:
             data = requests.get(f"https://clouddata.scratch.mit.edu/logs?projectid={self.project_id}&limit={limit}&offset={offset}", timeout=10).json()
             if filter_by_var_named is not None:
+                filter_by_var_named = filter_by_var_named.removeprefix("☁ ")
                 data = list(filter(lambda k: k["name"] == "☁ "+filter_by_var_named, data))
             for x in data:
                 x["cloud"] = self
