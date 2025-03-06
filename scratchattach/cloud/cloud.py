@@ -78,7 +78,7 @@ class ScratchCloud(BaseCloud):
             logs.reverse()
             clouddata = {}
             for activity in logs:
-                clouddata[activity.name.removeprefix("☁ ")] = activity.value
+                clouddata[activity.name] = activity.value
             return clouddata
         else:
             if self.recorder is None:
