@@ -145,7 +145,7 @@ class PartialProject(BaseSiteComponent):
                 title = " remix"
         if project_json is None:
             if "title" in self.__dict__:
-                project_json = self.get_raw_json()
+                project_json = self.raw_json()
             else:
                 project_json = empty_project_json
 
