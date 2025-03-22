@@ -16,13 +16,14 @@ class Request:
     Saves a request added to the request handler
     """
 
-    def __init__(self, request_name, *, on_call, cloud_requests, thread=True, enabled=True, response_priority=0):
+    def __init__(self, request_name, *, on_call, cloud_requests, thread=True, enabled=True, response_priority=0, debug=False):
         self.name = request_name
         self.on_call = on_call
         self.thread = thread
         self.enabled = enabled
         self.response_priority = response_priority
         self.cloud_requests = cloud_requests # the corresponding CloudRequests object
+        self.debug = debug
         
     def __call__(self, received_request):
         if not self.enabled:
@@ -44,7 +45,13 @@ class Request:
             else:
                 print(f"Exception in request '{self.name}':")
                 raise(e)
-            self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":[f"Error in request {self.name}","Check the Python console"], "priority":self.response_priority})
+            if self.debug:
+                traceback_full = traceback.format_exc().splitlines()
+                output = [f"Error in request {self.name}", "Traceback: "]
+                output.extend(traceback_full)
+                self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":output, "priority":self.response_priority})
+            else:
+                self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":[f"Error in request {self.name}","Check the Python console"], "priority":self.response_priority})
         self.cloud_requests.responder_event.set() # Activate the .cloud_requests._responder process so it sends back the data to Scratch
 
 class ReceivedRequest:
