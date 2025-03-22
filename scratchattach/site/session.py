@@ -41,6 +41,7 @@ from ..utils import commons
 from ..utils import exceptions
 from ..utils.commons import headers, empty_project_json, webscrape_count, get_class_sort_mode
 from ..utils.requests import Requests as requests
+from .browser_cookies import Browser, ANY, cookies_from_browser
 
 ratelimit_cache: dict[str, list[float]] = {}
 
@@ -1132,3 +1133,12 @@ def login_by_file(file: FileDescriptorOrPath) -> Session:
     """
     with suppress_login_warning(), open(file, encoding="utf-8") as f:
         return login_by_io(f)
+
+def login_from_browser(browser: Browser = ANY):
+    """
+    Login from a browser
+    """
+    cookies = cookies_from_browser(browser)
+    if "scratchsessionsid" in cookies:
+        return login_by_id(cookies["scratchsessionsid"])
+    raise ValueError("Not enough data to log in.")
