@@ -19,6 +19,17 @@ from . import activity
 
 from ..utils.requests import Requests as requests
 
+class Verificator:
+
+    def __init__(self, user: User, project_id: int):
+        self.project = user._make_linked_object("id", project_id, project.Project, exceptions.ProjectNotFound)
+        self.projecturl = self.project.url
+        self.code = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+        self.username = user.username
+
+    def check(self) -> bool:
+        return bool(list(filter(lambda x : x.author_name == self.username and (x.content == self.code or x.content.startswith(self.code) or x.content.endswith(self.code)), self.project.comments())))
+
 class User(BaseSiteComponent):
 
     '''
@@ -799,20 +810,8 @@ class User(BaseSiteComponent):
         It will return True if the user commented the code.
         """
 
-        class Verificator:
-
-            def __init__(self, user):
-                self.project = user._make_linked_object("id", verification_project_id, project.Project, exceptions.ProjectNotFound)
-                self.projecturl = self.project.url
-                self.code = ''.join(random.choices(string.ascii_letters + string.digits, k=130))
-                self.username = user.username
-
-            def check(self):
-                return list(filter(lambda x : x.author_name == self.username, self.project.comments())) != []
-
-        v = Verificator(self)
-        print(f"{self.username} has to go to {v.projecturl} and comment {v.code} to verify their identity")
-        return Verificator(self)
+        v = Verificator(self, verification_project_id)
+        return v
 
 # ------ #
 

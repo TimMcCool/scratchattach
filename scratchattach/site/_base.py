@@ -4,9 +4,10 @@ from abc import ABC, abstractmethod
 
 import requests
 from ..utils import exceptions, commons
+from typing import TypeVar
 from types import FunctionType
 
-
+C = TypeVar("C", bound="BaseSiteComponent")
 class BaseSiteComponent(ABC):
     @abstractmethod
     def __init__(self):
@@ -51,7 +52,7 @@ class BaseSiteComponent(ABC):
             raise exceptions.Unauthenticated(
                 "You need to use session.connect_xyz (NOT get_xyz) in order to perform this operation.")
 
-    def _make_linked_object(self, identificator_id, identificator, Class, NotFoundException) -> BaseSiteComponent:
+    def _make_linked_object(self, identificator_id, identificator, Class: type[C], NotFoundException) -> C:
         """
         Internal function for making a linked object (authentication kept) based on an identificator (like a project id or username)
         Class must inherit from BaseSiteComponent
