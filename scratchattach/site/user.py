@@ -809,6 +809,16 @@ class User(BaseSiteComponent):
         To check if the user verified successfully, call the .check() function on the returned object.
         It will return True if the user commented the code.
         """
+        class Verificator:
+
+            def __init__(self, user):
+                self.project = user._make_linked_object("id", verification_project_id, project.Project, exceptions.ProjectNotFound)
+                self.projecturl = self.project.url
+                self.code = ''.join(random.choices(string.ascii_letters + string.digits, k=130))
+                self.username = user.username
+
+            def check(self):
+                return self.code in list(filter(lambda x : x.author_name == self.username, self.project.comments()))
 
         v = Verificator(self, verification_project_id)
         return v
