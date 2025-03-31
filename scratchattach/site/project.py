@@ -136,8 +136,6 @@ class PartialProject(BaseSiteComponent):
         """
         self._assert_auth()
 
-        global CREATE_PROJECT_USES
-
         if title is None:
             if "title" in self.__dict__:
                 title = self.title+" remix"
