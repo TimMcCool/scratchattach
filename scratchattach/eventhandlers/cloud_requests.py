@@ -23,7 +23,7 @@ class Request:
         self.enabled = enabled
         self.response_priority = response_priority
         self.cloud_requests = cloud_requests # the corresponding CloudRequests object
-        self.debug = debug
+        self.debug = debug or self.cloud_requests.debug
         
     def __call__(self, received_request):
         if not self.enabled:
@@ -63,7 +63,7 @@ class CloudRequests(CloudEvents):
 
     # The CloudRequests class is built upon CloudEvents, similar to how Filterbot is built upon MessageEvents
 
-    def __init__(self, cloud, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=False, respond_order="receive"):
+    def __init__(self, cloud, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=False, respond_order="receive", debug=False):
         super().__init__(cloud)
         # Setup
         self._requests = {}
@@ -73,6 +73,7 @@ class CloudRequests(CloudEvents):
         self.no_packet_loss = no_packet_loss # When enabled, query the clouddata log regularly for missed requests and reconnect after every single request (reduces packet loss a lot, but is spammy and can make response duration longer)
         self.used_cloud_vars = used_cloud_vars
         self.respond_order = respond_order
+        self.debug = debug
 
         # Lists and dicts for saving request-related stuff
         self.request_parts = {} # Dict (key: request_id) for saving the parts of the requests not fully received yet
@@ -99,7 +100,7 @@ class CloudRequests(CloudEvents):
 
     # -- Adding and removing requests --
 
-    def request(self, function=None, *, enabled=True, name=None, thread=True, response_priority=0):
+    def request(self, function=None, *, enabled=True, name=None, thread=True, response_priority=0, debug=False):
         """
         Decorator function. Adds a request to the request handler.
         """
@@ -113,7 +114,8 @@ class CloudRequests(CloudEvents):
                 thread=thread,
                 response_priority=response_priority,
                 on_call=function,
-                cloud_requests=self
+                cloud_requests=self,
+                debug=debug
             )
 
         if function is None:
