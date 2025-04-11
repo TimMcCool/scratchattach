@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import random
 import string
+from datetime import datetime
 
 from ..eventhandlers import message_events
 from . import project
@@ -555,6 +556,12 @@ class User(BaseSiteComponent):
             if '{"error": "isFlood"}' in text:
                 raise(exceptions.CommentPostFailure(
                     "You are being rate-limited for running this operation too often. Implement a cooldown of about 10 seconds."))
+            elif '<script id="error-data" type="application/json">' in text:
+                raw_error_data = text.split('<script id="error-data" type="application/json">')[1].split('</script>')[0]
+                error_data = json.loads(raw_error_data)
+                expires = error_data['mute_status']['muteExpiresAt']
+                expires = datetime.utcfromtimestamp(expires)
+                raise(exceptions.CommentPostFailure(f"You have been muted. Mute expires on {expires}"))
             else:
                 raise(exceptions.FetchError(f"Couldn't parse API response: {r.text!r}"))
 
