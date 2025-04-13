@@ -182,6 +182,8 @@ class Activity(BaseSiteComponent):
             self.project_id = parent_id
             self.recipient_username = recipient_username
 
+        # type 12 does not exist in the HTML. That's why it was removed, not merged with type 13.
+        
         elif activity_type == 13:
             # Create ('add') studio
             studio_id = data["gallery"]
