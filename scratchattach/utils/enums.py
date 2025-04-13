@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Optional, Callable, Iterable
 
 
-@dataclass(init=True, repr=True)
+@dataclass
 class Language:
     name: str = None
     code: str = None
@@ -167,7 +167,7 @@ class Languages(_EnumWrapper):
         return super().all_of(attr_name, apply_func)
 
 
-@dataclass(init=True, repr=True)
+@dataclass
 class TTSVoice:
     name: str
     gender: str
