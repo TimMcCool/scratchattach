@@ -31,7 +31,7 @@ else:
 
 from bs4 import BeautifulSoup
 
-from . import activity, classroom, forum, studio, user, project, backpack_asset
+from . import activity, classroom, forum, studio, user, project, backpack_asset, alert
 # noinspection PyProtectedMember
 from ._base import BaseSiteComponent
 from ..cloud import cloud, _base
@@ -265,7 +265,9 @@ class Session(BaseSiteComponent):
                             params={"page": page, "ascsort": ascsort, "descsort": descsort},
                             headers=self._headers, cookies=self._cookies).json()
 
-        return data
+        alerts = [alert.EducatorAlert.from_json(alert_data, self) for alert_data in data]
+
+        return alerts
 
     def clear_messages(self):
         """
