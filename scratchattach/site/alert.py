@@ -42,8 +42,6 @@ class EducatorAlert:
 
         fields: dict[str, Any] = data.get("fields")
 
-        # classroom_name = fields.get("classroom_names") # not sure why the JSON key is in plural
-        # the classroom name is actually the only direct classroom information provided. however, It can be indirectly worked out using the target user
         time_read: datetime = datetime.fromisoformat(fields.get("educator_datetime_read"))
 
         admin_action: dict[str, Any] = fields.get("admin_action")
@@ -82,42 +80,25 @@ class EducatorAlert:
             # comment
             comment_data: dict[str, Any] = extra_data["comment_content"]
             content: str | None = comment_data.get("content")
-            # comment_id is equal to object_id
 
             comment_obj_id: int | None = comment_data.get("comment_obj_id")
-            # comment_obj_title: str | None = comment_data.get("comment_obj_title")
-
-            # comment_obj: project.Project | studio.Studio | user.User | None = None
 
             comment_type: int | None = comment_data.get("comment_type")
-            # use match case?
-            comment_source_type = "Unknown"
 
             if comment_type == 0:
                 # project
                 comment_source_type = "project"
-                # comment_obj = project.Project(id=comment_obj_id,
-                #                               title=comment_obj_title,
-                #                               _session=_session)
             elif comment_type == 1:
                 # profile
                 comment_source_type = "profile"
-                # comment_obj = user.User(id=comment_obj_id,
-                #                         username=comment_obj_title, # yes, it's called title, but it can store a username too
-                #                         _session=_session)
             else:
                 # probably a studio
+                comment_source_type = "Unknown"
                 warnings.warn(
                     f"The parser was not able to recognise the \"comment_type\" of {comment_type} in the alert JSON response.\n"
                     f"Full response: \n{pprint.pformat(data)}.\n\n"
                     f"Please draft an issue on github: https://github.com/TimMcCool/scratchattach/issues, providing this "
                     f"whole error message. This will allow us to implement an incomplete part of this parser")
-
-                # theoretical parser. might now work
-                comment_source_type = "studio"
-                # comment_obj = studio.Studio(id=comment_obj_id,
-                #                             title=comment_obj_title,
-                #                             _session=_session)
 
             # the comment_obj's corresponding attribute of comment.Comment is the place() method. As it has no cache, the title data is wasted.
             # if the comment_obj is deleted, this is still a valid way of working out the title/username
