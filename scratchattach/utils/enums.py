@@ -4,12 +4,13 @@ Adapted from https://translate-service.scratch.mit.edu/supported?language=en
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
 from enum import Enum
+from dataclasses import dataclass
+
 from typing import Optional, Callable, Iterable
 
 
-@dataclass
+@dataclass(init=True, repr=True)
 class Language:
     name: str = None
     code: str = None
@@ -43,7 +44,7 @@ class _EnumWrapper(Enum):
 
                 if apply_func(_val) == value:
                     return item_obj
-
+                  
             except TypeError:
                 pass
 
@@ -166,7 +167,7 @@ class Languages(_EnumWrapper):
         return super().all_of(attr_name, apply_func)
 
 
-@dataclass
+@dataclass(init=True, repr=True)
 class TTSVoice:
     name: str
     gender: str
@@ -194,40 +195,3 @@ class TTSVoices(_EnumWrapper):
     def all_of(cls, attr_name: str = "name", apply_func: Optional[Callable] = None) -> Iterable:
         return super().all_of(attr_name, apply_func)
 
-
-@dataclass
-class AlertType:
-    id: int
-    message: str
-
-
-class AlertTypes(_EnumWrapper):
-    # Reference: https://github.com/TimMcCool/scratchattach/issues/304#issuecomment-2800110811
-    # NOTE: THE TEXT WITHIN THE BRACES HERE MATTERS! IF YOU WANT TO CHANGE IT, MAKE SURE TO EDIT `site.alert.EducatorAlert`!
-    ban = AlertType(0, "{username} was banned.")
-    unban = AlertType(1, "{username} was unbanned.")
-    excluded_from_homepage = AlertType(2, "{username} was excluded from homepage")
-    excluded_from_homepage2 = AlertType(3, "{username} was excluded from homepage") # for some reason there are duplicates
-    notified = AlertType(4, "{username} was notified by a Scratch Administrator. Notification type: {notification_type}")
-    autoban = AlertType(5, "{username} was banned automatically")
-    autoremoved = AlertType(6, "{project} by {username} was removed automatically")
-    project_censored2 = AlertType(7, "{project} by {username} was censored.")  # <empty #7>
-    project_censored = AlertType(20, "{project} by {username} was censored.")
-    project_uncensored = AlertType(8, "{project} by {username} was uncensored.")
-    project_reviewed2 = AlertType(9, "{project} by {username} was reviewed by a Scratch Administrator.")  # <empty #9>
-    project_reviewed = AlertType(10, "{project} by {username} was reviewed by a Scratch Administrator.")
-    project_deleted = AlertType(11, "{project} by {username} was deleted by a Scratch Administrator.")
-    user_deleted2 = AlertType(12, "{username} was deleted by a Scratch Administrator")  # <empty #12>
-    user_deleted = AlertType(17, "{username} was deleted by a Scratch Administrator")
-    studio_reviewed2 = AlertType(13, "{studio} was reviewed by a Scratch Administrator.")  # <empty #13>
-    studio_reviewed = AlertType(14, "{studio} was reviewed by a Scratch Administrator.")
-    studio_deleted = AlertType(15, "{studio} was deleted by a Scratch Administrator.")
-    email_confirm2 = AlertType(16, "The email address of {username} was confirmed by a Scratch Administrator")  # <empty #16>
-    email_confirm = AlertType(18, "The email address of {username} was confirmed by a Scratch Administrator") # no '.' in HTML
-    email_unconfirm = AlertType(19, "The email address of {username} was set as not confirmed by a Scratch Administrator")
-    automute = AlertType(22, "{username} was automatically muted by our comment filters. The comment they tried to post was: {comment}")
-    default = AlertType(-1, "{username} had an admin action performed.") # default case
-
-    @classmethod
-    def find(cls, value, by: str = "id", apply_func: Optional[Callable] = None) -> AlertType:
-        return super().find(value, by, apply_func)
