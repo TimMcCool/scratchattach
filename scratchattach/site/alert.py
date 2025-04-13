@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Self, Any
 
 from . import user, project, studio, comment, session
+from ..utils import enums
 
 if TYPE_CHECKING:
     ...
@@ -30,7 +31,8 @@ class EducatorAlert:
     time_created: datetime = None
     target: user.User = None
     actor: user.User = None
-    target_object: project.Project | studio.Studio | comment.Comment = None
+    target_object: project.Project | studio.Studio | comment.Comment | studio.Studio = None
+    notification_type: str = None
     _session: session.Session = None
 
     @classmethod
@@ -68,7 +70,8 @@ class EducatorAlert:
         target_object: project.Project | studio.Studio | comment.Comment | None = None
 
         extra_data: dict[str, Any] = json.loads(admin_action.get("extra_data", "{}"))
-        # todo: properly implement the 2 incomplete parts of this parser (look for warning.warn())
+        # todo: if possible, properly implement the incomplete parts of this parser (look for warning.warn())
+        notification_type: str = None
 
         if "project_title" in extra_data:
             # project
@@ -126,22 +129,24 @@ class EducatorAlert:
                 source_id=comment_obj_id,
                 _session=_session
             )
+
+        elif "gallery_title" in extra_data:
+            # studio
+            # possible implemented incorrectly
+            target_object = studio.Studio(
+                id=object_id,
+                title=extra_data["gallery_title"],
+                _session=_session
+            )
+        elif "notification_type" in extra_data:
+            # possible implemented incorrectly
+            notification_type = extra_data["notification_type"]
         else:
-            # probably a studio
-            # possibly forums? Profile?
             warnings.warn(
                 f"The parser was not able to recognise the \"extra_data\" in the alert JSON response.\n"
                 f"Full response: \n{pprint.pformat(data)}.\n\n"
                 f"Please draft an issue on github: https://github.com/TimMcCool/scratchattach/issues, providing this "
                 f"whole error message. This will allow us to implement an incomplete part of this parser")
-
-            # theoretical parser. might now work
-            # also, what if it's a profile?
-            target_object = studio.Studio(
-                id=object_id,
-                title=extra_data.get("gallery_title"),  # i have no idea if this is the correct key
-                _session=_session
-            )
 
         return cls(
             id=alert_id,
@@ -153,5 +158,38 @@ class EducatorAlert:
             target=target,
             actor=actor,
             target_object=target_object,
+            notification_type=notification_type,
             _session=_session
         )
+
+    def __str__(self):
+        return f"EducatorAlert: {self.message}"
+
+    @property
+    def alert_type(self) -> enums.AlertType:
+        alert_type = enums.AlertTypes.find(self.type)
+        if not alert_type:
+            alert_type = enums.AlertTypes.default.value
+
+        return alert_type
+
+    @property
+    def message(self):
+        raw_message = self.alert_type.message
+        comment_content = ""
+        if isinstance(self.target_object, comment.Comment):
+            comment_content = self.target_object.content
+
+        return raw_message.format(username=self.target.username,
+                                  project=self.target_object_title,
+                                  studio=self.target_object_title,
+                                  notification_type=self.notification_type,
+                                  comment=comment_content)
+
+    @property
+    def target_object_title(self):
+        if isinstance(self.target_object, project.Project):
+            return self.target_object.title
+        if isinstance(self.target_object, studio.Studio):
+            return self.target_object.title
+        return None  # explicit
