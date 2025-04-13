@@ -14,9 +14,9 @@ class Activity(BaseSiteComponent):
     """
 
     def __repr__(self):
-        return repr(self.raw)
+        return f"Activity({repr(self.raw)})"
 
-    def str(self):
+    def __str__(self):
         return str(self.raw)
 
     def __init__(self, **entries):
