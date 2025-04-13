@@ -265,7 +265,7 @@ class Session(BaseSiteComponent):
                             params={"page": page, "ascsort": ascsort, "descsort": descsort},
                             headers=self._headers, cookies=self._cookies).json()
 
-        alerts = [alert.EducatorAlert.from_json(alert_data, self._session) for alert_data in data]
+        alerts = [alert.EducatorAlert.from_json(alert_data, self) for alert_data in data]
 
         return alerts
 
