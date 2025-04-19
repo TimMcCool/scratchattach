@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import warnings
-from typing import Optional, Iterable, Self
+from typing import Optional, Iterable
+from typing_extensions import Self
 
 from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape, prim, comment, build_defaulting
 from ..utils import exceptions

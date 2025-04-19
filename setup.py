@@ -16,7 +16,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=open('README.md', encoding='utf-8').read(),
     packages=find_packages(),
-    install_requires=["websocket-client","requests","bs4","SimpleWebSocketServer"],
+    install_requires=["websocket-client","requests","bs4","SimpleWebSocketServer", "typing-extensions"],
     keywords=['scratch api', 'scratchattach', 'scratch api python', 'scratch python', 'scratch for python', 'scratch', 'scratch cloud', 'scratch cloud variables', 'scratch bot'],
     url='https://scratchattach.tim1de.net',
     classifiers=[
