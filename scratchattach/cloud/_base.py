@@ -142,7 +142,7 @@ class WebSocketEventStream(EventStream):
         i = 0
         with self.reading:
             try:
-                self.receive_new(True)
+                self.receive_new(amount != -1)
                 while (self.packets_left and amount == -1) or (amount != -1 and i < amount):
                     if not self.packets_left and amount != -1:
                         self.receive_new()
@@ -150,7 +150,7 @@ class WebSocketEventStream(EventStream):
                     i += 1
             except Exception:
                 self.source_cloud.reconnect()
-                self.receive_new(True)
+                self.receive_new(amount != -1)
                 while (self.packets_left and amount == -1) or (amount != -1 and i < amount):
                     if not self.packets_left and amount != -1:
                         self.receive_new()
