@@ -1001,10 +1001,10 @@ def issue_login_warning() -> None:
     if getattr(suppressed_login_warning, "suppressed", 0):
         return
     warnings.warn(
-        "IMPORTANT: If you included login credentials directly in your code (e.g. session_id, session_string, ...), \
-        then make sure to EITHER instead load them from environment variables or files OR remember to remove them before \
-        you share your code with anyone else. If you want to remove this warning, \
-        use `warnings.filterwarnings('ignore', category=scratchattach.LoginDataWarning)`",
+        "IMPORTANT: If you included login credentials directly in your code (e.g. session_id, session_string, ...), "
+        "then make sure to EITHER instead load them from environment variables or files OR remember to remove them before "
+        "you share your code with anyone else. If you want to remove this warning, "
+        "use `warnings.filterwarnings('ignore', category=scratchattach.LoginDataWarning)`",
         exceptions.LoginDataWarning
     )
 
