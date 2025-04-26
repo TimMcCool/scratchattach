@@ -11,7 +11,7 @@ class MultiEventHandler:
 
     def event(self, function, *args, **kwargs):
         for handler in self.handlers:
-            handler.request(function, *args, **kwargs)
+            handler.event(function, *args, **kwargs)
 
     def start(self, *args, **kwargs):
         for handler in self.handlers:
