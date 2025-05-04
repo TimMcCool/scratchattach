@@ -69,7 +69,6 @@ class CloudRequests(CloudEvents):
         self._requests = {}
         self.event(self.on_set, thread=False)
         self.event(self.on_reconnect, thread=True)
-        self.respond_in_thread = False
         self.no_packet_loss = no_packet_loss # When enabled, query the clouddata log regularly for missed requests and reconnect after every single request (reduces packet loss a lot, but is spammy and can make response duration longer)
         self.used_cloud_vars = used_cloud_vars
         self.respond_order = respond_order
@@ -106,8 +105,6 @@ class CloudRequests(CloudEvents):
         """
         def inner(function):
             # called if the decorator provides arguments
-            if thread:
-                self.respond_in_thread = True
             self._requests[function.__name__ if name is None else name] = Request(
                 function.__name__ if name is None else name,
                 enabled = enabled,
