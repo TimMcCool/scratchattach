@@ -22,6 +22,21 @@ if TYPE_CHECKING:
 
 @dataclass
 class EducatorAlert:
+    """
+    Represents an alert for student activity, viewable at https://scratch.mit.edu/site-api/classrooms/alerts/
+
+    Attributes:
+        model: The type of alert (presumably); should always equal "educators.educatoralert" in this class
+        type: An integer that identifies the type of alert, differentiating e.g. against bans or autoban or censored comments etc
+        raw: The raw JSON data from the API
+        id: The ID of the alert (internally called 'pk' by scratch, not sure what this is for)
+        time_read: The time the alert was read
+        time_created: The time the alert was created
+        target: The user that the alert is about (the student)
+        actor: The user that created the alert (the admin)
+        target_object: The object that the alert is about (e.g. a project, studio, or comment)
+        notification_type: not sure what this is for, but inferred from the scratch HTML reference
+    """
     _: KW_ONLY
     model: str = "educators.educatoralert"
     type: int = None
@@ -37,6 +52,16 @@ class EducatorAlert:
 
     @classmethod
     def from_json(cls, data: dict[str, Any], _session: session.Session = None) -> Self:
+        """
+        Load an EducatorAlert from a JSON object.
+
+        Arguments:
+            data (dict): The JSON object
+            _session (session.Session): The session object used to load this data, to 'connect' to the alerts rather than just 'get' them
+
+        Returns:
+            EducatorAlert: The loaded EducatorAlert object
+        """
         model: str = data.get("model")  # With this class, should be equal to educators.educatoralert
         alert_id: int = data.get("pk")  # not sure what kind of pk/id this is. Doesn't seem to be a user or class id.
 
@@ -148,6 +173,9 @@ class EducatorAlert:
 
     @property
     def alert_type(self) -> enums.AlertType:
+        """
+        Get an associated AlertType object for this alert (based on the type index)
+        """
         alert_type = enums.AlertTypes.find(self.type)
         if not alert_type:
             alert_type = enums.AlertTypes.default.value
@@ -156,6 +184,9 @@ class EducatorAlert:
 
     @property
     def message(self):
+        """
+        Format the alert message using the alert type's message template, as it would be on the website.
+        """
         raw_message = self.alert_type.message
         comment_content = ""
         if isinstance(self.target_object, comment.Comment):
@@ -169,6 +200,9 @@ class EducatorAlert:
 
     @property
     def target_object_title(self):
+        """
+        Get the title of the target object (if applicable)
+        """
         if isinstance(self.target_object, project.Project):
             return self.target_object.title
         if isinstance(self.target_object, studio.Studio):

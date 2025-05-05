@@ -202,13 +202,16 @@ class AlertType:
 
 
 class AlertTypes(_EnumWrapper):
+    """
+    Enum for associating alert type indecies with their messages, for use with the str.format() method.
+    """
     # Reference: https://github.com/TimMcCool/scratchattach/issues/304#issuecomment-2800110811
     # NOTE: THE TEXT WITHIN THE BRACES HERE MATTERS! IF YOU WANT TO CHANGE IT, MAKE SURE TO EDIT `site.alert.EducatorAlert`!
     ban = AlertType(0, "{username} was banned.")
     unban = AlertType(1, "{username} was unbanned.")
     excluded_from_homepage = AlertType(2, "{username} was excluded from homepage")
     excluded_from_homepage2 = AlertType(3, "{username} was excluded from homepage") # for some reason there are duplicates
-    notified = AlertType(4, "{username} was notified by a Scratch Administrator. Notification type: {notification_type}")
+    notified = AlertType(4, "{username} was notified by a Scratch Administrator. Notification type: {notification_type}") # not sure what notification type is
     autoban = AlertType(5, "{username} was banned automatically")
     autoremoved = AlertType(6, "{project} by {username} was removed automatically")
     project_censored2 = AlertType(7, "{project} by {username} was censored.")  # <empty #7>
