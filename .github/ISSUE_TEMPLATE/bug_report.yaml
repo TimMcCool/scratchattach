@@ -1,0 +1,44 @@
+name: Bug report
+description: File a bug report.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: scratchattach-version
+    attributes:
+      label: scratchattach version
+      description: The version of scratchattach you have installed. Can be found using `python -m pip show scratchattach`
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: dropdown
+    id: cloudvariables-location
+    attributes:
+      label: Cloud variables
+      description: If your bug is based in some form on cloud variables, which cloud variable server did you use? If your bug doesn't have anything to do with cloud variables, submit "No cloud vars"
+      options:
+        - Scratch
+        - TurboWarp
+        - Custom Cloud Server
+        - Other
+        - No cloud vars
+      default: 0
+    validations:
+      required: true
+  - type: textarea
+    id: traceback
+    attributes:
+      label: Traceback
+      description: If you received a traceback, please copy paste the full traceback here. Otherwise write "none".
+      render: txt
+    validations:
+      required: true
