@@ -36,7 +36,7 @@ class BaseEventHandler(ABC):
                 self._thread = None
                 self._updater()
     
-    def call_event(self, event_name, args=[]):
+    def call_event(self, event_name, args : list = []):
         try:
             if event_name in self._threaded_events:
                 for func in self._threaded_events[event_name]:

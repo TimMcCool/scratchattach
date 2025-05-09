@@ -302,7 +302,7 @@ class CloudRequests(CloudEvents):
                 request_id=request_id,
                 activity=activity
             )
-            self.call_event("on_request", received_request)
+            self.call_event("on_request", [received_request])
             if received_request.request.thread:
                 self.executed_requests[request_id] = received_request
                 Thread(target=received_request.request, args=[received_request]).start() # Execute the request function directly in a thread

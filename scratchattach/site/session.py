@@ -76,6 +76,7 @@ class Session(BaseSiteComponent):
         mute_status: Information about commenting restrictions of the associated account
         banned: Returns True if the associated account is banned
     """
+    session_string: str | None = None
 
     def __str__(self) -> str:
         return f"Login for account {self.username!r}"
@@ -977,6 +978,9 @@ sess
     def connect_filterbot(self, *, log_deletions=True) -> filterbot.Filterbot:
         return filterbot.Filterbot(user.User(username=self.username, _session=self), log_deletions=log_deletions)
 
+    def get_session_string(self) -> str:
+        assert self.session_string
+        return self.session_string
 
 # ------ #
 
@@ -1033,7 +1037,7 @@ def login_by_id(session_id: str, *, username: Optional[str] = None, password: Op
     issue_login_warning()
     if password is not None:
         session_data = dict(session_id=session_id, username=username, password=password)
-        session_string = base64.b64encode(json.dumps(session_data).encode())
+        session_string = base64.b64encode(json.dumps(session_data).encode()).decode()
     else:
         session_string = None
     _session = Session(id=session_id, username=username, session_string=session_string, xtoken=xtoken)

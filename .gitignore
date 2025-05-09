@@ -9,3 +9,4 @@ scratchattach.code-workspace
 **/.DS_Store
 setup.py
 setup.py
+.env
