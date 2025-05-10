@@ -25,6 +25,7 @@ body:
     attributes:
       label: Your code.
       description: Put your code here. Be careful not to reveal your login data.
+      render: python
     validations:
       required: true
   - type: dropdown
