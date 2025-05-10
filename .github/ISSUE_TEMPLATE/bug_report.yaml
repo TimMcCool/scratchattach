@@ -20,20 +20,27 @@ body:
       label: What happened?
     validations:
       required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Your code.
+      description: Put your code here. Be careful not to reveal your login data.
+    validations:
+      required: true
   - type: dropdown
     id: cloudvariables-location
     attributes:
       label: Cloud variables
-      description: If your bug is based in some form on cloud variables, which cloud variable server did you use? If your bug doesn't have anything to do with cloud variables, submit "No cloud vars"
+      description: If your bug is based in some form on cloud variables, which cloud variable server did you use? If your bug doesn't have anything to do with cloud variables, ignore.
       options:
         - Scratch
         - TurboWarp
         - Custom Cloud Server
         - Other
-        - No cloud vars
+      multiple: true
       default: 0
     validations:
-      required: true
+      required: false
   - type: textarea
     id: traceback
     attributes:
