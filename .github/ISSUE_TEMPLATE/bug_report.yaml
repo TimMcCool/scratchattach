@@ -28,20 +28,6 @@ body:
       render: python
     validations:
       required: true
-  - type: dropdown
-    id: cloudvariables-location
-    attributes:
-      label: Cloud variables
-      description: If your bug is based in some form on cloud variables, which cloud variable server did you use? If your bug doesn't have anything to do with cloud variables, ignore.
-      options:
-        - Scratch
-        - TurboWarp
-        - Custom Cloud Server
-        - Other
-      multiple: true
-      default: 0
-    validations:
-      required: false
   - type: textarea
     id: traceback
     attributes:
