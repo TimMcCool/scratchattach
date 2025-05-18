@@ -31,7 +31,7 @@ else:
 
 from bs4 import BeautifulSoup
 
-from . import activity, classroom, forum, studio, user, project, backpack_asset
+from . import activity, classroom, forum, studio, user, project, backpack_asset, alert
 # noinspection PyProtectedMember
 from ._base import BaseSiteComponent
 from ..cloud import cloud, _base
@@ -252,6 +252,13 @@ class Session(BaseSiteComponent):
 
     def classroom_alerts(self, _classroom: Optional[classroom.Classroom | int] = None, mode: str = "Last created",
                          page: Optional[int] = None):
+        """
+        Load and parse admin alerts, optionally for a specific class, using https://scratch.mit.edu/site-api/classrooms/alerts/
+
+        Returns:
+            list[alert.EducatorAlert]: A list of parsed EducatorAlert objects
+        """
+
         if isinstance(_classroom, classroom.Classroom):
             _classroom = _classroom.id
 
@@ -266,7 +273,9 @@ class Session(BaseSiteComponent):
                             params={"page": page, "ascsort": ascsort, "descsort": descsort},
                             headers=self._headers, cookies=self._cookies).json()
 
-        return data
+        alerts = [alert.EducatorAlert.from_json(alert_data, self) for alert_data in data]
+
+        return alerts
 
     def clear_messages(self):
         """
