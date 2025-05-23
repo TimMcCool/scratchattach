@@ -1045,7 +1045,7 @@ def login_by_id(session_id: str, *, username: Optional[str] = None, password: Op
     # Generate session_string (a scratchattach-specific authentication method)
     issue_login_warning()
     if password is not None:
-        session_data = dict(session_id=session_id, username=username, password=password)
+        session_data = dict(id=session_id, username=username, password=password)
         session_string = base64.b64encode(json.dumps(session_data).encode()).decode()
     else:
         session_string = None
