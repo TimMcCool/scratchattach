@@ -549,7 +549,7 @@ class User(BaseSiteComponent):
                 'reply_count': 0,
                 'cached_replies': []
             }
-            _comment = comment.Comment(source="profile", parent_id=None if parent_id=="" else parent_id, commentee_id=commentee_id, source_id=self.username, id=data["id"], _session = self._session)
+            _comment = comment.Comment(source="profile", parent_id=None if parent_id=="" else parent_id, commentee_id=commentee_id, source_id=self.username, id=data["id"], _session = self._session, datetime = datetime.now())
             _comment._update_from_dict(data)
             return _comment
         except Exception:
