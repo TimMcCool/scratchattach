@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import random
 import string
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..eventhandlers import message_events
 from . import project
@@ -545,7 +545,7 @@ class User(BaseSiteComponent):
             data = {
                 'id': text.split('<div id="comments-')[1].split('" class="comment')[0],
                 'author': {"username": text.split('" data-comment-user="')[1].split('"><img class')[0]},
-                'content': text.split('<div class="content">')[1].split('"</div>')[0],
+                'content': text.split('<div class="content">')[1].split('</div>')[0].strip(),
                 'reply_count': 0,
                 'cached_replies': []
             }
@@ -560,7 +560,7 @@ class User(BaseSiteComponent):
                 raw_error_data = text.split('<script id="error-data" type="application/json">')[1].split('</script>')[0]
                 error_data = json.loads(raw_error_data)
                 expires = error_data['mute_status']['muteExpiresAt']
-                expires = datetime.utcfromtimestamp(expires)
+                expires = datetime.fromtimestamp(expires, timezone.utc)
                 raise(exceptions.CommentPostFailure(f"You have been muted. Mute expires on {expires}"))
             else:
                 raise(exceptions.FetchError(f"Couldn't parse API response: {r.text!r}"))
