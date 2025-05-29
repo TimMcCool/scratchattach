@@ -7,7 +7,8 @@ import pprint
 import warnings
 from dataclasses import dataclass, field, KW_ONLY
 from datetime import datetime
-from typing import TYPE_CHECKING, Self, Any
+from typing import TYPE_CHECKING, Any
+from typing_extensions import Self
 
 from . import user, project, studio, comment, session
 from ..utils import enums
