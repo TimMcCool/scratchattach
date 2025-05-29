@@ -3,22 +3,26 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import string
 from datetime import datetime, timezone
 
+from bs4 import BeautifulSoup
+
+from ._base import BaseSiteComponent
 from ..eventhandlers import message_events
-from . import project
+
+from ..utils import commons
 from ..utils import exceptions
+from ..utils.commons import headers
+from ..utils.requests import Requests as requests
+
+from . import project
 from . import studio
 from . import forum
-from bs4 import BeautifulSoup
-from ._base import BaseSiteComponent
-from ..utils.commons import headers
-from ..utils import commons
 from . import comment
 from . import activity
-
-from ..utils.requests import Requests as requests
+from . import classroom
 
 class Verificator:
 
