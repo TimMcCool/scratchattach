@@ -1119,9 +1119,9 @@ def login_by_session_string(session_string: str) -> Session:
     session_string = base64.b64decode(session_string).decode()  # unobfuscate
     session_data = json.loads(session_string)
     try:
-        assert session_data.get("session_id")
+        assert session_data.get("id")
         with suppress_login_warning():
-            return login_by_id(session_data["session_id"], username=session_data.get("username"),
+            return login_by_id(session_data["id"], username=session_data.get("username"),
                            password=session_data.get("password"))
     except Exception:
         pass
