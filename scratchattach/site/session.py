@@ -161,9 +161,10 @@ class Session(BaseSiteComponent):
 
         self._username = data["username"]
         if self._user:
-            self._user = user.User(_session=self)
+            self._user.username = self._username
+        else:
+            self._user = user.User(_session=self, username=self._username)
 
-        self._user.username = data["username"]
         self._user.id = data["_auth_user_id"]
         self.xtoken = data["token"]
 
