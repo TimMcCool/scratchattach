@@ -10,6 +10,7 @@ import random
 import re
 import time
 import warnings
+import zlib
 from typing import Optional, TypeVar, TYPE_CHECKING, overload, Any
 from contextlib import contextmanager
 from threading import local
@@ -102,6 +103,8 @@ class Session(BaseSiteComponent):
 
         # Set attributes that Session object may get
         self._user: user.User = None
+        self.time_created: datetime.datetime = None
+        self.language = "en" # default
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)
@@ -118,6 +121,9 @@ class Session(BaseSiteComponent):
             "accept": "application/json",
             "Content-Type": "application/json",
         }
+
+        if self.id:
+            self._process_session_id()
 
     def _update_from_dict(self, data: dict):
         # Note: there are a lot more things you can get from this data dict.
@@ -148,6 +154,23 @@ class Session(BaseSiteComponent):
                           f"Some features may not work properly.")
         return True
 
+    def _process_session_id(self):
+        assert self.id
+
+        data, self.time_created = decode_session_id(self.id)
+
+        self._username = data["username"]
+        if self._user:
+            self._user = user.User(_session=self)
+
+        self._user.username = data["username"]
+        self._user.id = data["_auth_user_id"]
+        self.xtoken = data["token"]
+
+        # not saving the login ip because it is a security issue, and is not very helpful
+
+        self.language = data["_language"]
+
     def connect_linked_user(self) -> user.User:
         """
         Gets the user associated with the login / session.
@@ -166,7 +189,7 @@ class Session(BaseSiteComponent):
             self._user = self.connect_user(self._username)
         return self._user
 
-    def get_linked_user(self) -> 'user.User':
+    def get_linked_user(self) -> user.User:
         # backwards compatibility with v1
 
         # To avoid inconsistencies with "connect" and "get", this function was renamed
@@ -1013,6 +1036,38 @@ sess
     def get_session_string(self) -> str:
         assert self.session_string
         return self.session_string
+
+
+# ------ #
+
+def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetime]:
+    """
+    Extract the JSON data from the main part of a session ID string
+    Session id is in the format:
+    <p1: long base64 string>:<p2: short base64 string>:<p3: medium base64 string>
+
+    p1 contains a base64-zlib compressed JSON string
+    p2 is a base 62 encoded timestamp
+    p3 might be a `synchronous signature` for the first 2 parts (might be useless for us)
+
+    The dict has these attributes:
+    - username
+    - _auth_user_id
+    - testcookie
+    - _auth_user_backend
+    - token
+    - login-ip
+    - _language
+    - django_timezone
+    - _auth_user_hash
+    """
+    p1, p2, p3 = session_id.split(':')
+
+    return (
+        json.loads(zlib.decompress(base64.urlsafe_b64decode(p1 + "=="))),
+        datetime.datetime.fromtimestamp(commons.b62_decode(p2))
+    )
+
 
 # ------ #
 
