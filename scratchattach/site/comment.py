@@ -1,7 +1,8 @@
 """Comment class"""
 from __future__ import annotations
 
-from typing import Union, Optional, assert_never, Any
+from typing import Union, Optional, Any
+from typing_extensions import assert_never  # importing from typing caused me errors
 from enum import Enum, auto
 
 from . import user, project, studio
