@@ -7,7 +7,7 @@ import pprint
 import warnings
 from dataclasses import dataclass, field, KW_ONLY
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional, Union
 from typing_extensions import Self
 
 from . import user, project, studio, comment, session
@@ -40,19 +40,19 @@ class EducatorAlert:
     """
     _: KW_ONLY
     model: str = "educators.educatoralert"
-    type: int = None
-    raw: dict = field(repr=False, default=None)
-    id: int = None
-    time_read: datetime = None
-    time_created: datetime = None
-    target: user.User = None
-    actor: user.User = None
-    target_object: project.Project | studio.Studio | comment.Comment | studio.Studio = None
-    notification_type: str = None
-    _session: session.Session = None
+    type: int = -1
+    raw: dict = field(repr=False, default_factory=dict)
+    id: int = -1
+    time_read: datetime = datetime.fromtimestamp(0.0)
+    time_created: datetime = datetime.fromtimestamp(0.0)
+    target: user.User
+    actor: user.User
+    target_object: Optional[Union[project.Project, studio.Studio, comment.Comment, studio.Studio]]
+    notification_type: str
+    _session: Optional[session.Session]
 
     @classmethod
-    def from_json(cls, data: dict[str, Any], _session: session.Session = None) -> Self:
+    def from_json(cls, data: dict[str, Any], _session: Optional[session.Session] = None) -> Self:
         """
         Load an EducatorAlert from a JSON object.
 
@@ -63,39 +63,51 @@ class EducatorAlert:
         Returns:
             EducatorAlert: The loaded EducatorAlert object
         """
-        model: str = data.get("model")  # With this class, should be equal to educators.educatoralert
-        alert_id: int = data.get("pk")  # not sure what kind of pk/id this is. Doesn't seem to be a user or class id.
+        model = data.get("model")  # With this class, should be equal to educators.educatoralert
+        assert isinstance(model, str)
+        alert_id = data.get("pk")  # not sure what kind of pk/id this is. Doesn't seem to be a user or class id.
+        assert isinstance(alert_id, int)
 
-        fields: dict[str, Any] = data.get("fields")
+        fields = data.get("fields")
+        assert isinstance(fields, dict)
 
-        time_read: datetime = datetime.fromisoformat(fields.get("educator_datetime_read"))
+        time_read_raw = fields.get("educator_datetime_read")
+        assert isinstance(time_read_raw, str)
+        time_read: datetime = datetime.fromisoformat(time_read_raw)
 
-        admin_action: dict[str, Any] = fields.get("admin_action")
+        admin_action = fields.get("admin_action")
+        assert isinstance(admin_action, dict)
 
-        time_created: datetime = datetime.fromisoformat(admin_action.get("datetime_created"))
+        time_created_raw = admin_action.get("datetime_created")
+        assert isinstance(time_created_raw, str)
+        time_created: datetime = datetime.fromisoformat(time_created_raw)
 
-        alert_type: int = admin_action.get("type")
+        alert_type = admin_action.get("type")
+        assert isinstance(alert_type, int)
 
-        target_data: dict[str, Any] = admin_action.get("target_user")
+        target_data = admin_action.get("target_user")
+        assert isinstance(target_data, dict)
         target = user.User(username=target_data.get("username"),
                            id=target_data.get("pk"),
                            icon_url=target_data.get("thumbnail_url"),
                            admin=target_data.get("admin", False),
                            _session=_session)
 
-        actor_data: dict[str, Any] = admin_action.get("actor")
+        actor_data = admin_action.get("actor")
+        assert isinstance(actor_data, dict)
         actor = user.User(username=actor_data.get("username"),
                           id=actor_data.get("pk"),
                           icon_url=actor_data.get("thumbnail_url"),
                           admin=actor_data.get("admin", False),
                           _session=_session)
 
-        object_id: int = admin_action.get("object_id")  # this could be a comment id, a project id, etc.
+        object_id = admin_action.get("object_id")  # this could be a comment id, a project id, etc.
+        assert isinstance(object_id, int)
         target_object: project.Project | studio.Studio | comment.Comment | None = None
 
         extra_data: dict[str, Any] = json.loads(admin_action.get("extra_data", "{}"))
         # todo: if possible, properly implement the incomplete parts of this parser (look for warning.warn())
-        notification_type: str = None
+        notification_type: str = ""
 
         if "project_title" in extra_data:
             # project
@@ -113,13 +125,13 @@ class EducatorAlert:
 
             if comment_type == 0:
                 # project
-                comment_source_type = "project"
+                comment_source_type = comment.CommentSource.PROJECT
             elif comment_type == 1:
                 # profile
-                comment_source_type = "profile"
+                comment_source_type = comment.CommentSource.USER_PROFILE
             else:
                 # probably a studio
-                comment_source_type = "Unknown"
+                comment_source_type = comment.CommentSource.STUDIO
                 warnings.warn(
                     f"The parser was not able to recognise the \"comment_type\" of {comment_type} in the alert JSON response.\n"
                     f"Full response: \n{pprint.pformat(data)}.\n\n"

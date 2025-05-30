@@ -156,7 +156,7 @@ class Studio(BaseSiteComponent):
         ).json()
         if r is None:
             raise exceptions.CommentNotFound()
-        _comment = comment.Comment(id=r["id"], _session=self._session, source="studio", source_id=self.id)
+        _comment = comment.Comment(id=r["id"], _session=self._session, source=comment.CommentSource.STUDIO, source_id=self.id)
         _comment._update_from_dict(r)
         return _comment
 
@@ -191,7 +191,7 @@ class Studio(BaseSiteComponent):
         ).json()
         if "id" not in r:
             raise exceptions.CommentPostFailure(r)
-        _comment = comment.Comment(id=r["id"], _session=self._session, source="studio", source_id=self.id)
+        _comment = comment.Comment(id=r["id"], _session=self._session, source=comment.CommentSource.STUDIO, source_id=self.id)
         _comment._update_from_dict(r)
         return _comment
 

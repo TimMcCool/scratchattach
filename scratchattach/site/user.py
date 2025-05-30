@@ -11,7 +11,7 @@ from . import project
 from ..utils import exceptions
 from . import studio
 from . import forum
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from ._base import BaseSiteComponent
 from ..utils.commons import headers
 from ..utils import commons
@@ -350,7 +350,7 @@ class User(BaseSiteComponent):
                     # A thumbnail link (no need to webscrape this)
                     # A title
                     # An Author (called an owner for some reason)
-
+                    assert isinstance(project_element, Tag)
                     project_anchors = project_element.find_all("a")
                     # Each list item has three <a> tags, the first two linking the project
                     # 1st contains <img> tag
@@ -359,10 +359,16 @@ class User(BaseSiteComponent):
 
                     # This function is pretty handy!
                     # I'll use it for an id from a string like: /projects/1070616180/
-                    project_id = commons.webscrape_count(project_anchors[0].attrs["href"],
+                    first_anchor = project_anchors[0]
+                    second_anchor = project_anchors[1]
+                    third_anchor = project_anchors[2]
+                    assert isinstance(first_anchor, Tag)
+                    assert isinstance(second_anchor, Tag)
+                    assert isinstance(third_anchor, Tag)
+                    project_id = commons.webscrape_count(first_anchor.attrs["href"],
                                                          "/projects/", "/")
-                    title = project_anchors[1].contents[0]
-                    author = project_anchors[2].contents[0]
+                    title = second_anchor.contents[0]
+                    author = third_anchor.contents[0]
 
                     # Instantiating a project with the properties that we know
                     # This may cause issues (see below)
@@ -549,7 +555,7 @@ class User(BaseSiteComponent):
                 'reply_count': 0,
                 'cached_replies': []
             }
-            _comment = comment.Comment(source="profile", parent_id=None if parent_id=="" else parent_id, commentee_id=commentee_id, source_id=self.username, id=data["id"], _session = self._session, datetime = datetime.now())
+            _comment = comment.Comment(source=comment.CommentSource.USER_PROFILE, parent_id=None if parent_id=="" else parent_id, commentee_id=commentee_id, source_id=self.username, id=data["id"], _session = self._session, datetime = datetime.now())
             _comment._update_from_dict(data)
             return _comment
         except Exception:
@@ -696,7 +702,7 @@ class User(BaseSiteComponent):
                 'content': content,
                 'datetime_created': time,
             }
-            _comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
+            _comment = comment.Comment(source=comment.CommentSource.USER_PROFILE, source_id=self.username, _session = self._session)
             _comment._update_from_dict(main_comment)
 
             ALL_REPLIES = []
@@ -719,7 +725,7 @@ class User(BaseSiteComponent):
                     "parent_id" : comment_id,
                     "cached_parent_comment" : _comment,
                 }
-                _r_comment = comment.Comment(source="profile", source_id=self.username, _session = self._session, cached_parent_comment=_comment)
+                _r_comment = comment.Comment(source=comment.CommentSource.USER_PROFILE, source_id=self.username, _session = self._session, cached_parent_comment=_comment)
                 _r_comment._update_from_dict(reply_data)
                 ALL_REPLIES.append(_r_comment)
 

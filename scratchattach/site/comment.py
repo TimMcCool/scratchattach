@@ -1,17 +1,32 @@
 """Comment class"""
 from __future__ import annotations
 
+from typing import Union, Optional, assert_never, Any
+from enum import Enum, auto
+
 from . import user, project, studio
 from ._base import BaseSiteComponent
 from ..utils import exceptions
 
+class CommentSource(Enum):
+    PROJECT = auto()
+    USER_PROFILE = auto()
+    STUDIO = auto()
 
 class Comment(BaseSiteComponent):
     """
     Represents a Scratch comment (on a profile, studio or project)
     """
+    id: Union[int, str]
+    source: CommentSource
+    source_id: Union[int, str]
+    cached_replies: Optional[list[Comment]]
+    parent_id: Optional[Union[int, str]]
+    cached_parent_comment: Optional[Comment]
+    commentee_id: Optional[int]
+    content: Any
 
-    def str(self):
+    def __str__(self):
         return str(self.content)
 
     def __init__(self, **entries):
@@ -93,12 +108,14 @@ class Comment(BaseSiteComponent):
 
         If the place can't be traced back, None is returned.
         """
-        if self.source == "profile":
+        if self.source == CommentSource.USER_PROFILE:
             return self._make_linked_object("username", self.source_id, user.User, exceptions.UserNotFound)
-        if self.source == "studio":
+        elif self.source == CommentSource.STUDIO:
             return self._make_linked_object("id", self.source_id, studio.Studio, exceptions.UserNotFound)
-        if self.source == "project":
+        elif self.source == CommentSource.PROJECT:
             return self._make_linked_object("id", self.source_id, project.Project, exceptions.UserNotFound)
+        else:
+            assert_never(self.source)
 
     def parent_comment(self) -> Comment | None:
         if self.parent_id is None:

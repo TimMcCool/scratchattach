@@ -10,7 +10,7 @@ import random
 import re
 import time
 import warnings
-from typing import Optional, TypeVar, TYPE_CHECKING, overload
+from typing import Optional, TypeVar, TYPE_CHECKING, overload, Any
 from contextlib import contextmanager
 from threading import local
 
@@ -18,10 +18,7 @@ from threading import local
 # import zipfile
 # from typing import Type
 Type = type
-try:
-    from warnings import deprecated
-except ImportError:
-    deprecated = lambda x: (lambda y: y)
+
 if TYPE_CHECKING:
     from _typeshed import FileDescriptorOrPath, SupportsRead
     from ..cloud._base import BaseCloud
@@ -29,7 +26,8 @@ if TYPE_CHECKING:
 else:
     T = TypeVar("T")
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
+from typing_extensions import deprecated
 
 from . import activity, classroom, forum, studio, user, project, backpack_asset, alert
 # noinspection PyProtectedMember
@@ -77,6 +75,16 @@ class Session(BaseSiteComponent):
         banned: Returns True if the associated account is banned
     """
     session_string: str | None = None
+    id: str
+    username: str
+    xtoken: str
+    email: str
+    new_scratcher: bool
+    mute_status: Any
+    banned: bool
+    _headers: dict[str, str]
+    _cookies: dict[str, str]
+    _username: str
 
     def __str__(self) -> str:
         return f"Login for account {self.username!r}"
@@ -188,7 +196,18 @@ class Session(BaseSiteComponent):
                       headers=self._headers, cookies=self._cookies)
 
     @property
+    @deprecated("Use get_new_email_address instead.")
     def new_email_address(self) -> str:
+        """
+        Gets the (unconfirmed) email address that this session has requested to transfer to, if any,
+        otherwise the current address.
+
+        Returns:
+            str: The email that this session wants to switch to
+        """
+        return self.get_new_email_address()
+
+    def get_new_email_address(self) -> str:
         """
         Gets the (unconfirmed) email address that this session has requested to transfer to, if any,
         otherwise the current address.
@@ -203,6 +222,10 @@ class Session(BaseSiteComponent):
 
         email = None
         for label_span in soup.find_all("span", {"class": "label"}):
+            if not isinstance(label_span, Tag):
+                continue
+            if not isinstance(label_span.parent, Tag):
+                continue
             if label_span.contents[0] == "New Email Address":
                 return label_span.parent.contents[-1].text.strip("\n ")
 
@@ -1102,8 +1125,10 @@ def login(username, password, *, timeout=10) -> Session:
         timeout=timeout, errorhandling = False
     )
     try:
-        session_id = str(re.search('"(.*)"', request.headers["Set-Cookie"]).group())
-    except (AttributeError, Exception):
+        result = re.search('"(.*)"', request.headers["Set-Cookie"])
+        assert result is not None
+        session_id = str(result.group())
+    except (AssertionError, Exception):
         raise exceptions.LoginFailure(
             "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
 

@@ -5,6 +5,7 @@ import json
 import random
 import base64
 import time
+from typing import Any
 from . import user, comment, studio
 from ..utils import exceptions
 from ..utils import commons
@@ -13,7 +14,7 @@ from ._base import BaseSiteComponent
 from ..other.project_json_capabilities import ProjectBody
 from ..utils.requests import Requests as requests
 
-CREATE_PROJECT_USES = []
+CREATE_PROJECT_USES: list[float] = []
 
 class PartialProject(BaseSiteComponent):
     """
@@ -126,6 +127,9 @@ class PartialProject(BaseSiteComponent):
         p = get_project(self.id)
         return isinstance(p, Project)
     
+    def raw_json_or_empty(self) -> dict[str, Any]:
+        return empty_project_json
+    
     def create_remix(self, *, title=None, project_json=None): # not working
         """
         Creates a project on the Scratch website.
@@ -142,10 +146,7 @@ class PartialProject(BaseSiteComponent):
             else:
                 title = " remix"
         if project_json is None:
-            if "title" in self.__dict__:
-                project_json = self.raw_json()
-            else:
-                project_json = empty_project_json
+            project_json = self.raw_json_or_empty()
 
         if len(CREATE_PROJECT_USES) < 5:
             CREATE_PROJECT_USES.insert(0, time.time())
@@ -317,6 +318,9 @@ class Project(PartialProject):
                 )
             )
     
+    def raw_json_or_empty(self):
+        return self.raw_json()
+    
     def creator_agent(self):
         """
         Method only works for project created with Scratch 3.
@@ -382,7 +386,7 @@ class Project(PartialProject):
         ).json()
         if r is None:
             raise exceptions.CommentNotFound()
-        _comment = comment.Comment(id=r["id"], _session=self._session, source="project", source_id=self.id)
+        _comment = comment.Comment(id=r["id"], _session=self._session, source=comment.CommentSource.PROJECT, source_id=self.id)
         _comment._update_from_dict(r)
         return _comment
     
@@ -611,7 +615,7 @@ class Project(PartialProject):
         )
         if "id" not in r:
             raise exceptions.CommentPostFailure(r)
-        _comment = comment.Comment(id=r["id"], _session=self._session, source="project", source_id=self.id)
+        _comment = comment.Comment(id=r["id"], _session=self._session, source=comment.CommentSource.PROJECT, source_id=self.id)
         _comment._update_from_dict(r)
         return _comment
 
