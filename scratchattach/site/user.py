@@ -149,7 +149,7 @@ class User(BaseSiteComponent):
                     if is_closed:
                         class_name = class_name[:-7].strip()
 
-                    class_id = href.split('/')[2]
+                        class_id = href.split('/')[2]
                     break
 
             if class_name:
