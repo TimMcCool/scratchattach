@@ -140,19 +140,24 @@ class User(BaseSiteComponent):
 
             details = soup.find("p", {"class": "profile-details"})
 
-            class_name, class_id = None, None
+            class_name, class_id, is_closed = None, None, None
             for a in details.find_all("a"):
                 href = a.get("href")
                 if re.match(r"/classes/\d*/", href):
                     class_name = a.text.strip()[len("Student of: "):]
-                    class_id = href.split('/')[2]
+                    is_closed = class_name.endswith("\n            (ended)") # as this has a \n, we can be sure
+                    if is_closed:
+                        class_name = class_name[:-7].strip()
+
+                        class_id = href.split('/')[2]
                     break
 
             if class_name:
                 self._classroom = True, classroom.Classroom(
                     _session=self,
                     id=class_id,
-                    title=class_name
+                    title=class_name,
+                    is_closed=is_closed
                 )
             else:
                 self._classroom = True, None
