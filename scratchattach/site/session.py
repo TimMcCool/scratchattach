@@ -1126,6 +1126,13 @@ def login_by_session_string(session_string: str) -> Session:
     except Exception:
         pass
     try:
+        assert session_data.get("session_id")
+        with suppress_login_warning():
+            return login_by_id(session_data["session_id"], username=session_data.get("username"),
+                           password=session_data.get("password"))
+    except Exception:
+        pass
+    try:
         assert session_data.get("username") and session_data.get("password")
         with suppress_login_warning():
             return login(username=session_data["username"], password=session_data["password"])
