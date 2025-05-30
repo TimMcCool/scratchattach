@@ -3,22 +3,26 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import string
 from datetime import datetime, timezone
 
+from bs4 import BeautifulSoup
+
+from ._base import BaseSiteComponent
 from ..eventhandlers import message_events
-from . import project
+
+from ..utils import commons
 from ..utils import exceptions
+from ..utils.commons import headers
+from ..utils.requests import Requests as requests
+
+from . import project
 from . import studio
 from . import forum
-from bs4 import BeautifulSoup
-from ._base import BaseSiteComponent
-from ..utils.commons import headers
-from ..utils import commons
 from . import comment
 from . import activity
-
-from ..utils.requests import Requests as requests
+from . import classroom
 
 class Verificator:
 
@@ -70,6 +74,10 @@ class User(BaseSiteComponent):
         self.username = None
         self.name = None
 
+        # cache value for classroom getter method (using @property)
+        # first value is whether the cache has actually been set (because it can be None), second is the value itself
+        self._classroom: tuple[bool, classroom.Classroom | None] = False, None
+
         # Update attributes from entries dict:
         entries.setdefault("name", entries.get("username"))
         self.__dict__.update(entries)
@@ -119,6 +127,42 @@ class User(BaseSiteComponent):
         if self._session._username != self.username:
             raise exceptions.Unauthorized(
                 "You need to be authenticated as the profile owner to do this.")
+
+    @property
+    def classroom(self) -> classroom.Classroom | None:
+        """
+        Get a user's associated classroom, and return it as a `scratchattach.classroom.Classroom` object.
+        If there is no associated classroom, returns `None`
+        """
+        if not self._classroom[0]:
+            resp = requests.get(f"https://scratch.mit.edu/users/{self.username}/")
+            soup = BeautifulSoup(resp.text, "html.parser")
+
+            details = soup.find("p", {"class": "profile-details"})
+
+            class_name, class_id, is_closed = None, None, None
+            for a in details.find_all("a"):
+                href = a.get("href")
+                if re.match(r"/classes/\d*/", href):
+                    class_name = a.text.strip()[len("Student of: "):]
+                    is_closed = class_name.endswith("\n            (ended)") # as this has a \n, we can be sure
+                    if is_closed:
+                        class_name = class_name[:-7].strip()
+
+                    class_id = href.split('/')[2]
+                    break
+
+            if class_name:
+                self._classroom = True, classroom.Classroom(
+                    _session=self,
+                    id=class_id,
+                    title=class_name,
+                    is_closed=is_closed
+                )
+            else:
+                self._classroom = True, None
+
+        return self._classroom[1]
 
     def does_exist(self):
         """
