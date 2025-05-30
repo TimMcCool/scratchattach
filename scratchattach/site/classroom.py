@@ -30,10 +30,11 @@ class Classroom(BaseSiteComponent):
         else:
             raise KeyError(f"No class id or token provided! Entries: {entries}")
 
-        # Set attributes every Project object needs to have:
+        # Set attributes every Classroom object needs to have:
         self._session: Session = None
         self.id = None
         self.classtoken = None
+        self.is_closed = False
 
         self.__dict__.update(entries)
 
@@ -49,7 +50,6 @@ class Classroom(BaseSiteComponent):
         self._json_headers = dict(self._headers)
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
-        self.is_closed = False
 
     def __repr__(self) -> str:
         return f"classroom called {self.title!r}"
