@@ -191,7 +191,7 @@ class Session(BaseSiteComponent):
             password (str): Password associated with the session (not stored)
         """
         requests.post("https://scratch.mit.edu/accounts/email_change/",
-                      data={"email_address": self.new_email_address,
+                      data={"email_address": self.get_new_email_address(),
                             "password": password},
                       headers=self._headers, cookies=self._cookies)
 
