@@ -1132,25 +1132,9 @@ def login_by_id(session_id: str, *, username: Optional[str] = None, password: Op
         session_string = None
     _session = Session(id=session_id, username=username, session_string=session_string, xtoken=xtoken)
 
-    try:
-        status = _session.update()
-    except Exception as e:
-        status = False
-        warnings.warn(f"Key error at key {e} when reading scratch.mit.edu/session API response")
+    # xtoken is decoded from sessid, so don't use sess.update
+    # but this will cause incompatibilities, warranting a change in the 2nd (semver) version number
 
-    if status is not True:
-        if _session.xtoken is None:
-            if _session.username is None:
-                warnings.warn("Warning: Logged in by id, but couldn't fetch XToken. "
-                              "Make sure the provided session id is valid. "
-                              "Setting cloud variables can still work if you provide a "
-                              "`username='username'` keyword argument to the sa.login_by_id function")
-            else:
-                warnings.warn("Warning: Logged in by id, but couldn't fetch XToken. "
-                              "Make sure the provided session id is valid.")
-        else:
-            warnings.warn("Warning: Logged in by id, but couldn't fetch session info. "
-                          "This won't affect any other features.")
     return _session
 
 
