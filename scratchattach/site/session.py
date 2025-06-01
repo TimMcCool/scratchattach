@@ -1076,6 +1076,7 @@ def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetim
 
 suppressed_login_warning = local()
 
+
 @contextmanager
 def suppress_login_warning():
     """
@@ -1087,6 +1088,7 @@ def suppress_login_warning():
         yield
     finally:
         suppressed_login_warning.suppressed -= 1
+
 
 def issue_login_warning() -> None:
     """
@@ -1101,6 +1103,7 @@ def issue_login_warning() -> None:
         "use `warnings.filterwarnings('ignore', category=scratchattach.LoginDataWarning)`",
         exceptions.LoginDataWarning
     )
+
 
 def login_by_id(session_id: str, *, username: Optional[str] = None, password: Optional[str] = None, xtoken=None) -> Session:
     """
@@ -1126,7 +1129,11 @@ def login_by_id(session_id: str, *, username: Optional[str] = None, password: Op
     else:
         session_string = None
 
-    _session = Session(id=session_id, username=username, session_string=session_string, xtoken=xtoken)
+    if xtoken is not None:
+        # todo: consider removing the xtoken parameter?
+        warnings.warn("xtoken is redundant because it is retrieved by decoding the session id.")
+
+    _session = Session(id=session_id, username=username, session_string=session_string)
 
     # xtoken is decoded from sessid, so don't use sess.update
     # but this will cause incompatibilities, warranting a change in the 2nd (semver) version number
