@@ -7,7 +7,7 @@ import re
 import string
 from datetime import datetime, timezone
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from ._base import BaseSiteComponent
 from ..eventhandlers import message_events
@@ -139,10 +139,13 @@ class User(BaseSiteComponent):
             soup = BeautifulSoup(resp.text, "html.parser")
 
             details = soup.find("p", {"class": "profile-details"})
+            assert isinstance(details, Tag)
 
             class_name, class_id, is_closed = None, None, None
             for a in details.find_all("a"):
-                href = a.get("href")
+                if not isinstance(a, Tag):
+                    continue
+                href = str(a.get("href"))
                 if re.match(r"/classes/\d*/", href):
                     class_name = a.text.strip()[len("Student of: "):]
                     is_closed = class_name.endswith("\n            (ended)") # as this has a \n, we can be sure
