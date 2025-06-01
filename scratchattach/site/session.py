@@ -1118,11 +1118,6 @@ def login_by_id(session_id: str, *, username: Optional[str] = None, password: Op
     Returns:
         scratchattach.session.Session: An object that represents the created login / session
     """
-    # Removed this from docstring since it doesn't exist:
-    # timeout (int): Optional, but recommended.
-    # Specify this when the Python environment's IP address is blocked by Scratch's API,
-    # but you still want to use cloud variables.
-
     # Generate session_string (a scratchattach-specific authentication method)
     issue_login_warning()
     if password is not None:
@@ -1130,6 +1125,7 @@ def login_by_id(session_id: str, *, username: Optional[str] = None, password: Op
         session_string = base64.b64encode(json.dumps(session_data).encode()).decode()
     else:
         session_string = None
+
     _session = Session(id=session_id, username=username, session_string=session_string, xtoken=xtoken)
 
     # xtoken is decoded from sessid, so don't use sess.update
@@ -1163,8 +1159,7 @@ def login(username, password, *, timeout=10) -> Session:
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     request = requests.post(
         "https://scratch.mit.edu/login/", json={"username": username, "password": password}, headers=_headers,
-
-        timeout=timeout, errorhandling = False
+        timeout=timeout, errorhandling=False
     )
     try:
         result = re.search('"(.*)"', request.headers["Set-Cookie"])
@@ -1177,6 +1172,7 @@ def login(username, password, *, timeout=10) -> Session:
     # Create session object:
     with suppress_login_warning():
         return login_by_id(session_id, username=username, password=password)
+
 
 def login_by_session_string(session_string: str) -> Session:
     """
@@ -1207,6 +1203,7 @@ def login_by_session_string(session_string: str) -> Session:
         pass
     raise ValueError("Couldn't log in.")
 
+
 def login_by_io(file: SupportsRead[str]) -> Session:
     """
     Login using a file object.
@@ -1214,12 +1211,14 @@ def login_by_io(file: SupportsRead[str]) -> Session:
     with suppress_login_warning():
         return login_by_session_string(file.read())
 
+
 def login_by_file(file: FileDescriptorOrPath) -> Session:
     """
     Login using a path to a file.
     """
     with suppress_login_warning(), open(file, encoding="utf-8") as f:
         return login_by_io(f)
+
 
 def login_from_browser(browser: Browser = ANY):
     """
