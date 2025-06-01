@@ -147,10 +147,10 @@ class Session(BaseSiteComponent):
         self.banned = data["user"]["banned"]
 
         if self.banned:
-            warnings.warn(f"Warning: The account {self._username} you logged in to is BANNED. "
+            warnings.warn(f"Warning: The account {self.username} you logged in to is BANNED. "
                           f"Some features may not work properly.")
         if self.has_outstanding_email_confirmation:
-            warnings.warn(f"Warning: The account {self._username} you logged is not email confirmed. "
+            warnings.warn(f"Warning: The account {self.username} you logged is not email confirmed. "
                           f"Some features may not work properly.")
         return True
 
@@ -159,14 +159,16 @@ class Session(BaseSiteComponent):
 
         data, self.time_created = decode_session_id(self.id)
 
-        self._username = data["username"]
+        self.username = data["username"]
+        self._username = self.username
         if self._user:
-            self._user.username = self._username
+            self._user.username = self.username
         else:
-            self._user = user.User(_session=self, username=self._username)
+            self._user = user.User(_session=self, username=self.username)
 
         self._user.id = data["_auth_user_id"]
         self.xtoken = data["token"]
+        self._headers["X-Token"] = self.xtoken
 
         # not saving the login ip because it is a security issue, and is not very helpful
 
