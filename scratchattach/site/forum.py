@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 
 from . import user
-from . import session
+from . import session as module_session
 from ..utils.commons import headers
 from ..utils import exceptions, commons
 from ._base import BaseSiteComponent
@@ -96,7 +96,7 @@ class ForumTopic(BaseSiteComponent):
         return True
     
     @classmethod
-    def from_id(cls, id: int, session: session.Session, update: bool = False):
+    def from_id(cls, id: int, session: module_session.Session, update: bool = False):
         new = cls(id=id, _session=session, title="", last_updated="", category_name="")
         if update:
             new.update()
