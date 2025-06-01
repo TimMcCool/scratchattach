@@ -173,6 +173,7 @@ class Session(BaseSiteComponent):
         # not saving the login ip because it is a security issue, and is not very helpful
 
         self.language = data["_language"]
+        # self._cookies["scratchlanguage"] = self.language
 
     def connect_linked_user(self) -> user.User:
         """
