@@ -1172,7 +1172,7 @@ def login(username, password, *, timeout=10) -> Session:
         result = re.search('"(.*)"', request.headers["Set-Cookie"])
         assert result is not None
         session_id = str(result.group())
-    except (AssertionError, Exception):
+    except Exception:
         raise exceptions.LoginFailure(
             "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
 
