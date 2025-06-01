@@ -12,7 +12,7 @@ from ..utils import commons
 from ..utils.commons import empty_project_json, headers
 from ._base import BaseSiteComponent
 from ..other.project_json_capabilities import ProjectBody
-from ..utils.requests import Requests as requests
+from ..utils.requests import requests
 
 CREATE_PROJECT_USES: list[float] = []
 
@@ -28,7 +28,7 @@ class PartialProject(BaseSiteComponent):
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
-        self.update_API = f"https://api.scratch.mit.edu/projects/{entries['id']}"
+        self.update_api = f"https://api.scratch.mit.edu/projects/{entries['id']}"
 
         # Set attributes every Project object needs to have:
         self._session = None

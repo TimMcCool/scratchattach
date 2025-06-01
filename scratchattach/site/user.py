@@ -15,7 +15,7 @@ from ..eventhandlers import message_events
 from ..utils import commons
 from ..utils import exceptions
 from ..utils.commons import headers
-from ..utils.requests import Requests as requests
+from ..utils.requests import requests
 
 from . import project
 from . import studio
@@ -66,7 +66,7 @@ class User(BaseSiteComponent):
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
-        self.update_API = f"https://api.scratch.mit.edu/users/{entries['username']}"
+        self.update_api = f"https://api.scratch.mit.edu/users/{entries['username']}"
 
         # Set attributes every User object needs to have:
         self._session = None

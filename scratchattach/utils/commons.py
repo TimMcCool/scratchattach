@@ -5,7 +5,7 @@ from typing import Optional, Final, Any, TypeVar, Callable, TYPE_CHECKING, Union
 from threading import Lock
 
 from . import exceptions
-from .requests import Requests as requests
+from .requests import requests
 
 from ..site import _base
 

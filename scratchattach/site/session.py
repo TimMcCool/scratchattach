@@ -10,7 +10,7 @@ import random
 import re
 import time
 import warnings
-from typing import Optional, TypeVar, TYPE_CHECKING, overload, Any
+from typing import Optional, TypeVar, TYPE_CHECKING, overload, Any, Union
 from contextlib import contextmanager
 from threading import local
 
@@ -38,7 +38,7 @@ from ..other import project_json_capabilities
 from ..utils import commons
 from ..utils import exceptions
 from ..utils.commons import headers, empty_project_json, webscrape_count, get_class_sort_mode
-from ..utils.requests import Requests as requests
+from ..utils.requests import requests
 from .browser_cookies import Browser, ANY, cookies_from_browser
 
 ratelimit_cache: dict[str, list[float]] = {}
@@ -92,7 +92,7 @@ class Session(BaseSiteComponent):
     def __init__(self, **entries):
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.post
-        self.update_API = "https://scratch.mit.edu/session"
+        self.update_api = "https://scratch.mit.edu/session"
 
         # Set attributes every Session object needs to have:
         self.id = None
@@ -650,9 +650,10 @@ class Session(BaseSiteComponent):
             ascsort = sort_by
             descsort = ""
         try:
+            params: dict[str, Union[str, int]] = {"page": page, "ascsort": ascsort, "descsort": descsort}
             targets = requests.get(
                 f"https://scratch.mit.edu/site-api/galleries/{filter_arg}/",
-                params={"page": page, "ascsort": ascsort, "descsort": descsort},
+                params=params,
                 headers=headers,
                 cookies=self._cookies,
                 timeout=10
@@ -1013,6 +1014,12 @@ sess
     def get_session_string(self) -> str:
         assert self.session_string
         return self.session_string
+    
+    def get_headers(self) -> dict[str, str]:
+        return self._headers
+    
+    def get_cookies(self) -> dict[str, str]:
+        return self._cookies
 
 # ------ #
 
@@ -1119,11 +1126,12 @@ def login(username, password, *, timeout=10) -> Session:
     # Post request to login API:
     _headers = headers.copy()
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
-    request = requests.post(
-        "https://scratch.mit.edu/login/", json={"username": username, "password": password}, headers=_headers,
+    with requests.no_error_handling():
+        request = requests.post(
+            "https://scratch.mit.edu/login/", json={"username": username, "password": password}, headers=_headers,
 
-        timeout=timeout, errorhandling = False
-    )
+            timeout=timeout
+        )
     try:
         result = re.search('"(.*)"', request.headers["Set-Cookie"])
         assert result is not None
