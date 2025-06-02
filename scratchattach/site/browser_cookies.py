@@ -1,4 +1,5 @@
-from typing import Optional, assert_never, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
+from typing_extensions import assert_never
 from http.cookiejar import CookieJar
 from enum import Enum, auto
 browsercookie_err = None
