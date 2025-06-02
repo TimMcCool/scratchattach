@@ -24,9 +24,9 @@ class Classroom(BaseSiteComponent):
         # NOTE: THIS DOESN'T WORK WITH CLOSED CLASSES!
         self.update_function = requests.get
         if "id" in entries:
-            self.update_API = f"https://api.scratch.mit.edu/classrooms/{entries['id']}"
+            self.update_api = f"https://api.scratch.mit.edu/classrooms/{entries['id']}"
         elif "classtoken" in entries:
-            self.update_API = f"https://api.scratch.mit.edu/classtoken/{entries['classtoken']}"
+            self.update_api = f"https://api.scratch.mit.edu/classtoken/{entries['classtoken']}"
         else:
             raise KeyError(f"No class id or token provided! Entries: {entries}")
 

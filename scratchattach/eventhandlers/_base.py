@@ -5,7 +5,7 @@ from collections import defaultdict
 from threading import Thread
 from collections.abc import Callable
 import traceback
-from ..utils.requests import Requests as requests
+from ..utils.requests import requests
 from ..utils import exceptions
 
 class BaseEventHandler(ABC):

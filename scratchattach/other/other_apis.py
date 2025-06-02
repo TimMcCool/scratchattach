@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from ..utils import commons
 from ..utils.enums import Languages, Language, TTSVoices, TTSVoice
 from ..utils.exceptions import BadRequest, InvalidLanguage, InvalidTTSGender
-from ..utils.requests import Requests as requests
+from ..utils.requests import requests
 from typing import Optional
 
 

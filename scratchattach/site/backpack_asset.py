@@ -6,7 +6,7 @@ import logging
 
 from ._base import BaseSiteComponent
 from ..utils import exceptions
-from ..utils.requests import Requests as requests
+from ..utils.requests import requests
 
 
 

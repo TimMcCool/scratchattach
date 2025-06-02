@@ -8,7 +8,7 @@ from ..utils import exceptions, commons
 from ..utils.commons import api_iterative, headers
 from ._base import BaseSiteComponent
 
-from ..utils.requests import Requests as requests
+from ..utils.requests import requests
 
 
 class Studio(BaseSiteComponent):
@@ -49,7 +49,7 @@ class Studio(BaseSiteComponent):
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
-        self.update_API = f"https://api.scratch.mit.edu/studios/{entries['id']}"
+        self.update_api = f"https://api.scratch.mit.edu/studios/{entries['id']}"
 
         # Set attributes every Project object needs to have:
         self._session = None

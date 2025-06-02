@@ -1,16 +1,21 @@
 """ForumTopic and ForumPost classes"""
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+from typing import Optional
+from urllib.parse import urlparse, parse_qs
+import xml.etree.ElementTree as ET
+
+from bs4 import BeautifulSoup
+
 from . import user
+from . import session as module_session
 from ..utils.commons import headers
 from ..utils import exceptions, commons
 from ._base import BaseSiteComponent
-import xml.etree.ElementTree as ET
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse, parse_qs
+from ..utils.requests import requests
 
-from ..utils.requests import Requests as requests
-
+@dataclass
 class ForumTopic(BaseSiteComponent):
     '''
     Represents a Scratch forum topic.
@@ -33,20 +38,18 @@ class ForumTopic(BaseSiteComponent):
 
     :.update(): Updates the attributes
     '''
+    id: int
+    title: str
+    category_name: str
+    last_updated: str
+    _session: Optional[session.Session] = field(default=None)
+    reply_count: Optional[int] = field(default=None)
+    view_count: Optional[int] = field(default=None)
 
-    def __init__(self, **entries):
+    def __post_init__(self):
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
-        self.update_API = f"https://scratch.mit.edu/discuss/feeds/topic/{entries['id']}/"
-
-        # Set attributes every Project object needs to have:
-        self._session = None
-        self.id = 0
-        self.reply_count = None
-        self.view_count = None
-        
-        # Update attributes from entries dict:
-        self.__dict__.update(entries)
+        self.update_api = f"https://scratch.mit.edu/discuss/feeds/topic/{self.id}/"
 
         # Headers and cookies:
         if self._session is None:
@@ -65,7 +68,7 @@ class ForumTopic(BaseSiteComponent):
         # As there is no JSON API for getting forum topics anymore,
         # the data has to be retrieved from the XML feed.
         response = self.update_function(
-            self.update_API,
+            self.update_api,
             headers = self._headers,
             cookies = self._cookies, timeout=20 # fetching forums can take very long
         )
@@ -87,15 +90,20 @@ class ForumTopic(BaseSiteComponent):
                 raise exceptions.ScrapeError(str(e))
         else:
             raise exceptions.ForumContentNotFound
-
-        return self._update_from_dict(dict(
-            title = title, category_name = category_name, last_updated = last_updated
-        ))
-        
-
-    def _update_from_dict(self, data):
-        self.__dict__.update(data)
+        self.title = title
+        self.category_name = category_name
+        self.last_updated = last_updated
         return True
+    
+    @classmethod
+    def from_id(cls, id: int, session: module_session.Session, update: bool = False):
+        new = cls(id=id, _session=session, title="", last_updated="", category_name="")
+        if update:
+            new.update()
+        return new
+    
+    def _update_from_dict(self, data):
+        raise NotImplementedError()
 
     def posts(self, *, page=1, order="oldest"):
         """
@@ -157,7 +165,6 @@ class ForumTopic(BaseSiteComponent):
         if len(posts) > 0:
             return posts[0]
 
-
 class ForumPost(BaseSiteComponent):
     '''
     Represents a Scratch forum post.
@@ -195,7 +202,7 @@ class ForumPost(BaseSiteComponent):
 
         # A forum post can't be updated the usual way as there is no API anymore
         self.update_function = None
-        self.update_API = None
+        self.update_api = None
 
         # Set attributes every Project object needs to have:
         self._session = None
@@ -225,14 +232,14 @@ class ForumPost(BaseSiteComponent):
         As there is no API for retrieving a single post anymore, this requires reloading the forum page.
         """
         page = 1
-        posts = ForumTopic(id=self.topic_id, _session=self._session).posts(page=1)
+        posts = ForumTopic.from_id(id=self.topic_id, session=self._session).posts(page=1)
         while posts != []:
             matching = list(filter(lambda x : int(x.id) == int(self.id), posts))
             if len(matching) > 0:
                 this = matching[0]
                 break
             page += 1
-            posts = ForumTopic(id=self.topic_id, _session=self._session).posts(page=page)
+            posts = ForumTopic.from_id(id=self.topic_id, session=self._session).posts(page=page)
         else:
             return False
         

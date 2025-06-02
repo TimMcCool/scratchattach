@@ -7,7 +7,7 @@ import re
 import string
 from datetime import datetime, timezone
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from ._base import BaseSiteComponent
 from ..eventhandlers import message_events
@@ -15,7 +15,7 @@ from ..eventhandlers import message_events
 from ..utils import commons
 from ..utils import exceptions
 from ..utils.commons import headers
-from ..utils.requests import Requests as requests
+from ..utils.requests import requests
 
 from . import project
 from . import studio
@@ -66,7 +66,7 @@ class User(BaseSiteComponent):
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
-        self.update_API = f"https://api.scratch.mit.edu/users/{entries['username']}"
+        self.update_api = f"https://api.scratch.mit.edu/users/{entries['username']}"
 
         # Set attributes every User object needs to have:
         self._session = None
@@ -139,10 +139,13 @@ class User(BaseSiteComponent):
             soup = BeautifulSoup(resp.text, "html.parser")
 
             details = soup.find("p", {"class": "profile-details"})
+            assert isinstance(details, Tag)
 
             class_name, class_id, is_closed = None, None, None
             for a in details.find_all("a"):
-                href = a.get("href")
+                if not isinstance(a, Tag):
+                    continue
+                href = str(a.get("href"))
                 if re.match(r"/classes/\d*/", href):
                     class_name = a.text.strip()[len("Student of: "):]
                     is_closed = class_name.endswith("\n            (ended)") # as this has a \n, we can be sure
