@@ -5,6 +5,9 @@ import json
 import random
 import base64
 import time
+import zipfile
+from io import BytesIO
+
 from typing import Any
 from . import user, comment, studio
 from ..utils import exceptions
@@ -307,17 +310,32 @@ class Project(PartialProject):
         """
         try:
             self.update()
-            return requests.get(
-                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
-                timeout=10,
-            ).json()
-        except Exception:
+
+        except Exception as e:
             raise (
                 exceptions.FetchError(
-                    "Either the project was created with an old Scratch version, or you're not authorized for accessing it"
+                    f"You're not authorized for accessing {self}.\nException: {e}"
                 )
             )
-    
+
+        with requests.no_error_handling():
+            resp = requests.get(
+                f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
+                timeout=10,
+            )
+
+            try:
+                return resp.json()
+            except json.JSONDecodeError:
+                ... # probably a zip file
+
+            # this kind of code should be ported to a scratch project parser (sa.editor/project json capabilities)
+            # to reduce repeated code. this is a bit of a temporary solution
+            # in the future, cache a projectbody object here and just return the json that is fetched from there
+
+            with zipfile.ZipFile(BytesIO(resp.content)) as zipf:
+                return json.load(zipf.open("project.json")) # we are wasting information (asset data) by only retrieving project json. we should cache this in a projectbody
+
     def raw_json_or_empty(self):
         return self.raw_json()
     
