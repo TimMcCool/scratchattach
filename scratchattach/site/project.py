@@ -327,14 +327,12 @@ class Project(PartialProject):
             try:
                 return resp.json()
             except json.JSONDecodeError:
-                ... # probably a zip file
+                # I am not aware of any cases where this will not be a zip file
+                # in the future, cache a projectbody object here and just return the json
+                # that is fetched from there to not waste existing asset data from this zip file
 
-            # this kind of code should be ported to a scratch project parser (sa.editor/project json capabilities)
-            # to reduce repeated code. this is a bit of a temporary solution
-            # in the future, cache a projectbody object here and just return the json that is fetched from there
-
-            with zipfile.ZipFile(BytesIO(resp.content)) as zipf:
-                return json.load(zipf.open("project.json")) # we are wasting information (asset data) by only retrieving project json. we should cache this in a projectbody
+                with zipfile.ZipFile(BytesIO(resp.content)) as zipf:
+                    return json.load(zipf.open("project.json"))
 
     def raw_json_or_empty(self):
         return self.raw_json()
