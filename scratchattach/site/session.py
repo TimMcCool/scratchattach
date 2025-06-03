@@ -16,9 +16,6 @@ from typing import Optional, TypeVar, TYPE_CHECKING, overload, Any, Union
 from contextlib import contextmanager
 from threading import local
 
-# import secrets
-# import zipfile
-# from typing import Type
 Type = type
 
 if TYPE_CHECKING:
@@ -910,6 +907,7 @@ class Session(BaseSiteComponent):
         Returns:
             scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
         """
+        # noinspection PyDeprecation
         return self._make_linked_object("username", self.find_username_from_id(user_id), user.User,
                                         exceptions.UserNotFound)
 
@@ -1131,6 +1129,7 @@ def login_by_id(session_id: str, *, username: Optional[str] = None, password: Op
         scratchattach.session.Session: An object that represents the created login / session
     """
     # Generate session_string (a scratchattach-specific authentication method)
+    # should this be changed to a @property?
     issue_login_warning()
     if password is not None:
         session_data = dict(id=session_id, username=username, password=password)
@@ -1138,14 +1137,10 @@ def login_by_id(session_id: str, *, username: Optional[str] = None, password: Op
     else:
         session_string = None
 
-    if xtoken is not None:
-        # todo: consider removing the xtoken parameter?
-        warnings.warn("xtoken is redundant because it is retrieved by decoding the session id.")
-
     _session = Session(id=session_id, username=username, session_string=session_string)
-
-    # xtoken is decoded from sessid, so don't use sess.update
-    # but this will cause incompatibilities, warranting a change in the 2nd (semver) version number
+    if xtoken is not None:
+        # xtoken is retrievable from session id, so the most we can do is assert equality
+        assert xtoken == _session.xtoken
 
     return _session
 
@@ -1176,7 +1171,6 @@ def login(username, password, *, timeout=10) -> Session:
     with requests.no_error_handling():
         request = requests.post(
             "https://scratch.mit.edu/login/", json={"username": username, "password": password}, headers=_headers,
-
             timeout=timeout
         )
     try:
