@@ -7,7 +7,7 @@ from . import base, commons
 from typing import Optional
 
 
-@dataclass(init=True, repr=True)
+@dataclass
 class PlatformMeta(base.JSONSerializable):
     name: str = None
     url: str = field(repr=True, default=None)
@@ -36,8 +36,13 @@ EDIT_META = True
 META_SET_PLATFORM = False
 
 
-def set_meta_platform(true_false: bool = False):
+def set_meta_platform(true_false: bool = None):
+    """
+    toggle whether to set the meta platform by default (or specify a value)
+    """
     global META_SET_PLATFORM
+    if true_false is None:
+        true_false = bool(1 - true_false)
     META_SET_PLATFORM = true_false
 
 
@@ -69,7 +74,10 @@ class Meta(base.JSONSerializable):
 
     @property
     def vm_is_valid(self):
-        # Thanks to TurboWarp for this pattern ↓↓↓↓, I just copied it
+        """
+        Check whether the vm value is valid using a regex
+        Thanks to TurboWarp for this pattern ↓↓↓↓, I just copied it
+        """
         return re.match("^([0-9]+\\.[0-9]+\\.[0-9]+)($|-)", self.vm) is not None
 
     def to_json(self):
