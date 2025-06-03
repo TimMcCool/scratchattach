@@ -12,13 +12,13 @@ from . import prim
 from ..utils.enums import _EnumWrapper
 
 
-@dataclass(init=True, repr=True)
+@dataclass
 class FieldUsage:
     name: str
     value_type: prim.PrimTypes = None
 
 
-@dataclass(init=True, repr=True)
+@dataclass
 class SpecialFieldUsage(FieldUsage):
     name: str
     attrs: list[str] = None
@@ -28,14 +28,14 @@ class SpecialFieldUsage(FieldUsage):
     value_type: None = None
 
 
-@dataclass(init=True, repr=True)
+@dataclass
 class InputUsage:
     name: str
     value_type: prim.PrimTypes = None
     default_obscurer: BlockUsage = None
 
 
-@dataclass(init=True, repr=True)
+@dataclass
 class BlockUsage:
     opcode: str
     fields: list[FieldUsage] = None
