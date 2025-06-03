@@ -39,17 +39,21 @@ class EducatorAlert:
         notification_type: not sure what this is for, but inferred from the scratch HTML reference
     """
     _: KW_ONLY
+    # required attrs
+    target: user.User
+    actor: user.User
+    target_object: Optional[Union[project.Project, studio.Studio, comment.Comment, studio.Studio]]
+    notification_type: str
+    _session: Optional[session.Session]
+
+    # defaulted attrs
     model: str = "educators.educatoralert"
     type: int = -1
     raw: dict = field(repr=False, default_factory=dict)
     id: int = -1
     time_read: datetime = datetime.fromtimestamp(0.0)
     time_created: datetime = datetime.fromtimestamp(0.0)
-    target: user.User
-    actor: user.User
-    target_object: Optional[Union[project.Project, studio.Studio, comment.Comment, studio.Studio]]
-    notification_type: str
-    _session: Optional[session.Session]
+
 
     @classmethod
     def from_json(cls, data: dict[str, Any], _session: Optional[session.Session] = None) -> Self:
