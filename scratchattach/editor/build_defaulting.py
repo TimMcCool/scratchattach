@@ -25,6 +25,9 @@ def stack_add_sprite(_sprite: sprite.Sprite):
 
 
 def current_sprite() -> sprite.Sprite | None:
+    """
+    Retrieve the default sprite from the top of the sprite stack
+    """
     if len(_sprite_stack) == 0:
         return None
     return _sprite_stack[-1]

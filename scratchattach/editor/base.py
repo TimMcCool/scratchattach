@@ -17,6 +17,9 @@ from . import build_defaulting
 
 
 class Base(ABC):
+    """
+    Abstract base class for most sa.editor classes. Implements copy functions
+    """
     def dcopy(self):
         """
         :return: A **deep** copy of self
@@ -31,6 +34,10 @@ class Base(ABC):
 
 
 class JSONSerializable(Base, ABC):
+    """
+    'Interface' for to_json() and from_json() methods
+    Also implements save_json() using to_json()
+    """
     @staticmethod
     @abstractmethod
     def from_json(data: dict | list | Any):
@@ -41,12 +48,19 @@ class JSONSerializable(Base, ABC):
         pass
 
     def save_json(self, name: str = ''):
+        """
+        Save a json file
+        """
         data = self.to_json()
         with open(f"{self.__class__.__name__.lower()}{name}.json", "w") as f:
             json.dump(data, f)
 
 
 class JSONExtractable(JSONSerializable, ABC):
+    """
+    Interface for objects that can be loaded from zip archives containing json files (sprite/project)
+    Only has one method - load_json
+    """
     @staticmethod
     @abstractmethod
     def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None) -> tuple[
@@ -62,35 +76,35 @@ class JSONExtractable(JSONSerializable, ABC):
 
 
 class ProjectSubcomponent(JSONSerializable, ABC):
+    """
+    Base class for any class with an associated project
+    """
     def __init__(self, _project: Optional[project.Project] = None):
         self.project = _project
 
 
 class SpriteSubComponent(JSONSerializable, ABC):
+    """
+    Base class for any class with an associated sprite
+    """
     def __init__(self, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         if _sprite is build_defaulting.SPRITE_DEFAULT:
             _sprite = build_defaulting.current_sprite()
 
         self.sprite = _sprite
 
-    # @property
-    # def sprite(self):
-    #     if self._sprite is None:
-    #         print("ok, ", build_defaulting.current_sprite())
-    #         return build_defaulting.current_sprite()
-    #     else:
-    #         return self._sprite
-
-    # @sprite.setter
-    # def sprite(self, value):
-    #     self._sprite = value
-
     @property
     def project(self) -> project.Project:
+        """
+        Get associated project by proxy of the associated sprite
+        """
         return self.sprite.project
 
 
 class IDComponent(SpriteSubComponent, ABC):
+    """
+    Base class for classes with an id attribute
+    """
     def __init__(self, _id: str, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         self.id = _id
         super().__init__(_sprite)
@@ -103,7 +117,6 @@ class NamedIDComponent(IDComponent, ABC):
     """
     Base class for Variables, Lists and Broadcasts (Name + ID + sprite)
     """
-
     def __init__(self, _id: str, name: str, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         self.name = name
         super().__init__(_id, _sprite)
@@ -113,30 +126,51 @@ class NamedIDComponent(IDComponent, ABC):
 
 
 class BlockSubComponent(JSONSerializable, ABC):
+    """
+    Base class for classes with associated blocks
+    """
     def __init__(self, _block: Optional[block.Block] = None):
         self.block = _block
 
     @property
     def sprite(self) -> sprite.Sprite:
+        """
+        Fetch sprite by proxy of the block
+        """
         return self.block.sprite
 
     @property
     def project(self) -> project.Project:
+        """
+        Fetch project by proxy of the sprite (by proxy of the block)
+        """
         return self.sprite.project
 
 
 class MutationSubComponent(JSONSerializable, ABC):
+    """
+    Base class for classes with associated mutations
+    """
     def __init__(self, _mutation: Optional[mutation.Mutation] = None):
         self.mutation = _mutation
 
     @property
     def block(self) -> block.Block:
+        """
+        Fetch block by proxy of mutation
+        """
         return self.mutation.block
 
     @property
     def sprite(self) -> sprite.Sprite:
+        """
+        Fetch sprite by proxy of block (by proxy of mutation)
+        """
         return self.block.sprite
 
     @property
     def project(self) -> project.Project:
+        """
+        Fetch project by proxy of sprite (by proxy of block (by proxy of mutation))
+        """
         return self.sprite.project

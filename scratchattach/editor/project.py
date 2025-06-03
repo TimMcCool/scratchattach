@@ -14,6 +14,9 @@ from ..utils import exceptions
 
 
 class Project(base.JSONExtractable):
+    """
+    sa.editor's equivalent of the ProjectBody. Represents the editor contents of a scratch project
+    """
     def __init__(self, _name: Optional[str] = None, _meta: Optional[meta.Meta] = None, _extensions: Iterable[extension.Extension] = (),
                  _monitors: Iterable[monitor.Monitor] = (), _sprites: Iterable[sprite.Sprite] = (), *,
                  _asset_data: Optional[list[asset.AssetFile]] = None, _session: Optional[session.Session] = None):
@@ -268,6 +271,9 @@ class Project(base.JSONExtractable):
             os.system(f"explorer.exe \"{fp}\"")
 
     def add_monitor(self, _monitor: monitor.Monitor) -> monitor.Monitor:
+        """
+        Bind a monitor to this project. Doing these manually can lead to interesting results.
+        """
         _monitor.project = self
         _monitor.reporter_id = self.new_id
         self.monitors.append(_monitor)

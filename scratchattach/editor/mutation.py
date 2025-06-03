@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from . import block
 
 
-@dataclass(init=True)
+@dataclass
 class ArgumentType(base.Base):
     type: str
     proc_str: str
@@ -38,7 +38,7 @@ class ArgumentType(base.Base):
             return None
 
 
-@dataclass(init=True, repr=True)
+@dataclass
 class ArgSettings(base.Base):
     ids: bool
     names: bool
@@ -61,7 +61,7 @@ class ArgSettings(base.Base):
         return int(self) > int(other)
 
 
-@dataclass(init=True, repr=True)
+@dataclass
 class Argument(base.MutationSubComponent):
     name: str
     default: str = ''
@@ -103,6 +103,10 @@ class ArgTypes(enums._EnumWrapper):
 
 
 def parse_proc_code(_proc_code: str) -> list[str, ArgumentType] | None:
+    """
+    Parse a proccode (part of a mutation) into argument types and strings
+    """
+
     if _proc_code is None:
         return None
     token = ''
@@ -209,6 +213,9 @@ class Mutation(base.BlockSubComponent):
 
     @property
     def parsed_proc_code(self) -> list[str, ArgumentType] | None:
+        """
+        Parse the proc code into arguments & strings
+        """
         return parse_proc_code(self.proc_code)
 
     @staticmethod

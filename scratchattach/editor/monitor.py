@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
 
+from typing_extensions import deprecated
+
 if TYPE_CHECKING:
     from . import project
 
@@ -26,6 +28,8 @@ class Monitor(base.ProjectSubcomponent):
         """
         Represents a variable/list monitor
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Monitors
+
+        Instantiating these yourself and attaching these to projects can lead to interesting results!
         """
         assert isinstance(reporter, base.SpriteSubComponent) or reporter is None
 
@@ -135,41 +139,43 @@ class Monitor(base.ProjectSubcomponent):
                 self.reporter = new_vlb
                 self.reporter_id = None
 
-    # @staticmethod
-    # def from_reporter(reporter: Block, _id: str = None, mode: str = "default",
-    #                   opcode: str = None, sprite_name: str = None, value=0, width: int | float = 0,
-    #                   height: int | float = 0,
-    #                   x: int | float = 5, y: int | float = 5, visible: bool = False, slider_min: int | float = 0,
-    #                   slider_max: int | float = 100, is_discrete: bool = True, params: dict = None):
-    #     if "reporter" not in reporter.stack_type:
-    #         warnings.warn(f"{reporter} is not a reporter block; the monitor will return '0'")
-    #     elif "(menu)" in reporter.stack_type:
-    #         warnings.warn(f"{reporter} is a menu block; the monitor will return '0'")
-    #     # Maybe add note that length of list doesn't work fsr?? idk
-    #     if _id is None:
-    #         _id = reporter.opcode
-    #     if opcode is None:
-    #         opcode = reporter.opcode  # .replace('_', ' ')
+    # todo: consider reimplementing this
+    @deprecated("This method does not work correctly (This may be fixed in the future)")
+    @staticmethod
+    def from_reporter(reporter: Block, _id: str = None, mode: str = "default",
+                      opcode: str = None, sprite_name: str = None, value=0, width: int | float = 0,
+                      height: int | float = 0,
+                      x: int | float = 5, y: int | float = 5, visible: bool = False, slider_min: int | float = 0,
+                      slider_max: int | float = 100, is_discrete: bool = True, params: dict = None):
+        if "reporter" not in reporter.stack_type:
+            warnings.warn(f"{reporter} is not a reporter block; the monitor will return '0'")
+        elif "(menu)" in reporter.stack_type:
+            warnings.warn(f"{reporter} is a menu block; the monitor will return '0'")
+        # Maybe add note that length of list doesn't work fsr?? idk
+        if _id is None:
+            _id = reporter.opcode
+        if opcode is None:
+            opcode = reporter.opcode  # .replace('_', ' ')
 
-    #     if params is None:
-    #         params = {}
-    #     for field in reporter.fields:
-    #         if field.value_id is None:
-    #             params[field.id] = field.value
-    #         else:
-    #             params[field.id] = field.value, field.value_id
+        if params is None:
+            params = {}
+        for field in reporter.fields:
+            if field.value_id is None:
+                params[field.id] = field.value
+            else:
+                params[field.id] = field.value, field.value_id
 
-    #     return Monitor(
-    #         _id,
-    #         mode,
-    #         opcode,
+        return Monitor(
+            _id,
+            mode,
+            opcode,
 
-    #         params,
-    #         sprite_name,
-    #         value,
+            params,
+            sprite_name,
+            value,
 
-    #         width, height,
-    #         x, y,
-    #         visible,
-    #         slider_min, slider_max, is_discrete
-    #     )
+            width, height,
+            x, y,
+            visible,
+            slider_min, slider_max, is_discrete
+        )
