@@ -4,10 +4,10 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 
-from ..utils import commons
-from ..utils.enums import Languages, Language, TTSVoices, TTSVoice
-from ..utils.exceptions import BadRequest, InvalidLanguage, InvalidTTSGender
-from ..utils.requests import requests
+from scratchattach.utils import commons
+from scratchattach.utils.enums import Languages, Language, TTSVoices, TTSVoice
+from scratchattach.utils.exceptions import BadRequest, InvalidLanguage, InvalidTTSGender
+from scratchattach.utils.requests import requests
 from typing import Optional
 
 

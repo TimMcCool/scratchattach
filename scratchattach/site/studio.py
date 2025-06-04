@@ -4,11 +4,11 @@ from __future__ import annotations
 import json
 import random
 from . import user, comment, project, activity
-from ..utils import exceptions, commons
-from ..utils.commons import api_iterative, headers
+from scratchattach.utils import exceptions, commons
+from scratchattach.utils.commons import api_iterative, headers
 from ._base import BaseSiteComponent
 
-from ..utils.requests import requests
+from scratchattach.utils.requests import requests
 
 
 class Studio(BaseSiteComponent):

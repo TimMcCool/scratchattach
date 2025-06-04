@@ -1,9 +1,9 @@
 """CloudEvents class"""
 from __future__ import annotations
 
-from ..cloud import _base
+from scratchattach.cloud import _base
 from ._base import BaseEventHandler
-from ..site import cloud_activity
+from scratchattach.site import cloud_activity
 import time
 import json
 from collections.abc import Iterator

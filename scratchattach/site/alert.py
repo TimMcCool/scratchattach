@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 from typing_extensions import Self
 
 from . import user, project, studio, comment, session
-from ..utils import enums
+from scratchattach.utils import enums
 
 if TYPE_CHECKING:
     ...

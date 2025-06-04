@@ -20,7 +20,7 @@ Type = type
 
 if TYPE_CHECKING:
     from _typeshed import FileDescriptorOrPath, SupportsRead
-    from ..cloud._base import BaseCloud
+    from scratchattach.cloud._base import BaseCloud
     T = TypeVar("T", bound=BaseCloud)
 else:
     T = TypeVar("T")
@@ -31,13 +31,13 @@ from typing_extensions import deprecated
 from . import activity, classroom, forum, studio, user, project, backpack_asset, alert
 # noinspection PyProtectedMember
 from ._base import BaseSiteComponent
-from ..cloud import cloud, _base
-from ..eventhandlers import message_events, filterbot
-from ..other import project_json_capabilities
-from ..utils import commons
-from ..utils import exceptions
-from ..utils.commons import headers, empty_project_json, webscrape_count, get_class_sort_mode
-from ..utils.requests import requests
+from scratchattach.cloud import cloud, _base
+from scratchattach.eventhandlers import message_events, filterbot
+from scratchattach.other import project_json_capabilities
+from scratchattach.utils import commons
+from scratchattach.utils import exceptions
+from scratchattach.utils.commons import headers, empty_project_json, webscrape_count, get_class_sort_mode
+from scratchattach.utils.requests import requests
 from .browser_cookies import Browser, ANY, cookies_from_browser
 
 ratelimit_cache: dict[str, list[float]] = {}

@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Optional, Literal
 
 from . import base, sprite, build_defaulting
-from ..utils import exceptions
+from scratchattach.utils import exceptions
 
 
 class Variable(base.NamedIDComponent):

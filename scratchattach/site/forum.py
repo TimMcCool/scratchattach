@@ -10,10 +10,10 @@ from bs4 import BeautifulSoup, Tag
 
 from . import user
 from . import session as module_session
-from ..utils.commons import headers
-from ..utils import exceptions, commons
+from scratchattach.utils.commons import headers
+from scratchattach.utils import exceptions, commons
 from ._base import BaseSiteComponent
-from ..utils.requests import requests
+from scratchattach.utils.requests import requests
 
 @dataclass
 class ForumTopic(BaseSiteComponent):

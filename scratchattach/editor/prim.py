@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Optional, Callable, Final
 
 from . import base, sprite, vlb, commons, build_defaulting
-from ..utils import enums, exceptions
+from scratchattach.utils import enums, exceptions
 
 
 @dataclass

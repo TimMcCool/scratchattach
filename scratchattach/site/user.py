@@ -10,12 +10,12 @@ from datetime import datetime, timezone
 from bs4 import BeautifulSoup, Tag
 
 from ._base import BaseSiteComponent
-from ..eventhandlers import message_events
+from scratchattach.eventhandlers import message_events
 
-from ..utils import commons
-from ..utils import exceptions
-from ..utils.commons import headers
-from ..utils.requests import requests
+from scratchattach.utils import commons
+from scratchattach.utils import exceptions
+from scratchattach.utils.commons import headers
+from scratchattach.utils.requests import requests
 
 from . import project
 from . import studio

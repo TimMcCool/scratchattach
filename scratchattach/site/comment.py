@@ -7,7 +7,7 @@ from enum import Enum, auto
 
 from . import user, project, studio
 from ._base import BaseSiteComponent
-from ..utils import exceptions
+from scratchattach.utils import exceptions
 
 class CommentSource(Enum):
     PROJECT = auto()

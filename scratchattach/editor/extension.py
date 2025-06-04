@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from . import base
-from ..utils import enums
+from scratchattach.utils import enums
 
 
 @dataclass
