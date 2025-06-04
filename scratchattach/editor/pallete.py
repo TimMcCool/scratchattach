@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from . import prim
-from ..utils.enums import _EnumWrapper
+from scratchattach.utils.enums import _EnumWrapper
 
 
 @dataclass

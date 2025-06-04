@@ -10,12 +10,12 @@ from io import BytesIO
 
 from typing import Any
 from . import user, comment, studio
-from ..utils import exceptions
-from ..utils import commons
-from ..utils.commons import empty_project_json, headers
+from scratchattach.utils import exceptions
+from scratchattach.utils import commons
+from scratchattach.utils.commons import empty_project_json, headers
 from ._base import BaseSiteComponent
-from ..other.project_json_capabilities import ProjectBody
-from ..utils.requests import requests
+from scratchattach.other.project_json_capabilities import ProjectBody
+from scratchattach.utils.requests import requests
 
 CREATE_PROJECT_USES: list[float] = []
 

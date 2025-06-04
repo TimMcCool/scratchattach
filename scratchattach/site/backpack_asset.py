@@ -5,8 +5,8 @@ import time
 import logging
 
 from ._base import BaseSiteComponent
-from ..utils import exceptions
-from ..utils.requests import requests
+from scratchattach.utils import exceptions
+from scratchattach.utils.requests import requests
 
 
 

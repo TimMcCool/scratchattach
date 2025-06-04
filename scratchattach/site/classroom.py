@@ -7,13 +7,13 @@ from typing import Optional, TYPE_CHECKING, Any
 import bs4
 
 if TYPE_CHECKING:
-    from ..site.session import Session
+    from scratchattach.site.session import Session
 
-from ..utils.commons import requests
+from scratchattach.utils.commons import requests
 from . import user, activity
 from ._base import BaseSiteComponent
-from ..utils import exceptions, commons
-from ..utils.commons import headers
+from scratchattach.utils import exceptions, commons
+from scratchattach.utils.commons import headers
 
 from bs4 import BeautifulSoup
 

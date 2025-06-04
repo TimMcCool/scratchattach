@@ -8,7 +8,7 @@ import random
 import string
 from typing import Optional, Final, Any
 
-from ..utils import exceptions
+from scratchattach.utils import exceptions
 
 DIGITS: Final[tuple[str]] = tuple("0123456789")
 

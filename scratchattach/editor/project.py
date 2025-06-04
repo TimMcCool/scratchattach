@@ -8,9 +8,9 @@ from typing import Optional, Iterable, Generator, BinaryIO
 from zipfile import ZipFile
 
 from . import base, meta, extension, monitor, sprite, asset, vlb, twconfig, comment, commons
-from ..site import session
-from ..site.project import get_project
-from ..utils import exceptions
+from scratchattach.site import session
+from scratchattach.site.project import get_project
+from scratchattach.utils import exceptions
 
 
 class Project(base.JSONExtractable):

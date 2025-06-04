@@ -5,7 +5,7 @@ from bs4 import PageElement
 
 from . import user, project, studio
 from ._base import BaseSiteComponent
-from ..utils import exceptions
+from scratchattach.utils import exceptions
 
 
 class Activity(BaseSiteComponent):

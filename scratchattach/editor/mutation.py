@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING, Iterable, Any
 
 from . import base, commons
-from ..utils import enums
+from scratchattach.utils import enums
 
 if TYPE_CHECKING:
     from . import block

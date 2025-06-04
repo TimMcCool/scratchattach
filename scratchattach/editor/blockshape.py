@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from . import commons
-from ..utils.enums import _EnumWrapper
+from scratchattach.utils.enums import _EnumWrapper
 
 
 class _MutationDependent(commons.Singleton):

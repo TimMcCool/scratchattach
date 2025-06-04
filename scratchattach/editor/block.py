@@ -5,7 +5,7 @@ from typing import Optional, Iterable
 from typing_extensions import Self
 
 from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape, prim, comment, build_defaulting
-from ..utils import exceptions
+from scratchattach.utils import exceptions
 
 
 class Block(base.SpriteSubComponent):

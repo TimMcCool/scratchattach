@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from threading import Thread
-from ..utils import exceptions
+from scratchattach.utils import exceptions
 import json
 import time
-from ..site import cloud_activity
-from ..site.user import User
+from scratchattach.site import cloud_activity
+from scratchattach.site.user import User
 from ._base import BaseEventHandler
 
 class TwCloudSocket(WebSocket):

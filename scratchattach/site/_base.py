@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from typing import TypeVar, Optional
 
 import requests
+from scratchattach.utils import exceptions, commons
 from . import session
-from ..utils import exceptions, commons
 
 C = TypeVar("C", bound="BaseSiteComponent")
 class BaseSiteComponent(ABC):

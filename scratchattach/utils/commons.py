@@ -9,7 +9,7 @@ from threading import Lock
 from . import exceptions
 from .requests import requests
 
-from ..site import _base
+from scratchattach.site import _base
 
 
 headers: Final = {
@@ -133,7 +133,7 @@ def _get_object(identificator_name, identificator, __class: type[C], NotFoundExc
     # Internal function: Generalization of the process ran by get_user, get_studio etc.
     # Builds an object of class that is inheriting from BaseSiteComponent
     # # Class must inherit from BaseSiteComponent
-    from ..site import project
+    from scratchattach.site import project
     try:
         use_class: type = __class
         if __class is project.PartialProject:
