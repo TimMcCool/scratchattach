@@ -10,13 +10,12 @@ import random
 import re
 import time
 import warnings
+import zlib
+
 from typing import Optional, TypeVar, TYPE_CHECKING, overload, Any, Union
 from contextlib import contextmanager
 from threading import local
 
-# import secrets
-# import zipfile
-# from typing import Type
 Type = type
 
 if TYPE_CHECKING:
@@ -102,6 +101,8 @@ class Session(BaseSiteComponent):
 
         # Set attributes that Session object may get
         self._user: user.User = None
+        self.time_created: datetime.datetime = None
+        self.language = "en" # default
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)
@@ -118,6 +119,9 @@ class Session(BaseSiteComponent):
             "accept": "application/json",
             "Content-Type": "application/json",
         }
+
+        if self.id:
+            self._process_session_id()
 
     def _update_from_dict(self, data: dict):
         # Note: there are a lot more things you can get from this data dict.
@@ -141,12 +145,33 @@ class Session(BaseSiteComponent):
         self.banned = data["user"]["banned"]
 
         if self.banned:
-            warnings.warn(f"Warning: The account {self._username} you logged in to is BANNED. "
+            warnings.warn(f"Warning: The account {self.username} you logged in to is BANNED. "
                           f"Some features may not work properly.")
         if self.has_outstanding_email_confirmation:
-            warnings.warn(f"Warning: The account {self._username} you logged is not email confirmed. "
+            warnings.warn(f"Warning: The account {self.username} you logged is not email confirmed. "
                           f"Some features may not work properly.")
         return True
+
+    def _process_session_id(self):
+        assert self.id
+
+        data, self.time_created = decode_session_id(self.id)
+
+        self.username = data["username"]
+        self._username = self.username
+        if self._user:
+            self._user.username = self.username
+        else:
+            self._user = user.User(_session=self, username=self.username)
+
+        self._user.id = data["_auth_user_id"]
+        self.xtoken = data["token"]
+        self._headers["X-Token"] = self.xtoken
+
+        # not saving the login ip because it is a security issue, and is not very helpful
+
+        self.language = data["_language"]
+        # self._cookies["scratchlanguage"] = self.language
 
     def connect_linked_user(self) -> user.User:
         """
@@ -166,7 +191,7 @@ class Session(BaseSiteComponent):
             self._user = self.connect_user(self._username)
         return self._user
 
-    def get_linked_user(self) -> 'user.User':
+    def get_linked_user(self) -> user.User:
         # backwards compatibility with v1
 
         # To avoid inconsistencies with "connect" and "get", this function was renamed
@@ -882,6 +907,7 @@ class Session(BaseSiteComponent):
         Returns:
             scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
         """
+        # noinspection PyDeprecation
         return self._make_linked_object("username", self.find_username_from_id(user_id), user.User,
                                         exceptions.UserNotFound)
 
@@ -1021,9 +1047,42 @@ sess
     def get_cookies(self) -> dict[str, str]:
         return self._cookies
 
+
+# ------ #
+
+def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetime]:
+    """
+    Extract the JSON data from the main part of a session ID string
+    Session id is in the format:
+    <p1: long base64 string>:<p2: short base64 string>:<p3: medium base64 string>
+
+    p1 contains a base64-zlib compressed JSON string
+    p2 is a base 62 encoded timestamp
+    p3 might be a `synchronous signature` for the first 2 parts (might be useless for us)
+
+    The dict has these attributes:
+    - username
+    - _auth_user_id
+    - testcookie
+    - _auth_user_backend
+    - token
+    - login-ip
+    - _language
+    - django_timezone
+    - _auth_user_hash
+    """
+    p1, p2, p3 = session_id.split(':')
+
+    return (
+        json.loads(zlib.decompress(base64.urlsafe_b64decode(p1 + "=="))),
+        datetime.datetime.fromtimestamp(commons.b62_decode(p2))
+    )
+
+
 # ------ #
 
 suppressed_login_warning = local()
+
 
 @contextmanager
 def suppress_login_warning():
@@ -1036,6 +1095,7 @@ def suppress_login_warning():
         yield
     finally:
         suppressed_login_warning.suppressed -= 1
+
 
 def issue_login_warning() -> None:
     """
@@ -1050,6 +1110,7 @@ def issue_login_warning() -> None:
         "use `warnings.filterwarnings('ignore', category=scratchattach.LoginDataWarning)`",
         exceptions.LoginDataWarning
     )
+
 
 def login_by_id(session_id: str, *, username: Optional[str] = None, password: Optional[str] = None, xtoken=None) -> Session:
     """
@@ -1067,39 +1128,20 @@ def login_by_id(session_id: str, *, username: Optional[str] = None, password: Op
     Returns:
         scratchattach.session.Session: An object that represents the created login / session
     """
-    # Removed this from docstring since it doesn't exist:
-    # timeout (int): Optional, but recommended.
-    # Specify this when the Python environment's IP address is blocked by Scratch's API,
-    # but you still want to use cloud variables.
-
     # Generate session_string (a scratchattach-specific authentication method)
+    # should this be changed to a @property?
     issue_login_warning()
     if password is not None:
         session_data = dict(id=session_id, username=username, password=password)
         session_string = base64.b64encode(json.dumps(session_data).encode()).decode()
     else:
         session_string = None
-    _session = Session(id=session_id, username=username, session_string=session_string, xtoken=xtoken)
 
-    try:
-        status = _session.update()
-    except Exception as e:
-        status = False
-        warnings.warn(f"Key error at key {e} when reading scratch.mit.edu/session API response")
+    _session = Session(id=session_id, username=username, session_string=session_string)
+    if xtoken is not None:
+        # xtoken is retrievable from session id, so the most we can do is assert equality
+        assert xtoken == _session.xtoken
 
-    if status is not True:
-        if _session.xtoken is None:
-            if _session.username is None:
-                warnings.warn("Warning: Logged in by id, but couldn't fetch XToken. "
-                              "Make sure the provided session id is valid. "
-                              "Setting cloud variables can still work if you provide a "
-                              "`username='username'` keyword argument to the sa.login_by_id function")
-            else:
-                warnings.warn("Warning: Logged in by id, but couldn't fetch XToken. "
-                              "Make sure the provided session id is valid.")
-        else:
-            warnings.warn("Warning: Logged in by id, but couldn't fetch session info. "
-                          "This won't affect any other features.")
     return _session
 
 
@@ -1129,20 +1171,20 @@ def login(username, password, *, timeout=10) -> Session:
     with requests.no_error_handling():
         request = requests.post(
             "https://scratch.mit.edu/login/", json={"username": username, "password": password}, headers=_headers,
-
             timeout=timeout
         )
     try:
         result = re.search('"(.*)"', request.headers["Set-Cookie"])
         assert result is not None
         session_id = str(result.group())
-    except (AssertionError, Exception):
+    except Exception:
         raise exceptions.LoginFailure(
             "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
 
     # Create session object:
     with suppress_login_warning():
         return login_by_id(session_id, username=username, password=password)
+
 
 def login_by_session_string(session_string: str) -> Session:
     """
@@ -1173,6 +1215,7 @@ def login_by_session_string(session_string: str) -> Session:
         pass
     raise ValueError("Couldn't log in.")
 
+
 def login_by_io(file: SupportsRead[str]) -> Session:
     """
     Login using a file object.
@@ -1180,12 +1223,14 @@ def login_by_io(file: SupportsRead[str]) -> Session:
     with suppress_login_warning():
         return login_by_session_string(file.read())
 
+
 def login_by_file(file: FileDescriptorOrPath) -> Session:
     """
     Login using a path to a file.
     """
     with suppress_login_warning(), open(file, encoding="utf-8") as f:
         return login_by_io(f)
+
 
 def login_from_browser(browser: Browser = ANY):
     """

@@ -120,6 +120,9 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
             _comment.link_using_sprite()
 
     def add_local_global(self, _vlb: base.NamedIDComponent):
+        """
+        Add a global variable/list to this sprite (for when an overarching project/stage is not available)
+        """
         self._local_globals.append(_vlb)
         _vlb.sprite = self
 

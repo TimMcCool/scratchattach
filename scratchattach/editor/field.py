@@ -38,6 +38,9 @@ class Field(base.BlockSubComponent):
 
     @property
     def value_id(self):
+        """
+        Get the id of the value associated with this field (if applicable) - when value is var/list/broadcast
+        """
         if self.id is not None:
             return self.id
         else:
@@ -48,6 +51,9 @@ class Field(base.BlockSubComponent):
 
     @property
     def value_str(self):
+        """
+        Convert the associated value to a string - if this is a VLB, return the VLB name
+        """
         if not isinstance(self.value, base.NamedIDComponent):
             return self.value
         else:
@@ -55,6 +61,9 @@ class Field(base.BlockSubComponent):
 
     @property
     def name(self) -> str:
+        """
+        Fetch the name of this field using the associated block
+        """
         for _name, _field in self.block.fields.items():
             if _field is self:
                 return _name

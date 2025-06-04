@@ -17,7 +17,7 @@ You can move, resize, and minimize this comment, but don't edit it by hand. This
 _END = " // _twconfig_"
 
 
-@dataclass(init=True, repr=True)
+@dataclass
 class TWConfig(base.JSONSerializable):
     framerate: int = None,
     interpolation: bool = False,
@@ -100,6 +100,7 @@ def get_twconfig_data(string: str) -> dict | None:
         return None
 
 
+# todo: move this to commons.py?
 def none_if_eq(data, compare) -> Any | None:
     """
     Returns None if data and compare are the same

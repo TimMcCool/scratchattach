@@ -1,6 +1,8 @@
 """v2 ready: Common functions used by various internal modules"""
 from __future__ import annotations
 
+import string
+
 from typing import Optional, Final, Any, TypeVar, Callable, TYPE_CHECKING, Union
 from threading import Lock
 
@@ -8,6 +10,7 @@ from . import exceptions
 from .requests import requests
 
 from ..site import _base
+
 
 headers: Final = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -241,3 +244,14 @@ def get_class_sort_mode(mode: str) -> tuple[str, str]:
         descsort = "title"
 
     return ascsort, descsort
+
+
+def b62_decode(s: str):
+    chars = string.digits + string.ascii_uppercase + string.ascii_lowercase
+
+    ret = 0
+    for char in s:
+        ret = ret * 62 + chars.index(char)
+
+    return ret
+
