@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from types import FunctionType
 from typing import TypeVar, Optional
 
 import requests
@@ -60,7 +59,7 @@ class BaseSiteComponent(ABC):
         """
         return commons._get_object(identificator_id, identificator, Class, NotFoundException, self._session)
 
-    update_function: FunctionType = requests.get
+    update_function = requests.get
     """
     Internal function run on update. Function is a method of the 'requests' module/class
     """
