@@ -2,3 +2,5 @@ websocket-client
 requests
 bs4
 SimpleWebSocketServer
+typing-extensions
+browser_cookie3

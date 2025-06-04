@@ -39,24 +39,23 @@ def cookies_from_browser(browser : Browser = ANY) -> dict[str, str]:
     if not browser_cookie3:
         raise browsercookie_err or ModuleNotFoundError()
     cookies : Optional[CookieJar] = None
-    match browser:
-        case Browser.ANY:
-            cookies = browser_cookie3.load()
-        case Browser.FIREFOX:
-            cookies = browser_cookie3.firefox()
-        case Browser.CHROME:
-            cookies = browser_cookie3.chrome()
-        case Browser.EDGE:
-            cookies = browser_cookie3.edge()
-        case Browser.SAFARI:
-            cookies = browser_cookie3.safari()
-        case Browser.CHROMIUM:
-            cookies = browser_cookie3.chromium()
-        case Browser.VIVALDI:
-            cookies = browser_cookie3.vivaldi()
-        case Browser.EDGE_DEV:
-            raise ValueError("EDGE_DEV is not supported anymore.")
-        case _:
-            assert_never(browser)
+    if browser is Browser.ANY:
+        cookies = browser_cookie3.load()
+    elif browser is Browser.FIREFOX:
+        cookies = browser_cookie3.firefox()
+    elif browser is Browser.CHROME:
+        cookies = browser_cookie3.chrome()
+    elif browser is Browser.EDGE:
+        cookies = browser_cookie3.edge()
+    elif browser is Browser.SAFARI:
+        cookies = browser_cookie3.safari()
+    elif browser is Browser.CHROMIUM:
+        cookies = browser_cookie3.chromium()
+    elif browser is Browser.VIVALDI:
+        cookies = browser_cookie3.vivaldi()
+    elif browser is Browser.EDGE_DEV:
+        raise ValueError("EDGE_DEV is not supported anymore.")
+    else:
+        assert_never(browser)
     assert isinstance(cookies, CookieJar)
     return {cookie.name: cookie.value for cookie in cookies if "scratch.mit.edu" in cookie.domain and cookie.value}

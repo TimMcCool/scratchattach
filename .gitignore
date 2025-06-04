@@ -10,3 +10,4 @@ scratchattach.code-workspace
 setup.py
 setup.py
 .env
+tests/manual_tests/**
