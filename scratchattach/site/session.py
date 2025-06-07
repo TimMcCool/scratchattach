@@ -98,6 +98,7 @@ class Session(BaseSiteComponent):
         self.username = None
         self.xtoken = None
         self.new_scratcher = None
+        self.is_teacher = None
 
         # Set attributes that Session object may get
         self._user: user.User = None
@@ -704,6 +705,9 @@ class Session(BaseSiteComponent):
             raise exceptions.FetchError()
 
     def mystuff_classes(self, mode: str = "Last created", page: Optional[int] = None) -> list[classroom.Classroom]:
+        if self.is_teacher is None:
+            self.update()
+
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have classes")
         ascsort, descsort = get_class_sort_mode(mode)

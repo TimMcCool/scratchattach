@@ -13,9 +13,10 @@ class BaseSiteComponent(ABC):
     update_api: str
     _headers: dict[str, str]
     _cookies: dict[str, str]
-    @abstractmethod
-    def __init__(self):
-        pass
+
+    # @abstractmethod
+    # def __init__(self):  # dataclasses do not implement __init__ directly
+    #     pass
 
     def update(self):
         """
