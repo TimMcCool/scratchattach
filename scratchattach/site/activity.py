@@ -20,7 +20,6 @@ class Activity(BaseSiteComponent):
         return str(self.raw)
 
     def __init__(self, **entries):
-
         # Set attributes every Activity object needs to have:
         self._session = None
         self.raw = None
@@ -80,7 +79,7 @@ class Activity(BaseSiteComponent):
         else:
             recipient_username = None
 
-        default_case = True
+        default_case = False
         # Even if `activity_type` is an invalid value; it will default to 'user performed an action'
 
         if activity_type == 0:
@@ -283,7 +282,8 @@ class Activity(BaseSiteComponent):
             self.comment_obj_id = comment_obj_id
             self.comment_obj_title = comment_obj_title
             self.comment_id = comment_id
-
+        else:
+            default_case = True
 
         if default_case:
             # This is coded in the scratch HTML, haven't found an example of it though
