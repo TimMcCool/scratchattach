@@ -12,6 +12,7 @@ import time
 import warnings
 import zlib
 
+from dataclasses import dataclass, field
 from typing import Optional, TypeVar, TYPE_CHECKING, overload, Any, Union
 from contextlib import contextmanager
 from threading import local
@@ -34,8 +35,7 @@ from ._base import BaseSiteComponent
 from scratchattach.cloud import cloud, _base
 from scratchattach.eventhandlers import message_events, filterbot
 from scratchattach.other import project_json_capabilities
-from scratchattach.utils import commons
-from scratchattach.utils import exceptions
+from scratchattach.utils import commons, exceptions
 from scratchattach.utils.commons import headers, empty_project_json, webscrape_count, get_class_sort_mode
 from scratchattach.utils.requests import requests
 from .browser_cookies import Browser, ANY, cookies_from_browser
@@ -60,6 +60,7 @@ def enforce_ratelimit(__type: str, name: str, amount: int = 5, duration: int = 6
    
 C = TypeVar("C", bound=BaseSiteComponent) 
 
+@dataclass
 class Session(BaseSiteComponent):
     """
     Represents a Scratch log in / session. Stores authentication data (session id and xtoken).
@@ -73,40 +74,28 @@ class Session(BaseSiteComponent):
         mute_status: Information about commenting restrictions of the associated account
         banned: Returns True if the associated account is banned
     """
-    session_string: str | None = None
-    id: str
-    username: str
-    xtoken: str
-    email: str
-    new_scratcher: bool
-    mute_status: Any
-    banned: bool
-    _headers: dict[str, str]
-    _cookies: dict[str, str]
-    _username: str
+    username: str = None
+    _user: user.User = field(repr=False, default=None)
+
+    id: str = None
+    session_string: str | None = field(repr=False, default=None)
+    xtoken: str = field(repr=False, default=None)
+    email: str = field(repr=False, default=None)
+
+    new_scratcher: bool = field(repr=False, default=None)
+    mute_status: Any = field(repr=False, default=None)
+    banned: bool = field(repr=False, default=None)
+
+    time_created: datetime.datetime = None
+    language: str = field(repr=False, default="en")
 
     def __str__(self) -> str:
-        return f"Login for account {self.username!r}"
+        return f"<Login for {self.username!r}>"
 
-    def __init__(self, **entries):
+    def __post_init__(self):
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.post
         self.update_api = "https://scratch.mit.edu/session"
-
-        # Set attributes every Session object needs to have:
-        self.id = None
-        self.username = None
-        self.xtoken = None
-        self.new_scratcher = None
-        self.is_teacher = None
-
-        # Set attributes that Session object may get
-        self._user: user.User = None
-        self.time_created: datetime.datetime = None
-        self.language = "en" # default
-
-        # Update attributes from entries dict:
-        self.__dict__.update(entries)
 
         # Set alternative attributes:
         self._username = self.username  # backwards compatibility with v1
