@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Optional, TYPE_CHECKING, Any
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Optional, TYPE_CHECKING, Any, Callable
 
 import bs4
+from bs4 import BeautifulSoup
 
 if TYPE_CHECKING:
     from scratchattach.site.session import Session
@@ -13,46 +16,50 @@ from scratchattach.utils.commons import requests
 from . import user, activity
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions, commons
-from scratchattach.utils.commons import headers
-
-from bs4 import BeautifulSoup
 
 
+@dataclass
 class Classroom(BaseSiteComponent):
-    def __init__(self, **entries):
+    title: str = None
+    id: int = None
+    classtoken: str = None
+
+    author: user.User = None
+    about_class: str = None
+    working_on: str = None
+
+    is_closed: bool = False
+    datetime: datetime = None
+
+
+    update_function: Callable = field(repr=False, default=requests.get)
+    _session: Optional[Session] = field(repr=False, default=None)
+
+    def __post_init__(self):
         # Info on how the .update method has to fetch the data:
         # NOTE: THIS DOESN'T WORK WITH CLOSED CLASSES!
-        self.update_function = requests.get
-        if "id" in entries:
-            self.update_api = f"https://api.scratch.mit.edu/classrooms/{entries['id']}"
-        elif "classtoken" in entries:
-            self.update_api = f"https://api.scratch.mit.edu/classtoken/{entries['classtoken']}"
+        if self.id:
+            self.update_api = f"https://api.scratch.mit.edu/classrooms/{self.id}"
+        elif self.classtoken:
+            self.update_api = f"https://api.scratch.mit.edu/classtoken/{self.classtoken}"
         else:
-            raise KeyError(f"No class id or token provided! Entries: {entries}")
-
-        # Set attributes every Classroom object needs to have:
-        self._session: Session = None
-        self.id = None
-        self.classtoken = None
-        self.is_closed = False
-
-        self.__dict__.update(entries)
+            raise KeyError(f"No class id or token provided! {self.__dict__ = }")
 
         # Headers and cookies:
         if self._session is None:
-            self._headers = headers
+            self._headers = commons.headers
             self._cookies = {}
         else:
             self._headers = self._session._headers
             self._cookies = self._session._cookies
 
         # Headers for operations that require accept and Content-Type fields:
-        self._json_headers = dict(self._headers)
-        self._json_headers["accept"] = "application/json"
-        self._json_headers["Content-Type"] = "application/json"
+        self._json_headers = {**self._headers,
+                              "accept": "application/json",
+                              "Content-Type": "application/json"}
 
-    def __repr__(self) -> str:
-        return f"classroom called {self.title!r}"
+    def __str__(self) -> str:
+        return f"<Classroom {self.title!r}, id={self.id!r}>"
 
     def update(self):
         try:
@@ -305,7 +312,8 @@ class Classroom(BaseSiteComponent):
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
 
-    def register_student(self, username: str, password: str = '', birth_month: Optional[int] = None, birth_year: Optional[int] = None,
+    def register_student(self, username: str, password: str = '', birth_month: Optional[int] = None,
+                         birth_year: Optional[int] = None,
                          gender: Optional[str] = None, country: Optional[str] = None, is_robot: bool = False) -> None:
         return register_by_token(self.id, self.classtoken, username, password, birth_month, birth_year, gender, country,
                                  is_robot)
@@ -346,7 +354,8 @@ class Classroom(BaseSiteComponent):
 
         return activities
 
-    def activity(self, student: str = "all", mode: str = "Last created", page: Optional[int] = None) -> list[dict[str, Any]]:
+    def activity(self, student: str = "all", mode: str = "Last created", page: Optional[int] = None) -> list[
+        dict[str, Any]]:
         """
         Get a list of private activity, only available to the class owner.
         Returns:
@@ -421,7 +430,7 @@ def register_by_token(class_id: int, class_token: str, username: str, password: 
             "is_robot": is_robot}
 
     response = requests.post("https://scratch.mit.edu/classes/register_new_student/",
-                             data=data, headers=headers, cookies={"scratchcsrftoken": 'a'})
+                             data=data, headers=commons.headers, cookies={"scratchcsrftoken": 'a'})
     ret = response.json()[0]
 
     if "username" in ret:
