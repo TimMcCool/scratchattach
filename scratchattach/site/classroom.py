@@ -23,11 +23,16 @@ class Classroom(BaseSiteComponent):
     title: str = None
     id: int = None
     classtoken: str = None
+
+    author: user.User = None
+    about_class: str = None
+    working_on: str = None
+
     is_closed: bool = False
     datetime: datetime = None
-    author: user.User = None
-    update_function: Callable = requests.get
 
+
+    update_function: Callable = field(repr=False, default=requests.get)
     _session: Optional[Session] = field(repr=False, default=None)
 
     def __post_init__(self):
