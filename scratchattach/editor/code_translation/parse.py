@@ -86,11 +86,11 @@ class PrettyUnparser(Transformer):
 
     @v_args(inline=True)
     def PREPROC_INSTR(self, content):
-        return f"%%{content}%%"
+        return f"{content}"
     
     @v_args(inline=True)
     def COMMMENT(self, content):
-        return f"##{content}##"
+        return f"{content}"
     
     def block(self, items):
         params = []
