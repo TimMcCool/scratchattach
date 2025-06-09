@@ -21,6 +21,9 @@ setup(
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
     install_requires=requirements,
+    extras_require={
+        "lark": ["lark"]
+    },
     keywords=['scratch api', 'scratchattach', 'scratch api python', 'scratch python', 'scratch for python', 'scratch', 'scratch cloud', 'scratch cloud variables', 'scratch bot'],
     url='https://scratchattach.tim1de.net',
     classifiers=[
