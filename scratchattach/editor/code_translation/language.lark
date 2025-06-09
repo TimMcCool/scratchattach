@@ -35,7 +35,7 @@ block_content: block*
 expr: (addition | subtraction | multiplication | division | LITERAL_NUMBER | "(" expr ")") [comments]
 
 low_expr1: (("(" expr ")") | LITERAL_NUMBER) [comments]
-low_expr2: low_expr1 | multiplication | division
+low_expr2: multiplication | division | low_expr1
 
 addition: expr "+" expr
 subtraction: expr "-" low_expr2
