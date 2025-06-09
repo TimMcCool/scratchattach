@@ -1,0 +1,56 @@
+start: top_level_block*
+
+top_level_block: hat "{" block* "}"
+    | PREPROC_INSTR
+    | COMMMENT
+
+PREPROC_INSTR: "%%" _PREPROC_INSTR_CONTENT "%%"
+
+_PREPROC_INSTR_CONTENT: /[\s\S]+?/
+
+COMMMENT: "##" _COMMMENT_CONTENT "##"
+
+_COMMMENT_CONTENT: /[\s\S]+?/
+
+hat: [event_hat | block_hat]
+
+event_hat: "when"i "(" EVENT ")"
+block_hat: "custom_block"i BLOCK_NAME "(" [ param ("," param)* ] ")"
+
+param: value_param
+    | bool_param
+value_param: PARAM_NAME
+bool_param: "<" PARAM_NAME ">"
+
+EVENT: "green_flag_clicked"i
+
+block: CONTROL_BLOCK_NAME ["(" block_params ")"] "{" block_content "}"
+    | BLOCK_NAME ["(" block_params ")"] [";" | "\n" | " "]
+
+block_params: expr*
+block_content: block*
+
+expr: addition | subtraction | multiplication | division | LITERAL_NUMBER | "(" expr ")"
+
+low_expr1: ("(" expr ")") | LITERAL_NUMBER
+low_expr2: low_expr1 | multiplication | division
+
+addition: expr "+" expr
+subtraction: expr "-" low_expr2
+multiplication: low_expr2 "*" low_expr2
+division: low_expr2 "/" low_expr1
+
+CONTROL_BLOCK_NAME: "repeat"i
+    | "until"i
+    | "forever"i
+
+PARAM_NAME: ("a".."z" | "A".."Z" | "_" | "-" | "%" | "+")+
+BLOCK_NAME: [MODULE_NAME "."] ("a".."z" | "A".."Z" | "_" | "-" | "%" | "+")+
+
+MODULE_NAME: "params"i
+    | "vars"i
+    | "lists"i
+
+WS: /\s+/
+%ignore WS
+%import common.SIGNED_NUMBER -> LITERAL_NUMBER

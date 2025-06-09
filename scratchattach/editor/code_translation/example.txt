@@ -1,0 +1,13 @@
+## For testing. The file extension is temporary and might change in the future. ##
+
+WHEN (green_flag_clicked) {
+    until {
+        say()say()
+    }
+    sa()
+}
+custom_block hello_%s_ (<a>, awd) {
+    until (1) {
+        say((8 + 2) * (6 - 3))
+    }
+}

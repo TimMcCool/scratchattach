@@ -16,6 +16,7 @@ from scratchattach.utils.commons import requests
 from . import user, activity
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions, commons
+from scratchattach.utils.commons import headers
 
 
 @dataclass
