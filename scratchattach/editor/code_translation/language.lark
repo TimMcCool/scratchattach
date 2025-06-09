@@ -1,12 +1,14 @@
 start: top_level_block*
 
-top_level_block: hat "{" block* "}"
+top_level_block: hat "{" block* "}" [comments]
     | PREPROC_INSTR
     | COMMMENT
 
 PREPROC_INSTR: "%%" _PREPROC_INSTR_CONTENT "%%"
 
 _PREPROC_INSTR_CONTENT: /[\s\S]+?/
+
+comments: COMMMENT+
 
 COMMMENT: "##" _COMMMENT_CONTENT "##"
 
@@ -24,15 +26,15 @@ bool_param: "<" PARAM_NAME ">"
 
 EVENT: "green_flag_clicked"i
 
-block: CONTROL_BLOCK_NAME ["(" block_params ")"] "{" block_content "}"
-    | BLOCK_NAME ["(" block_params ")"] [";" | "\n" | " "]
+block: (CONTROL_BLOCK_NAME ["(" block_params ")"] "{" block_content "}"
+    | BLOCK_NAME ["(" block_params ")"] [";" | "\n" | " "]) [comments]
 
 block_params: expr*
 block_content: block*
 
-expr: addition | subtraction | multiplication | division | LITERAL_NUMBER | "(" expr ")"
+expr: (addition | subtraction | multiplication | division | LITERAL_NUMBER | "(" expr ")") [comments]
 
-low_expr1: ("(" expr ")") | LITERAL_NUMBER
+low_expr1: (("(" expr ")") | LITERAL_NUMBER) [comments]
 low_expr2: low_expr1 | multiplication | division
 
 addition: expr "+" expr

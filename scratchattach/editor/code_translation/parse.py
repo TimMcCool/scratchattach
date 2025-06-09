@@ -95,6 +95,7 @@ class PrettyUnparser(Transformer):
     def block(self, items):
         params = []
         inner_blocks = []
+        comments = []
         for i in items[1:]:
             if not isinstance(i, Tree):
                 continue
@@ -102,26 +103,32 @@ class PrettyUnparser(Transformer):
                 inner_blocks.extend(i.children)
             if str(i.data) == "block_params":
                 params.extend(i.children)
+            if str(i.data) == "comments":
+                comments.extend(i.children)
         block_name = items[0]
         block_text = f"{block_name}({', '.join(params)})" if params or not inner_blocks else f"{block_name}"
-        if len(inner_blocks) > 0:
+        if inner_blocks:
             blocks_content = "\n".join(inner_blocks)
             indented_content = self._indent(blocks_content)
             block_text += f" {{\n{indented_content}\n}}"
+        if comments:
+            block_text += f" {'  '.join(comments)}"
         return block_text
     
     def LITERAL_NUMBER(self, number: str):
         return number
     
-    @v_args(inline=True)
-    def expr(self, item):
-        return item
+    def expr(self, items):
+        text = items[0]
+        if len(items) > 1:
+            text += f" {'  '.join(items[1].children)}"
+        return text
     
-    @v_args(inline=True)
-    def low_expr1(self, item):
-        if " " in item:
-            return f"({item})"
-        return item
+    def low_expr1(self, items):
+        text = f"({items[0]})" if " " in items[0] else items[0]
+        if len(items) > 1:
+            text += f" {'  '.join(items[1].children)}"
+        return text
     
     @v_args(inline=True)
     def low_expr2(self, item):
