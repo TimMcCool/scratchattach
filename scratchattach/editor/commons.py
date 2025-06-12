@@ -6,8 +6,15 @@ from __future__ import annotations
 import json
 import random
 import string
-from typing import Optional, Final, Any
+from typing import Optional, Final, Any, TYPE_CHECKING, Union
 from enum import Enum
+
+if TYPE_CHECKING:
+    from . import sprite, build_defaulting
+
+    SpriteInput = Union[sprite.Sprite, build_defaulting._SetSprite]
+else:
+    SpriteInput = Any
 
 from scratchattach.utils import exceptions
 

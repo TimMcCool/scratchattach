@@ -18,7 +18,7 @@ class Block(base.SpriteSubComponent):
                  _inputs: Optional[dict[str, inputs.Input]] = None, x: int = 0, y: int = 0, pos: Optional[tuple[int, int]] = None,
 
                  _next: Optional[Block] = None, _parent: Optional[Block] = None,
-                 *, _next_id: Optional[str] = None, _parent_id: Optional[str] = None, _sprite: Union[sprite.Sprite, build_defaulting._SetSprite] = build_defaulting.SPRITE_DEFAULT):
+                 *, _next_id: Optional[str] = None, _parent_id: Optional[str] = None, _sprite: commons.SpriteInput = build_defaulting.SPRITE_DEFAULT):
         # Defaulting for args
         if _fields is None:
             _fields = {}

@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from . import project, block, asset
     from . import mutation as module_mutation
     from . import sprite as module_sprite
+    from . import commons
 
 from . import build_defaulting
 
@@ -42,11 +43,11 @@ class JSONSerializable(Base, ABC):
     """
     @staticmethod
     @abstractmethod
-    def from_json(data: dict | list | Any):
+    def from_json(data):
         pass
 
     @abstractmethod
-    def to_json(self) -> dict | list | Any:
+    def to_json(self):
         pass
 
     def save_json(self, name: str = ''):
@@ -89,7 +90,7 @@ class SpriteSubComponent(JSONSerializable, ABC):
     Base class for any class with an associated sprite
     """
     sprite: module_sprite.Sprite
-    def __init__(self, _sprite: Union[module_sprite.Sprite, build_defaulting._SetSprite] = build_defaulting.SPRITE_DEFAULT):
+    def __init__(self, _sprite: "commons.SpriteInput" = build_defaulting.SPRITE_DEFAULT):
         if _sprite is build_defaulting.SPRITE_DEFAULT:
             retrieved_sprite = build_defaulting.current_sprite()
             assert retrieved_sprite is not None, "You don't have any sprites."
@@ -110,7 +111,7 @@ class IDComponent(SpriteSubComponent, ABC):
     """
     Base class for classes with an id attribute
     """
-    def __init__(self, _id: str, _sprite: Union[module_sprite.Sprite, build_defaulting._SetSprite] = build_defaulting.SPRITE_DEFAULT):
+    def __init__(self, _id: str, _sprite: "commons.SpriteInput" = build_defaulting.SPRITE_DEFAULT):
         self.id = _id
         super().__init__(_sprite)
 
@@ -122,7 +123,7 @@ class NamedIDComponent(IDComponent, ABC):
     """
     Base class for Variables, Lists and Broadcasts (Name + ID + sprite)
     """
-    def __init__(self, _id: str, name: str, _sprite: Union[module_sprite.Sprite, build_defaulting._SetSprite] = build_defaulting.SPRITE_DEFAULT):
+    def __init__(self, _id: str, name: str, _sprite: "commons.SpriteInput" = build_defaulting.SPRITE_DEFAULT):
         self.name = name
         super().__init__(_id, _sprite)
 

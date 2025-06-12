@@ -15,8 +15,8 @@ class AssetFile:
     - stores the filename, data, and md5 hash
     """
     filename: str
-    _data: bytes = field(repr=False, default=None)
-    _md5: str = field(repr=False, default=None)
+    _data: bytes = field(repr=False, default_factory=bytes)
+    _md5: str = field(repr=False, default_factory=str)
 
     @property
     def data(self):
@@ -48,7 +48,7 @@ class Asset(base.SpriteSubComponent):
     def __init__(self,
                  name: str = "costume1",
                  file_name: str = "b7853f557e4426412e64bb3da6531a99.svg",
-                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
+                 _sprite: commons.SpriteInput = build_defaulting.SPRITE_DEFAULT):
         """
         Represents a generic asset. Can be a sound or an image.
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Assets
@@ -129,12 +129,16 @@ class Asset(base.SpriteSubComponent):
         Load asset data from project.json
         """
         _name = data.get("name")
+        assert isinstance(_name, str)
         _file_name = data.get("md5ext")
         if _file_name is None:
             if "dataFormat" in data and "assetId" in data:
                 _id = data["assetId"]
                 _data_format = data["dataFormat"]
                 _file_name = f"{_id}.{_data_format}"
+            else:
+                _file_name = ""
+        assert isinstance(_file_name, str)
 
         return Asset(_name, _file_name)
 
@@ -170,7 +174,7 @@ class Costume(Asset):
                  bitmap_resolution=None,
                  rotation_center_x: int | float = 48,
                  rotation_center_y: int | float = 50,
-                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
+                 _sprite: commons.SpriteInput = build_defaulting.SPRITE_DEFAULT):
         """
         A costume (image). An asset with additional properties
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Costumes
