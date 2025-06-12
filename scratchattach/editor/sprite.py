@@ -11,6 +11,8 @@ if TYPE_CHECKING:
     from . import asset
 
 class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
+    _local_globals: list[base.NamedIDComponent]
+    asset_data: list[asset.AssetFile]
     def __init__(self, is_stage: bool = False, name: str = '', _current_costume: int = 1, _layer_order: Optional[int] = None,
                  _volume: int = 100,
                  _broadcasts: Optional[list[vlb.Broadcast]] = None,
@@ -131,11 +133,11 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
         _variable.sprite = self
 
     def add_list(self, _list: vlb.List):
-        self.variables.append(_list)
+        self.lists.append(_list)
         _list.sprite = self
 
     def add_broadcast(self, _broadcast: vlb.Broadcast):
-        self.variables.append(_broadcast)
+        self.broadcasts.append(_broadcast)
         _broadcast.sprite = self
 
     def add_vlb(self, _vlb: base.NamedIDComponent):
@@ -154,18 +156,20 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
                 return _block
 
         _block.sprite = self
+        new_id = self.new_id
 
         if isinstance(_block, block.Block):
-            self.blocks[self.new_id] = _block
+            self.blocks[new_id] = _block
+            _block.id = new_id
             _block.link_using_sprite()
 
         elif isinstance(_block, prim.Prim):
-            self.prims[self.new_id] = _block
+            self.prims[new_id] = _block
             _block.link_using_sprite()
 
         return _block
 
-    def add_chain(self, *chain: Iterable[block.Block | prim.Prim]) -> block.Block | prim.Prim:
+    def add_chain(self, *chain: block.Block | prim.Prim) -> block.Block | prim.Prim:
         """
         Adds a list of blocks to the sprite **AND RETURNS THE FIRST BLOCK**
         :param chain:
@@ -176,6 +180,8 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
         _prev = self.add_block(chain[0])
 
         for _block in chain[1:]:
+            if not isinstance(_prev, block.Block) or not isinstance(_block, block.Block):
+                continue
             _prev = _prev.attach_block(_block)
 
         return chain[0]
@@ -209,7 +215,11 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
         """
         :return: All vlbs associated with the sprite. No local globals are added
         """
-        return self.variables + self.lists + self.broadcasts
+        vlbs: list[base.NamedIDComponent] = []
+        vlbs.extend(self.variables)
+        vlbs.extend(self.lists)
+        vlbs.extend(self.broadcasts)
+        return vlbs
 
     @property
     def assets(self) -> list[asset.Costume | asset.Sound]:

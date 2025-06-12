@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Union
 from typing_extensions import Self
 
 from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape, prim, comment, build_defaulting
@@ -12,12 +12,13 @@ class Block(base.SpriteSubComponent):
     """
     Represents a block in the scratch editor, as a subcomponent of a sprite.
     """
+    _id: Optional[str] = None
     def __init__(self, _opcode: str, _shadow: bool = False, _top_level: Optional[bool] = None,
                  _mutation: Optional[mutation.Mutation] = None, _fields: Optional[dict[str, field.Field]] = None,
                  _inputs: Optional[dict[str, inputs.Input]] = None, x: int = 0, y: int = 0, pos: Optional[tuple[int, int]] = None,
 
                  _next: Optional[Block] = None, _parent: Optional[Block] = None,
-                 *, _next_id: Optional[str] = None, _parent_id: Optional[str] = None, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
+                 *, _next_id: Optional[str] = None, _parent_id: Optional[str] = None, _sprite: Union[sprite.Sprite, build_defaulting._SetSprite] = build_defaulting.SPRITE_DEFAULT):
         # Defaulting for args
         if _fields is None:
             _fields = {}
@@ -125,7 +126,8 @@ class Block(base.SpriteSubComponent):
         _shape = blockshape.BlockShapes.find(self.opcode, "opcode")
         if _shape is None:
             warnings.warn(f"No blockshape {self.opcode!r} exists! Defaulting to {blockshape.BlockShapes.UNDEFINED}")
-            return blockshape.BlockShapes.UNDEFINED
+            _shape = blockshape.BlockShapes.UNDEFINED
+        assert isinstance(_shape, blockshape.BlockShape)
         return _shape
 
     @property
@@ -145,18 +147,26 @@ class Block(base.SpriteSubComponent):
             return self.mutation.has_next
 
     @property
-    def id(self) -> str | None:
+    def id(self) -> str:
         """
         Work out the id of this block by searching through the sprite dictionary
         """
+        if self._id:
+            return self.id
         # warnings.warn(f"Using block IDs can cause consistency issues and is not recommended")
         # This property is used when converting comments to JSON (we don't want random warning when exporting a project)
         for _block_id, _block in self.sprite.blocks.items():
             if _block is self:
-                return _block_id
+                self._id = _block_id
+                return self.id
 
         # Let's just automatically assign ourselves an id
         self.sprite.add_block(self)
+        return self.id
+    
+    @id.setter
+    def id(self, value: str) -> None:
+        self._id = value
 
     @property
     def parent_id(self):
