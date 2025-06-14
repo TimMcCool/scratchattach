@@ -10,7 +10,8 @@ from typing import Optional, Final, Any
 
 from scratchattach.utils import exceptions
 
-DIGITS: Final[tuple[str]] = tuple("0123456789")
+DIGITS: Final[tuple[str, str, str, str, str, str, str, str, str, str]] = (
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
 
 ID_CHARS: Final[str] = string.ascii_letters + string.digits  # + string.punctuation
 
@@ -71,6 +72,7 @@ def _read_json_number(_str: str) -> float | int:
     ret += read_exponent(_str)
 
     return json.loads(ret)
+
 
 # todo: consider if this should be moved to util.commons instead of editor.commons
 # note: this is currently unused code
@@ -190,14 +192,11 @@ def trim_final_nones(lst: list) -> list:
     return lst[:i]
 
 
-def dumps_ifnn(obj: Any) -> str:
+def dumps_ifnn(obj: Any):
     """
     Return json.dumps(obj) if the object is not None
     """
-    if obj is None:
-        return None
-    else:
-        return json.dumps(obj)
+    return json.dumps(obj) if obj is not None else None
 
 
 def gen_id() -> str:
