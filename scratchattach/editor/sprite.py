@@ -165,14 +165,12 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
 
         return _block
 
-    def add_chain(self, *chain: Iterable[block.Block | prim.Prim]) -> block.Block | prim.Prim:
+    def add_chain(self, *chain: block.Block | prim.Prim) -> block.Block | prim.Prim:
         """
         Adds a list of blocks to the sprite **AND RETURNS THE FIRST BLOCK**
         :param chain:
         :return:
         """
-        chain = tuple(chain)
-
         _prev = self.add_block(chain[0])
 
         for _block in chain[1:]:
