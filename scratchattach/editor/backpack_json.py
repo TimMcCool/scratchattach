@@ -6,14 +6,12 @@ from __future__ import annotations
 from . import block, prim, field, inputs, mutation, sprite
 
 
-def parse_prim_fields(_fields: dict[str]) -> tuple[str | None, str | None, str | None]:
+def parse_prim_fields(_fields: dict[str, dict[str, str]]) -> tuple[str | None, str | None, str | None]:
     """
     Function for reading the fields in a backpack **primitive**
     """
     for key, value in _fields.items():
-        key: str
-        value: dict[str, str]
-        prim_value, prim_name, prim_id = (None,) * 3
+        prim_value, prim_name, prim_id = None, None, None
         if key == "NUM":
             prim_value = value.get("value")
         else:
@@ -22,7 +20,7 @@ def parse_prim_fields(_fields: dict[str]) -> tuple[str | None, str | None, str |
 
         # There really should only be 1 item, and this function can only return for that item
         return prim_value, prim_name, prim_id
-    return (None,) * 3
+    return None, None, None
 
 
 class BpField(field.Field):
@@ -31,10 +29,9 @@ class BpField(field.Field):
     """
 
     @staticmethod
-    def from_json(data: dict[str, str]) -> field.Field:
+    def from_json(data: dict[str, str]) -> field.Field:  # type: ignore
         # We can very simply convert it to the regular format
-        data = [data.get("value"), data.get("id")]
-        return field.Field.from_json(data)
+        return field.Field.from_json([data.get("value"), data.get("id")])
 
 
 class BpInput(inputs.Input):
@@ -43,7 +40,7 @@ class BpInput(inputs.Input):
     """
 
     @staticmethod
-    def from_json(data: dict[str, str]) -> inputs.Input:
+    def from_json(data: dict[str, str]) -> inputs.Input:  # type: ignore
         # The actual data is stored in a separate prim block
         _id = data.get("shadow")
         _obscurer_id = data.get("block")
@@ -61,7 +58,7 @@ class BpBlock(block.Block):
     """
 
     @staticmethod
-    def from_json(data: dict) -> prim.Prim | block.Block:
+    def from_json(data: dict) -> prim.Prim | block.Block:  # type: ignore
         """
         Load a block in the **backpack** JSON format
         :param data: A dictionary (not list)
@@ -69,7 +66,7 @@ class BpBlock(block.Block):
         """
         _opcode = data["opcode"]
 
-        _x, _y = data.get("x"), data.get("y")
+        _x, _y = data.get("x", 0), data.get("y", 0)
         if prim.is_prim_opcode(_opcode):
             # This is actually a prim
             prim_value, prim_name, prim_id = parse_prim_fields(data["fields"])
@@ -111,6 +108,7 @@ def load_script(_script_data: list[dict]) -> sprite.Sprite:
     for _block_data in _script_data:
         _block = BpBlock.from_json(_block_data)
         _block.sprite = _blockchain
+        assert isinstance(_block, block.Block)
         _blockchain.blocks[_block_data["id"]] = _block
 
     _blockchain.link_subcomponents()
