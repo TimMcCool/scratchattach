@@ -279,6 +279,7 @@ def text2speech(text: str = "hello", voice_name: str = "female", language: str =
     if lang.tts_locale is None:
         raise InvalidLanguage(f"Language '{language}' is not a valid TTS language")
 
-    response = requests.get(f"https://synthesis-service.scratch.mit.edu/synth"
-                            f"?locale={lang.tts_locale}&gender={voice.gender}&text={text}")
+    with requests.no_error_handling():
+        response = requests.get(f"https://synthesis-service.scratch.mit.edu/synth"
+                                f"?locale={lang.tts_locale}&gender={voice.gender}&text={text}")
     return response.content, voice.playback_rate
