@@ -12,11 +12,11 @@ from scratchattach.utils import exceptions
 
 @dataclass
 class Language:
-    name: str = None
-    code: str = None
-    locales: list[str] = None
-    tts_locale: str = None
-    single_gender: bool = None
+    name: str | None = None
+    code: str | None = None
+    locales: list[str] | None = None
+    tts_locale: str | None = None
+    single_gender: bool | None = None
 
 
 class _EnumWrapper(Enum):
@@ -51,7 +51,7 @@ class _EnumWrapper(Enum):
         raise exceptions.EnumValueNotFound(f"Could not find the {by}: {value!r}")
 
     @classmethod
-    def all_of(cls, attr_name: str, apply_func: Optional[Callable] = None) -> Iterable:
+    def all_of(cls, attr_name: str, apply_func: Optional[Callable] = None):
         """
         Returns the list of each listed enum item's specified attribute by "attr_name"
 
@@ -81,9 +81,12 @@ class _EnumWrapper(Enum):
         Calls the EnumWrapper.by function multiple times until a match is found, using the provided 'by' attribute names
         """
         for by in bys:
-            ret = cls.find(value, by, apply_func)
-            if ret is not None:
+            try:
+                ret = cls.find(value, by, apply_func)
                 return ret
+            except exceptions.EnumValueNotFound:
+                pass
+        raise exceptions.EnumValueNotFound(f"Could not find {value!r} as any of {bys!r}")
 
 
 class Languages(_EnumWrapper):
