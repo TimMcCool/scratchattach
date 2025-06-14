@@ -40,11 +40,11 @@ class JSONSerializable(Base, ABC):
     """
     @staticmethod
     @abstractmethod
-    def from_json(data: dict | list | Any):
+    def from_json(data):
         pass
 
     @abstractmethod
-    def to_json(self) -> dict | list | Any:
+    def to_json(self):
         pass
 
     def save_json(self, name: str = ''):
