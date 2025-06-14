@@ -168,7 +168,7 @@ class Languages(_EnumWrapper):
         return super().find(value, by, apply_func)
 
     @classmethod
-    def all_of(cls, attr_name: str = "name", apply_func: Optional[Callable] = None) -> list:
+    def all_of(cls, attr_name: str = "name", apply_func: Optional[Callable] = None):
         return super().all_of(attr_name, apply_func)
 
 
