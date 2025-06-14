@@ -3,7 +3,7 @@ Module which stores the 'default' or 'current' selected Sprite/project (stored a
 """
 from __future__ import annotations
 
-from typing import Iterable, TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
     from . import sprite, block, prim, comment
@@ -38,13 +38,22 @@ def pop_sprite(_sprite: sprite.Sprite) -> sprite.Sprite | None:
     return _sprite
 
 
-def add_block(_block: block.Block | prim.Prim) -> block.Block | prim.Prim:
-    return current_sprite().add_block(_block)
+def add_block(_block: block.Block | prim.Prim) -> block.Block | prim.Prim | None:
+    s = current_sprite()
+    if s is not None:
+        return s.add_block(_block)
+    return None
 
 
-def add_chain(*chain: block.Block | prim.Prim) -> block.Block | prim.Prim:
-    return current_sprite().add_chain(*chain)
+def add_chain(*chain: block.Block | prim.Prim) -> block.Block | prim.Prim | None:
+    s = current_sprite()
+    if s is not None:
+        return s.add_chain(*chain)
+    return None
 
 
 def add_comment(_comment: comment.Comment):
-    return current_sprite().add_comment(_comment)
+    s = current_sprite()
+    if s is not None:
+        return s.add_comment(_comment)
+    return None
