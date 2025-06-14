@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Callable, Iterable
 
+from scratchattach.utils import exceptions
 
 @dataclass
 class Language:
@@ -46,6 +47,8 @@ class _EnumWrapper(Enum):
 
             except TypeError:
                 pass
+
+        raise exceptions.EnumValueNotFound(f"Could not find the {by}: {value!r}")
 
     @classmethod
     def all_of(cls, attr_name: str, apply_func: Optional[Callable] = None) -> Iterable:

@@ -225,6 +225,12 @@ class BadScript(Exception):
     Raised when the block script cannot allow for the operation
     """
 
+# Processing errors (local)
+class EnumValueNotFound(Exception):
+    """
+    Raised when the _EnumWrapper.find() method cannot find anything
+    """
+
 # Warnings
 
 class LoginDataWarning(UserWarning):
