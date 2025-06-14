@@ -6,46 +6,40 @@ May want to completely change this later
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field, InitVar
 
-from . import prim
+from scratchattach.editor import prim
 from scratchattach.utils.enums import _EnumWrapper
 
 
 @dataclass
 class FieldUsage:
     name: str
-    value_type: prim.PrimTypes = None
+    value_type: prim.PrimTypes | None = None
 
 
 @dataclass
 class SpecialFieldUsage(FieldUsage):
-    name: str
-    attrs: list[str] = None
-    if attrs is None:
-        attrs = []
+    name: InitVar[str]
+    attrs: list[str] = field(default_factory=list)
+    value_type: InitVar[None]
 
-    value_type: None = None
+    def __post_init__(self, name: str, value_type: None = None):
+        super().__init__(name, value_type)
 
 
 @dataclass
 class InputUsage:
     name: str
-    value_type: prim.PrimTypes = None
-    default_obscurer: BlockUsage = None
+    value_type: prim.PrimTypes | None = None
+    default_obscurer: BlockUsage | None = None
 
 
 @dataclass
 class BlockUsage:
     opcode: str
-    fields: list[FieldUsage] = None
-    if fields is None:
-        fields = []
-
-    inputs: list[InputUsage] = None
-    if inputs is None:
-        inputs = []
-
+    fields: list[FieldUsage] = field(default_factory=list)
+    inputs: list[InputUsage] = field(default_factory=list)
 
 class BlockUsages(_EnumWrapper):
     # Special Enum blocks
