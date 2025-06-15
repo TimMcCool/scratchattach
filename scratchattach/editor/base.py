@@ -87,17 +87,18 @@ class SpriteSubComponent(JSONSerializable, ABC):
     """
     Base class for any class with an associated sprite
     """
-    def __init__(self, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
-        if _sprite is build_defaulting.SPRITE_DEFAULT:
+    def __init__(self, _sprite: sprite.Sprite | None = None):
+        if _sprite is None:
             _sprite = build_defaulting.current_sprite()
 
         self.sprite = _sprite
 
     @property
-    def project(self) -> project.Project:
+    def project(self) -> project.Project | None:
         """
         Get associated project by proxy of the associated sprite
         """
+        assert self.sprite is not None
         return self.sprite.project
 
 
@@ -105,7 +106,9 @@ class IDComponent(SpriteSubComponent, ABC):
     """
     Base class for classes with an id attribute
     """
-    def __init__(self, _id: str, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
+    def __init__(self, _id: str, _sprite: sprite.Sprite | None = None):
+        if _sprite is None:
+            _sprite = build_defaulting.current_sprite()
         self.id = _id
         super().__init__(_sprite)
 
@@ -117,7 +120,9 @@ class NamedIDComponent(IDComponent, ABC):
     """
     Base class for Variables, Lists and Broadcasts (Name + ID + sprite)
     """
-    def __init__(self, _id: str, name: str, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
+    def __init__(self, _id: str, name: str, _sprite: sprite.Sprite | None = None):
+        if _sprite is None:
+            _sprite = build_defaulting.current_sprite()
         self.name = name
         super().__init__(_id, _sprite)
 
@@ -133,17 +138,19 @@ class BlockSubComponent(JSONSerializable, ABC):
         self.block = _block
 
     @property
-    def sprite(self) -> sprite.Sprite:
+    def sprite(self) -> sprite.Sprite | None:
         """
         Fetch sprite by proxy of the block
         """
+        assert self.block is not None
         return self.block.sprite
 
     @property
-    def project(self) -> project.Project:
+    def project(self) -> project.Project | None:
         """
         Fetch project by proxy of the sprite (by proxy of the block)
         """
+        assert self.sprite is not None
         return self.sprite.project
 
 
@@ -155,22 +162,25 @@ class MutationSubComponent(JSONSerializable, ABC):
         self.mutation = _mutation
 
     @property
-    def block(self) -> block.Block:
+    def block(self) -> block.Block | None:
         """
         Fetch block by proxy of mutation
         """
+        assert self.mutation is not None
         return self.mutation.block
 
     @property
-    def sprite(self) -> sprite.Sprite:
+    def sprite(self) -> sprite.Sprite | None:
         """
         Fetch sprite by proxy of block (by proxy of mutation)
         """
+        assert self.block is not None
         return self.block.sprite
 
     @property
-    def project(self) -> project.Project:
+    def project(self) -> project.Project | None:
         """
         Fetch project by proxy of sprite (by proxy of block (by proxy of mutation))
         """
+        assert self.sprite is not None
         return self.sprite.project

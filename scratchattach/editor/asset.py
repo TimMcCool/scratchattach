@@ -15,8 +15,8 @@ class AssetFile:
     - stores the filename, data, and md5 hash
     """
     filename: str
-    _data: bytes = field(repr=False, default=None)
-    _md5: str = field(repr=False, default=None)
+    _data: bytes | None = field(repr=False, default=None)
+    _md5: str | None = field(repr=False, default=None)
 
     @property
     def data(self):
@@ -48,7 +48,7 @@ class Asset(base.SpriteSubComponent):
     def __init__(self,
                  name: str = "costume1",
                  file_name: str = "b7853f557e4426412e64bb3da6531a99.svg",
-                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
+                 _sprite: sprite.Sprite | None = field(default_factory=build_defaulting.current_sprite)):
         """
         Represents a generic asset. Can be a sound or an image.
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Assets
@@ -120,6 +120,7 @@ class Asset(base.SpriteSubComponent):
 
         # No pre-existing asset file object; create one and add it to the project
         asset_file = AssetFile(self.file_name)
+        assert self.project is not None
         self.project.asset_data.append(asset_file)
         return asset_file
 
@@ -135,6 +136,9 @@ class Asset(base.SpriteSubComponent):
                 _id = data["assetId"]
                 _data_format = data["dataFormat"]
                 _file_name = f"{_id}.{_data_format}"
+
+        assert isinstance(_name, str)
+        assert isinstance(_file_name, str)
 
         return Asset(_name, _file_name)
 
