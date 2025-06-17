@@ -25,7 +25,6 @@ setup(
         "lark": ["lark"]
     },
     keywords=['scratch api', 'scratchattach', 'scratch api python', 'scratch python', 'scratch for python', 'scratch', 'scratch cloud', 'scratch cloud variables', 'scratch bot'],
-    url='https://scratchattach.tim1de.net',
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -33,5 +32,9 @@ setup(
         "Operating System :: Unix",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
-    ]
+    ],
+    project_urls={
+        "Source": "https://github.com/timmccool/scratchattach",
+        "Homepage": 'https://scratchattach.tim1de.net'
+    }
 )
