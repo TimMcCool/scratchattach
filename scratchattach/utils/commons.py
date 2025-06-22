@@ -4,6 +4,7 @@ from __future__ import annotations
 import string
 
 from typing import Optional, Final, Any, TypeVar, Callable, TYPE_CHECKING, Union
+from threading import Event as ManualResetEvent
 from threading import Lock
 
 from . import exceptions
@@ -185,42 +186,42 @@ class LockEvent:
     """
     Can be waited on and triggered. Not to be confused with threading.Event, which has to be reset.
     """
-    locks: list[Lock]
-    use_locks: Lock
+    _event: ManualResetEvent
+    _locks: list[Lock]
+    _access_locks: Lock
     def __init__(self):
-        self.locks = []
-        self.use_locks = Lock()
+        self._event = ManualResetEvent()
+        self._locks = []
+        self._access_locks = Lock()
 
     def wait(self, blocking: bool = True, timeout: Optional[Union[int, float]] = None) -> bool:
         """
         Wait for the event.
         """
-        timeout = -1 if timeout is None else timeout
-        if not blocking:
-            timeout = 0
-        lock = self.on()
-        return lock.acquire(timeout=timeout)
+        return self._event.wait(timeout if blocking else 0)
 
     def trigger(self):
         """
         Trigger all threads waiting on this event to continue.
         """
-        with self.use_locks:
-            for lock in self.locks:
+        with self._access_locks:
+            for lock in self._locks:
                 try:
-                    lock.release() # Unlock the lock once to trigger the event.
+                    lock.release()
                 except RuntimeError:
                     pass
-            self.locks.clear()
+            self._locks.clear()
+            self._event.set()
+            self._event = ManualResetEvent()
 
     def on(self) -> Lock:
         """
         Return a lock that will unlock once the event takes place. Return value has to be waited on to wait for the event.
         """
         lock = Lock()
-        with self.use_locks:
-            self.locks.append(lock)
-            lock.acquire(timeout=0)
+        with self._access_locks:
+            self._locks.append(lock)
+        lock.acquire(timeout=0)
         return lock
 
 def get_class_sort_mode(mode: str) -> tuple[str, str]:
