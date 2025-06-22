@@ -186,6 +186,7 @@ class LockEvent:
     Can be waited on and triggered. Not to be confused with threading.Event, which has to be reset.
     """
     locks: list[Lock]
+    use_locks: Lock
     def __init__(self):
         self.locks = []
         self.use_locks = Lock()
@@ -197,7 +198,8 @@ class LockEvent:
         timeout = -1 if timeout is None else timeout
         if not blocking:
             timeout = 0
-        return self.on().acquire(timeout=timeout)
+        lock = self.on()
+        return lock.acquire(timeout=timeout)
 
     def trigger(self):
         """
@@ -208,22 +210,17 @@ class LockEvent:
                 try:
                     lock.release() # Unlock the lock once to trigger the event.
                 except RuntimeError:
-                    lock.acquire(timeout=0) # Lock the lock again.
-            for lock in self.locks.copy():
-                try:
-                    lock.release() # Unlock the lock once more to make sure it was waited on.
-                    self.locks.remove(lock)
-                except RuntimeError:
-                    lock.acquire(timeout=0) # Lock the lock again.
+                    pass
+            self.locks.clear()
 
     def on(self) -> Lock:
         """
-        Return a lock that will unlock once the event takes place.
+        Return a lock that will unlock once the event takes place. Return value has to be waited on to wait for the event.
         """
         lock = Lock()
         with self.use_locks:
             self.locks.append(lock)
-        lock.acquire(timeout=0)
+            lock.acquire(timeout=0)
         return lock
 
 def get_class_sort_mode(mode: str) -> tuple[str, str]:
