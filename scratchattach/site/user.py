@@ -24,8 +24,6 @@ from . import comment
 from . import activity
 from . import classroom
 
-from enum import Enum
-
 class Verificator:
 
     def __init__(self, user: User, project_id: int):
@@ -875,15 +873,25 @@ class User(BaseSiteComponent):
         v = Verificator(self, verification_project_id)
         return v
 
-    def rank(self, Enum):
-        new_scratcher = 0
-        scratcher = 1
-        scratch_team = 2
-        try:
-            ns = self.is_new_scratcher()
-            
-            
+    def rank(self):
+        """
+        Finds the rank of the user.
+        May replace user.scratchteam and user.is_mew_scratcher in the future.
+        """
         
+        ns = self.is_new_scratcher()
+        if ns == True:
+            return 0
+            #is new scratcher#
+        elif ns == False:
+            ns = self.scratchteam
+            if ns == False:
+                return 1
+                #is scratcher#
+            else:
+                return 2
+                #is scratch team member#
+
 
 # ------ #
 
