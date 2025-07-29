@@ -24,7 +24,7 @@ from . import comment
 from . import activity
 from . import classroom
 
-from Enum import enum
+from enum import Enum
 
 class Verificator:
 
@@ -875,12 +875,12 @@ class User(BaseSiteComponent):
         v = Verificator(self, verification_project_id)
         return v
 
-    def rank(self, enum):
+    def rank(self, Enum):
         new_scratcher = 0
         scratcher = 1
         scratch_team = 2
         try:
-            ns = is_new_scratcher(self)
+            ns = self.is_new_scratcher()
             
             
         
