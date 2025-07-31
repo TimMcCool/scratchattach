@@ -193,6 +193,7 @@ class User(BaseSiteComponent):
         Returns:
             boolean : True if the user has the New Scratcher status, else False
         """
+        print("Warning: this function is partially deprecated. Use user.rank() instead.")
         try:
             res = requests.get(f"https://scratch.mit.edu/users/{self.username}/").text
             group=res[res.rindex('<span class="group">'):][:70]
