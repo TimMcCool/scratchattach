@@ -885,7 +885,7 @@ class User(BaseSiteComponent):
         v = Verificator(self, verification_project_id)
         return v
 
-    def rank(self):
+    def rank(self) -> Rank:
         """
         Finds the rank of the user.
         Returns a member of the Rank enum: either Rank.NEW_SCRATCHER, Rank.SCRATCHER, or Rank.SCRATCH_TEAM.
