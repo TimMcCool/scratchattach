@@ -189,7 +189,8 @@ class User(BaseSiteComponent):
         elif status_code == 404:
             return False
 
-    @deprecated("This function is partially deprecated. Use user.rank() instead.")
+    # Will maybe be deprecated later, but for now still has its own purpose.
+    #@deprecated("This function is partially deprecated. Use user.rank() instead.")
     def is_new_scratcher(self):
         """
         Returns:
