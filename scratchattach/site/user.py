@@ -884,7 +884,7 @@ class User(BaseSiteComponent):
         v = Verificator(self, verification_project_id)
         return v
 
-   def rank(self):
+    def rank(self):
         """
         Finds the rank of the user.
         May replace user.scratchteam and user.is_new_scratcher in the future.
