@@ -6,6 +6,7 @@ import random
 import re
 import string
 from datetime import datetime, timezone
+from enum import Enum
 
 from typing_extensions import deprecated
 from bs4 import BeautifulSoup, Tag
@@ -24,8 +25,6 @@ from . import forum
 from . import comment
 from . import activity
 from . import classroom
-
-from enum import Enum
 
 class Rank(Enum):
     """
