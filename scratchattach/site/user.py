@@ -888,19 +888,17 @@ class User(BaseSiteComponent):
     def rank(self):
         """
         Finds the rank of the user.
+        Returns a member of the Rank enum: either Rank.NEW_SCRATCHER, Rank.SCRATCHER, or Rank.SCRATCH_TEAM.
         May replace user.scratchteam and user.is_new_scratcher in the future.
         """
 
         if self.is_new_scratcher():
             return Rank.NEW_SCRATCHER
-            # Is New Scratcher
         
         if not self.scratchteam:
             return Rank.SCRATCHER
-            # Is Scratcher
 
         return Rank.SCRATCH_TEAM
-        # Is Scratch Team member
 
 
 # ------ #
