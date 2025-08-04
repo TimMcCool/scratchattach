@@ -103,24 +103,26 @@ class CloudRequests(CloudEvents):
         """
         Decorator function. Adds a request to the request handler.
         """
-        def inner(function):
+        def inner(_function):
+            _name = _function.__name__ if name is None else name
             # called if the decorator provides arguments
-            self._requests[function.__name__ if name is None else name] = Request(
-                function.__name__ if name is None else name,
-                enabled = enabled,
+            self._requests[_name] = Request(
+                _name,
+                enabled=enabled,
                 thread=thread,
                 response_priority=response_priority,
-                on_call=function,
+                on_call=_function,
                 cloud_requests=self,
                 debug=debug
             )
+            return _function
 
         if function is None:
             # => the decorator provides arguments
             return inner
         else:
             # => the decorator doesn't provide arguments
-            inner(function)
+            return inner(function)
 
     def add_request(self, function, *, enabled=True, name=None):
         self.request(enabled=enabled, name=name)(function)
