@@ -122,7 +122,7 @@ class Encoding:
         try:
             inp = str(inp)
         except Exception:
-            raise(exceptions.InvalidDecodeInput)
+            raise exceptions.InvalidDecodeInput
         outp = ""
         for i in range(0, math.floor(len(inp) / 2)):
             letter = letters[int(f"{inp[i*2]}{inp[(i*2)+1]}")]

@@ -30,6 +30,7 @@ from bs4 import BeautifulSoup, Tag
 from typing_extensions import deprecated
 
 from . import activity, classroom, forum, studio, user, project, backpack_asset, alert
+from . import typed_dicts
 # noinspection PyProtectedMember
 from ._base import BaseSiteComponent
 from scratchattach.cloud import cloud, _base
@@ -57,11 +58,11 @@ def enforce_ratelimit(__type: str, name: str, amount: int = 5, duration: int = 6
         "For security reasons, it cannot be turned off.\n\n"
         "Don't spam-create studios or similar, it WILL get you banned."
     )
-   
+
 C = TypeVar("C", bound=BaseSiteComponent) 
 
 @dataclass
-class Session(BaseSiteComponent):
+class Session(BaseSiteComponent[typed_dicts.SessionDict]):
     """
     Represents a Scratch log in / session. Stores authentication data (session id and xtoken).
 
@@ -74,31 +75,35 @@ class Session(BaseSiteComponent):
         mute_status: Information about commenting restrictions of the associated account
         banned: Returns True if the associated account is banned
     """
-    username: str = None
-    _user: user.User = field(repr=False, default=None)
+    username: str = field(repr=False, default="")
+    _user: Optional[user.User] = field(repr=False, default=None)
 
-    id: str = None
-    session_string: str | None = field(repr=False, default=None)
-    xtoken: str = field(repr=False, default=None)
-    email: str = field(repr=False, default=None)
+    id: str = field(repr=False, default="")
+    session_string: Optional[str] = field(repr=False, default=None)
+    xtoken: Optional[str] = field(repr=False, default=None)
+    email: Optional[str] = field(repr=False, default=None)
 
-    new_scratcher: bool = field(repr=False, default=None)
+    new_scratcher: bool = field(repr=False, default=False)
     mute_status: Any = field(repr=False, default=None)
-    banned: bool = field(repr=False, default=None)
+    banned: bool = field(repr=False, default=False)
 
-    time_created: datetime.datetime = None
+    time_created: datetime.datetime = field(repr=False, default=datetime.datetime.fromtimestamp(0.0))
     language: str = field(repr=False, default="en")
+    
+    has_outstanding_email_confirmation: bool = field(repr=False, default=False)
+    is_teacher: bool = field(repr=False, default=False)
 
     def __str__(self) -> str:
         return f"<Login for {self.username!r}>"
+
+    @property
+    def _username(self) -> str:
+        return self.username
 
     def __post_init__(self):
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.post
         self.update_api = "https://scratch.mit.edu/session"
-
-        # Set alternative attributes:
-        self._username = self.username  # backwards compatibility with v1
 
         # Base headers and cookies of every session:
         self._headers = dict(headers)
@@ -131,7 +136,6 @@ class Session(BaseSiteComponent):
         self.mute_status = data["permissions"]["mute_status"]
 
         self.username = data["user"]["username"]
-        self._username = data["user"]["username"]
         self.banned = data["user"]["banned"]
 
         if self.banned:
@@ -148,13 +152,12 @@ class Session(BaseSiteComponent):
         data, self.time_created = decode_session_id(self.id)
 
         self.username = data["username"]
-        self._username = self.username
-        if self._user:
-            self._user.username = self.username
-        else:
-            self._user = user.User(_session=self, username=self.username)
+        # if self._user:
+        #     self._user.username = self.username
+        # else:
+        #     self._user = user.User(_session=self, username=self.username)
 
-        self._user.id = data["_auth_user_id"]
+        # self._user.id = data["_auth_user_id"]
         self.xtoken = data["token"]
         self._headers["X-Token"] = self.xtoken
 
@@ -179,6 +182,7 @@ class Session(BaseSiteComponent):
 
         if not cached:
             self._user = self.connect_user(self._username)
+        assert self._user is not None
         return self._user
 
     def get_linked_user(self) -> user.User:
@@ -1130,7 +1134,7 @@ def login_by_id(session_id: str, *, username: Optional[str] = None, password: Op
     else:
         session_string = None
 
-    _session = Session(id=session_id, username=username, session_string=session_string)
+    _session = Session(id=session_id, username=username or "", session_string=session_string)
     if xtoken is not None:
         # xtoken is retrievable from session id, so the most we can do is assert equality
         assert xtoken == _session.xtoken

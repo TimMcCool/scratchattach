@@ -102,7 +102,7 @@ class OAHTTPSession(ABC):
             raise exceptions.BadRequest("Make sure all provided arguments are valid")
     
     
-    def _make_request(
+    def request(
         self,
         method: Union[HTTPMethod, str],
         url: str,
