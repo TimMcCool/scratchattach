@@ -275,7 +275,7 @@ class CloudRequests(CloudEvents):
             # Decode request and parse arguemtns:
             request = Encoding.decode(raw_request)
             arguments = request.split("&")
-            request_name = arguments.pop(0)#
+            request_name = arguments.pop(0)
             
             # Check if the request is unknown:
             if request_name not in self._requests:
@@ -284,17 +284,17 @@ class CloudRequests(CloudEvents):
                 )
                 self.call_event("on_unknown_request", [
                     ReceivedRequest(request_name=request,
-                        requester=activity.user,
-                        timestamp=activity.timestamp,
-                        arguments=arguments,
-                        request_id=request_id,
-                        activity=activity
-                    )
+                                    requester=activity.user,
+                                    timestamp=activity.timestamp,
+                                    arguments=arguments,
+                                    request_id=request_id,
+                                    activity=activity
+                                    )
                 ])
                 return
             
             received_request = ReceivedRequest(
-                request = self._requests[request_name],
+                request=self._requests[request_name],
                 requester=activity.user,
                 timestamp=activity.timestamp,
                 arguments=arguments,
