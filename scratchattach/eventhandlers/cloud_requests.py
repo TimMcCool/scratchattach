@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .cloud_events import CloudEvents
-from scratchattach.site import project
+from scratchattach.site import project, cloud_activity
 from threading import Thread, Event, current_thread
 import time
 import random
@@ -55,6 +55,13 @@ class Request:
         self.cloud_requests.responder_event.set() # Activate the .cloud_requests._responder process so it sends back the data to Scratch
 
 class ReceivedRequest:
+    request: Request
+    request_name: str
+    requester: str
+    timestamp: float
+    arguments: list[str]
+    request_id: int
+    activity: cloud_activity.CloudActivity
 
     def __init__(self, **entries):
         self.__dict__.update(entries)
@@ -293,6 +300,7 @@ class CloudRequests(CloudEvents):
             
             received_request = ReceivedRequest(
                 request = self._requests[request_name],
+                request_name=request_name,
                 requester=activity.user,
                 timestamp=activity.timestamp,
                 arguments=arguments,
