@@ -13,7 +13,7 @@ import warnings
 import zlib
 
 from dataclasses import dataclass, field
-from typing import Optional, TypeVar, TYPE_CHECKING, overload, Any, Union
+from typing import Optional, TypeVar, TYPE_CHECKING, overload, Any, Union, cast
 from contextlib import contextmanager
 from threading import local
 
@@ -62,7 +62,7 @@ def enforce_ratelimit(__type: str, name: str, amount: int = 5, duration: int = 6
 C = TypeVar("C", bound=BaseSiteComponent) 
 
 @dataclass
-class Session(BaseSiteComponent[typed_dicts.SessionDict]):
+class Session(BaseSiteComponent):
     """
     Represents a Scratch log in / session. Stores authentication data (session id and xtoken).
 
@@ -118,10 +118,12 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         if self.id:
             self._process_session_id()
 
-    def _update_from_dict(self, data: dict):
+    def _update_from_dict(self, data: Union[dict, typed_dicts.SessionDict]):
         # Note: there are a lot more things you can get from this data dict.
         # Maybe it would be a good idea to also store the dict itself?
         # self.data = data
+        
+        data = cast(typed_dicts.SessionDict, data)
 
         self.xtoken = data['user']['token']
         self._headers["X-Token"] = self.xtoken

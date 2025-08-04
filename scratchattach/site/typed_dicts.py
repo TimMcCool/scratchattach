@@ -38,7 +38,17 @@ class SessionPermissionsDict(TypedDict):
     mute_status: Union[dict, SessionOffensesDict]
 
 class SessionFlagsDict(TypedDict):
-    pass
+    must_reset_password: bool
+    must_complete_registration: bool
+    has_outstanding_email_confirmation: bool
+    show_welcome: bool
+    confirm_email_banner: bool
+    unsupported_browser_banner: bool
+    with_parent_email: bool
+    project_comments_enabled: bool
+    gallery_comments_enabled: bool
+    userprofile_comments_enabled: bool
+    everything_is_totally_normal: bool
 
 class SessionDict(TypedDict):
     user: SessionUserDict

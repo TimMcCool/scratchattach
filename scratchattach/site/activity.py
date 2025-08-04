@@ -1,7 +1,7 @@
 """Activity and CloudActivity class"""
 from __future__ import annotations
 
-from bs4 import PageElement
+from bs4 import Tag
 
 from . import user, project, studio
 from ._base import BaseSiteComponent
@@ -295,7 +295,7 @@ class Activity(BaseSiteComponent):
 
             self.username = username
 
-    def _update_from_html(self, data: PageElement):
+    def _update_from_html(self, data: Tag):
 
         self.raw = data
 

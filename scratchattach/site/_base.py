@@ -8,8 +8,7 @@ from scratchattach.utils import exceptions, commons
 from . import session
 
 C = TypeVar("C", bound="BaseSiteComponent")
-D = TypeVar("D", bound=dict)
-class BaseSiteComponent(Generic[D], ABC):
+class BaseSiteComponent(ABC):
     _session: Optional[session.Session]
     update_api: str
     _headers: dict[str, str]
@@ -44,7 +43,7 @@ class BaseSiteComponent(Generic[D], ABC):
         return self._update_from_dict(response)
 
     @abstractmethod
-    def _update_from_dict(self, data: D) -> bool:
+    def _update_from_dict(self, data) -> bool:
         """
         Parses the API response that is fetched in the update-method. Class specific, must be overridden in classes inheriting from this one.
         """
