@@ -283,13 +283,14 @@ class CloudRequests(CloudEvents):
                     f"Warning: Client received an unknown request called {request_name!r}"
                 )
                 self.call_event("on_unknown_request", [
-                    ReceivedRequest(request_name=request,
-                                    requester=activity.user,
-                                    timestamp=activity.timestamp,
-                                    arguments=arguments,
-                                    request_id=request_id,
-                                    activity=activity
-                                    )
+                    ReceivedRequest(
+                        request_name=request,
+                        requester=activity.user,
+                        timestamp=activity.timestamp,
+                        arguments=arguments,
+                        request_id=request_id,
+                        activity=activity
+                    )
                 ])
                 return
             
