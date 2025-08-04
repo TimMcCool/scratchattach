@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import TypeVar, Optional, Self, Union, Any
+import json
 
 import requests
+
 from scratchattach.utils import exceptions, commons, optional_async
 from scratchattach.utils import requests as m_requests
 from . import session
@@ -34,7 +36,7 @@ class BaseSiteComponent(ABC):
         if "429" in str(response):
             return "429"
 
-        if response.text == '{\n  "response": "Too many requests"\n}':
+        if json.loads(response.text) == {"response": "Too many requests"}:
             return "429"
 
         # If no error: Parse JSON:
