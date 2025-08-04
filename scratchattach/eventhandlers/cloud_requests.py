@@ -280,7 +280,7 @@ class CloudRequests(CloudEvents):
             # Check if the request is unknown:
             if request_name not in self._requests:
                 print(
-                    f"Warning: Client received an unknown request called '{request_name}'"
+                    f"Warning: Client received an unknown request called {request_name!r}"
                 )
                 self.call_event("on_unknown_request", [
                     ReceivedRequest(request_name=request,
