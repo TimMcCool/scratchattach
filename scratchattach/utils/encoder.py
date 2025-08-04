@@ -123,10 +123,13 @@ class Encoding:
             inp = str(inp)
         except Exception:
             raise exceptions.InvalidDecodeInput
+
         outp = ""
-        for i in range(len(inp) // 2):
-            letter = letters[int(f"{inp[i*2]}{inp[(i*2)+1]}")]
-            outp = f"{outp}{letter}"
+        # print(f"Encoding.decode({inp=})")
+        # This loops through a string like 'abCDefGHijKLmnOP' like so: l1+l2=ab, CD, ef, GH, etc.
+        for l1, l2 in zip(inp[::2], inp[1::2]):
+            outp += letters[int(l1 + l2)]
+
         return outp
 
     @staticmethod
