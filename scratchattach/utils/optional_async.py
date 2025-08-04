@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Generator, Callable
-from typing import Generic, TypeVar, ParamSpec, Optional, Union
+from typing import Generic, TypeVar, ParamSpec, Optional, Union, Any
 from functools import wraps
 import asyncio
 import time
@@ -120,7 +120,7 @@ class CARequest(CallableAwaitable[requests.AnyHTTPResponse]):
         headers: Optional[dict[str, str]] = None,
         params: Optional[dict[str, str]] = None,
         data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[dict[str, str]] = None
+        json: Optional[Any] = None
     ) -> None:
         self.requests_session = requests_session
         self.method = method

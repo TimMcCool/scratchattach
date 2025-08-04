@@ -73,7 +73,7 @@ class OAHTTPSession(ABC):
         headers: Optional[dict[str, str]] = None,
         params: Optional[dict[str, str]] = None,
         data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[dict[str, str]] = None
+        json: Optional[Any] = None
     ) -> AnyHTTPResponse:
         pass
     
@@ -87,7 +87,7 @@ class OAHTTPSession(ABC):
         headers: Optional[dict[str, str]] = None,
         params: Optional[dict[str, str]] = None,
         data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[dict[str, str]] = None
+        json: Optional[Any] = None
     ) -> AnyHTTPResponse:
         pass
 
@@ -111,12 +111,10 @@ class OAHTTPSession(ABC):
         headers: Optional[dict[str, str]] = None,
         params: Optional[dict[str, str]] = None,
         data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[dict[str, str]] = None
-    ):
+        json: Optional[Any] = None
+    ) -> optional_async.CARequest:
         if isinstance(method, str):
-            _method = HTTPMethod.of(method.upper())
-            assert isinstance(_method, HTTPMethod)
-            method = _method
+            method = HTTPMethod.of(method.upper())
         return optional_async.CARequest(
             self,
             method,
@@ -127,6 +125,24 @@ class OAHTTPSession(ABC):
             data = data,
             json = json
         )
+    
+    @contextmanager
+    def no_error_handling(self) -> Iterator[None]:
+        val_before = self.error_handling
+        self.error_handling = False
+        try:
+            yield
+        finally:
+            self.error_handling = val_before
+    
+    @contextmanager
+    def yes_error_handling(self) -> Iterator[None]:
+        val_before = self.error_handling
+        self.error_handling = True
+        try:
+            yield
+        finally:
+            self.error_handling = val_before
 
 class SyncRequests(OAHTTPSession):
     @override
@@ -144,15 +160,16 @@ class SyncRequests(OAHTTPSession):
             )
         except Exception as e:
             raise exceptions.FetchError(e)
-        if self.error_handling:
-            self.check_response(r)
-        return HTTPResponse(
+        response = HTTPResponse(
             request_method=method,
             status_code=r.status_code,
             content=r.content,
             text=r.text,
             headers=r.headers
         )
+        if self.error_handling:
+            self.check_response(response)
+        return response
     
     async def async_request(self, method, url, *, cookies = None, headers = None, params = None, data = None, json = None):
         raise NotImplementedError()
@@ -197,13 +214,16 @@ class AsyncRequests(OAHTTPSession):
                 text = content.decode(resp.get_encoding())
             except Exception:
                 text = ""
-            return HTTPResponse(
+            response = HTTPResponse(
                 request_method=method,
                 status_code=resp.status,
                 content=content,
                 text=text,
                 headers=resp.headers
             )
+            if self.error_handling:
+                self.check_response(response)
+            return response
 
 class Requests(HTTPSession):
     """
