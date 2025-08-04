@@ -6,7 +6,9 @@ import random
 import re
 import string
 from datetime import datetime, timezone
+from enum import Enum
 
+from typing_extensions import deprecated
 from bs4 import BeautifulSoup, Tag
 
 from ._base import BaseSiteComponent
@@ -23,6 +25,14 @@ from . import forum
 from . import comment
 from . import activity
 from . import classroom
+
+class Rank(Enum):
+    """
+    Possible ranks in scratch
+    """
+    NEW_SCRATCHER = 0
+    SCRATCHER = 1
+    SCRATCH_TEAM = 2
 
 class Verificator:
 
@@ -178,6 +188,8 @@ class User(BaseSiteComponent):
         elif status_code == 404:
             return False
 
+    # Will maybe be deprecated later, but for now still has its own purpose.
+    #@deprecated("This function is partially deprecated. Use user.rank() instead.")
     def is_new_scratcher(self):
         """
         Returns:
@@ -872,6 +884,22 @@ class User(BaseSiteComponent):
 
         v = Verificator(self, verification_project_id)
         return v
+
+    def rank(self) -> Rank:
+        """
+        Finds the rank of the user.
+        Returns a member of the Rank enum: either Rank.NEW_SCRATCHER, Rank.SCRATCHER, or Rank.SCRATCH_TEAM.
+        May replace user.scratchteam and user.is_new_scratcher in the future.
+        """
+
+        if self.is_new_scratcher():
+            return Rank.NEW_SCRATCHER
+        
+        if not self.scratchteam:
+            return Rank.SCRATCHER
+
+        return Rank.SCRATCH_TEAM
+
 
 # ------ #
 

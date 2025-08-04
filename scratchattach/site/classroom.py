@@ -16,20 +16,21 @@ from scratchattach.utils.commons import requests
 from . import user, activity
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions, commons
+from scratchattach.utils.commons import headers
 
 
 @dataclass
 class Classroom(BaseSiteComponent):
-    title: str = None
-    id: int = None
-    classtoken: str = None
+    title: str = ""
+    id: int = 0
+    classtoken: str = ""
 
-    author: user.User = None
-    about_class: str = None
-    working_on: str = None
+    author: Optional[user.User] = None
+    about_class: str = ""
+    working_on: str = ""
 
     is_closed: bool = False
-    datetime: datetime = None
+    datetime: datetime = datetime.fromtimestamp(0.0)
 
 
     update_function: Callable = field(repr=False, default=requests.get)

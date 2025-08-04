@@ -6,11 +6,19 @@ from __future__ import annotations
 import json
 import random
 import string
-from typing import Optional, Final, Any
+from typing import Optional, Final, Any, TYPE_CHECKING, Union
+from enum import Enum
+
+if TYPE_CHECKING:
+    from . import sprite, build_defaulting
+
+    SpriteInput = Union[sprite.Sprite, build_defaulting._SetSprite]
+else:
+    SpriteInput = Any
 
 from scratchattach.utils import exceptions
 
-DIGITS: Final[tuple[str]] = tuple("0123456789")
+DIGITS: Final[tuple[str, ...]] = tuple("0123456789")
 
 ID_CHARS: Final[str] = string.ascii_letters + string.digits  # + string.punctuation
 
@@ -190,7 +198,7 @@ def trim_final_nones(lst: list) -> list:
     return lst[:i]
 
 
-def dumps_ifnn(obj: Any) -> str:
+def dumps_ifnn(obj: Any) -> Optional[str]:
     """
     Return json.dumps(obj) if the object is not None
     """
@@ -249,16 +257,8 @@ def get_name_nofldr(name: str) -> str:
     else:
         return name[len(fldr) + 2:]
 
-
-class Singleton(object):
-    """
-    Singleton base class
-    """
-    _instance: Singleton
+# Parent enum class
+class Singleton(Enum):
 
     def __new__(cls, *args, **kwargs):
-        if hasattr(cls, "_instance"):
-            return cls._instance
-        else:
-            cls._instance = super(Singleton, cls).__new__(cls)
-            return cls._instance
+        return super().__new__(cls, 0)
