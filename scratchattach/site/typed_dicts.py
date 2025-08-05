@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from scratchattach.cloud import _base
 from typing import TypedDict, Union
 
 class SessionUserDict(TypedDict):
@@ -71,3 +72,18 @@ class UserDict(TypedDict):
     scratchteam: bool
     history: UserHistoryDict
     profile: UserProfileDict
+
+class CloudLogActivityDict(TypedDict):
+    user: str
+    verb: str
+    name: str
+    value: Union[str, float, int]
+    timestamp: int
+    cloud: _base.AnyCloud
+
+class CloudActivityDict(TypedDict):
+    method: str
+    name: str
+    value: Union[str, float, int]
+    project_id: int
+    cloud: _base.AnyCloud

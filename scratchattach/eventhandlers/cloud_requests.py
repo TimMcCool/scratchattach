@@ -1,14 +1,31 @@
 """CloudRequests class (threading.Event version)"""
 from __future__ import annotations
 
-from .cloud_events import CloudEvents
-from scratchattach.site import project, cloud_activity
 from threading import Thread, Event, current_thread
 import time
 import random
 import traceback
+import warnings
+from dataclasses import dataclass, field
+from typing import Protocol, Any, runtime_checkable, TypedDict, Union, Optional
+from enum import Enum, auto
+
 from scratchattach.utils.encoder import Encoding
 from scratchattach.utils import exceptions
+from scratchattach.site import project, cloud_activity
+from scratchattach.cloud import _base
+from .cloud_events import CloudEvents
+
+class ErrorInRequest(RuntimeWarning):
+    pass
+
+class ErrorWithMessage(Exception):
+    pass
+
+@runtime_checkable
+class RequestHandler(Protocol):
+    def __call__(self, *args: str) -> Any:
+        pass
 
 class Request:
 
@@ -16,7 +33,17 @@ class Request:
     Saves a request added to the request handler
     """
 
-    def __init__(self, request_name, *, on_call, cloud_requests, thread=True, enabled=True, response_priority=0, debug=False):
+    def __init__(
+        self,
+        request_name: str,
+        *,
+        on_call: RequestHandler,
+        cloud_requests: CloudRequests,
+        thread: bool = True,
+        enabled: bool = True,
+        response_priority: int = 0,
+        debug: bool = False
+    ):
         self.name = request_name
         self.on_call = on_call
         self.thread = thread
@@ -25,52 +52,92 @@ class Request:
         self.cloud_requests = cloud_requests # the corresponding CloudRequests object
         self.debug = debug or self.cloud_requests.debug
         
-    def __call__(self, received_request):
+    def __call__(self, received_request: ReceivedRequest):
         if not self.enabled:
             self.cloud_requests.call_event("on_disabled_request", [received_request])
         try:
-            current_thread().setName(received_request.request_id)
+            current_thread().name = repr(received_request.request_id)
             output = self.on_call(*received_request.arguments)
-            self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":output, "priority":self.response_priority})
+            self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id": received_request.request_id, "output":output, "priority":self.response_priority})
+        except ErrorWithMessage as e:
+            self.cloud_requests.call_event("on_error", [received_request, e])
+            output = [i for arg in e.args for i in str(arg).splitlines()]
+            self.cloud_requests.request_outputs.append({"receive": received_request.timestamp, "request_id": received_request.request_id, "output": output, "priority": self.response_priority})
         except Exception as e:
             self.cloud_requests.call_event("on_error", [received_request, e])
             if self.cloud_requests.ignore_exceptions:
-                print(
-                    f"Warning: Caught error in request '{self.name}' - Full error below"
+                warnings.warn(
+                    f"Warning: Caught error in request {self.name!r} - Full error below\n{traceback.format_exc()}",
+                    ErrorInRequest
                 )
-                try:
-                    traceback.print_exc()
-                except Exception:
-                    print(e)
             else:
-                print(f"Exception in request '{self.name}':")
+                print(f"Exception in request {self.name!r}:")
                 raise(e)
             if self.debug:
                 traceback_full = traceback.format_exc().splitlines()
                 output = [f"Error in request {self.name}", "Traceback: "]
                 output.extend(traceback_full)
-                self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":output, "priority":self.response_priority})
+                self.cloud_requests.request_outputs.append({"receive": received_request.timestamp, "request_id": received_request.request_id, "output": output, "priority": self.response_priority})
             else:
-                self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id":received_request.request_id, "output":[f"Error in request {self.name}","Check the Python console"], "priority":self.response_priority})
+                self.cloud_requests.request_outputs.append({"receive": received_request.timestamp, "request_id": received_request.request_id, "output": [f"Error in request {self.name}", "Check the Python console"], "priority": self.response_priority})
         self.cloud_requests.responder_event.set() # Activate the .cloud_requests._responder process so it sends back the data to Scratch
 
-class ReceivedRequest:
-    request: Request
-    request_name: str
-    requester: str
-    timestamp: float
-    arguments: list[str]
-    request_id: int
-    activity: cloud_activity.CloudActivity
+class EmptyRequest(Request):
+    def __init__(self):
+        pass
+    
+    def __call__(self, received_request):
+        raise TypeError("Empty request can not be called.")
 
-    def __init__(self, **entries):
-        self.__dict__.update(entries)
+@dataclass
+class ReceivedRequest:
+    request: Request = field(kw_only=True, default_factory=EmptyRequest)
+    request_name: str = field(kw_only=True, default="")
+    requester: str = field(kw_only=True, default="")
+    timestamp: float = field(kw_only=True, default=0.0)
+    arguments: list[str] = field(kw_only=True, default_factory=list)
+    request_id: str = field(kw_only=True, default="0")
+    activity: cloud_activity.CloudActivity = field(kw_only=True)
+
+class RespondOrder(Enum):
+    FINISH = auto() # {"receive":time.time()*1000, "request_id":"100000000"+str(random.randint(1000, 9999)), "output":data, "priority":priority}
+    RECEIVE = auto()
+    REQUEST_ID = auto()
+    OUTPUT = auto()
+    PRIORITY = auto()
+
+class RequestOutput(TypedDict):
+    receive: float
+    request_id: str
+    output: Union[str, list[str]]
+    priority: int
+
+class ResponseMemory(TypedDict):
+    rid: str
+    packets: dict[int, str]
 
 class CloudRequests(CloudEvents):
 
     # The CloudRequests class is built upon CloudEvents, similar to how Filterbot is built upon MessageEvents
 
-    def __init__(self, cloud, used_cloud_vars=["1", "2", "3", "4", "5", "6", "7", "8", "9"], no_packet_loss=False, respond_order="receive", debug=False):
+    _requests: dict[str, Request]
+    request_parts: dict[str, list[str]]
+    received_requests: list[ReceivedRequest]
+    executed_requests: dict[str, ReceivedRequest]
+    request_outputs: list[RequestOutput]
+    responded_request_ids: list[str]
+    packet_memory: list[ResponseMemory]
+    _packets_to_resend: list[str]
+
+    def __init__(
+        self,
+        cloud: _base.AnyCloud,
+        used_cloud_vars: Optional[list[str]] = None,
+        no_packet_loss: bool = False,
+        respond_order: RespondOrder = RespondOrder.RECEIVE,
+        debug = False
+    ):
+        used_cloud_vars = used_cloud_vars or ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         super().__init__(cloud)
         # Setup
         self._requests = {}
@@ -102,7 +169,7 @@ class CloudRequests(CloudEvents):
 
         self.current_var = 0 # ID of the last set FROM_HOST_ variable (when a response is sent back to Scratch, these are set cyclically)
         self.credit_check()
-        self.hard_stop = False # When set to True, all processes will halt immediately without finishing safely (can result in not fully received / responded requests etc.)
+        self.hard_stopped = False # When set to True, all processes will halt immediately without finishing safely (can result in not fully received / responded requests etc.)
 
     # -- Adding and removing requests --
 
@@ -137,10 +204,10 @@ class CloudRequests(CloudEvents):
     def remove_request(self, name):
         try:
             self._requests.pop(name)
-        except Exception:
-            raise ValueError(
+        except KeyError as e:
+            raise KeyError(
                 f"No request with name {name} found to remove"
-            )
+            ) from e
 
     # -- Parse and send back the request output --
 
@@ -200,7 +267,7 @@ class CloudRequests(CloudEvents):
             ) or self.no_packet_loss:
             self.cloud.reconnect()
 
-        memory = {"rid":request_id}
+        memory = ResponseMemory(rid=request_id, packets={})#{"rid":request_id}
         remaining_response = str(response)
         length_limit = self.cloud.length_limit - (len(str(request_id))+6) # the subtrahend is the worst-case length of the "."+numbers after the "."
         
@@ -219,7 +286,7 @@ class CloudRequests(CloudEvents):
                     iteration_string = "00" + str(i)
 
                 value_to_send = f"{response_part}.{request_id}{iteration_string}1"
-                memory[i] = value_to_send
+                memory["packets"][i] = value_to_send
                 
                 self._set_FROM_HOST_var(value_to_send)
 
@@ -230,26 +297,27 @@ class CloudRequests(CloudEvents):
                     self.packet_memory.pop(0)
                 remaining_response = ""
 
-            if self.hard_stop: # stop immediately without exiting safely
+            if self.hard_stopped: # stop immediately without exiting safely
                 break
 
-    def _request_packet_from_memory(self, request_id, packet_id):
+    def _request_packet_from_memory(self, request_id: str, packet_id: Union[str, int]):
         memory = list(filter(lambda x : x["rid"] == request_id, self.packet_memory))
         if len(memory) > 0:
-            self._packets_to_resend.append(memory[0][int(packet_id)])
+            self._packets_to_resend.append(memory[0]["packets"][int(packet_id)])
             self.responder_event.set() # activate _responder process
 
     # -- Register and handle incoming requests --
 
-    def on_set(self, activity):
+    def on_set(self, activity: cloud_activity.CloudActivity):
         """
         This function is automatically called on cloud activites by the underlying cloud events that this CloudRequests class inherits from
         It registers incoming cloud activity and (if request.thread is True) runs them directly or (else) adds detected request to the .received_requests list
         """
         # Note for contributors: All functions called in this on_set function MUST be executed in threads because this function blocks the cloud events receiver, which is usually not a problem (because of the websocket buffer) but can cause problems in rare cases
-        if activity.var == "TO_HOST" and "." in activity.value:
+        activity_value = str(activity.value)
+        if activity.var == "TO_HOST" and "." in activity_value:
             # Parsing the received request
-            raw_request, request_id = activity.value.split(".")
+            raw_request, request_id = activity_value.split(".")
 
             if len(request_id) == 8 and request_id[-1] == "9":
                 # A lost packet was re-requested
@@ -260,7 +328,7 @@ class CloudRequests(CloudEvents):
                 # => The received request has already been answered, meaning this activity has already been received
                 return
 
-            if activity.value[0] == "-":
+            if activity_value[0] == "-":
                 # => The received request is actually part of a bigger request
                 if not request_id in self.request_parts:
                     self.request_parts[request_id] = []
@@ -339,7 +407,7 @@ class CloudRequests(CloudEvents):
 
                 if use_extra_data:
                     Thread(target=self.on_reconnect).start()
-                if self.hard_stop: # stop immediately without exiting safely
+                if self.hard_stopped: # stop immediately without exiting safely
                     break
 
             self.executer_event.wait(timeout = 2.5 if use_extra_data else None) # Wait for requests to be received
@@ -354,21 +422,21 @@ class CloudRequests(CloudEvents):
             
             while self._packets_to_resend != []:
                 self._set_FROM_HOST_var(self._packets_to_resend.pop(0))
-                if self.hard_stop: # stop immediately without exiting safely
+                if self.hard_stopped: # stop immediately without exiting safely
                     break
 
-            while self.request_outputs != []:
-                if self.respond_order == "finish":
+            while self.request_outputs:
+                if self.respond_order == RespondOrder.FINISH:
                     output_obj = self.request_outputs.pop(0)
                 else:
-                    output_obj = min(self.request_outputs, key=lambda x : x[self.respond_order])
+                    output_obj = min(self.request_outputs, key=lambda x : x[self.respond_order.name.lower()])
                     self.request_outputs.remove(output_obj)
                 if output_obj["request_id"] in self.executed_requests:
                     received_request = self.executed_requests.pop(output_obj["request_id"])
                     self._parse_output(received_request, output_obj["output"], output_obj["request_id"])
                 else:
                     self._parse_output("[sent from backend]", output_obj["output"], output_obj["request_id"])
-                if self.hard_stop: # stop immediately without exiting safely
+                if self.hard_stopped: # stop immediately without exiting safely
                     break
 
     def on_reconnect(self):
@@ -445,10 +513,10 @@ class CloudRequests(CloudEvents):
         """
         Stops the request handler and all associated threads forever. Stops running response sending processes immediately.
         """
-        self.hard_stop = True
+        self.hard_stopped = True
         self.stop()
         time.sleep(0.5)
-        self.hard_stop = False
+        self.hard_stopped = False
 
     def credit_check(self):
         try:

@@ -28,6 +28,7 @@ from . import comment
 from . import activity
 from . import classroom
 from . import typed_dicts
+from . import session
 
 class Rank(Enum):
     """
@@ -81,9 +82,10 @@ class User(BaseSiteComponent):
     id: int = field(kw_only=True, default=0)
     scratchteam: bool = field(kw_only=True, repr=False, default=False)
     _classroom: tuple[bool, Optional[classroom.Classroom]] = field(init=False, default=(False, None))
-    _headers: dict[str, str] = field(init=False, default=headers)
+    _headers: dict[str, str] = field(init=False, default_factory=headers.copy)
     _cookies: dict[str, str] = field(init=False, default_factory=dict)
     _json_headers: dict[str, str] = field(init=False, default_factory=dict)
+    _session: Optional[session.Session] = field(kw_only=True, default=None)
 
     def __str__(self):
         return str(self.username)

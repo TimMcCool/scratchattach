@@ -6,8 +6,8 @@ from __future__ import annotations
 import json
 import random
 import string
-from typing import Optional, Final, Any, TYPE_CHECKING, Union
-from enum import Enum
+from typing import Optional, Final, Any, TYPE_CHECKING, Union, Self
+from enum import EnumType, Enum
 
 if TYPE_CHECKING:
     from . import sprite, build_defaulting
@@ -257,8 +257,47 @@ def get_name_nofldr(name: str) -> str:
     else:
         return name[len(fldr) + 2:]
 
-# Parent enum class
-class Singleton(Enum):
+class SingletonMeta(EnumType):
+    def __call__(self, value=0, *args, **kwds):
+        if value != 0:
+            raise ValueError("Value must be 0.")
+        return super().__call__(value, *args, **kwds)
 
-    def __new__(cls, *args, **kwargs):
-        return super().__new__(cls, 0)
+if TYPE_CHECKING:
+    Singleton = Enum
+else:
+    class Singleton(metaclass=SingletonMeta):
+ 
+        def __new__(cls, val=None):
+            if cls is Singleton:
+                raise TypeError("Singleton cannot be created directly.")
+            if hasattr(cls, "INSTANCE"):
+                return getattr(cls, "INSTANCE")
+            if val == 0:
+                return super().__new__(cls)
+            raise TypeError("Has no instance.")
+ 
+        def __init__(self, *args, **kwds):
+            pass
+ 
+        def __repr__(self):
+            return self.__class__.__name__
+ 
+        def __str__(self):
+            return self.__class__.__name__
+ 
+        def __format__(self, format_spec):
+            return str.__format__(str(self), format_spec)
+ 
+        def __hash__(self):
+            return hash(self.__class__)
+ 
+        def __reduce_ex__(self, proto):
+            return self.__class__, ()
+ 
+        def __deepcopy__(self,memo):
+            return self
+ 
+        def __copy__(self):
+            return self
+

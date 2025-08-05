@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 import time
+from typing import Union, TypeGuard, Optional
+from dataclasses import dataclass, field
+import warnings
+
+from scratchattach.cloud import _base
+from scratchattach.utils import exceptions
+from scratchattach.site import project, user
 from ._base import BaseSiteComponent
+from . import typed_dicts, session
 
-
-
+@dataclass
 class CloudActivity(BaseSiteComponent):
     """
     Represents a cloud activity (a cloud variable set / creation / deletion).
@@ -25,6 +32,14 @@ class CloudActivity(BaseSiteComponent):
     
     :.cloud: The cloud (as object inheriting from scratchattach.Cloud.BaseCloud) that the cloud activity corresponds to
     """
+    username: str = field(kw_only=True, default="")
+    var: str = field(kw_only=True, default="")
+    name: str = field(kw_only=True, default="")
+    type: str = field(kw_only=True, default="set")
+    timestamp: float = field(kw_only=True, default=0.0)
+    value: Union[float, int, str] = field(kw_only=True, default="0.0")
+    cloud: _base.AnyCloud = field(kw_only=True, default_factory=lambda : _base.DummyCloud())
+    _session: Optional[session.Session] = field(kw_only=True, default=None)
 
     def __init__(self, **entries):
         # Set attributes every CloudActivity object needs to have:
@@ -39,32 +54,29 @@ class CloudActivity(BaseSiteComponent):
         self.__dict__.update(entries)
 
     def update(self):
-        print("Warning: CloudActivity objects can't be updated")
+        warnings.warn("CloudActivity objects can't be updated", exceptions.InvalidUpdateWarning)
         return False # Objects of this type cannot be updated
 
     def __eq__(self, activity2):
         # CloudLogEvents needs to check if two activites are equal (to finde new ones), therefore CloudActivity objects need to be comparable
         return self.user == activity2.user and self.type == activity2.type and self.timestamp == activity2.timestamp and self.value == activity2.value and self.name == activity2.name
     
-    def _update_from_dict(self, data) -> bool:
-        try: self.name = data["name"]
-        except Exception: pass
-        try: self.var = data["name"]
-        except Exception: pass
-        try: self.value = data["value"]
-        except Exception: pass
-        try: self.user = data["user"]
-        except Exception: pass
-        try: self.username = data["user"]
-        except Exception: pass
-        try: self.timestamp = data["timestamp"]
-        except Exception: pass
-        try: self.type = data["verb"].replace("_var","")
-        except Exception: pass
-        try: self.type = data["method"]
-        except Exception: pass
-        try: self.cloud = data["cloud"]
-        except Exception: pass
+    def _update_from_dict(self, data: Union[typed_dicts.CloudActivityDict, typed_dicts.CloudLogActivityDict]) -> bool:
+        def is_cloud_log_activity(activity: Union[typed_dicts.CloudActivityDict, typed_dicts.CloudLogActivityDict]) -> TypeGuard[typed_dicts.CloudLogActivityDict]:
+            return "verb" in activity
+        def is_cloud_activity(activity: Union[typed_dicts.CloudActivityDict, typed_dicts.CloudLogActivityDict]) -> TypeGuard[typed_dicts.CloudActivityDict]:
+            return "method" in activity
+        self.name = data["name"]
+        self.var = data["name"]
+        self.value = data["value"]
+        if is_cloud_log_activity(data):
+            self.user = data["user"]
+            self.username = data["user"]
+            self.timestamp = data["timestamp"]
+            self.type = data["verb"].removesuffix("_var")
+        elif is_cloud_activity(data):
+            self.type = data["method"]
+        self.cloud = data["cloud"]
         return True
 
     def load_log_data(self):
@@ -91,17 +103,18 @@ class CloudActivity(BaseSiteComponent):
         """
         if self.username is None:
             return None
-        from scratchattach.site import user
-        from scratchattach.utils import exceptions
         return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
 
-    def project(self):
+    def project(self) -> Optional[project.Project]:
         """
         Returns the project where the cloud activity was performed as scratchattach.project.Project object
         """
+        def make_linked(cloud: _base.BaseCloud) -> project.Project:
+            return self._make_linked_object("id", cloud.project_id, project.Project, exceptions.ProjectNotFound)
         if self.cloud is None:
             return None
-        from scratchattach.site import project
-        from scratchattach.utils import exceptions
-        return self._make_linked_object("id", self.cloud.project_id, project.Project, exceptions.ProjectNotFound)
+        cloud = self.cloud
+        if not isinstance(cloud, _base.BaseCloud):
+            return None
+        return make_linked(cloud)
 

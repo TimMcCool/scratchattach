@@ -17,10 +17,6 @@ else:
         def read(self) -> T:
             pass
 
-class SupportsClose(ABC):
-    @abstractmethod
-    def close(self) -> None:
-        pass
 
 import websocket
 
@@ -31,6 +27,11 @@ from scratchattach.eventhandlers.cloud_requests import CloudRequests
 from scratchattach.eventhandlers.cloud_events import CloudEvents
 from scratchattach.eventhandlers.cloud_storage import CloudStorage
 from scratchattach.site import cloud_activity
+
+class SupportsClose(ABC):
+    @abstractmethod
+    def close(self) -> None:
+        pass
 
 T = TypeVar("T")
 
@@ -107,6 +108,42 @@ class AnyCloud(ABC, Generic[T]):
     @abstractmethod
     def create_event_stream(self) -> EventStream:
         pass
+
+class DummyCloud(AnyCloud[Any]):
+    class DummyEventStream(EventStream):
+        def read(self, length = ...):
+            return iter(())
+        
+        def close(self):
+            pass
+        
+    def connect(self):
+        pass
+
+    def disconnect(self):
+        pass
+    
+    def create_event_stream(self) -> EventStream:
+        return self.DummyEventStream()
+    
+    def _enforce_ratelimit(self, *, n: int) -> None:
+        pass
+
+    def set_var(self, variable: str, value: T) -> None:
+        pass
+
+    @abstractmethod
+    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True):
+        pass
+
+    @abstractmethod
+    def get_var(self, var, *, recorder_initial_values={}) -> Any:
+        pass
+
+    @abstractmethod
+    def get_all_vars(self, *, recorder_initial_values={}) -> dict[str, Any]:
+        return {}
+
 
 class WebSocketEventStream(EventStream):
     packets_left: list[Union[str, bytes]]

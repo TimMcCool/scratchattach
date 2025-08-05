@@ -92,6 +92,7 @@ class Session(BaseSiteComponent):
     
     has_outstanding_email_confirmation: bool = field(repr=False, default=False)
     is_teacher: bool = field(repr=False, default=False)
+    _session: Optional[Session] = field(kw_only=True, default=None)
 
     def __str__(self) -> str:
         return f"<Login for {self.username!r}>"
@@ -117,6 +118,8 @@ class Session(BaseSiteComponent):
 
         if self.id:
             self._process_session_id()
+        
+        self._session = self
 
     def _update_from_dict(self, data: Union[dict, typed_dicts.SessionDict]):
         # Note: there are a lot more things you can get from this data dict.

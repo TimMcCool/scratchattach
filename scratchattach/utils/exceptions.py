@@ -231,3 +231,8 @@ class LoginDataWarning(UserWarning):
     """
     Warns you not to accidentally share your login data.
     """
+
+class InvalidUpdateWarning(UserWarning):
+    """
+    Warns you that something cannot be updated.
+    """

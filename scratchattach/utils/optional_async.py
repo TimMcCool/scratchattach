@@ -100,7 +100,7 @@ class CASleep(CallableAwaitable[bool]):
 def oa_sleep(amount: float):
     return CASleep(amount)
 
-class CARequest(CallableAwaitable[requests.AnyHTTPResponse]):
+class CARequest(CallableAwaitable["requests.AnyHTTPResponse"]):
     requests_session: requests.OAHTTPSession
     method: requests.HTTPMethod
     url: str
