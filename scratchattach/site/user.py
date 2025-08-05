@@ -5,6 +5,8 @@ import json
 import random
 import re
 import string
+from typing import Union, cast, Optional
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 
@@ -25,6 +27,7 @@ from . import forum
 from . import comment
 from . import activity
 from . import classroom
+from . import typed_dicts
 
 class Rank(Enum):
     """
@@ -45,6 +48,7 @@ class Verificator:
     def check(self) -> bool:
         return bool(list(filter(lambda x : x.author_name == self.username and (x.content == self.code or x.content.startswith(self.code) or x.content.endswith(self.code)), self.project.comments())))
 
+@dataclass
 class User(BaseSiteComponent):
 
     '''
@@ -68,73 +72,69 @@ class User(BaseSiteComponent):
 
     :.update(): Updates the attributes
     '''
+    username: str = field(kw_only=True, default="")
+    join_date: str = field(kw_only=True, default="")
+    about_me: str = field(kw_only=True, default="")
+    wiwo: str = field(kw_only=True, default="")
+    country: str = field(kw_only=True, default="")
+    icon_url: str = field(kw_only=True, default="")
+    id: int = field(kw_only=True, default=0)
+    scratchteam: bool = field(kw_only=True, repr=False, default=False)
+    _classroom: tuple[bool, Optional[classroom.Classroom]] = field(init=False, default=(False, None))
+    _headers: dict[str, str] = field(init=False, default=headers)
+    _cookies: dict[str, str] = field(init=False, default_factory=dict)
+    _json_headers: dict[str, str] = field(init=False, default_factory=dict)
 
     def __str__(self):
         return str(self.username)
 
-    def __init__(self, **entries):
+    @property
+    def status(self) -> str:
+        return self.wiwo
+
+    @property
+    def bio(self) -> str:
+        return self.about_me
+
+    @property
+    def name(self) -> str:
+        return self.username
+
+    def __post_init__(self):
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
-        self.update_api = f"https://api.scratch.mit.edu/users/{entries['username']}"
-
-        # Set attributes every User object needs to have:
-        self._session = None
-        self.id = None
-        self.username = None
-        self.name = None
+        self.update_api = f"https://api.scratch.mit.edu/users/{self.username}"
 
         # cache value for classroom getter method (using @property)
         # first value is whether the cache has actually been set (because it can be None), second is the value itself
-        self._classroom: tuple[bool, classroom.Classroom | None] = False, None
-
-        # Update attributes from entries dict:
-        entries.setdefault("name", entries.get("username"))
-        self.__dict__.update(entries)
-
-        # Set alternative attributes:
-        if hasattr(self, "bio"):
-            self.about_me = self.bio
-        if hasattr(self, "status"):
-            self.wiwo = self.status
-        if hasattr(self, "name"):
-            self.username = self.name
+        # self._classroom
 
         # Headers and cookies:
-        if self._session is None:
-            self._headers :dict = headers
-            self._cookies = {}
-        else:
-            self._headers :dict = self._session._headers
-            self._cookies = self._session._cookies
+        if self._session is not None:
+            self._headers = self._session.get_headers()
+            self._cookies = self._session.get_cookies()
 
         # Headers for operations that require accept and Content-Type fields:
         self._json_headers = dict(self._headers)
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
-    def _update_from_dict(self, data):
-        try: self.id = data["id"]
-        except KeyError: pass
-        try: self.username = data["username"]
-        except KeyError: pass
-        try: self.scratchteam = data["scratchteam"]
-        except KeyError: pass
-        try: self.join_date = data["history"]["joined"]
-        except KeyError: pass
-        try: self.about_me = data["profile"]["bio"]
-        except KeyError: pass
-        try: self.wiwo = data["profile"]["status"]
-        except KeyError: pass
-        try: self.country = data["profile"]["country"]
-        except KeyError: pass
-        try: self.icon_url = data["profile"]["images"]["90x90"]
-        except KeyError: pass
+    def _update_from_dict(self, data: Union[dict, typed_dicts.UserDict]):
+        data = cast(typed_dicts.UserDict, data)
+        self.id = data["id"]
+        self.username = data["username"]
+        self.scratchteam = data["scratchteam"]
+        self.join_date = data["history"]["joined"]
+        self.about_me = data["profile"]["bio"]
+        self.wiwo = data["profile"]["status"]
+        self.country = data["profile"]["country"]
+        self.icon_url = data["profile"]["images"]["90x90"]
         return True
 
     def _assert_permission(self):
         self._assert_auth()
-        if self._session._username != self.username:
+        if self._session.username != self.username:
             raise exceptions.Unauthorized(
                 "You need to be authenticated as the profile owner to do this.")
 
@@ -151,24 +151,24 @@ class User(BaseSiteComponent):
             details = soup.find("p", {"class": "profile-details"})
             assert isinstance(details, Tag)
 
-            class_name, class_id, is_closed = None, None, None
+            class_name, class_id, is_closed = None, None, False
             for a in details.find_all("a"):
                 if not isinstance(a, Tag):
                     continue
                 href = str(a.get("href"))
                 if re.match(r"/classes/\d*/", href):
                     class_name = a.text.strip()[len("Student of: "):]
-                    is_closed = class_name.endswith("\n            (ended)") # as this has a \n, we can be sure
+                    is_closed = bool(re.search(r"\n *\(ended\)", class_name))# as this has a \n, we can be sure
                     if is_closed:
-                        class_name = class_name[:-7].strip()
+                        class_name = re.sub(r"\n *\(ended\)", "", class_name).strip()
 
-                    class_id = href.split('/')[2]
+                    class_id = int(href.split('/')[2])
                     break
 
             if class_name:
                 self._classroom = True, classroom.Classroom(
-                    _session=self,
-                    id=class_id,
+                    _session=self._session,
+                    id=class_id or 0,
                     title=class_name,
                     is_closed=is_closed
                 )

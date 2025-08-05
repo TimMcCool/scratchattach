@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TypeVar, Optional, Generic
+from typing import TypeVar, Optional, Self, Union, Any
+import json
 
 import requests
-from scratchattach.utils import exceptions, commons
+
+from scratchattach.utils import exceptions, commons, optional_async
+from scratchattach.utils import requests as m_requests
 from . import session
 
 C = TypeVar("C", bound="BaseSiteComponent")
@@ -13,6 +16,7 @@ class BaseSiteComponent(ABC):
     update_api: str
     _headers: dict[str, str]
     _cookies: dict[str, str]
+    oa_http_session: Optional[m_requests.OAHTTPSession] = None
 
     # @abstractmethod
     # def __init__(self):  # dataclasses do not implement __init__ directly
@@ -32,7 +36,7 @@ class BaseSiteComponent(ABC):
         if "429" in str(response):
             return "429"
 
-        if response.text == '{\n  "response": "Too many requests"\n}':
+        if json.loads(response.text) == {"response": "Too many requests"}:
             return "429"
 
         # If no error: Parse JSON:
@@ -41,6 +45,10 @@ class BaseSiteComponent(ABC):
             return False
 
         return self._update_from_dict(response)
+    
+    def updated(self) -> Self:
+        self.update()
+        return self
 
     @abstractmethod
     def _update_from_dict(self, data) -> bool:
@@ -64,3 +72,18 @@ class BaseSiteComponent(ABC):
     """
     Internal function run on update. Function is a method of the 'requests' module/class
     """
+    
+    def _make_request(
+        self,
+        method: Union[m_requests.HTTPMethod, str],
+        url: str,
+        *,
+        cookies: Optional[dict[str, str]] = None,
+        headers: Optional[dict[str, str]] = None,
+        params: Optional[dict[str, str]] = None,
+        data: Optional[Union[dict[str, str], str]] = None,
+        json: Optional[Any] = None
+    ) -> optional_async.CARequest:
+        if self.oa_http_session is None:
+            raise ValueError("This BaseSiteComponent has no oa_http_session.")
+        return self.oa_http_session.request(method, url, cookies=cookies, headers=headers, params=params, data=data, json=json)

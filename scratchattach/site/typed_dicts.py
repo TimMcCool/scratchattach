@@ -54,3 +54,20 @@ class SessionDict(TypedDict):
     user: SessionUserDict
     permissions: SessionPermissionsDict
     flags: SessionFlagsDict
+
+class UserHistoryDict(TypedDict):
+    joined: str
+
+class UserProfileDict(TypedDict):
+    id: int
+    status: str
+    bio: str
+    country: str
+    images: dict[str, str]
+
+class UserDict(TypedDict):
+    id: int
+    username: str
+    scratchteam: bool
+    history: UserHistoryDict
+    profile: UserProfileDict
