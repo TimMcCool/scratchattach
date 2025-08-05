@@ -45,7 +45,7 @@ class AnyCloud(ABC, Generic[T]):
     Represents a cloud that is not necessarily using a websocket.
     """
     active_connection: bool
-    var_stets_since_first: int
+    var_sets_since_first: int
     _session: Optional[session.Session]
     
     @abstractmethod
@@ -132,15 +132,12 @@ class DummyCloud(AnyCloud[Any]):
     def set_var(self, variable: str, value: T) -> None:
         pass
 
-    @abstractmethod
     def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True):
         pass
 
-    @abstractmethod
     def get_var(self, var, *, recorder_initial_values={}) -> Any:
         pass
 
-    @abstractmethod
     def get_all_vars(self, *, recorder_initial_values={}) -> dict[str, Any]:
         return {}
 
@@ -258,7 +255,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         # which will be saved in this attribute as soon as .get_var is called
         self.first_var_set = 0
         self.last_var_set = 0
-        self.var_stets_since_first = 0
+        self.var_sets_since_first = 0
 
         # Set default values for attributes that save configurations specific to the represented cloud:
         # (These attributes can be specifically in the constructors of classes inheriting from this base class)
@@ -381,8 +378,8 @@ class BaseCloud(AnyCloud[Union[str, int]]):
     def _enforce_ratelimit(self, *, n):
         # n is the amount of variables being set
         if (time.time() - self.first_var_set) / (
-                self.var_stets_since_first + 1) > self.ws_longterm_ratelimit:  # if the average delay between cloud variable sets has been bigger than the long-term rate-limit, cloud variables can be set fast (wait time smaller than long-term rate limit) again
-            self.var_stets_since_first = 0
+                self.var_sets_since_first + 1) > self.ws_longterm_ratelimit:  # if the average delay between cloud variable sets has been bigger than the long-term rate-limit, cloud variables can be set fast (wait time smaller than long-term rate limit) again
+            self.var_sets_since_first = 0
             self.first_var_set = time.time()
 
         wait_time = self.ws_shortterm_ratelimit * n
@@ -407,7 +404,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             self.connect()
         self._enforce_ratelimit(n=1)
 
-        self.var_stets_since_first += 1
+        self.var_sets_since_first += 1
 
         packet = {
             "method": "set",
@@ -434,7 +431,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         if intelligent_waits:
             self._enforce_ratelimit(n=len(list(var_value_dict.keys())))
 
-        self.var_stets_since_first += len(list(var_value_dict.keys()))
+        self.var_sets_since_first += len(list(var_value_dict.keys()))
 
         packet_list = []
         for variable in var_value_dict:

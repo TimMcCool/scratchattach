@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import string
 
-from typing import Optional, Final, Any, TypeVar, Callable, TYPE_CHECKING, Union
+from typing import Optional, Final, Any, TypeVar, Callable, TYPE_CHECKING, Union, overload
 from threading import Event as ManualResetEvent
 from threading import Lock
 
@@ -162,8 +162,16 @@ def _get_object(identificator_name, identificator, __class: type[C], NotFoundExc
     except Exception as e:
         raise e
 
+I = TypeVar("I")
+@overload
+def webscrape_count(raw: str, text_before: str, text_after: str, cls: type[I]) -> I:
+    pass
 
-def webscrape_count(raw, text_before, text_after, cls: type = int) -> int | Any:
+@overload
+def webscrape_count(raw: str, text_before: str, text_after: str) -> int:
+    pass
+
+def webscrape_count(raw, text_before, text_after, cls = int):
     return cls(raw.split(text_before)[1].split(text_after)[0])
 
 

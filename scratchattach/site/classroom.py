@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -13,7 +12,7 @@ if TYPE_CHECKING:
     from scratchattach.site.session import Session
 
 from scratchattach.utils.commons import requests
-from . import user, activity
+from . import user, activity, typed_dicts
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions, commons
 from scratchattach.utils.commons import headers
@@ -102,36 +101,15 @@ class Classroom(BaseSiteComponent):
             return self._update_from_dict(ret)
         return success
 
-    def _update_from_dict(self, classrooms):
-        try:
-            self.id = int(classrooms["id"])
-        except Exception:
-            pass
-        try:
-            self.title = classrooms["title"]
-        except Exception:
-            pass
-        try:
-            self.about_class = classrooms["description"]
-        except Exception:
-            pass
-        try:
-            self.working_on = classrooms["status"]
-        except Exception:
-            pass
-        try:
-            self.datetime = datetime.datetime.fromisoformat(classrooms["date_start"])
-        except Exception:
-            pass
-        try:
-            self.author = user.User(username=classrooms["educator"]["username"], _session=self._session)
-        except Exception:
-            pass
-        try:
-            self.author._update_from_dict(classrooms["educator"])
-        except Exception:
-            pass
-        self.is_closed = classrooms.get("is_closed", False)
+    def _update_from_dict(self, data: typed_dicts.ClassroomDict):
+        self.id = int(data["id"])
+        self.title = data["title"]
+        self.about_class = data["description"]
+        self.working_on = data["status"]
+        self.datetime = datetime.fromisoformat(data["date_start"])
+        self.author = user.User(username=data["educator"]["username"], _session=self._session)
+        self.author.supply_data_dict(data["educator"])
+        self.is_closed = bool(data["date_end"])
         return True
 
     def student_count(self) -> int:
@@ -156,14 +134,24 @@ class Classroom(BaseSiteComponent):
             ret = []
             response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
             soup = BeautifulSoup(response.text, "html.parser")
+            found = set("")
+            
+            for result in soup.css.select("ul.scroll-content .user a"):
+                result_text = result.text.strip()
+                if result_text in found:
+                    continue
+                found.add(result_text)
+                ret.append(result_text)
 
-            for scrollable in soup.find_all("ul", {"class": "scroll-content"}):
-                for item in scrollable.contents:
-                    if not isinstance(item, bs4.NavigableString):
-                        if "user" in item.attrs["class"]:
-                            anchors = item.find_all("a")
-                            if len(anchors) == 2:
-                                ret.append(anchors[1].text.strip())
+            # for scrollable in soup.find_all("ul", {"class": "scroll-content"}):
+            #     if not isinstance(scrollable, Tag):
+            #         continue
+            #     for item in scrollable.contents:
+            #         if not isinstance(item, bs4.NavigableString):
+            #             if "user" in item.attrs["class"]:
+            #                 anchors = item.find_all("a")
+            #                 if len(anchors) == 2:
+            #                     ret.append(anchors[1].text.strip())
 
             return ret
 
@@ -196,14 +184,20 @@ class Classroom(BaseSiteComponent):
             ret = []
             response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
             soup = BeautifulSoup(response.text, "html.parser")
+            
+            for result in soup.css.select("ul.scroll-content .gallery a[href]:not([class])"):
+                value = result["href"]
+                if not isinstance(value, str):
+                    value = value[0]
+                ret.append(commons.webscrape_count(value, "/studios/", "/"))
 
-            for scrollable in soup.find_all("ul", {"class": "scroll-content"}):
-                for item in scrollable.contents:
-                    if not isinstance(item, bs4.NavigableString):
-                        if "gallery" in item.attrs["class"]:
-                            anchor = item.find("a")
-                            if "href" in anchor.attrs:
-                                ret.append(commons.webscrape_count(anchor.attrs["href"], "/studios/", "/"))
+            # for scrollable in soup.find_all("ul", {"class": "scroll-content"}):
+            #     for item in scrollable.contents:
+            #         if not isinstance(item, bs4.NavigableString):
+            #             if "gallery" in item.attrs["class"]:
+            #                 anchor = item.find("a")
+            #                 if "href" in anchor.attrs:
+            #                     ret.append(commons.webscrape_count(anchor.attrs["href"], "/studios/", "/"))
             return ret
 
         text = requests.get(
@@ -316,7 +310,7 @@ class Classroom(BaseSiteComponent):
     def register_student(self, username: str, password: str = '', birth_month: Optional[int] = None,
                          birth_year: Optional[int] = None,
                          gender: Optional[str] = None, country: Optional[str] = None, is_robot: bool = False) -> None:
-        return register_by_token(self.id, self.classtoken, username, password, birth_month, birth_year, gender, country,
+        return register_by_token(self.id, self.classtoken, username, password, birth_month or 1, birth_year or 2000, gender or "(Prefer not to say)", country or "United+States",
                                  is_robot)
 
     def generate_signup_link(self):
@@ -355,8 +349,7 @@ class Classroom(BaseSiteComponent):
 
         return activities
 
-    def activity(self, student: str = "all", mode: str = "Last created", page: Optional[int] = None) -> list[
-        dict[str, Any]]:
+    def activity(self, student: str = "all", mode: str = "Last created", page: Optional[int] = None) -> list[activity.Activity]:
         """
         Get a list of private activity, only available to the class owner.
         Returns:
@@ -371,10 +364,10 @@ class Classroom(BaseSiteComponent):
                             params={"page": page, "ascsort": ascsort, "descsort": descsort},
                             headers=self._headers, cookies=self._cookies).json()
 
-        _activity = []
+        _activity: list[activity.Activity] = []
         for activity_json in data:
             _activity.append(activity.Activity(_session=self._session))
-            _activity[-1]._update_from_json(activity_json)
+            _activity[-1].supply_data_dict(activity_json)
 
         return _activity
 

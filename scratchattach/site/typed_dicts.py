@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from scratchattach.cloud import _base
-from typing import TypedDict, Union
+from typing import TypedDict, Union, Optional
 
 class SessionUserDict(TypedDict):
     id: int
@@ -87,3 +87,13 @@ class CloudActivityDict(TypedDict):
     value: Union[str, float, int]
     project_id: int
     cloud: _base.AnyCloud
+
+class ClassroomDict(TypedDict):
+    id: int
+    title: str
+    description: str
+    status: str
+    date_start: str
+    date_end: Optional[str]
+    images: dict[str, str]
+    educator: UserDict

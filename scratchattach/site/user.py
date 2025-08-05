@@ -50,7 +50,7 @@ class Verificator:
         return bool(list(filter(lambda x : x.author_name == self.username and (x.content == self.code or x.content.startswith(self.code) or x.content.endswith(self.code)), self.project.comments())))
 
 @dataclass
-class User(BaseSiteComponent):
+class User(BaseSiteComponent[typed_dicts.UserDict]):
 
     '''
     Represents a Scratch user.

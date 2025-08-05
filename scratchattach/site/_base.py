@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TypeVar, Optional, Self, Union, Any
+from typing import TypeVar, Optional, Self, Union, Any, Generic
 import json
 
 import requests
@@ -10,8 +10,9 @@ from scratchattach.utils import exceptions, commons, optional_async
 from scratchattach.utils import requests as m_requests
 from . import session
 
+D = TypeVar("D")
 C = TypeVar("C", bound="BaseSiteComponent")
-class BaseSiteComponent(ABC):
+class BaseSiteComponent(ABC, Generic[D]):
     _session: Optional[session.Session]
     update_api: str
     _headers: dict[str, str]
@@ -51,7 +52,7 @@ class BaseSiteComponent(ABC):
         return self
 
     @abstractmethod
-    def _update_from_dict(self, data) -> bool:
+    def _update_from_dict(self, data: D) -> bool:
         """
         Parses the API response that is fetched in the update-method. Class specific, must be overridden in classes inheriting from this one.
         """
@@ -67,6 +68,9 @@ class BaseSiteComponent(ABC):
         Class must inherit from BaseSiteComponent
         """
         return commons._get_object(identificator_id, identificator, Class, NotFoundException, self._session)
+    
+    def supply_data_dict(self, data: D) -> bool:
+        return self._update_from_dict(data)
 
     update_function = requests.get
     """

@@ -12,7 +12,7 @@ from ._base import BaseSiteComponent
 from . import typed_dicts, session
 
 @dataclass
-class CloudActivity(BaseSiteComponent):
+class CloudActivity(BaseSiteComponent[Union[typed_dicts.CloudActivityDict, typed_dicts.CloudLogActivityDict]]):
     """
     Represents a cloud activity (a cloud variable set / creation / deletion).
 
