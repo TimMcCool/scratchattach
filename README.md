@@ -3,6 +3,8 @@
 The library allows setting cloud variables, following users, updating your profile, and
 so much more! Additionally, it provides frameworks that simplify sending data through cloud variables.
 
+This is a fork of scratchattach, so that I can contribute to the project. Thank you to [TimMcCool](https://scratch.mit.edu/users/TimMcCool/) for making this project :D
+
 <p align="left" style="margin:10px">
   <img width="160" src="https://raw.githubusercontent.com/TimMcCool/scratchattach/refs/heads/main/logos/logo.svg">
 
