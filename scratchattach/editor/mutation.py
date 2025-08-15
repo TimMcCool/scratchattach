@@ -178,6 +178,7 @@ def construct_proccode(components):
 
     return " ".join(result)
 
+
 class Mutation(base.BlockSubComponent):
     def __init__(self, _tag_name: str = "mutation", _children: Optional[list] = None, _proc_code: Optional[str] = None,
                  _is_warp: Optional[bool] = None, _arguments: Optional[list[Argument]] = None, _has_next: Optional[bool] = None,
