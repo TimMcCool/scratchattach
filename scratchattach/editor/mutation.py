@@ -322,3 +322,30 @@ class Mutation(base.BlockSubComponent):
             for _argument in self.arguments:
                 _argument.mutation = self
                 _argument.link_using_mutation()
+                
+def construct_proccode(components: list[ArgumentType | Argument | str]) -> str:
+    """
+    if your reading ts: 
+    ive only recently really gotten into python so sorry if this is bad lol.
+    
+    each comp may be:
+    - ArgumentType: itll be converted to .proc_str
+    - Argument: converted based on .proc_str
+    - str: added directly
+
+    will return:
+        str: a (hopefully) vaid proc code string, eg "move %n steps"
+    """
+    result = []
+    for comp in components:
+        if isinstance(comp, ArgumentType):
+            result.append(comp.proc_str)
+        elif hasattr(item, 'typename'):
+            result.append(f"[{item.typename}]")
+        elif hasattr(item, 'name') and hasattr(item, 'type'):
+            result.append(f"[{item.type} {item.name}]")
+        else:
+            raise TypeError(f"Unsupported component type: {type(comp)}")
+
+    return " ".join(result)
+
