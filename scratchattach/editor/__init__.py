@@ -17,7 +17,7 @@ from .field import Field
 from .vlb import Variable, List, Broadcast
 from .comment import Comment
 from .monitor import Monitor
-from .mutation import construct_proccode
-from . import mutation
+
+from .editor.mutation import construct_proccode, ArgumentType
 
 from .build_defaulting import add_chain, add_comment, add_block
