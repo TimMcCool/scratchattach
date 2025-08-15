@@ -142,6 +142,41 @@ def parse_proc_code(_proc_code: str) -> list[str, ArgumentType] | None:
 
     return tokens
 
+def construct_proccode(components):
+    
+    """
+    if your reading ts:
+    sorry if the code is bad or doesnt work. ive only recently gotten into python
+    if it doesnt work telling me whats wrong/helping me out would really help :p
+    
+    anyway the components may include:
+        ArgumentType enums
+        Argument instances
+        plain text stirngs
+        
+    should output smth like:
+        move %n steps.
+        say %s for %n seconds.
+    
+    """
+    
+    
+    result = []
+
+    for comp in components:
+        if isinstance(comp, ArgumentType):
+            result.append(comp.proc_str)
+
+        elif hasattr(comp, 'typename'):
+            result.append(f"[{comp.typename}]")
+
+        elif hasattr(comp, 'name') and hasattr(comp, 'type'):
+            result.append(f"[{comp.type} {comp.name}]")
+
+        else:
+            raise TypeError(f"Unsupported component type: {type(comp)}")
+
+    return " ".join(result)
 
 class Mutation(base.BlockSubComponent):
     def __init__(self, _tag_name: str = "mutation", _children: Optional[list] = None, _proc_code: Optional[str] = None,
@@ -323,29 +358,3 @@ class Mutation(base.BlockSubComponent):
                 _argument.mutation = self
                 _argument.link_using_mutation()
                 
-def construct_proccode(components: list[ArgumentType | Argument | str]) -> str:
-    """
-    if your reading ts: 
-    ive only recently really gotten into python so sorry if this is bad lol.
-    
-    each comp may be:
-    - ArgumentType: itll be converted to .proc_str
-    - Argument: converted based on .proc_str
-    - str: added directly
-
-    will return:
-        str: a (hopefully) vaid proc code string, eg "move %n steps"
-    """
-    result = []
-    for comp in components:
-        if isinstance(comp, ArgumentType):
-            result.append(comp.proc_str)
-        elif hasattr(item, 'typename'):
-            result.append(f"[{item.typename}]")
-        elif hasattr(item, 'name') and hasattr(item, 'type'):
-            result.append(f"[{item.type} {item.name}]")
-        else:
-            raise TypeError(f"Unsupported component type: {type(comp)}")
-
-    return " ".join(result)
-
