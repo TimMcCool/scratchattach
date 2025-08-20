@@ -134,6 +134,10 @@ def parse_proc_code(_proc_code: str) -> Optional[list[str | ArgumentType]]:
                 token = token[:-1]
                 # Clip the % sign off the token
 
+                if token.endswith(' '):
+                    # A space is required before params, but this should not be part of the parsed output
+                    token = token[:-1]
+
                 if token != '':
                     # Make sure not to append an empty token
                     tokens.append(token)
