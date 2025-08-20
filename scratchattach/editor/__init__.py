@@ -5,7 +5,7 @@ scratchattach.editor (sbeditor v2) - a library for all things sb3
 from .asset import Asset, Costume, Sound
 from .project import Project
 from .extension import Extensions, Extension
-from .mutation import Mutation, Argument, parse_proc_code
+from .mutation import Mutation, Argument, ArgumentType, parse_proc_code, construct_proccode, ArgTypes
 from .meta import Meta, set_meta_platform
 from .sprite import Sprite
 from .block import Block
@@ -17,7 +17,5 @@ from .field import Field
 from .vlb import Variable, List, Broadcast
 from .comment import Comment
 from .monitor import Monitor
-
-from .editor.mutation import construct_proccode, ArgumentType
 
 from .build_defaulting import add_chain, add_comment, add_block

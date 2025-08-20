@@ -18,6 +18,7 @@ class ArgumentType(base.Base):
     proc_str: str
 
     def __eq__(self, other):
+        # noinspection PyProtectedMember
         if isinstance(other, enums._EnumWrapper):
             other = other.value
 
@@ -65,25 +66,37 @@ class ArgSettings(base.Base):
 class Argument(base.MutationSubComponent):
     name: str
     default: str = ''
+    _type: Optional[ArgumentType] = None
 
     _id: str = None
     """
     Argument ID: Will be used to replace other parameters during block instantiation.
     """
 
+    def __post_init__(self):
+        super().__init__()
+
     @property
     def index(self):
         return self.mutation.arguments.index(self)
 
     @property
-    def type(self) -> None | ArgumentType:
-        i = 0
-        goal = self.index
-        for token in parse_proc_code(self.mutation.proc_code):
-            if isinstance(token, ArgumentType):
-                if i == goal:
-                    return token
-                i += 1
+    def type(self) -> Optional[ArgumentType]:
+        if not self._type:
+            if not self.mutation:
+                raise ValueError(f"Cannot infer 'type' of {self} when there is no mutation attached. "
+                                 f"Consider providing a type manually.")
+
+            i = 0
+            goal = self.index
+            for token in parse_proc_code(self.mutation.proc_code):
+                if isinstance(token, ArgumentType):
+                    if i == goal:
+                        self._type = token
+                        break
+                    i += 1
+
+        return self._type
 
     @staticmethod
     def from_json(data: dict | list | Any):
@@ -97,12 +110,13 @@ class Argument(base.MutationSubComponent):
             self._id = self.block.new_id
 
 
+# noinspection PyProtectedMember
 class ArgTypes(enums._EnumWrapper):
     BOOLEAN = ArgumentType("boolean", "%b")
     NUMBER_OR_TEXT = ArgumentType("number or text", "%s")
 
 
-def parse_proc_code(_proc_code: str) -> list[str, ArgumentType] | None:
+def parse_proc_code(_proc_code: str) -> Optional[list[str | ArgumentType]]:
     """
     Parse a proccode (part of a mutation) into argument types and strings
     """
@@ -142,41 +156,36 @@ def parse_proc_code(_proc_code: str) -> list[str, ArgumentType] | None:
 
     return tokens
 
-def construct_proccode(components):
-    
+def construct_proccode(*components: ArgumentType | ArgTypes | Argument | str) -> str:
     """
-    if your reading ts:
-    sorry if the code is bad or doesnt work. ive only recently gotten into python
-    if it doesnt work telling me whats wrong/helping me out would really help :p
-    
-    anyway the components may include:
-        ArgumentType enums
-        Argument instances
-        plain text stirngs
-        
-    should output smth like:
-        move %n steps.
-        say %s for %n seconds.
-    
+    Create a proccode from strings/ArgumentType enum members/Argument instances
+
+    :param components: list of strings/Arguments/ArgumentType instances
+    :return: A proccode, e.g. 'move %s steps' or 'say %s for %n seconds'
     """
-    
-    
-    result = []
+
+    result = ""
 
     for comp in components:
         if isinstance(comp, ArgumentType):
-            result.append(comp.proc_str)
+            result += comp.proc_str
 
-        elif hasattr(comp, 'typename'):
-            result.append(f"[{comp.typename}]")
+        elif isinstance(comp, ArgTypes):
+            new: ArgumentType = comp.value
+            result += new.proc_str
 
-        elif hasattr(comp, 'name') and hasattr(comp, 'type'):
-            result.append(f"[{comp.type} {comp.name}]")
+        elif isinstance(comp, Argument):
+            result += comp.type.proc_str
+
+        elif isinstance(comp, str):
+            result += comp
 
         else:
             raise TypeError(f"Unsupported component type: {type(comp)}")
 
-    return " ".join(result)
+        result += ' '
+
+    return result
 
 
 class Mutation(base.BlockSubComponent):
@@ -308,7 +317,7 @@ class Mutation(base.BlockSubComponent):
                 _arg_name = get(_argument_names, i)
                 _arg_default = get(_argument_defaults, i)
 
-                _arguments.append(Argument(_arg_name, _arg_default, _arg_id))
+                _arguments.append(Argument(_arg_name, _arg_default, _id=_arg_id))
 
         return Mutation(_tag_name, _children, _proc_code, _is_warp, _arguments, _has_next, _argument_settings)
 
