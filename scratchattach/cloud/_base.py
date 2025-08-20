@@ -202,7 +202,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
     - must first call the constructor of the super class: super().__init__()
     - must then set some attributes
 
-    Attributes that must be specified in the __init__ function a class inheriting from this one:
+    Attributes that must be specified in the __init__ function of a class inheriting from this one:
         project_id: Project id of the cloud variables
 
         cloud_host: URL of the websocket server ("wss://..." or "ws://...")

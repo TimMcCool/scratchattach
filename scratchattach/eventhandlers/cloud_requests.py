@@ -55,8 +55,9 @@ class Request:
     def __call__(self, received_request: ReceivedRequest):
         if not self.enabled:
             self.cloud_requests.call_event("on_disabled_request", [received_request])
+            return
         try:
-            current_thread().name = repr(received_request.request_id)
+            current_thread().name = received_request.request_id # Used by .get_requester() / .get_timestamp() as lookup key
             output = self.on_call(*received_request.arguments)
             self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id": received_request.request_id, "output":output, "priority":self.response_priority})
         except ErrorWithMessage as e:
@@ -433,7 +434,7 @@ class CloudRequests(CloudEvents):
                     self.request_outputs.remove(output_obj)
                 if output_obj["request_id"] in self.executed_requests:
                     received_request = self.executed_requests.pop(output_obj["request_id"])
-                    self._parse_output(received_request, output_obj["output"], output_obj["request_id"])
+                    self._parse_output(received_request.request_name, output_obj["output"], output_obj["request_id"])
                 else:
                     self._parse_output("[sent from backend]", output_obj["output"], output_obj["request_id"])
                 if self.hard_stopped: # stop immediately without exiting safely
