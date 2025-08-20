@@ -1,7 +1,7 @@
 """CloudRequests class (threading.Event version)"""
 from __future__ import annotations
 
-from threading import Thread, Event, current_thread
+from threading import Thread, Event, local
 import time
 import random
 import traceback
@@ -15,6 +15,11 @@ from scratchattach.utils import exceptions
 from scratchattach.site import project, cloud_activity
 from scratchattach.cloud import _base
 from .cloud_events import CloudEvents
+
+class RequestHandlerThreadInfo(local):
+    request_id: str = ""
+
+request_handler_thread_info = RequestHandlerThreadInfo()
 
 class ErrorInRequest(RuntimeWarning):
     pass
@@ -57,7 +62,7 @@ class Request:
             self.cloud_requests.call_event("on_disabled_request", [received_request])
             return
         try:
-            current_thread().name = received_request.request_id # Used by .get_requester() / .get_timestamp() as lookup key
+            request_handler_thread_info.request_id = received_request.request_id # Used by .get_requester() / .get_timestamp() as lookup key
             output = self.on_call(*received_request.arguments)
             self.cloud_requests.request_outputs.append({"receive":received_request.timestamp, "request_id": received_request.request_id, "output":output, "priority":self.response_priority})
         except ErrorWithMessage as e:
@@ -459,7 +464,7 @@ class CloudRequests(CloudEvents):
         """
         Can be used inside a request to get the username that performed the request.
         """
-        activity = self.executed_requests[current_thread().name].activity
+        activity = self.executed_requests[request_handler_thread_info.request_id].activity
         if activity.user is None:
             activity.load_log_data()
         return activity.user
@@ -468,14 +473,14 @@ class CloudRequests(CloudEvents):
         """
         Can be used inside a request to get the timestamp of when the request was received.
         """
-        activity = self.executed_requests[current_thread().name].activity
+        activity = self.executed_requests[request_handler_thread_info.request_id].activity
         return activity.timestamp
 
     def get_exact_timestamp(self):
         """
         Can be used inside a request to get the exact timestamp of when the request was performed.
         """
-        activity = self.executed_requests[current_thread().name].activity
+        activity = self.executed_requests[request_handler_thread_info.request_id].activity
         activity.load_log_data()
         return activity.timestamp
 
