@@ -43,7 +43,7 @@ def add_block(_block: block.Block | prim.Prim) -> block.Block | prim.Prim:
     return current_sprite().add_block(_block)
 
 
-def add_chain(*chain: Iterable[block.Block, prim.Prim]) -> block.Block | prim.Prim:
+def add_chain(*chain: Iterable[block.Block | prim.Prim]) -> block.Block | prim.Prim:
     return current_sprite().add_chain(*chain)
 
 
