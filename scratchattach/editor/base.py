@@ -92,9 +92,7 @@ class SpriteSubComponent(JSONSerializable, ABC):
     sprite: module_sprite.Sprite
     def __init__(self, _sprite: "commons.SpriteInput" = build_defaulting.SPRITE_DEFAULT):
         if _sprite is build_defaulting.SPRITE_DEFAULT:
-            retrieved_sprite = build_defaulting.current_sprite()
-            assert retrieved_sprite is not None, "You don't have any sprites."
-            _sprite = retrieved_sprite
+            _sprite = build_defaulting.current_sprite()
         self.sprite = _sprite
 
     @property
