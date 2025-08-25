@@ -152,17 +152,17 @@ class Block(base.SpriteSubComponent):
         Work out the id of this block by searching through the sprite dictionary
         """
         if self._id:
-            return self.id
+            return self._id
         # warnings.warn(f"Using block IDs can cause consistency issues and is not recommended")
         # This property is used when converting comments to JSON (we don't want random warning when exporting a project)
         for _block_id, _block in self.sprite.blocks.items():
             if _block is self:
                 self._id = _block_id
-                return self.id
+                return self._id
 
         # Let's just automatically assign ourselves an id
         self.sprite.add_block(self)
-        return self.id
+        return self._id
     
     @id.setter
     def id(self, value: str) -> None:

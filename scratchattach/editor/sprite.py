@@ -102,6 +102,11 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
         self.link_prims()
         self.link_blocks()
         self.link_comments()
+        self.link_vlbs()
+
+    def link_vlbs(self):
+        for _vlb in self.vlbs:
+            _vlb.sprite = self
 
     def link_prims(self):
         """

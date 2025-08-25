@@ -3,6 +3,7 @@ scratchattach.editor (sbeditor v2) - a library for all things sb3
 """
 
 from .asset import Asset, Costume, Sound
+from .blockshape import BlockShapes
 from .project import Project
 from .extension import Extensions, Extension
 from .mutation import Mutation, Argument, ArgumentType, parse_proc_code, construct_proccode, ArgTypes

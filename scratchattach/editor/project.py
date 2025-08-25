@@ -31,7 +31,7 @@ class Project(base.JSONExtractable):
         self.name = _name
 
         self.meta = _meta
-        self.extensions = _extensions
+        self.extensions: list[extension.Extension] = list(_extensions)
         self.monitors = list(_monitors)
         self.sprites = list(_sprites)
 
@@ -69,11 +69,12 @@ class Project(base.JSONExtractable):
         return _ret
 
     @property
-    def stage(self) -> sprite.Sprite:
+    def stage(self) -> Optional[sprite.Sprite]:
         for _sprite in self.sprites:
             if _sprite.is_stage:
                 return _sprite
         warnings.warn(f"Could not find stage for {self.name}")
+        return None
 
     def to_json(self) -> dict:
         _json = {
@@ -221,9 +222,10 @@ class Project(base.JSONExtractable):
         return _proj
 
     def find_vlb(self, value: str | None, by: str = "name",
-                 multiple: bool = False) -> vlb.Variable | vlb.List | vlb.Broadcast | list[
-        vlb.Variable | vlb.List | vlb.Broadcast]:
-        _ret = []
+                 multiple: bool = False) -> Optional[vlb.Variable | vlb.List | vlb.Broadcast | list[
+        vlb.Variable | vlb.List | vlb.Broadcast]]:
+
+        _ret: list[vlb.Variable | vlb.List | vlb.Broadcast] = []
         for _sprite in self.sprites:
             val = _sprite.find_vlb(value, by, multiple)
             if multiple:
@@ -231,8 +233,11 @@ class Project(base.JSONExtractable):
             else:
                 if val is not None:
                     return val
+
         if multiple:
             return _ret
+
+        return None
 
     def find_sprite(self, value: str | None, by: str = "name",
                  multiple: bool = False) -> sprite.Sprite | list[sprite.Sprite]:

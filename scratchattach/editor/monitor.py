@@ -3,11 +3,12 @@ from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 
 from typing_extensions import deprecated
+import warnings
 
 if TYPE_CHECKING:
     from . import project
 
-from . import base
+from . import base, block
 
 
 class Monitor(base.ProjectSubcomponent):
@@ -32,6 +33,9 @@ class Monitor(base.ProjectSubcomponent):
         Instantiating these yourself and attaching these to projects can lead to interesting results!
         """
         assert isinstance(reporter, base.SpriteSubComponent) or reporter is None
+
+        if sprite_name is None and hasattr(reporter, 'sprite'):
+            sprite_name = None if reporter.sprite.is_stage else reporter.sprite.name
 
         self.reporter_id = reporter_id
         """
@@ -142,14 +146,14 @@ class Monitor(base.ProjectSubcomponent):
     # todo: consider reimplementing this
     @deprecated("This method does not work correctly (This may be fixed in the future)")
     @staticmethod
-    def from_reporter(reporter: Block, _id: str = None, mode: str = "default",
+    def from_reporter(reporter: block.Block, _id: str = None, mode: str = "default",
                       opcode: str = None, sprite_name: str = None, value=0, width: int | float = 0,
                       height: int | float = 0,
                       x: int | float = 5, y: int | float = 5, visible: bool = False, slider_min: int | float = 0,
                       slider_max: int | float = 100, is_discrete: bool = True, params: dict = None):
-        if "reporter" not in reporter.stack_type:
+        if not reporter.block_shape.is_reporter:
             warnings.warn(f"{reporter} is not a reporter block; the monitor will return '0'")
-        elif "(menu)" in reporter.stack_type:
+        elif reporter.block_shape.is_menu:
             warnings.warn(f"{reporter} is a menu block; the monitor will return '0'")
         # Maybe add note that length of list doesn't work fsr?? idk
         if _id is None:
@@ -166,7 +170,7 @@ class Monitor(base.ProjectSubcomponent):
                 params[field.id] = field.value, field.value_id
 
         return Monitor(
-            _id,
+            reporter,
             mode,
             opcode,
 
