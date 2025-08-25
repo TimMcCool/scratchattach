@@ -1,0 +1,32 @@
+# This workflow will run pytest in the repository directory
+# This runs on pull request or on any push to the repository
+# based on https://www.youtube.com/watch?v=uFcXrWT4f80
+name: Run tests
+
+on:
+  pull_request:
+    branches: ['master']
+  push:
+    branches: ['master']
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v5
+
+      - name: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements.txt
+      - run: pip install pytest
+
+      - shell: bash
+        env:
+          # TEST_SECRET: ${{ secrets.TEST_SECRET }}
+        run: |
+          pytest
