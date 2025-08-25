@@ -25,8 +25,9 @@ jobs:
       - run: pip install -r requirements.txt
       - run: pip install pytest
 
-      - shell: bash
-        env:
-          # TEST_SECRET: ${{ secrets.TEST_SECRET }}
-        run: |
-          pytest
+      # - shell: bash
+      #   env:
+      #     TEST_SECRET: ${{ secrets.TEST_SECRET }}
+      #   run: |
+      #     pytest
+      - run: pytest
