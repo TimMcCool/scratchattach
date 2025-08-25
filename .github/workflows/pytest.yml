@@ -16,12 +16,12 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: setup-python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v3
         with:
-          python-version: '3.13'
+          python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: pip install pytest
 
