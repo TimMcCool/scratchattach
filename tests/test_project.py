@@ -3,3 +3,4 @@ def test_get():
   project = sa.get_project(104)
   assert project
   assert project.title == "Weekend"
+  assert project.author_name == "andresmh"
