@@ -824,6 +824,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     def message_events(self):
         return message_events.MessageEvents(self)
 
+    @deprecated("This method is deprecated because ScratchDB is down indefinitely.")
     def stats(self):
         """
         Gets information about the user's stats. Fetched from ScratchDB.
@@ -834,7 +835,6 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         Returns:
             dict: A dict containing the user's stats. If the stats aren't available, all values will be -1.
         """
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
         try:
             stats= requests.get(
                 f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
@@ -844,6 +844,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             stats = {"loves":-1,"favorites":-1,"comments":-1,"views":-1,"followers":-1,"following":-1}
         return stats
 
+    @deprecated("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
     def ranks(self):
         """
         Gets information about the user's ranks. Fetched from ScratchDB.
@@ -854,7 +855,6 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         Returns:
             dict: A dict containing the user's ranks. If the ranks aren't available, all values will be -1.
         """
-        print("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
         try:
             return requests.get(
                 f"https://scratchdb.lefty.one/v3/user/info/{self.username}"

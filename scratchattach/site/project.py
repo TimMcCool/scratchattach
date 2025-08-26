@@ -9,6 +9,7 @@ import zipfile
 from io import BytesIO
 
 from typing import Any
+from typing_extensions import deprecated
 from . import user, comment, studio
 from scratchattach.utils import exceptions
 from scratchattach.utils import commons
@@ -487,8 +488,8 @@ class Project(PartialProject):
         use_site_api (bool):
             When enabled, the fields are set using the scratch.mit.edu/site-api API.
             This function allows setting more fields than Project.set_fields.
-            For example you can also share / unshare the project by setting the "shared" field.
-            According to the Scratch team, this API is deprecated. As of 2024 it's still fully functional tho.
+            For example, you can also share / unshare the project by setting the "shared" field.
+            According to the Scratch team, this API is deprecated. As of 2024 it's still fully functional though.
         """
         self._assert_permission()
         if use_site_api:
@@ -716,7 +717,7 @@ class Project(PartialProject):
         """
         self.set_fields({"description": text})
 
-
+    @deprecated("Deprecated because ScratchDB is down indefinitely.")
     def ranks(self):
         """
         Gets information about the project's ranks. Fetched from ScratchDB.
@@ -727,7 +728,6 @@ class Project(PartialProject):
         Returns:
             dict: A dict containing the project's ranks. If the ranks aren't available, all values will be -1.
         """
-        print("Warning: Project.ranks method is deprecated because ScratchDB is down indefinitely.")
         return requests.get(
             f"https://scratchdb.lefty.one/v3/project/info/{self.id}"
         ).json()["statistics"]["ranks"]
