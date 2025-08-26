@@ -306,7 +306,7 @@ class Studio(BaseSiteComponent):
             f"https://api.scratch.mit.edu/studios/{self.id}/projects", limit=limit, offset=offset)
         return commons.parse_object_list(response, project.Project, self._session)
 
-    def curators(self, limit=40, offset=0):
+    def curators(self, limit=40, offset=0) -> list[user.User]:
         """
         Gets the studio curators.
 
@@ -443,7 +443,7 @@ class Studio(BaseSiteComponent):
             f"https://api.scratch.mit.edu/studios/{self.id}/managers", limit=limit, offset=offset)
         return commons.parse_object_list(response, user.User, self._session, "username")
 
-    def host(self):
+    def host(self) -> user.User:
         """
         Gets the studio host.
 
