@@ -1,4 +1,7 @@
+import sys
+
 def test_get():
+    sys.path.insert(0, ".")
     import scratchattach as sa
     project = sa.get_project(1209355136)
 
