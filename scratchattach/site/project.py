@@ -113,7 +113,7 @@ class PartialProject(BaseSiteComponent):
         """
         return f"{self.url}/embed"
 
-    def remixes(self, *, limit=40, offset=0):
+    def remixes(self, *, limit=40, offset=0) -> list[Project]:
         """
         Returns:
             list<scratchattach.project.Project>: A list containing the remixes of the project, each project is represented by a Project object.
@@ -346,7 +346,7 @@ class Project(PartialProject):
         """
         return self.raw_json()["meta"]["agent"]
 
-    def author(self):
+    def author(self) -> user.User:
         """
         Returns:
             scratchattach.user.User: An object representing the Scratch user who created this project.
