@@ -1,6 +1,7 @@
 """Comment class"""
 from __future__ import annotations
 
+import warnings
 from typing import Union, Optional, Any
 from typing_extensions import assert_never  # importing from typing caused me errors
 from enum import Enum, auto
@@ -48,7 +49,7 @@ class Comment(BaseSiteComponent):
             self.source = "Unknown"
 
     def update(self):
-        print("Warning: Comment objects can't be updated")
+        warnings.warn("Warning: Comment objects can't be updated")
         return False  # Objects of this type cannot be updated
 
     def _update_from_dict(self, data):

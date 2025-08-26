@@ -1,6 +1,7 @@
 """ForumTopic and ForumPost classes"""
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass, field
 from typing import Optional, Any
 from urllib.parse import urlparse, parse_qs
@@ -114,7 +115,7 @@ class ForumTopic(BaseSiteComponent):
             list<scratchattach.forum.ForumPost>: A list containing the posts from the specified page of the forum topic 
         """
         if order != "oldest":
-            print("Warning: All post orders except for 'oldest' are deprecated and no longer work") # For backwards compatibility
+            warnings.warn("Warning: All post orders except for 'oldest' are deprecated and no longer work") # For backwards compatibility
 
         posts = []
         
@@ -143,7 +144,7 @@ class ForumTopic(BaseSiteComponent):
                     link = breadcrumb_ul.find_all('a')[1]  # Get the right anchor tag
                     topic_category = link.text.strip()  # Extract and strip text content
             except Exception as e:
-                print(f"Warning: Couldn't scrape topic category for topic {self.id} - {e}")
+                warnings.warn(f"Warning: Couldn't scrape topic category for topic {self.id} - {e}")
                 topic_category = ""
                 
             # get corresponding posts:

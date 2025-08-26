@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import time
 import logging
+import warnings
 
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions
@@ -39,7 +40,7 @@ class BackpackAsset(BaseSiteComponent):
         self.__dict__.update(entries)
 
     def update(self):
-        print("Warning: BackpackAsset objects can't be updated")
+        warnings.warn("Warning: BackpackAsset objects can't be updated")
         return False  # Objects of this type cannot be updated
 
     
