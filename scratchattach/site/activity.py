@@ -299,7 +299,7 @@ class Activity(BaseSiteComponent):
 
         self.raw = data
 
-        _time = data.find('div').find('span').findNext().findNext().text.strip()
+        _time = data.find('div').find('span').find_next().find_next().text.strip()
 
         if '\xa0' in _time:
             while '\xa0' in _time:
@@ -308,9 +308,9 @@ class Activity(BaseSiteComponent):
         self.datetime_created = _time
         self.actor_username = data.find('div').find('span').text
 
-        self.target_name = data.find('div').find('span').findNext().text
-        self.target_link = data.find('div').find('span').findNext()["href"]
-        self.target_id = data.find('div').find('span').findNext()["href"].split("/")[-2]
+        self.target_name = data.find('div').find('span').find_next().text
+        self.target_link = data.find('div').find('span').find_next()["href"]
+        self.target_id = data.find('div').find('span').find_next()["href"].split("/")[-2]
 
         self.type = data.find('div').find_all('span')[0].next_sibling.strip()
         if self.type == "loved":
