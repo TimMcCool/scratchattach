@@ -148,7 +148,8 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         If there is no associated classroom, returns `None`
         """
         if not self._classroom[0]:
-            resp = requests.get(f"https://scratch.mit.edu/users/{self.username}/")
+            with requests.no_error_handling():
+                resp = requests.get(f"https://scratch.mit.edu/users/{self.username}/")
             soup = BeautifulSoup(resp.text, "html.parser")
 
             details = soup.find("p", {"class": "profile-details"})
@@ -180,16 +181,20 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
 
         return self._classroom[1]
 
-    def does_exist(self):
+    def does_exist(self) -> Optional[bool]:
         """
         Returns:
             boolean : True if the user exists, False if the user is deleted, None if an error occured
         """
-        status_code = requests.get(f"https://scratch.mit.edu/users/{self.username}/").status_code
-        if status_code == 200:
-            return True
-        elif status_code == 404:
-            return False
+        with requests.no_error_handling():
+            status_code = requests.get(f"https://scratch.mit.edu/users/{self.username}/").status_code
+            if status_code == 200:
+                return True
+            elif status_code == 404:
+                    return False
+
+        return None
+
 
     # Will maybe be deprecated later, but for now still has its own purpose.
     #@deprecated("This function is partially deprecated. Use user.rank() instead.")
@@ -209,7 +214,6 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             return None
 
     def message_count(self):
-
         return json.loads(requests.get(f"https://api.scratch.mit.edu/users/{self.username}/messages/count/?cachebust={random.randint(0,10000)}", headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',}).text)["count"]
 
     def featured_data(self):
