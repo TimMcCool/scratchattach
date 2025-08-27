@@ -758,7 +758,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             data = json.dumps({"id":str(comment_id)})
         )
 
-    def comments(self, *, page=1, limit=None):
+    def comments(self, *, page=1, limit=None) -> list[comment.Comment]:
         """
         Returns the comments posted on the user's profile (with replies).
 
@@ -779,7 +779,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         _comments = soup.find_all("li", {"class": "top-level-reply"})
 
         if len(_comments) == 0:
-            return None
+            return []
 
         for entity in _comments:
             comment_id = entity.find("div", {"class": "comment"})['data-comment-id']
@@ -810,11 +810,11 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                 r_time = reply.find("span", {"class": "time"})['title']
                 reply_data = {
                     'id': r_comment_id,
-                    'author':{'username': r_user},
+                    'author': {'username': r_user},
                     'content': r_content,
                     'datetime_created': r_time,
-                    "parent_id" : comment_id,
-                    "cached_parent_comment" : _comment,
+                    "parent_id": comment_id,
+                    "cached_parent_comment": _comment,
                 }
                 _r_comment = comment.Comment(source=comment.CommentSource.USER_PROFILE, source_id=self.username, _session = self._session, cached_parent_comment=_comment)
                 _r_comment._update_from_dict(reply_data)

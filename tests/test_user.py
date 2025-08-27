@@ -74,4 +74,9 @@ def test_import():
 
     # if this fails, then RIP griffpatch :(
     assert griffpatch.activity()
+    assert griffpatch.activity_html()
+    # (un)follow, delete comment, report comment,
+    comment = user.comments()[0]
+    assert comment.id == 387076703
+    assert comment.content == "Sample comment"
 
