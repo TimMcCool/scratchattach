@@ -22,7 +22,7 @@ from .site.project import Project, get_project, search_projects, explore_project
 from .site.session import Session, login, login_by_id, login_by_session_string, login_by_io, login_by_file, login_from_browser
 from .site.studio import Studio, get_studio, search_studios, explore_studios
 from .site.classroom import Classroom, get_classroom
-from .site.user import User, get_user
+from .site.user import User, get_user, Rank
 from .site._base import BaseSiteComponent
 from .site.browser_cookies import Browser, ANY, FIREFOX, CHROME, CHROMIUM, VIVALDI, EDGE, EDGE_DEV, SAFARI
 
