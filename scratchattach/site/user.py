@@ -222,7 +222,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             dict: Gets info on the user's featured project and featured label (like "Featured project", "My favorite things", etc.)
         """
         try:
-            response = json.loads(requests.get(f"https://scratch.mit.edu/site-api/users/all/{self.username}/").text)
+            response = requests.get(f"https://scratch.mit.edu/site-api/users/all/{self.username}/").json()
             return {
                 "label":response["featured_project_label_name"],
                 "project":
@@ -237,20 +237,20 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             return None
 
     def follower_count(self):
-        # follower count
-        text = requests.get(
-            f"https://scratch.mit.edu/users/{self.username}/followers/",
-            headers = self._headers
-        ).text
-        return commons.webscrape_count(text, "Followers (", ")")
+        with requests.no_error_handling():
+            text = requests.get(
+                f"https://scratch.mit.edu/users/{self.username}/followers/",
+                headers = self._headers
+            ).text
+            return commons.webscrape_count(text, "Followers (", ")")
 
     def following_count(self):
-        # following count
-        text = requests.get(
-            f"https://scratch.mit.edu/users/{self.username}/following/",
-            headers = self._headers
-        ).text
-        return commons.webscrape_count(text, "Following (", ")")
+        with requests.no_error_handling():
+            text = requests.get(
+                f"https://scratch.mit.edu/users/{self.username}/following/",
+                headers = self._headers
+            ).text
+            return commons.webscrape_count(text, "Following (", ")")
 
     def followers(self, *, limit=40, offset=0):
         """
@@ -284,7 +284,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         """
         return [i.name for i in self.following(limit=limit, offset=offset)]
 
-    def is_following(self, user):
+    def is_following(self, user: str):
         """
         Returns:
             boolean: Whether the user is following the user provided as argument
@@ -298,11 +298,11 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                 if user in following_names:
                     following = True
                     break
-                if following_names == []:
+                if not following_names:
                     break
                 offset += 20
-            except Exception:
-                print("Warning: API error when performing following check")
+            except Exception as e:
+                print(f"Warning: API error when performing following check: {e=}")
                 return following
         return following
 
@@ -311,14 +311,30 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         Returns:
             boolean: Whether the user is followed by the user provided as argument
         """
-        return User(username=user).is_following(self.username)
+        offset = 0
+        followed = False
+
+        while True:
+            try:
+                followed_names = self.follower_names(limit=20, offset=offset)
+                if user in followed_names:
+                    followed = True
+                    break
+                if not followed_names:
+                    break
+                offset += 20
+            except Exception as e:
+                print(f"Warning: API error when performing following check: {e=}")
+                return followed
+        return followed
 
     def project_count(self):
-        text = requests.get(
-            f"https://scratch.mit.edu/users/{self.username}/projects/",
-            headers = self._headers
-        ).text
-        return commons.webscrape_count(text, "Shared Projects (", ")")
+        with requests.no_error_handling():
+            text = requests.get(
+                f"https://scratch.mit.edu/users/{self.username}/projects/",
+                headers = self._headers
+            ).text
+            return commons.webscrape_count(text, "Shared Projects (", ")")
 
     def studio_count(self):
         text = requests.get(
