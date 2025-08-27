@@ -337,20 +337,22 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             return commons.webscrape_count(text, "Shared Projects (", ")")
 
     def studio_count(self):
-        text = requests.get(
-            f"https://scratch.mit.edu/users/{self.username}/studios/",
-            headers = self._headers
-        ).text
-        return commons.webscrape_count(text, "Studios I Curate (", ")")
+        with requests.no_error_handling():
+            text = requests.get(
+                f"https://scratch.mit.edu/users/{self.username}/studios/",
+                headers = self._headers
+            ).text
+            return commons.webscrape_count(text, "Studios I Curate (", ")")
 
     def studios_following_count(self):
-        text = requests.get(
-            f"https://scratch.mit.edu/users/{self.username}/studios_following/",
-            headers = self._headers
-        ).text
-        return commons.webscrape_count(text, "Studios I Follow (", ")")
+        with requests.no_error_handling():
+            text = requests.get(
+                f"https://scratch.mit.edu/users/{self.username}/studios_following/",
+                headers = self._headers
+            ).text
+            return commons.webscrape_count(text, "Studios I Follow (", ")")
 
-    def studios(self, *, limit=40, offset=0):
+    def studios(self, *, limit=40, offset=0) -> list[studio.Studio]:
         _studios = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self.username}/studios/curate", limit=limit, offset=offset)
         studios = []
