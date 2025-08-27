@@ -401,8 +401,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             # The index of the first project on page #n is just (n-1) * 40
             first_idx = (page - 1) * 40
 
-            page_content = requests.get(f"https://scratch.mit.edu/projects/all/{self.username}/loves/"
-                                        f"?page={page}", headers=self._headers).content
+            with requests.no_error_handling():
+                page_content = requests.get(f"https://scratch.mit.edu/projects/all/{self.username}/loves/"
+                                            f"?page={page}", headers=self._headers).content
 
             soup = BeautifulSoup(
                 page_content,
@@ -476,10 +477,11 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         return _projects
 
     def loves_count(self):
-        text = requests.get(
-            f"https://scratch.mit.edu/projects/all/{self.username}/loves/",
-            headers=self._headers
-        ).text
+        with requests.no_error_handling():
+            text = requests.get(
+                f"https://scratch.mit.edu/projects/all/{self.username}/loves/",
+                headers=self._headers
+            ).text
 
         # If there are no loved projects, then Scratch doesn't actually display the number - so we have to catch this
         soup = BeautifulSoup(text, "html.parser")
@@ -500,10 +502,11 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         return commons.parse_object_list(_projects, project.Project, self._session)
 
     def favorites_count(self):
-        text = requests.get(
-            f"https://scratch.mit.edu/users/{self.username}/favorites/",
-            headers = self._headers
-        ).text
+        with requests.no_error_handling():
+            text = requests.get(
+                f"https://scratch.mit.edu/users/{self.username}/favorites/",
+                headers=self._headers
+            ).text
         return commons.webscrape_count(text, "Favorites (", ")")
 
     def toggle_commenting(self):
@@ -681,7 +684,8 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         Returns:
             list<scratchattach.Activity>: The user's activity data as parsed list of scratchattach.activity.Activity objects
         """
-        soup = BeautifulSoup(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text, 'html.parser')
+        with requests.no_error_handling():
+            soup = BeautifulSoup(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text, 'html.parser')
 
         activities = []
         source = soup.find_all("li")

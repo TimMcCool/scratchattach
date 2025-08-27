@@ -1,4 +1,6 @@
 import sys
+
+
 def test_import():
     sys.path.insert(0, ".")
     import scratchattach as sa
@@ -54,3 +56,22 @@ def test_import():
     assert user_studio_count > 0
     assert user.studios_following_count() > 1
     assert user.studios(limit=1, offset=user_studio_count-1)[0].title == "Sample studio"
+    user_project_count = user.project_count()
+    assert user_project_count > 1
+    assert user.projects(limit=1, offset=user_project_count - 2)[0].title == "Sample project #1"
+    loves_count = user.loves_count()
+    assert loves_count > 0
+    assert (user.loves(limit=1, offset=loves_count - 1)[0].title ==
+            "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python")
+    favorites_count = user.favorites_count()
+    assert favorites_count > 0
+    assert (user.favorites(limit=1, offset=favorites_count - 1)[0].title ==
+            "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python")
+    # toggle commenting
+    # viewed projects
+    # set pfp, bio, wiwo, set featured, forum_signature
+    # post comment, reply comment
+
+    # if this fails, then RIP griffpatch :(
+    assert griffpatch.activity()
+
