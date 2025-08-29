@@ -1,3 +1,4 @@
+import pprint
 import sys
 
 
@@ -77,6 +78,10 @@ def test_import():
     assert griffpatch.activity_html()
     # (un)follow, delete comment, report comment,
     comment = user.comments()[0]
-    assert comment.id == 387076703
+    assert int(comment.id) == 387076703
     assert comment.content == "Sample comment"
+    # comment by id, message_events, verificator
 
+    status_data = user.ocular_status()
+    assert status_data["status"] == "Sample status"
+    assert status_data["color"] == "#855cd6"

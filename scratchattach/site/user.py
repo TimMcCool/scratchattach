@@ -703,7 +703,8 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         Returns:
             str: The raw user activity HTML data
         """
-        return requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text
+        with requests.no_error_handling():
+            return requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text
 
 
     def follow(self):
@@ -772,7 +773,8 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         URL = f"https://scratch.mit.edu/site-api/comments/user/{self.username}/?page={page}"
         DATA = []
 
-        page_contents = requests.get(URL).content
+        with requests.no_error_handling():
+            page_contents = requests.get(URL).content
 
         soup = BeautifulSoup(page_contents, "html.parser")
 
