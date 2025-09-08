@@ -168,7 +168,7 @@ class Session(BaseSiteComponent):
 
         # not saving the login ip because it is a security issue, and is not very helpful
 
-        self.language = data["_language"]
+        self.language = data.get("_language", "en")
         # self._cookies["scratchlanguage"] = self.language
 
     def connect_linked_user(self) -> user.User:
@@ -1175,6 +1175,7 @@ def login(username, password, *, timeout=10) -> Session:
             "https://scratch.mit.edu/login/", json={"username": username, "password": password}, headers=_headers,
             timeout=timeout
         )
+
     try:
         result = re.search('"(.*)"', request.headers["Set-Cookie"])
         assert result is not None
