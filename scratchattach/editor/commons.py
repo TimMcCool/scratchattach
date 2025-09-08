@@ -7,7 +7,7 @@ import json
 import random
 import string
 from typing import Optional, Final, Any, TYPE_CHECKING, Union, Self
-from enum import EnumType, Enum
+from enum import EnumMeta, Enum
 
 if TYPE_CHECKING:
     from . import sprite, build_defaulting
@@ -257,7 +257,12 @@ def get_name_nofldr(name: str) -> str:
     else:
         return name[len(fldr) + 2:]
 
-class SingletonMeta(EnumType):
+class SingletonMeta(EnumMeta):
+    def __new__(cls, *args, **kwargs):
+        result = super.__new__(cls, *args, **kwargs)
+        result.__class__ = EnumMeta
+        return result
+
     def __call__(self, value=0, *args, **kwds):
         if value != 0:
             raise ValueError("Value must be 0.")
