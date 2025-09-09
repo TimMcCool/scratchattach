@@ -262,10 +262,7 @@ class SingletonMeta(EnumMeta):
     def __call__(self, value=0, *args, **kwds):
         if value != 0:
             raise ValueError("Value must be 0.")
-        cls = self.__class__
-        self.__class__ = EnumMeta
         result = super().__call__(value, *args, **kwds)
-        self.__class__ = cls
         return result
 
 if TYPE_CHECKING:
