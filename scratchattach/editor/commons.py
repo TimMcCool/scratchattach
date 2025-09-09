@@ -258,15 +258,15 @@ def get_name_nofldr(name: str) -> str:
         return name[len(fldr) + 2:]
 
 class SingletonMeta(EnumMeta):
-    def __new__(cls, *args, **kwargs):
-        result = super().__new__(cls, *args, **kwargs)
-        result.__class__ = EnumMeta
-        return result
-
+    
     def __call__(self, value=0, *args, **kwds):
         if value != 0:
             raise ValueError("Value must be 0.")
-        return super().__call__(value, *args, **kwds)
+        cls = self.__class__
+        self.__class__ = EnumMeta
+        result = super().__call__(value, *args, **kwds)
+        self.__class__ = cls
+        return result
 
 if TYPE_CHECKING:
     Singleton = Enum
