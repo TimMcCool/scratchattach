@@ -259,7 +259,7 @@ def get_name_nofldr(name: str) -> str:
 
 class SingletonMeta(EnumMeta):
     def __new__(cls, *args, **kwargs):
-        result = super.__new__(cls, *args, **kwargs)
+        result = super().__new__(cls, *args, **kwargs)
         result.__class__ = EnumMeta
         return result
 
