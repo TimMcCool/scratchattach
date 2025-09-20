@@ -396,15 +396,18 @@ class Project(PartialProject):
         Returns:
             scratchattach.comments.Comment: A Comment object representing the requested comment.
         """
-        r = requests.get(
+        # https://api.scratch.mit.edu/users/TimMcCool/projects/404369790/comments/439984518
+        data = requests.get(
             f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/{comment_id}",
             headers=self._headers,
             cookies=self._cookies
         ).json()
-        if r is None:
-            raise exceptions.CommentNotFound()
-        _comment = comment.Comment(id=r["id"], _session=self._session, source=comment.CommentSource.PROJECT, source_id=self.id)
-        _comment._update_from_dict(r)
+
+        if data is None or data.get("code") == "NotFound":
+            raise exceptions.CommentNotFound(f"Cannot find comment #{comment_id} on -P {self.id} by -U {self.author_name}")
+
+        _comment = comment.Comment(id=data["id"], _session=self._session, source=comment.CommentSource.PROJECT, source_id=self.id)
+        _comment._update_from_dict(data)
         return _comment
     
     def love(self):

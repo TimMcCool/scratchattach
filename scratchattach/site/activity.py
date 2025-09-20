@@ -33,11 +33,12 @@ class Activity(BaseSiteComponent):
     gallery_title: Optional[str] = None
     topic_title: Optional[str] = None
     topic_id: Optional[int] = None
+    target_name: Optional[str] = None
 
     parent_title: Optional[str] = None
     parent_id: Optional[int] = None
 
-    comment_type = None
+    comment_type: Optional[int] = None
     comment_obj_id = None
     comment_obj_title: Optional[str] = None
     comment_id: Optional[int] = None
@@ -447,11 +448,13 @@ class Activity(BaseSiteComponent):
 
         if self.type == "addcomment":  # target is a comment
             if self.comment_type == 0:
-                _c = project.Project(id=self.comment_obj_id, author_name=self._session.username,
-                                     _session=self._session).comment_by_id(self.comment_id)
-            if self.comment_type == 1:
+                # we need author name, but it has not been saved in this object
+                _proj = self._session.connect_project(self.comment_obj_id)
+                _c = _proj.comment_by_id(self.comment_id)
+
+            elif self.comment_type == 1:
                 _c = user.User(username=self.comment_obj_title, _session=self._session).comment_by_id(self.comment_id)
-            if self.comment_type == 2:
+            elif self.comment_type == 2:
                 _c = user.User(id=self.comment_obj_id, _session=self._session).comment_by_id(self.comment_id)
             else:
                 raise ValueError(f"{self.comment_type} is an invalid comment type")

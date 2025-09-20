@@ -2,15 +2,26 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 
+
 def test_activity():
     sys.path.insert(0, ".")
     import scratchattach as sa
+    from scratchattach.utils import exceptions
     import util
     sess = util.session()
 
     messages = sess.messages()
     for msg in messages:
-        print(msg)
+        print(msg, end=' ')
+
+        try:
+            target = msg.target()
+        except exceptions.CommentNotFound:
+            target = None
+            raise
+
+        print(target)
+
 
 if __name__ == "__main__":
     test_activity()
