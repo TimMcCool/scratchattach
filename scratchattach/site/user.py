@@ -6,7 +6,7 @@ import random
 import re
 import string
 import warnings
-from typing import Union, cast, Optional
+from typing import Union, cast, Optional, TypedDict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
@@ -38,6 +38,17 @@ class Rank(Enum):
     NEW_SCRATCHER = 0
     SCRATCHER = 1
     SCRATCH_TEAM = 2
+
+class _OcularStatusMeta(TypedDict):
+    updated: str
+    updatedBy: str
+
+class _OcularStatus(TypedDict):
+    _id: str
+    name: str
+    status: str
+    color: str
+    meta: _OcularStatusMeta
 
 class Verificator:
 
@@ -894,7 +905,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         except Exception:
             return {"country":{"loves":0,"favorites":0,"comments":0,"views":0,"followers":0,"following":0},"loves":0,"favorites":0,"comments":0,"views":0,"followers":0,"following":0}
 
-    def ocular_status(self):
+    def ocular_status(self) -> _OcularStatus:
         """
         Gets information about the user's ocular status. Ocular is a website developed by jeffalo: https://ocular.jeffalo.net/
 
