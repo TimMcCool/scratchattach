@@ -15,7 +15,7 @@ def test_comment():
     comment = user.comments(limit=1)[0]
 
     assert comment.id == "387076703"
-    assert comment.source is sa.CommentSource.USER_PROFILE
+    assert comment.source == sa.CommentSource.USER_PROFILE
     assert comment.source_id == "ScratchAttachV2"
     assert comment.parent_id is None
     assert comment.content == "Sample comment"
@@ -26,7 +26,7 @@ def test_comment():
     comment = proj.comments(limit=1)[0]
 
     assert comment.id == 494890468
-    assert comment.source in [sa.CommentSource.PROJECT, 'project']
+    assert comment.source == sa.CommentSource.PROJECT
     assert comment.source_id == 1108326850
     assert comment.parent_id is None
     assert comment.content == ("&lt;&amp;;&apos;!\n"
@@ -41,7 +41,7 @@ def test_comment():
     comment = studio.comments(limit=1)[0]
 
     assert comment.id == 302129887
-    assert comment.source in [sa.CommentSource.STUDIO, 'studio']
+    assert comment.source == sa.CommentSource.STUDIO
     assert comment.source_id == 50809872
     assert comment.parent_id is None
     assert comment.content == "Sample"
@@ -53,7 +53,7 @@ def test_comment():
     comment = comment.replies(limit=1)[0]
 
     assert comment.id == 302129910
-    assert comment.source in [sa.CommentSource.STUDIO, 'studio']
+    assert comment.source == sa.CommentSource.STUDIO
     assert comment.source_id == 50809872
     assert comment.parent_id == 302129887
     assert comment.commentee_id == 58743127
