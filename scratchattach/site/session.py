@@ -496,9 +496,11 @@ class Session(BaseSiteComponent):
         Returns:
             list<scratchattach.project.Project>: List that contains the search results.
         """
+        query = f"&q={query}" if query else ""
+
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset,
-            add_params=f"&language={language}&mode={mode}&q={query}")
+            add_params=f"&language={language}&mode={mode}{query}")
         return commons.parse_object_list(response, project.Project, self)
 
     def explore_projects(self, *, query: str = "*", mode: str = "trending", language: str = "en", limit: int = 40,
@@ -526,20 +528,19 @@ class Session(BaseSiteComponent):
 
     def search_studios(self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40,
                        offset: int = 0) -> list[studio.Studio]:
-        if not query:
-            raise ValueError("The query can't be empty for search")
+        query = f"&q={query}" if query else ""
+
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/search/studios", limit=limit, offset=offset,
-            add_params=f"&language={language}&mode={mode}&q={query}")
+            add_params=f"&language={language}&mode={mode}{query}")
         return commons.parse_object_list(response, studio.Studio, self)
 
     def explore_studios(self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40,
                         offset: int = 0) -> list[studio.Studio]:
-        if not query:
-            raise ValueError("The query can't be empty for explore")
+        query = f"&q={query}" if query else ""
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/explore/studios", limit=limit, offset=offset,
-            add_params=f"&language={language}&mode={mode}&q={query}")
+            add_params=f"&language={language}&mode={mode}{query}")
         return commons.parse_object_list(response, studio.Studio, self)
 
     # --- Create project API ---
