@@ -11,16 +11,19 @@ def test_teacher_activity():
     sess = util.teacher_session()
 
     # we cannot do assertions, but we can probe for any errors.
-    messages = sess.mystuff_classes()[0].activity()
-    for msg in messages:
-        print(msg, end=' ')
+    cls = sess.mystuff_classes()[0]
 
-        try:
-            target = msg.target()
-        except exceptions.CommentNotFound:
-            target = None
+    messages = [cls.activity(page=page) for page in range(1, 3)]
+    for page in messages:
+        for msg in page:
+            print(msg, end=' ')
 
-        print(target)
+            try:
+                target = msg.target()
+            except exceptions.CommentNotFound:
+                target = None
+
+            print(target)
 
 
 if __name__ == "__main__":

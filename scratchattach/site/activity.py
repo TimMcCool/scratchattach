@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import html
+import warnings
 
 from typing import Optional
 
@@ -57,7 +58,7 @@ class Activity(BaseSiteComponent):
         return f"Activity({repr(self.raw)})"
 
     def __str__(self):
-        return '-A ' +' '.join(self.parts)
+        return '-A ' + ' '.join(self.parts)
 
     @property
     def parts(self):
@@ -77,7 +78,8 @@ class Activity(BaseSiteComponent):
             case "followstudio":
                 return [f"{self.actor_username}", "followed", f"-S {self.title!r} ({self.gallery_id})"]
             case "shareproject":
-                return [f"{self.actor_username}", "reshared" if self.is_reshare else "shared", f"-P {self.title!r} ({self.project_id})"]
+                return [f"{self.actor_username}", "reshared" if self.is_reshare else "shared",
+                        f"-P {self.title!r} ({self.project_id})"]
             case "remixproject":
                 return [f"{self.actor_username}", "remixed",
                         f"-P {self.parent_title!r} ({self.parent_id}) as -P {self.title!r} ({self.project_id})"]
@@ -129,16 +131,19 @@ class Activity(BaseSiteComponent):
                 return [f"{self.actor_username}", "created", f"-S {self.gallery_title} ({self.gallery_id})"]
 
             case "promotetomanager":
-                return [f"{self.actor_username}", "promoted", f"-U {self.recipient_username}", "in", f"-S {self.gallery_title} ({self.gallery_id})"]
+                return [f"{self.actor_username}", "promoted", f"-U {self.recipient_username}", "in",
+                        f"-S {self.gallery_title} ({self.gallery_id})"]
 
             case "updateprofile":
                 return [f"{self.actor_username}", "updated their profile.", f"Changed fields: {self.changed_fields}"]
 
             case "removeprojectfromstudio":
-                return [f"{self.actor_username}", "removed", f"-P {self.project_title} ({self.project_id})", "from", f"-S {self.gallery_title} ({self.gallery_id})"]
+                return [f"{self.actor_username}", "removed", f"-P {self.project_title} ({self.project_id})", "from",
+                        f"-S {self.gallery_title} ({self.gallery_id})"]
 
             case "addprojecttostudio":
-                return [f"{self.actor_username}", "added", f"-P {self.project_title} ({self.project_id})", "to", f"-S {self.gallery_title} ({self.gallery_id})"]
+                return [f"{self.actor_username}", "added", f"-P {self.project_title} ({self.project_id})", "to",
+                        f"-S {self.gallery_title} ({self.gallery_id})"]
 
             case "performaction":
                 return [f"{self.actor_username}", "performed an action"]
@@ -173,185 +178,96 @@ class Activity(BaseSiteComponent):
         else:
             username = None
 
-        if data.get("recipient") is not None:
-            recipient_username = data["recipient"]["username"]
-
-        elif data.get("recipient_username") is not None:
-            recipient_username = data["recipient_username"]
-
-        elif data.get("project_creator") is not None:
-            recipient_username = data["project_creator"]["username"]
+        if recipient := data.get("recipient"):
+            recipient_username = recipient["username"]
+        elif recipient_username := data.get("recipient_username"):
+            pass
+        elif project_creator := data.get("project_creator"):
+            recipient_username = project_creator["username"]
         else:
             recipient_username = None
 
         default_case = False
         # Even if `activity_type` is an invalid value; it will default to 'user performed an action'
-
+        self.actor_username = username
+        self.username = username
         self.raw = data
+        self.datetime_created = _time
         if activity_type == 0:
-            # follow
-            followed_username = data["followed_username"]
-
-            self.datetime_created = _time
             self.type = "followuser"
-            self.username = username
-            self.followed_username = followed_username
+            self.followed_username = data["followed_username"]
 
         elif activity_type == 1:
-            # follow studio
-            studio_id = data["gallery"]
-
-            self.datetime_created = _time
             self.type = "followstudio"
-
-            self.username = username
-            self.gallery_id = studio_id
+            self.gallery_id = data["gallery"]
 
         elif activity_type == 2:
-            # love project
-            project_id = data["project"]
-
-            self.datetime_created = _time
             self.type = "loveproject"
-
-            self.username = username
-            self.project_id = project_id
+            self.project_id = data["project"]
             self.recipient_username = recipient_username
 
         elif activity_type == 3:
-            # Favorite project
-            project_id = data["project"]
-
-            self.datetime_created = _time
             self.type = "favoriteproject"
-
-            self.username = username
-            self.project_id = project_id
+            self.project_id = data["project"]
             self.recipient_username = recipient_username
 
         elif activity_type == 7:
-            # Add project to studio
-
-            project_id = data["project"]
-            studio_id = data["gallery"]
-
-            self.datetime_created = _time
             self.type = "addprojecttostudio"
-
-            self.username = username
-            self.gallery_id = studio_id
-            self.project_id = project_id
+            self.project_id = data["project"]
+            self.gallery_id = data["gallery"]
             self.recipient_username = recipient_username
 
         elif activity_type in (8, 9, 10):
-            # Share/Reshare project
-            project_id = data["project"]
-            is_reshare = data["is_reshare"]
-
-            self.is_reshare = is_reshare
-            self.datetime_created = _time
             self.type = "shareproject"
-
-            self.username = username
-            self.project_id = project_id
+            self.is_reshare = data["is_reshare"]
+            self.project_id = data["project"]
             self.recipient_username = recipient_username
 
         elif activity_type == 11:
-            # Remix
-            parent_id = data["parent"]
-
-            self.datetime_created = _time
             self.type = "remixproject"
-
-            self.username = username
-            self.project_id = parent_id
+            self.parent_id = data["parent"]
+            warnings.warn(f"This may be incorrectly implemented.\n"
+                          f"Raw data: {data}\n"
+                          f"Please raise an issue on gh: https://github.com/TimMcCool/scratchattach/issues")
             self.recipient_username = recipient_username
 
         # type 12 does not exist in the HTML. That's why it was removed, not merged with type 13.
 
         elif activity_type == 13:
-            # Create ('add') studio
-            studio_id = data["gallery"]
-
-            self.datetime_created = _time
             self.type = "createstudio"
-
-            self.username = username
-            self.gallery_id = studio_id
+            self.gallery_id = data["gallery"]
 
         elif activity_type == 15:
-            # Update studio
-            studio_id = data["gallery"]
-
-            self.datetime_created = _time
             self.type = "updatestudio"
-
-            self.username = username
-            self.gallery_id = studio_id
+            self.gallery_id = data["gallery"]
 
         elif activity_type in (16, 17, 18, 19):
-            # Remove project from studio
-
-            project_id = data["project"]
-            studio_id = data["gallery"]
-
-            self.datetime_created = _time
             self.type = "removeprojectfromstudio"
-            self.gallery_id = studio_id
-            self.project_id = project_id
-
-            self.username = username
-            self.project_id = project_id
+            self.gallery_id = data["gallery"]
+            self.project_id = data["project"]
 
         elif activity_type in (20, 21, 22):
-            # Was promoted to manager for studio
-            studio_id = data["gallery"]
-
-            self.datetime_created = _time
             self.type = "promotetomanager"
-
-            self.username = username
             self.recipient_username = recipient_username
-            self.gallery_id = studio_id
+            self.gallery_id = data["gallery"]
 
         elif activity_type in (23, 24, 25):
-            # Update profile
-            self.datetime_created = _time
             self.type = "updateprofile"
             self.changed_fields = data.get("changed_fields", {})
 
-            self.username = username
-
         elif activity_type in (26, 27):
             # Comment in either project, user, or studio
-            comment_type: int = data["comment_type"]
-            fragment = data["comment_fragment"]
-            comment_id = data["comment_id"]
-            comment_obj_id = data["comment_obj_id"]
-            comment_obj_title = data["comment_obj_title"]
-
-            self.datetime_created = _time
             self.type = "addcomment"
+            self.comment_fragment = data["comment_fragment"]
+            self.comment_type = data["comment_type"]
+            self.comment_obj_id = data["comment_obj_id"]
+            self.comment_obj_title = data["comment_obj_title"]
+            self.comment_id = data["comment_id"]
 
-            self.username = username
-
-            self.comment_fragment = fragment
-            self.comment_type = comment_type
-            self.comment_obj_id = comment_obj_id
-            self.comment_obj_title = comment_obj_title
-            self.comment_id = comment_id
         else:
-            default_case = True
-
-        if default_case:
             # This is coded in the scratch HTML, haven't found an example of it though
-            self.datetime_created = _time
             self.type = "performaction"
 
-            self.username = username
-
-        if not self.actor_username:
-            self.actor_username = self.username
 
     def _update_from_html(self, data: Tag):
 
