@@ -26,7 +26,7 @@ jobs:
         run: |
           echo hi2
           
-          myvar="FERNET_KEY"
+          myvar="$FERNET_KEY"
           myvarlen="${#myvar}"
           
           echo "$myvarlen"
