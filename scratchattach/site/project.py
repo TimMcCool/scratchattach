@@ -815,7 +815,7 @@ class Project(PartialProject):
 
     def remix_tree(self):
         """
-        Fetch & cache remix tree and return direct children.
+        Fetch & cache remix tree, and return remix root.
         Cached remix tree children accessible via Project.remix_tree_children.
         A parent project object that is linked to children is accessible via Project.remix_tree_parent
 
