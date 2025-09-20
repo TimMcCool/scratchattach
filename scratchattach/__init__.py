@@ -15,7 +15,7 @@ from .utils.exceptions import LoginDataWarning
 
 from .site.activity import Activity
 from .site.backpack_asset import BackpackAsset
-from .site.comment import Comment
+from .site.comment import Comment, CommentSource
 from .site.cloud_activity import CloudActivity
 from .site.forum import ForumPost, ForumTopic, get_topic, get_topic_list, youtube_link_to_scratch
 from .site.project import Project, get_project, search_projects, explore_projects

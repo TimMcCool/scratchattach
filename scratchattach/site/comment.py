@@ -5,6 +5,7 @@ import warnings
 from typing import Union, Optional, Any
 from typing_extensions import assert_never  # importing from typing caused me errors
 from enum import Enum, auto
+import html
 
 from . import user, project, studio
 from ._base import BaseSiteComponent
@@ -98,6 +99,17 @@ class Comment(BaseSiteComponent):
         except Exception:
             pass
         return True
+
+    @property
+    def text(self) -> str:
+        """
+        Parsed version of Comment.content. This removes any escape codes, e.g. '&apos;' becomes ', an apostrophe
+        """
+        if self.source is CommentSource.USER_PROFILE:
+            # user profile comments do not seem to be escaped
+            return self.content
+
+        return html.unescape(self.content)
 
     # Methods for getting related entities
 
