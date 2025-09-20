@@ -21,13 +21,13 @@ def session() -> _Session:
     return _session
 
 _teacher_session: Optional[_Session] = None
-def teacher_session() -> _Session:
+def teacher_session() -> Optional[_Session]:
     global _teacher_session
 
     if not _teacher_session:
         if "teacher_auth" not in __AUTH:
             warnings.warn(f"Could not test for teacher session")
-            exit(0)
+            return None
 
         data = __AUTH["teacher_auth"]
         _teacher_session = login(data["username"], data["password"])

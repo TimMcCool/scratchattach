@@ -4,7 +4,7 @@ from __future__ import annotations
 import html
 import warnings
 
-from typing import Optional
+from typing import Optional, Any
 
 from bs4 import Tag
 from dataclasses import dataclass
@@ -20,7 +20,7 @@ class Activity(BaseSiteComponent):
     Represents a Scratch activity (message or other user page activity)
     """
     _session: Optional[session.Session] = None
-    raw = None
+    raw: Any = None
 
     id: Optional[int] = None
     actor_username: Optional[str] = None
@@ -51,8 +51,8 @@ class Activity(BaseSiteComponent):
     is_reshare: Optional[bool] = None
 
     datetime_created: Optional[str] = None
-    time = None
-    type = None
+    time: Any = None
+    type: str = None
 
     def __repr__(self):
         return f"Activity({repr(self.raw)})"

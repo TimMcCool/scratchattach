@@ -609,11 +609,11 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         Posts a comment on the user's profile. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
 
         Args:
-            content: Content of the comment that should be posted
+            :param content: Content of the comment that should be posted
 
         Keyword Arguments:
-            parent_id: ID of the comment you want to reply to. If you don't want to mention a user, don't put the argument.
-            commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
+            :param commentee_id: ID of the comment you want to reply to. If you don't want to mention a user, don't put the argument.
+            :param parent_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
 
         Returns:
             scratchattach.comment.Comment: An object representing the created comment.
@@ -636,8 +636,8 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             else:
                 raise exceptions.CommentPostFailure(r.text)
 
+        text = r.text
         try:
-            text = r.text
             data = {
                 'id': text.split('<div id="comments-')[1].split('" class="comment')[0],
                 'author': {"username": text.split('" data-comment-user="')[1].split('"><img class')[0]},
@@ -648,18 +648,18 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             _comment = comment.Comment(source=comment.CommentSource.USER_PROFILE, parent_id=None if parent_id=="" else parent_id, commentee_id=commentee_id, source_id=self.username, id=data["id"], _session = self._session, datetime = datetime.now())
             _comment._update_from_dict(data)
             return _comment
-        except Exception:
+        except Exception as e:
             if '{"error": "isFlood"}' in text:
                 raise(exceptions.CommentPostFailure(
-                    "You are being rate-limited for running this operation too often. Implement a cooldown of about 10 seconds."))
+                    "You are being rate-limited for running this operation too often. Implement a cooldown of about 10 seconds.")) from e
             elif '<script id="error-data" type="application/json">' in text:
                 raw_error_data = text.split('<script id="error-data" type="application/json">')[1].split('</script>')[0]
                 error_data = json.loads(raw_error_data)
                 expires = error_data['mute_status']['muteExpiresAt']
                 expires = datetime.fromtimestamp(expires, timezone.utc)
-                raise(exceptions.CommentPostFailure(f"You have been muted. Mute expires on {expires}"))
+                raise(exceptions.CommentPostFailure(f"You have been muted. Mute expires on {expires}")) from e
             else:
-                raise(exceptions.FetchError(f"Couldn't parse API response: {r.text!r}"))
+                raise(exceptions.FetchError(f"Couldn't parse API response: {r.text!r}")) from e
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """
@@ -671,11 +671,11 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             Therefore, parent_id should be the comment id of a top level comment.
 
         Args:
-            content: Content of the comment that should be posted
+            :param content: Content of the comment that should be posted
 
         Keyword Arguments:
-            parent_id: ID of the comment you want to reply to
-            commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
+            :param parent_id: ID of the comment you want to reply to
+            :param commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
         """
         return self.post_comment(content, parent_id=parent_id, commentee_id=commentee_id)
 
