@@ -871,6 +871,12 @@ class Project(PartialProject):
         return mapping[root_id]
 
     def remix_tree_pretty(self, indent: int = 0, *, formatter: Callable[[Project, int], str] = None):
+        """
+        Prettily formats and indents the remix tree attached to this project. (does NOT start at root)
+        :param indent: default indent - recommend keeping this as 0
+        :param formatter: function that formats a single project with an indent. Return a string. Recommend starting with '\t' * indent
+        :return: Large string containing the formatted remix tree. For large trees, it is recommended to save it to a file.
+        """
         if not formatter:
             formatter = lambda p, ind: f"{'\t' * ind}-P {p.title} ({p.id}) #{p.remix_depth}\n"
 
