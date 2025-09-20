@@ -1,48 +1,46 @@
 """Activity and CloudActivity class"""
 from __future__ import annotations
 
-from bs4 import Tag
+from typing import Optional
 
-from . import user, project, studio
+from bs4 import Tag
+from dataclasses import dataclass
+
+from . import user, project, studio, session
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions
 
 
+@dataclass
 class Activity(BaseSiteComponent):
     """
     Represents a Scratch activity (message or other user page activity)
     """
+    _session: Optional[session.Session] = None
+    raw = None
+
+    id: Optional[int] = None
+
+    project_id: Optional[int] = None
+    gallery_id: Optional[int] = None
+    username: Optional[str] = None
+    followed_username: Optional[str] = None
+    recipient_username: Optional[str] = None
+
+    comment_type = None
+    comment_obj_id = None
+    comment_obj_title: Optional[str] = None
+    comment_id: Optional[int] = None
+
+    datetime_created = None
+    time = None
+    type = None
 
     def __repr__(self):
         return f"Activity({repr(self.raw)})"
 
     def __str__(self):
         return str(self.raw)
-
-    def __init__(self, **entries):
-        # Set attributes every Activity object needs to have:
-        self._session = None
-        self.raw = None
-
-        # Possible attributes
-        self.project_id = None
-        self.gallery_id = None
-
-        self.username = None
-        self.followed_username = None
-        self.recipient_username = None
-
-        self.comment_type = None
-        self.comment_obj_id = None
-        self.comment_obj_title = None
-        self.comment_id = None
-
-        self.datetime_created = None
-        self.time = None
-        self.type = None
-
-        # Update attributes from entries dict:
-        self.__dict__.update(entries)
 
     def update(self):
         print("Warning: Activity objects can't be updated")
@@ -182,7 +180,7 @@ class Activity(BaseSiteComponent):
             self.recipient_username = recipient_username
 
         # type 12 does not exist in the HTML. That's why it was removed, not merged with type 13.
-        
+
         elif activity_type == 13:
             # Create ('add') studio
             studio_id = data["gallery"]
@@ -380,3 +378,4 @@ class Activity(BaseSiteComponent):
                 raise ValueError(f"{self.comment_type} is an invalid comment type")
 
             return _c
+        return None
