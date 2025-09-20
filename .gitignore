@@ -7,7 +7,7 @@ setup.py
 scratchattach/test.py
 scratchattach.code-workspace
 **/.DS_Store
-setup.py
-setup.py
 .env
 tests/manual_tests/**
+tests/util/localauth.toml
+.venv

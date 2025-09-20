@@ -1,0 +1,7 @@
+# Encrypted authentication data using the FERNET_KEY
+# If you want to set local auth data, make a file 'localauth.toml' in this same directory.
+# any values - that be entire categories - in localauth will overwrite those in auth.toml
+
+[test]
+# this key is just used to test if auth is working
+note = "gAAAAABozoVANH3_fARiCOFvv-O6pHd8DU2kb5vzs7xIxzE3JoWnsFByK5LdoLnnfh0pXpmSpo0KS1j4uwl3XvF-Qm3Sm63Fwy_H224EAdqF_d2hWdVxJkn7HmAJTT445AyrtdFYgrg9"
