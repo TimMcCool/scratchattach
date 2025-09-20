@@ -9,5 +9,5 @@ scratchattach.code-workspace
 **/.DS_Store
 .env
 tests/manual_tests/**
-tests/util/localauth.toml
+tests/util/local_auth.toml
 .venv

@@ -22,6 +22,7 @@ class Activity(BaseSiteComponent):
     raw = None
 
     id: Optional[int] = None
+    actor_username: Optional[str] = None
 
     project_id: Optional[int] = None
     gallery_id: Optional[int] = None
@@ -34,6 +35,7 @@ class Activity(BaseSiteComponent):
     topic_title: Optional[str] = None
     topic_id: Optional[int] = None
     target_name: Optional[str] = None
+    target_id: Optional[int] = None
 
     parent_title: Optional[str] = None
     parent_id: Optional[int] = None
@@ -43,6 +45,8 @@ class Activity(BaseSiteComponent):
     comment_obj_title: Optional[str] = None
     comment_id: Optional[int] = None
     comment_fragment: Optional[str] = None
+
+    changed_fields: Optional[dict[str, str]] = None
 
     datetime_created: Optional[str] = None
     time = None
@@ -57,6 +61,7 @@ class Activity(BaseSiteComponent):
     @property
     def parts(self):
         """
+        Return format: [actor username] + N * [action, object]
         :return: A list of parts of the message. Join the parts to get a readable version, which is done with str(activity)
         """
         match self.type:
@@ -110,10 +115,32 @@ class Activity(BaseSiteComponent):
                 return [f"{self.actor_username}", "joined Scratch"]
 
             case "studioactivity":
-                return ['Studio activity', '', f"-S {self.title!r} ({self.gallery_id})"]
+                # the actor username should be systemuser
+                return [f"{self.actor_username}", 'Studio activity', '', f"-S {self.title!r} ({self.gallery_id})"]
 
             case "forumpost":
                 return [f"{self.actor_username}", "posted in", f"-F {self.topic_title} ({self.topic_id})"]
+
+            case "updatestudio":
+                return [f"{self.actor_username}", "updated", f"-S {self.gallery_title} ({self.gallery_id})"]
+
+            case "createstudio":
+                return [f"{self.actor_username}", "created", f"-S {self.gallery_title} ({self.gallery_id})"]
+
+            case "promotetomanager":
+                return [f"{self.actor_username}", "promoted", f"-U {self.recipient_username}", "in", f"-S {self.gallery_title} ({self.gallery_id})"]
+
+            case "updateprofile":
+                return [f"{self.actor_username}", "updated their profile.", f"Changed fields: {self.changed_fields}"]
+
+            case "removeprojectfromstudio":
+                return [f"{self.actor_username}", "removed", f"-P {self.project_title} ({self.project_id})", "from", f"-S {self.gallery_title} ({self.gallery_id})"]
+
+            case "addprojecttostudio":
+                return [f"{self.actor_username}", "added", f"-P {self.project_title} ({self.project_id})", "to", f"-S {self.gallery_title} ({self.gallery_id})"]
+
+            case "performaction":
+                return [f"{self.actor_username}", "performed an action"]
 
             case _:
                 raise NotImplementedError(
@@ -159,11 +186,12 @@ class Activity(BaseSiteComponent):
         default_case = False
         # Even if `activity_type` is an invalid value; it will default to 'user performed an action'
 
+        self.raw = data
         if activity_type == 0:
             # follow
             followed_username = data["followed_username"]
 
-            self.raw = f"{username} followed user {followed_username}"
+            # self.raw = f"{username} followed user {followed_username}"
 
             self.datetime_created = _time
             self.type = "followuser"
@@ -174,9 +202,9 @@ class Activity(BaseSiteComponent):
             # follow studio
             studio_id = data["gallery"]
 
-            raw = f"{username} followed studio https://scratch.mit.edu/studios/{studio_id}"
+            # raw = f"{username} followed studio https://scratch.mit.edu/studios/{studio_id}"
 
-            self.raw = raw
+            # self.raw = raw
             self.datetime_created = _time
             self.type = "followstudio"
 
@@ -187,9 +215,9 @@ class Activity(BaseSiteComponent):
             # love project
             project_id = data["project"]
 
-            raw = f"{username} loved project https://scratch.mit.edu/projects/{project_id}"
+            # raw = f"{username} loved project https://scratch.mit.edu/projects/{project_id}"
 
-            self.raw = raw
+            # self.raw = raw
             self.datetime_created = _time
             self.type = "loveproject"
 
@@ -201,9 +229,9 @@ class Activity(BaseSiteComponent):
             # Favorite project
             project_id = data["project"]
 
-            raw = f"{username} favorited project https://scratch.mit.edu/projects/{project_id}"
+            # raw = f"{username} favorited project https://scratch.mit.edu/projects/{project_id}"
 
-            self.raw = raw
+            # self.raw = raw
             self.datetime_created = _time
             self.type = "favoriteproject"
 
@@ -217,9 +245,9 @@ class Activity(BaseSiteComponent):
             project_id = data["project"]
             studio_id = data["gallery"]
 
-            raw = f"{username} added the project https://scratch.mit.edu/projects/{project_id} to studio https://scratch.mit.edu/studios/{studio_id}"
+            # raw = f"{username} added the project https://scratch.mit.edu/projects/{project_id} to studio https://scratch.mit.edu/studios/{studio_id}"
 
-            self.raw = raw
+            # self.raw = raw
             self.datetime_created = _time
             self.type = "addprojecttostudio"
 
@@ -234,9 +262,9 @@ class Activity(BaseSiteComponent):
 
             raw_reshare = "reshared" if is_reshare else "shared"
 
-            raw = f"{username} {raw_reshare} the project https://scratch.mit.edu/projects/{project_id}"
+            # raw = f"{username} {raw_reshare} the project https://scratch.mit.edu/projects/{project_id}"
 
-            self.raw = raw
+            # self.raw = raw
             self.datetime_created = _time
             self.type = "shareproject"
 
@@ -248,9 +276,9 @@ class Activity(BaseSiteComponent):
             # Remix
             parent_id = data["parent"]
 
-            raw = f"{username} remixed the project https://scratch.mit.edu/projects/{parent_id}"
+            # raw = f"{username} remixed the project https://scratch.mit.edu/projects/{parent_id}"
 
-            self.raw = raw
+            # self.raw = raw
             self.datetime_created = _time
             self.type = "remixproject"
 
@@ -264,9 +292,9 @@ class Activity(BaseSiteComponent):
             # Create ('add') studio
             studio_id = data["gallery"]
 
-            raw = f"{username} created the studio https://scratch.mit.edu/studios/{studio_id}"
+            # raw = f"{username} created the studio https://scratch.mit.edu/studios/{studio_id}"
 
-            self.raw = raw
+            # self.raw = raw
             self.datetime_created = _time
             self.type = "createstudio"
 
@@ -277,9 +305,9 @@ class Activity(BaseSiteComponent):
             # Update studio
             studio_id = data["gallery"]
 
-            raw = f"{username} updated the studio https://scratch.mit.edu/studios/{studio_id}"
+            # raw = f"{username} updated the studio https://scratch.mit.edu/studios/{studio_id}"
 
-            self.raw = raw
+            # self.raw = raw
             self.datetime_created = _time
             self.type = "updatestudio"
 
@@ -292,11 +320,13 @@ class Activity(BaseSiteComponent):
             project_id = data["project"]
             studio_id = data["gallery"]
 
-            raw = f"{username} removed the project https://scratch.mit.edu/projects/{project_id} from studio https://scratch.mit.edu/studios/{studio_id}"
+            # raw = f"{username} removed the project https://scratch.mit.edu/projects/{project_id} from studio https://scratch.mit.edu/studios/{studio_id}"
 
-            self.raw = raw
+            # self.raw = raw
             self.datetime_created = _time
             self.type = "removeprojectfromstudio"
+            self.gallery_id = studio_id
+            self.project_id = project_id
 
             self.username = username
             self.project_id = project_id
@@ -305,9 +335,9 @@ class Activity(BaseSiteComponent):
             # Was promoted to manager for studio
             studio_id = data["gallery"]
 
-            raw = f"{recipient_username} was promoted to manager by {username} for studio https://scratch.mit.edu/studios/{studio_id}"
+            # raw = f"{recipient_username} was promoted to manager by {username} for studio https://scratch.mit.edu/studios/{studio_id}"
 
-            self.raw = raw
+            # self.raw = raw
             self.datetime_created = _time
             self.type = "promotetomanager"
 
@@ -317,11 +347,12 @@ class Activity(BaseSiteComponent):
 
         elif activity_type in (23, 24, 25):
             # Update profile
-            raw = f"{username} made a profile update"
+            # raw = f"{username} made a profile update"
 
-            self.raw = raw
+            # self.raw = raw
             self.datetime_created = _time
             self.type = "updateprofile"
+            self.changed_fields = data.get("changed_fields", {})
 
             self.username = username
 
@@ -333,28 +364,12 @@ class Activity(BaseSiteComponent):
             comment_obj_id = data["comment_obj_id"]
             comment_obj_title = data["comment_obj_title"]
 
-            if comment_type == 0:
-                # Project comment
-                raw = f"{username} commented on project https://scratch.mit.edu/projects/{comment_obj_id}/#comments-{comment_id} {fragment!r}"
-
-            elif comment_type == 1:
-                # Profile comment
-                raw = f"{username} commented on user https://scratch.mit.edu/users/{comment_obj_title}/#comments-{comment_id} {fragment!r}"
-
-            elif comment_type == 2:
-                # Studio comment
-                # Scratch actually provides an incorrect link, but it is fixed here:
-                raw = f"{username} commented on studio https://scratch.mit.edu/studios/{comment_obj_id}/comments/#comments-{comment_id} {fragment!r}"
-
-            else:
-                raw = f"{username} commented {fragment!r}"  # This should never happen
-
-            self.raw = raw
             self.datetime_created = _time
             self.type = "addcomment"
 
             self.username = username
 
+            self.comment_fragment = fragment
             self.comment_type = comment_type
             self.comment_obj_id = comment_obj_id
             self.comment_obj_title = comment_obj_title
@@ -364,13 +379,16 @@ class Activity(BaseSiteComponent):
 
         if default_case:
             # This is coded in the scratch HTML, haven't found an example of it though
-            raw = f"{username} performed an action."
+            # raw = f"{username} performed an action."
 
-            self.raw = raw
+            # self.raw = raw
             self.datetime_created = _time
             self.type = "performaction"
 
             self.username = username
+
+        if not self.actor_username:
+            self.actor_username = self.username
 
     def _update_from_html(self, data: Tag):
 

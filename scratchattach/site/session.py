@@ -703,7 +703,7 @@ class Session(BaseSiteComponent):
             raise exceptions.FetchError()
 
     def mystuff_classes(self, mode: str = "Last created", page: Optional[int] = None) -> list[classroom.Classroom]:
-        if self.is_teacher is None:
+        if not self.is_teacher:
             self.update()
 
         if not self.is_teacher:

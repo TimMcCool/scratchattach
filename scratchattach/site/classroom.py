@@ -367,7 +367,7 @@ class Classroom(BaseSiteComponent):
         _activity: list[activity.Activity] = []
         for activity_json in data:
             _activity.append(activity.Activity(_session=self._session))
-            _activity[-1].supply_data_dict(activity_json)
+            _activity[-1]._update_from_json(activity_json)  # NOT the same as _update_from_dict
 
         return _activity
 
