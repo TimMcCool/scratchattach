@@ -344,26 +344,27 @@ class Activity(BaseSiteComponent):
         """
 
         if "project" in self.type:  # target is a project
-            if "target_id" in self.__dict__:
+            if self.target_id:
                 return self._make_linked_object("id", self.target_id, project.Project, exceptions.ProjectNotFound)
-            if "project_id" in self.__dict__:
+            if self.project_id:
                 return self._make_linked_object("id", self.project_id, project.Project, exceptions.ProjectNotFound)
 
         if self.type == "becomecurator" or self.type == "followstudio":  # target is a studio
-            if "target_id" in self.__dict__:
+            if self.target_id:
                 return self._make_linked_object("id", self.target_id, studio.Studio, exceptions.StudioNotFound)
-            if "gallery_id" in self.__dict__:
+            if self.gallery_id:
                 return self._make_linked_object("id", self.gallery_id, studio.Studio, exceptions.StudioNotFound)
             # NOTE: the "becomecurator" type is ambigous - if it is inside the studio activity tab, the target is the user who joined
-            if "username" in self.__dict__:
+            if self.username:
                 return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
 
         if self.type == "followuser" or "curator" in self.type:  # target is a user
-            if "target_name" in self.__dict__:
+            if self.target_name:
                 return self._make_linked_object("username", self.target_name, user.User, exceptions.UserNotFound)
-            if "followed_username" in self.__dict__:
+            if self.followed_username:
                 return self._make_linked_object("username", self.followed_username, user.User, exceptions.UserNotFound)
-        if "recipient_username" in self.__dict__:  # the recipient_username field always indicates the target is a user
+
+        if self.recipient_username:  # the recipient_username field always indicates the target is a user
             return self._make_linked_object("username", self.recipient_username, user.User, exceptions.UserNotFound)
 
         if self.type == "addcomment":  # target is a comment
