@@ -53,11 +53,12 @@ def _decrypt_dict(data: dict) -> dict:
 
 
 __fp__ = Path(__file__).parent
-_auth = _decrypt_dict(tomllib.load(
-    (__fp__ / "auth.toml").open("rb")
-))
-_local_auth = tomllib.load(
-    (__fp__ / "localauth.toml").open("rb")
-)
+
+_auth_fp = __fp__ / "auth.toml"
+_local_auth_fp = __fp__ / "local_auth.toml"
+
+_auth = _decrypt_dict(tomllib.load(_auth_fp.open("rb")))
+
+_local_auth = tomllib.load(_local_auth_fp.open("rb")) if _local_auth_fp.exists() else {}
 
 AUTH = _auth | _local_auth
