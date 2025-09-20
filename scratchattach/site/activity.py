@@ -8,7 +8,7 @@ from typing import Optional
 from bs4 import Tag
 from dataclasses import dataclass
 
-from . import user, project, studio, session
+from . import user, project, studio, session, forum
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions
 
@@ -460,4 +460,8 @@ class Activity(BaseSiteComponent):
                 raise ValueError(f"{self.comment_type} is an invalid comment type")
 
             return _c
+
+        if self.type == "forumpost":
+            return forum.ForumTopic(id=603418, _session=self._session, title=self.title)
+
         return None

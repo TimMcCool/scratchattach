@@ -41,11 +41,14 @@ class ForumTopic(BaseSiteComponent):
     '''
     id: int
     title: str
-    category_name: str
-    last_updated: str
+    category_name: Optional[str] = None
+    last_updated: Optional[str] = None
     _session: Optional[module_session.Session] = field(default=None)
     reply_count: Optional[int] = field(default=None)
     view_count: Optional[int] = field(default=None)
+
+    def __str__(self):
+        return f"-F {self.title} ({self.id})"
 
     def __post_init__(self):
         # Info on how the .update method has to fetch the data:

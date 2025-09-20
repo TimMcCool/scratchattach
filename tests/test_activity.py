@@ -10,6 +10,7 @@ def test_activity():
     import util
     sess = util.session()
 
+    # we cannot do assertions, but we can probe for any errors.
     messages = sess.messages()
     for msg in messages:
         print(msg, end=' ')
