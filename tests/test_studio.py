@@ -4,8 +4,10 @@ from datetime import datetime, timezone
 def test_import():
     sys.path.insert(0, ".")
     import scratchattach as sa
+    from util import session
+    sess = session()
 
-    studio = sa.get_studio(50809872)
+    studio = sess.connect_studio(50809872)
 
     assert studio.title == "Sample studio"
     assert studio.description == "Sample text"

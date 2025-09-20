@@ -1,9 +1,13 @@
 import sys
 
+
 def test_get():
     sys.path.insert(0, ".")
     import scratchattach as sa
-    project = sa.get_project(1209355136)
+    from util import session
+    sess = session()
+
+    project = sess.connect_project(1209355136)
 
     assert project
     assert project.title == "Sample project #1"
@@ -22,7 +26,7 @@ def test_get():
     # studios
     comment = project.comments()[0]  # TODO: move this to a separate comment tester
     # comment_by_id
-    #comment_replies
+    # comment_replies
     # comment by id
     # (un)love
     # (un)favorite
@@ -38,7 +42,6 @@ def test_get():
     # set title/instruction/notes
     # visibility
 
-
     assert comment.id == 489648029
 
     remix = project.remixes()[0]
@@ -47,9 +50,10 @@ def test_get():
     assert remix.author_name == "ScratchAttachV2"
     assert remix.embed_url == "https://scratch.mit.edu/projects/1209582809/embed"
 
-    assert sa.get_project(414601586).moderation_status() == "notsafe"
-    assert sa.get_project(1207314193).moderation_status() == "safe"
-    assert sa.get_project(1233).moderation_status() == "notreviewed"  # if this becomes reviewed, please update this
+    assert sess.connect_project(414601586).moderation_status() == "notsafe"
+    assert sess.connect_project(1207314193).moderation_status() == "safe"
+    assert sess.connect_project(
+        1233).moderation_status() == "notreviewed"  # if this becomes reviewed, please update this
     # ^^ also this project is an infinite remix loop!
 
     assert sa.explore_projects()

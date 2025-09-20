@@ -5,3 +5,6 @@
 [test]
 # this key is just used to test if auth is working
 note = "gAAAAABozoVANH3_fARiCOFvv-O6pHd8DU2kb5vzs7xIxzE3JoWnsFByK5LdoLnnfh0pXpmSpo0KS1j4uwl3XvF-Qm3Sm63Fwy_H224EAdqF_d2hWdVxJkn7HmAJTT445AyrtdFYgrg9"
+
+[auth]
+scratchattachv2="gAAAAABozo75u7Eov4zakrObMqLVs6wmwSNXQ7KroU5ntU7vZvM49fW-RnEWl1ZCnqIxAnjsPW5OUOBO2IS_MJYfuRl2CVNtaJojaO1s0uHk8_vZhh_YVMI="

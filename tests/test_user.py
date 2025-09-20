@@ -5,8 +5,10 @@ import sys
 def test_import():
     sys.path.insert(0, ".")
     import scratchattach as sa
+    from util import session
+    sess = session()
 
-    user = sa.get_user("ScratchAttachV2")
+    user = sess.connect_user("ScratchAttachV2")
 
     assert user.id == 147905216
     assert user.username == "ScratchAttachV2"
@@ -21,17 +23,17 @@ def test_import():
     assert user.classroom is None
     assert user.does_exist()
 
-    new_scratcher = sa.get_user("-NewScratcher-")
+    new_scratcher = sess.connect_user("-NewScratcher-")
     assert new_scratcher.is_new_scratcher()
     assert new_scratcher.rank() == sa.Rank.NEW_SCRATCHER
     assert not new_scratcher.scratchteam
 
-    ceebee = sa.get_user("ceebee")
+    ceebee = sess.connect_user("ceebee")
     assert not ceebee.is_new_scratcher()
     assert ceebee.scratchteam
     assert ceebee.rank() == sa.Rank.SCRATCH_TEAM
 
-    kaj = sa.get_user("kaj")
+    kaj = sess.connect_user("kaj")
     assert not kaj.does_exist()
     # If you request for a user that never existed using sa.get_user, you will get an error. So we construct a new user
     # here like so:
@@ -39,7 +41,7 @@ def test_import():
 
     # status, bio
     # If the following is not the case, then a miracle has occurred
-    griffpatch = sa.get_user("griffpatch")
+    griffpatch = sess.connect_user("griffpatch")
     assert griffpatch.message_count() > 100
 
     assert user.featured_data() is None
