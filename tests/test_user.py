@@ -2,11 +2,14 @@ import pprint
 import sys
 
 
-def test_import():
+def test_user():
     sys.path.insert(0, ".")
     import scratchattach as sa
     from util import session
     sess = session()
+
+    user = sess.connect_user("faretek1")
+    assert "mochipiyo" in user.unfollower_usernames()
 
     user = sess.connect_user("ScratchAttachV2")
 
@@ -87,3 +90,6 @@ def test_import():
     status_data = user.ocular_status()
     assert status_data["status"] == "Sample status"
     assert status_data["color"] == "#855cd6"
+
+if __name__ == '__main__':
+    test_user()

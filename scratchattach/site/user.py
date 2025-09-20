@@ -247,6 +247,33 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         except Exception:
             return None
 
+    def unfollowers(self) -> list[User]:
+        """
+        Get all unfollowers by comparing API response and HTML response.
+        NOTE: This method can take a long time to run.
+
+        Based on https://juegostrower.github.io/unfollowers/
+        """
+        follower_count = self.follower_count()
+
+        # regular followers
+        usernames = []
+        for i in range(1, 2 + follower_count // 60):
+            with requests.no_error_handling():
+                resp = requests.get(f"https://scratch.mit.edu/users/{self.username}/followers/", params={"page": i})
+            soup = BeautifulSoup(resp.text, "html.parser")
+            usernames.extend(span.text.strip() for span in soup.select("span.title"))
+
+        # api response contains all-time followers, including deleted and unfollowed
+        unfollowers = []
+        for offset in range(0, follower_count, 40):
+            unfollowers.extend(user for user in self.followers(offset=offset, limit=40) if user.username not in usernames)
+
+        return unfollowers
+
+    def unfollower_usernames(self) -> list[str]:
+        return [user.username for user in self.unfollowers()]
+
     def follower_count(self):
         with requests.no_error_handling():
             text = requests.get(
