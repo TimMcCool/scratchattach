@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 import json
+import pprint
 import random
 import base64
 import time
 import zipfile
 from io import BytesIO
+from typing import Callable
 
-from typing import Any
+from typing import Any, Optional
 from typing_extensions import deprecated
 from . import user, comment, studio
 from scratchattach.utils import exceptions
@@ -19,6 +21,7 @@ from scratchattach.other.project_json_capabilities import ProjectBody
 from scratchattach.utils.requests import requests
 
 CREATE_PROJECT_USES: list[float] = []
+
 
 class PartialProject(BaseSiteComponent):
     """
@@ -40,10 +43,14 @@ class PartialProject(BaseSiteComponent):
         self.id = 0
         self.instructions = None
         self.parent_title = None
+        self._moderation_status = None
+
+        self.remix_tree_children: Optional[list[Project]] = None
+        self.remix_tree_parent: Optional[Project] = None
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)
-        
+
         # Headers and cookies:
         if self._session is None:
             self._headers = headers
@@ -62,47 +69,77 @@ class PartialProject(BaseSiteComponent):
             self.id = int(data["id"])
         except KeyError:
             pass
-        try: self.url = "https://scratch.mit.edu/projects/" + str(self.id)
-        except Exception: pass
-        try: self.author_name = data["author"]["username"]
-        except Exception: pass
-        try: self.author_name = data["username"]
-        except Exception: pass
-        try: self.comments_allowed = data["comments_allowed"]
-        except Exception: pass
-        try: self.instructions = data["instructions"]
-        except Exception: pass
-        try: self.notes = data["description"]
-        except Exception: pass
-        try: self.created = data["history"]["created"]
-        except Exception: pass
-        try: self.last_modified = data["history"]["modified"]
-        except Exception: pass
-        try: self.share_date = data["history"]["shared"]
-        except Exception: pass
-        try: self.thumbnail_url = data["image"]
-        except Exception: pass
+        try:
+            self.url = "https://scratch.mit.edu/projects/" + str(self.id)
+        except Exception:
+            pass
+        try:
+            self.author_name = data["author"]["username"]
+        except Exception:
+            pass
+        try:
+            self.author_name = data["username"]
+        except Exception:
+            pass
+        try:
+            self.comments_allowed = data["comments_allowed"]
+        except Exception:
+            pass
+        try:
+            self.instructions = data["instructions"]
+        except Exception:
+            pass
+        try:
+            self.notes = data["description"]
+        except Exception:
+            pass
+        try:
+            self.created = data["history"]["created"]
+        except Exception:
+            pass
+        try:
+            self.last_modified = data["history"]["modified"]
+        except Exception:
+            pass
+        try:
+            self.share_date = data["history"]["shared"]
+        except Exception:
+            pass
+        try:
+            self.thumbnail_url = data["image"]
+        except Exception:
+            pass
         try:
             self.remix_parent = data["remix"]["parent"]
             self.remix_root = data["remix"]["root"]
         except Exception:
             self.remix_parent = None
             self.remix_root = None
-        try: self.favorites = data["stats"]["favorites"]
-        except Exception: pass
-        try: self.loves = data["stats"]["loves"]
-        except Exception: pass
-        try: self.remix_count = data["stats"]["remixes"]
-        except Exception: pass
-        try: self.views = data["stats"]["views"]
-        except Exception: pass
-        try: self.title = data["title"]
-        except Exception: pass
+        try:
+            self.favorites = data["stats"]["favorites"]
+        except Exception:
+            pass
+        try:
+            self.loves = data["stats"]["loves"]
+        except Exception:
+            pass
+        try:
+            self.remix_count = data["stats"]["remixes"]
+        except Exception:
+            pass
+        try:
+            self.views = data["stats"]["views"]
+        except Exception:
+            pass
+        try:
+            self.title = data["title"]
+        except Exception:
+            pass
         try:
             self.project_token = data["project_token"]
         except Exception:
             self.project_token = None
-        if "code" in data: # Project is unshared -> return false
+        if "code" in data:  # Project is unshared -> return false
             return False
         return True
 
@@ -130,11 +167,11 @@ class PartialProject(BaseSiteComponent):
         """
         p = get_project(self.id)
         return isinstance(p, Project)
-    
+
     def raw_json_or_empty(self) -> dict[str, Any]:
         return empty_project_json
-    
-    def create_remix(self, *, title=None, project_json=None): # not working
+
+    def create_remix(self, *, title=None, project_json=None):  # not working
         """
         Creates a project on the Scratch website.
 
@@ -146,7 +183,7 @@ class PartialProject(BaseSiteComponent):
 
         if title is None:
             if "title" in self.__dict__:
-                title = self.title+" remix"
+                title = self.title + " remix"
             else:
                 title = " remix"
         if project_json is None:
@@ -158,7 +195,8 @@ class PartialProject(BaseSiteComponent):
             if CREATE_PROJECT_USES[-1] < time.time() - 300:
                 CREATE_PROJECT_USES.pop()
             else:
-                raise exceptions.BadRequest("Rate limit for remixing Scratch projects exceeded.\nThis rate limit is enforced by scratchattach, not by the Scratch API.\nFor security reasons, it cannot be turned off.\n\nDon't spam-create projects, it WILL get you banned.")
+                raise exceptions.BadRequest(
+                    "Rate limit for remixing Scratch projects exceeded.\nThis rate limit is enforced by scratchattach, not by the Scratch API.\nFor security reasons, it cannot be turned off.\n\nDon't spam-create projects, it WILL get you banned.")
                 return
             CREATE_PROJECT_USES.insert(0, time.time())
 
@@ -168,11 +206,12 @@ class PartialProject(BaseSiteComponent):
             'title': title,
         }
 
-        response = requests.post('https://projects.scratch.mit.edu/', params=params, cookies=self._cookies, headers=self._headers, json=project_json).json()
+        response = requests.post('https://projects.scratch.mit.edu/', params=params, cookies=self._cookies,
+                                 headers=self._headers, json=project_json).json()
         _project = self._session.connect_project(response["content-name"])
         _project.parent_title = base64.b64decode(response['content-title']).decode('utf-8').split(' remix')[0]
         return _project
-    
+
     def load_description(self):
         """
         Gets the instructions of the unshared project. Requires authentication.
@@ -256,7 +295,7 @@ class Project(PartialProject):
             if filename is None:
                 filename = str(self.id)
             if not (dir.endswith("/") or dir.endswith("\\")):
-                dir = dir+"/"
+                dir = dir + "/"
             self.update()
             response = requests.get(
                 f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
@@ -337,7 +376,7 @@ class Project(PartialProject):
 
     def raw_json_or_empty(self):
         return self.raw_json()
-    
+
     def creator_agent(self):
         """
         Method only works for project created with Scratch 3.
@@ -360,7 +399,8 @@ class Project(PartialProject):
             list<scratchattach.studio.Studio>: A list containing the studios this project is in, each studio is represented by a Studio object.
         """
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/studios", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
+            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/studios", limit=limit,
+            offset=offset, add_params=f"&cachebust={random.randint(0, 9999)}")
         return commons.parse_object_list(response, studio.Studio, self._session)
 
     def comments(self, *, limit=40, offset=0) -> list['comment.Comment']:
@@ -376,7 +416,8 @@ class Project(PartialProject):
         """
 
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
+            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/", limit=limit,
+            offset=offset, add_params=f"&cachebust={random.randint(0, 9999)}")
         for i in response:
             i["source"] = "project"
             i["source_id"] = self.id
@@ -384,7 +425,8 @@ class Project(PartialProject):
 
     def comment_replies(self, *, comment_id, limit=40, offset=0):
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/{comment_id}/replies/", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
+            f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/{comment_id}/replies/",
+            limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0, 9999)}")
         for x in response:
             x["parent_id"] = comment_id
             x["source"] = "project"
@@ -404,12 +446,14 @@ class Project(PartialProject):
         ).json()
 
         if data is None or data.get("code") == "NotFound":
-            raise exceptions.CommentNotFound(f"Cannot find comment #{comment_id} on -P {self.id} by -U {self.author_name}")
+            raise exceptions.CommentNotFound(
+                f"Cannot find comment #{comment_id} on -P {self.id} by -U {self.author_name}")
 
-        _comment = comment.Comment(id=data["id"], _session=self._session, source=comment.CommentSource.PROJECT, source_id=self.id)
+        _comment = comment.Comment(id=data["id"], _session=self._session, source=comment.CommentSource.PROJECT,
+                                   source_id=self.id)
         _comment._update_from_dict(data)
         return _comment
-    
+
     def love(self):
         """
         Posts a love on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
@@ -510,7 +554,7 @@ class Project(PartialProject):
                 json=fields_dict,
             ).json()
         return self._update_from_dict(r)
-    
+
     def turn_off_commenting(self):
         """
         Disables commenting on the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
@@ -635,7 +679,8 @@ class Project(PartialProject):
         )
         if "id" not in r:
             raise exceptions.CommentPostFailure(r)
-        _comment = comment.Comment(id=r["id"], _session=self._session, source=comment.CommentSource.PROJECT, source_id=self.id)
+        _comment = comment.Comment(id=r["id"], _session=self._session, source=comment.CommentSource.PROJECT,
+                                   source_id=self.id)
         _comment._update_from_dict(r)
         return _comment
 
@@ -658,8 +703,8 @@ class Project(PartialProject):
         return self.post_comment(
             content, parent_id=parent_id, commentee_id=commentee_id
         )
-    
-    def set_body(self, project_body:ProjectBody):
+
+    def set_body(self, project_body: ProjectBody):
         """
         Sets the project's contents You can use this to upload projects to the Scratch website.
         Returns a dict with Scratch's raw JSON API response.
@@ -668,9 +713,8 @@ class Project(PartialProject):
             project_body (scratchattach.ProjectBody): A ProjectBody object containing the contents of the project
         """
         self._assert_permission()
-        
-        return self.set_json(project_body.to_json())
 
+        return self.set_json(project_body.to_json())
 
     def set_json(self, json_data):
         """
@@ -706,7 +750,6 @@ class Project(PartialProject):
         Changes the projects title. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         self.set_fields({"title": text})
-    
 
     def set_instructions(self, text):
         """
@@ -735,7 +778,7 @@ class Project(PartialProject):
             f"https://scratchdb.lefty.one/v3/project/info/{self.id}"
         ).json()["statistics"]["ranks"]
 
-    def moderation_status(self):
+    def moderation_status(self, *, reload: bool = False):
         """
         Gets information about the project's moderation status. Fetched from jeffalo's API.
 
@@ -752,19 +795,112 @@ class Project(PartialProject):
 
         no_remixes: Unable to fetch the project's moderation status.
         """
+        if self._moderation_status and not reload:
+            return self._moderation_status
+
         try:
             return requests.get(
                 f"https://jeffalo.net/api/nfe/?project={self.id}"
             ).json()["status"]
         except Exception:
-            raise (exceptions.FetchError)
+            raise exceptions.FetchError
 
     def visibility(self):
         """
         Returns info about the project's visibility. Requires authentication.
         """
         self._assert_auth()
-        return requests.get(f"https://api.scratch.mit.edu/users/{self._session.username}/projects/{self.id}/visibility", headers=self._headers, cookies=self._cookies).json()
+        return requests.get(f"https://api.scratch.mit.edu/users/{self._session.username}/projects/{self.id}/visibility",
+                            headers=self._headers, cookies=self._cookies).json()
+
+    def remix_tree(self):
+        """
+        Fetch & cache remix tree and return direct children.
+        Cached remix tree children accessible via Project.remix_tree_children.
+        A parent project object that is linked to children is accessible via Project.remix_tree_parent
+
+        :return remix root project. All remixes in the tree are (in)directly linked.
+        """
+
+        data: dict = requests.get(f"https://scratch.mit.edu/projects/{self.id}/remixtree/bare/").json()
+
+        mapping: dict[str, Project] = {}
+        root_id = data.pop("root_id")
+
+
+        # load up all projects
+        for curr_id, curr_data in data.items():
+            curr_data = data[curr_id]
+            if share_date := curr_data["datetime_shared"]:
+                share_date = share_date["$date"] / 1000
+
+            if curr_id == str(self.id):
+                curr_obj = self
+            else:
+                curr_obj = Project(id=curr_id)
+
+            curr_obj.title = curr_data["title"]
+            curr_obj.author_name = curr_data["username"]
+            curr_obj.favorites = curr_data["favorite_count"]
+            curr_obj.loves = curr_data["love_count"]
+            curr_obj._moderation_status = curr_data["moderation_status"]
+            curr_obj.share_date = share_date  # timestamp
+            curr_obj.created = curr_data["datetime_created"]["$date"] / 1000
+            curr_obj.last_modified = curr_data["mtime"]["$date"] / 1000
+            curr_obj._session = self._session
+            curr_obj.remix_tree_children = []
+
+            # curr_obj._visibility=curr_data["visibility"]
+            # is_published=curr_data["is_published"]
+            # curr_obj.ctime = curr_data["ctime"]["$date"] / 1000
+
+            mapping[curr_id] = curr_obj
+
+        assert self in mapping.values()
+
+        # link projects
+        for curr_id, curr_data in data.items():
+            curr_data = data[curr_id]
+            curr_obj = mapping[curr_id]
+
+            parent_id = curr_data["parent_id"]
+            if parent := mapping.get(parent_id):
+                curr_obj.remix_tree_parent = parent
+                parent.remix_tree_children.append(curr_obj)
+
+        return mapping[root_id]
+
+    def remix_tree_pretty(self, indent: int = 0, *, formatter: Callable[[Project, int], str] = None):
+        if not formatter:
+            formatter = lambda p, ind: f"{'\t' * ind}-P {p.title} ({p.id}) #{p.remix_depth}\n"
+
+        if self.remix_tree_children is None:
+            self.remix_tree()
+
+        ret = formatter(self, indent)
+        for child in self.remix_tree_children:
+            ret += child.remix_tree_pretty(indent + 1, formatter=formatter)
+
+        return ret
+
+    @property
+    def remix_depth(self) -> int:
+        """
+        Get the 'remix depth' of this project - i.e. the number of layers of remixing until one reaches the remix root.
+        """
+        if self.remix_tree_children is None:
+            self.remix_tree()
+
+        depth = 0
+        p = self
+        while p.remix_tree_parent:
+            # this could also be done recursively, but it can hit the recursion limit in extreme cases
+            # > and this happens often, because of remix chains
+            p = p.remix_tree_parent
+            depth += 1
+
+        return depth
+
 
 # ------ #
 
@@ -787,6 +923,7 @@ def get_project(project_id) -> Project:
     print("Warning: For methods that require authentication, use session.connect_project instead of get_project")
     return commons._get_object("id", project_id, Project, exceptions.ProjectNotFound)
 
+
 def search_projects(*, query="", mode="trending", language="en", limit=40, offset=0):
     '''
     Uses the Scratch search to search projects.
@@ -804,8 +941,10 @@ def search_projects(*, query="", mode="trending", language="en", limit=40, offse
     if not query:
         raise ValueError("The query can't be empty for search")
     response = commons.api_iterative(
-        f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
+        f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset,
+        add_params=f"&language={language}&mode={mode}&q={query}")
     return commons.parse_object_list(response, Project)
+
 
 def explore_projects(*, query="*", mode="trending", language="en", limit=40, offset=0):
     '''
@@ -824,5 +963,6 @@ def explore_projects(*, query="*", mode="trending", language="en", limit=40, off
     if not query:
         raise ValueError("The query can't be empty for search")
     response = commons.api_iterative(
-        f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset, add_params=f"&language={language}&mode={mode}&q={query}")
+        f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset,
+        add_params=f"&language={language}&mode={mode}&q={query}")
     return commons.parse_object_list(response, Project)

@@ -1,11 +1,17 @@
+import pprint
 import sys
 
 
-def test_get():
+def test_project():
     sys.path.insert(0, ".")
     import scratchattach as sa
     from util import session
     sess = session()
+
+
+    project = sess.connect_project(104)
+    tree = project.remix_tree_pretty()
+    assert len(tree) > 1000 # there is a lot of chars. Just assert that sth is generated
 
     project = sess.connect_project(1209355136)
 
@@ -58,3 +64,6 @@ def test_get():
 
     assert sa.explore_projects()
     assert sa.search_projects(query="scratchattach")
+
+if __name__ == '__main__':
+    test_project()
