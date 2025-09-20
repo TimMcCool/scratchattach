@@ -1,6 +1,8 @@
 """Activity and CloudActivity class"""
 from __future__ import annotations
 
+import html
+
 from typing import Optional
 
 from bs4 import Tag
@@ -26,13 +28,22 @@ class Activity(BaseSiteComponent):
     username: Optional[str] = None
     followed_username: Optional[str] = None
     recipient_username: Optional[str] = None
+    title: Optional[str] = None
+    project_title: Optional[str] = None
+    gallery_title: Optional[str] = None
+    topic_title: Optional[str] = None
+    topic_id: Optional[int] = None
+
+    parent_title: Optional[str] = None
+    parent_id: Optional[int] = None
 
     comment_type = None
     comment_obj_id = None
     comment_obj_title: Optional[str] = None
     comment_id: Optional[int] = None
+    comment_fragment: Optional[str] = None
 
-    datetime_created = None
+    datetime_created: Optional[str] = None
     time = None
     type = None
 
@@ -40,7 +51,74 @@ class Activity(BaseSiteComponent):
         return f"Activity({repr(self.raw)})"
 
     def __str__(self):
-        return str(self.raw)
+        return '-A ' +' '.join(self.parts)
+
+    @property
+    def parts(self):
+        """
+        :return: A list of parts of the message. Join the parts to get a readable version, which is done with str(activity)
+        """
+        match self.type:
+            case "loveproject":
+                return [f"{self.actor_username}", "loved", f"-P {self.title!r} ({self.project_id})"]
+            case "favoriteproject":
+                return [f"{self.actor_username}", "favorited", f"-P {self.project_title!r} ({self.project_id})"]
+            case "becomecurator":
+                return [f"{self.actor_username}", "now curating", f"-S {self.title!r} ({self.gallery_id})"]
+            case "followuser":
+                return [f"{self.actor_username}", "followed", f"-U {self.followed_username}"]
+            case "followstudio":
+                return [f"{self.actor_username}", "followed", f"-S {self.title!r} ({self.gallery_id})"]
+            case "shareproject":
+                return [f"{self.actor_username}", "shared", f"-P {self.title!r} ({self.project_id})"]
+            case "remixproject":
+                return [f"{self.actor_username}", "remixed",
+                        f"-P {self.parent_title!r} ({self.parent_id}) as -P {self.title!r} ({self.project_id})"]
+            case "becomeownerstudio":
+                return [f"{self.actor_username}", "became owner of", f"-S {self.gallery_title!r} ({self.gallery_id})"]
+
+            case "addcomment":
+                ret = [self.actor_username, "commented on"]
+
+                match self.comment_type:
+                    case 0:
+                        # project
+                        ret.append(f"-P {self.comment_obj_title!r} ({self.comment_obj_id}")
+                    case 1:
+                        # user
+                        ret.append(f"-U {self.comment_obj_title}")
+
+                    case 2:
+                        # studio
+                        ret.append(f"-S {self.comment_obj_title!r} ({self.comment_obj_id}")
+
+                    case _:
+                        raise ValueError(f"Unknown comment type: {self.comment_type}")
+
+                ret[-1] += f"#{self.comment_id})"
+
+                ret.append(f"{html.unescape(self.comment_fragment)}")
+
+                return ret
+
+            case "curatorinvite":
+                return [f"{self.actor_username}", "invited you to curate", f"-S {self.title!r} ({self.gallery_id})"]
+
+            case "userjoin":
+                # This is also the first message you get - 'Welcome to Scratch'
+                return [f"{self.actor_username}", "joined Scratch"]
+
+            case "studioactivity":
+                return ['Studio activity', '', f"-S {self.title!r} ({self.gallery_id})"]
+
+            case "forumpost":
+                return [f"{self.actor_username}", "posted in", f"-F {self.topic_title} ({self.topic_id})"]
+
+            case _:
+                raise NotImplementedError(
+                    f"Activity type {self.type!r} is not implemented!\n"
+                    f"{self.raw=}\n"
+                    f"Raise an issue on github: https://github.com/TimMcCool/scratchattach/issues")
 
     def update(self):
         print("Warning: Activity objects can't be updated")
@@ -111,7 +189,7 @@ class Activity(BaseSiteComponent):
             raw = f"{username} loved project https://scratch.mit.edu/projects/{project_id}"
 
             self.raw = raw
-            self.datetime_created = _time,
+            self.datetime_created = _time
             self.type = "loveproject"
 
             self.username = username
