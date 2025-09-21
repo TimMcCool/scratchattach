@@ -74,7 +74,7 @@ class Activity(BaseSiteComponent):
 
     datetime_created: Optional[str] = None
     time: Any = None
-    type: str = None
+    type: Optional[str] = None
 
     def __repr__(self):
         return f"Activity({repr(self.raw)})"
