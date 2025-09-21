@@ -17,6 +17,8 @@ from typing import Optional, TypeVar, TYPE_CHECKING, overload, Any, Union, cast
 from contextlib import contextmanager
 from threading import local
 
+from scratchattach import editor
+
 Type = type
 
 if TYPE_CHECKING:
@@ -421,24 +423,19 @@ class Session(BaseSiteComponent):
 
     # -- Project JSON editing capabilities ---
     # These are set to staticmethods right now, but they probably should not be
-    @staticmethod
-    def connect_empty_project_pb() -> project_json_capabilities.ProjectBody:
-        pb = project_json_capabilities.ProjectBody()
-        pb.from_json(empty_project_json)
+    def connect_empty_project_pb(self) -> editor.Project:
+        pb = editor.Project.from_json(empty_project_json)  # in the future, ideally just init a new editor.Project, instead of loading an empty one
+        pb._session = self
         return pb
 
-    @staticmethod
-    def connect_pb_from_dict(project_json: dict) -> project_json_capabilities.ProjectBody:
-        pb = project_json_capabilities.ProjectBody()
-        pb.from_json(project_json)
+    def connect_pb_from_dict(self, project_json: dict) -> editor.Project:
+        pb = editor.Project.from_json(project_json)
+        pb._session = self
         return pb
 
-    @staticmethod
-    def connect_pb_from_file(path_to_file) -> project_json_capabilities.ProjectBody:
-        pb = project_json_capabilities.ProjectBody()
-        # noinspection PyProtectedMember
-        # _load_sb3_file starts with an underscore
-        pb.from_json(project_json_capabilities._load_sb3_file(path_to_file))
+    def connect_pb_from_file(self, path_to_file) -> editor.Project:
+        pb = editor.Project.from_sb3(path_to_file)
+        pb._session = self
         return pb
 
     @staticmethod
