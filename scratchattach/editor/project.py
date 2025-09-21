@@ -208,8 +208,8 @@ class Project(base.JSONExtractable):
 
         return project
 
-    @deprecated("Use get_project(id).body() instead")
     @staticmethod
+    @deprecated("Use get_project(id).body() instead")
     def from_id(project_id: int, _name: Optional[str] = None):
         raise Exception("This method is deprecated")
         # _proj = get_project(project_id)
