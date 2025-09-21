@@ -4,15 +4,37 @@ from __future__ import annotations
 import html
 import warnings
 
+from dataclasses import dataclass
 from typing import Optional, Any
 
 from bs4 import Tag
-from dataclasses import dataclass
 
 from . import user, project, studio, session, forum
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions
 
+class ActvityTypes:
+    # not an enum to preserve backwards compatability. Can be changed though.
+    loveproject = "loveproject"
+    favoriteproject = "favoriteproject"
+    becomecurator = "becomecurator"
+    followuser = "followuser"
+    followstudio = "followstudio"
+    shareproject = "shareproject"
+    remixproject = "remixproject"
+    becomeownerstudio = "becomeownerstudio"
+    addcomment = "addcomment"
+    curatorinvite = "curatorinvite"
+    userjoin = "userjoin"
+    studioactivity = "studioactivity"
+    forumpost = "forumpost"
+    updatestudio = "updatestudio"
+    createstudio = "createstudio"
+    promotetomanager = "promotetomanager"
+    updateprofile = "updateprofile"
+    removeprojectfromstudio = "removeprojectfromstudio"
+    addprojecttostudio = "addprojecttostudio"
+    performaction = "performaction"
 
 @dataclass
 class Activity(BaseSiteComponent):

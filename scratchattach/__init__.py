@@ -13,7 +13,7 @@ from .utils.encoder import Encoding
 from .utils.enums import Languages, TTSVoices
 from .utils.exceptions import LoginDataWarning
 
-from .site.activity import Activity
+from .site.activity import Activity, ActvityTypes
 from .site.backpack_asset import BackpackAsset
 from .site.comment import Comment, CommentSource
 from .site.cloud_activity import CloudActivity
