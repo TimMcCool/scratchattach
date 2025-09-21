@@ -32,7 +32,7 @@ DEFAULT_VM = "0.1.0"
 DEFAULT_AGENT = "scratchattach.editor by https://scratch.mit.edu/users/timmccool/"
 DEFAULT_PLATFORM = PlatformMeta("scratchattach", "https://github.com/timMcCool/scratchattach/")
 
-EDIT_META = True
+EDIT_META = False
 META_SET_PLATFORM = False
 
 

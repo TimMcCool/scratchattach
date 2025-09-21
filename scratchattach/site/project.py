@@ -17,7 +17,8 @@ from scratchattach.utils import exceptions
 from scratchattach.utils import commons
 from scratchattach.utils.commons import empty_project_json, headers
 from ._base import BaseSiteComponent
-from scratchattach.other.project_json_capabilities import ProjectBody
+# from scratchattach.other.project_json_capabilities import ProjectBody
+from scratchattach import editor
 from scratchattach.utils.requests import requests
 
 CREATE_PROJECT_USES: list[float] = []
@@ -31,10 +32,10 @@ class PartialProject(BaseSiteComponent):
     def __str__(self):
         return f"Unshared project with id {self.id}"
 
-    def __init__(self, **entries):
+    def __init__(self, **entries) -> None:
 
         # Info on how the .update method has to fetch the data:
-        self.update_function = requests.get
+        self.update_function: Callable = requests.get
         self.update_api = f"https://api.scratch.mit.edu/projects/{entries['id']}"
 
         # Set attributes every Project object needs to have:
@@ -282,7 +283,9 @@ class Project(PartialProject):
     def load_description(self):
         # Overrides the load_description method that exists for unshared projects
         self.update()
-
+    
+    # -- Project contents (body/json) -- #
+    
     def download(self, *, filename=None, dir=""):
         """
         Downloads the project json to the given directory.
@@ -309,7 +312,8 @@ class Project(PartialProject):
                     "Method only works for projects created with Scratch 3"
                 )
             )
-
+    
+    @deprecated("Use raw_json instead")
     def get_json(self) -> str:
         """
         Downloads the project json and returns it as a string
@@ -329,17 +333,15 @@ class Project(PartialProject):
                 )
             )
 
-    def body(self):
+    def body(self) -> editor.Project:
         """
         Method only works for project created with Scratch 3.
 
         Returns:
-            scratchattach.ProjectBody: The contents of the project as ProjectBody object
+            scratchattach.editor.Project: The contents of the project as editor Project object
         """
         raw_json = self.raw_json()
-        pb = ProjectBody()
-        pb.from_json(raw_json)
-        return pb
+        return editor.Project.from_json(raw_json)
 
     def raw_json(self):
         """
@@ -386,6 +388,49 @@ class Project(PartialProject):
         """
         return self.raw_json()["meta"]["agent"]
 
+    def set_body(self, project_body: ProjectBody):
+        """
+        Sets the project's contents You can use this to upload projects to the Scratch website.
+        Returns a dict with Scratch's raw JSON API response.
+
+        Args:
+            project_body (scratchattach.ProjectBody): A ProjectBody object containing the contents of the project
+        """
+        self._assert_permission()
+
+        return self.set_json(project_body.to_json())
+
+    def set_json(self, json_data):
+        """
+        Sets the project json. You can use this to upload projects to the Scratch website.
+        Returns a dict with Scratch's raw JSON API response.
+
+        Args:
+            json_data (dict or JSON): The new project JSON as encoded JSON object or as dict
+        """
+
+        self._assert_permission()
+
+        if not isinstance(json_data, dict):
+            json_data = json.loads(json_data)
+
+        return requests.put(
+            f"https://projects.scratch.mit.edu/{self.id}",
+            headers=self._headers,
+            cookies=self._cookies,
+            json=json_data,
+        ).json()
+
+    def upload_json_from(self, project_id):
+        """
+        Uploads the project json from the project with the given id to the project represented by this Project object
+        """
+        self._assert_auth()
+        other_project = self._session.connect_project(project_id)
+        self.set_json(other_project.get_raw_json())
+
+    # -- other -- #
+    
     def author(self) -> user.User:
         """
         Returns:
@@ -703,47 +748,6 @@ class Project(PartialProject):
         return self.post_comment(
             content, parent_id=parent_id, commentee_id=commentee_id
         )
-
-    def set_body(self, project_body: ProjectBody):
-        """
-        Sets the project's contents You can use this to upload projects to the Scratch website.
-        Returns a dict with Scratch's raw JSON API response.
-
-        Args:
-            project_body (scratchattach.ProjectBody): A ProjectBody object containing the contents of the project
-        """
-        self._assert_permission()
-
-        return self.set_json(project_body.to_json())
-
-    def set_json(self, json_data):
-        """
-        Sets the project json. You can use this to upload projects to the Scratch website.
-        Returns a dict with Scratch's raw JSON API response.
-
-        Args:
-            json_data (dict or JSON): The new project JSON as encoded JSON object or as dict
-        """
-
-        self._assert_permission()
-
-        if not isinstance(json_data, dict):
-            json_data = json.loads(json_data)
-
-        return requests.put(
-            f"https://projects.scratch.mit.edu/{self.id}",
-            headers=self._headers,
-            cookies=self._cookies,
-            json=json_data,
-        ).json()
-
-    def upload_json_from(self, project_id):
-        """
-        Uploads the project json from the project with the given id to the project represented by this Project object
-        """
-        self._assert_auth()
-        other_project = self._session.connect_project(project_id)
-        self.set_json(other_project.get_raw_json())
 
     def set_title(self, text):
         """

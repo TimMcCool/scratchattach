@@ -5,11 +5,11 @@ import os
 import warnings
 from io import BytesIO, TextIOWrapper
 from typing import Optional, Iterable, Generator, BinaryIO
+from warnings import deprecated
 from zipfile import ZipFile
 
 from . import base, meta, extension, monitor, sprite, asset, vlb, twconfig, comment, commons
 from scratchattach.site import session
-from scratchattach.site.project import get_project
 from scratchattach.utils import exceptions
 
 
@@ -208,18 +208,20 @@ class Project(base.JSONExtractable):
 
         return project
 
+    @deprecated("Use get_project(id).body() instead")
     @staticmethod
     def from_id(project_id: int, _name: Optional[str] = None):
-        _proj = get_project(project_id)
-        data = json.loads(_proj.get_json())
+        raise Exception("This method is deprecated")
+        # _proj = get_project(project_id)
+        # data = json.loads(_proj.get_json())
 
-        if _name is None:
-            _name = _proj.title
-        _name = str(_name)
+        # if _name is None:
+        #     _name = _proj.title
+        # _name = str(_name)
 
-        _proj = Project.from_json(data)
-        _proj.name = _name
-        return _proj
+        # _proj = Project.from_json(data)
+        # _proj.name = _name
+        # return _proj
 
     def find_vlb(self, value: str | None, by: str = "name",
                  multiple: bool = False) -> Optional[vlb.Variable | vlb.List | vlb.Broadcast | list[
