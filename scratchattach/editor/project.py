@@ -5,7 +5,7 @@ import os
 import warnings
 from io import BytesIO, TextIOWrapper
 from typing import Optional, Iterable, Generator, BinaryIO
-from warnings import deprecated
+from typing_extensions import deprecated
 from zipfile import ZipFile
 
 from . import base, meta, extension, monitor, sprite, asset, vlb, twconfig, comment, commons
