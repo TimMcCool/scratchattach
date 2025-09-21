@@ -813,7 +813,7 @@ class Project(PartialProject):
         return requests.get(f"https://api.scratch.mit.edu/users/{self._session.username}/projects/{self.id}/visibility",
                             headers=self._headers, cookies=self._cookies).json()
 
-    def remix_tree(self):
+    def remix_tree(self) -> Project:
         """
         Fetch & cache remix tree, and return remix root.
         Cached remix tree children accessible via Project.remix_tree_children.
@@ -866,11 +866,12 @@ class Project(PartialProject):
             parent_id = curr_data["parent_id"]
             if parent := mapping.get(parent_id):
                 curr_obj.remix_tree_parent = parent
-                parent.remix_tree_children.append(curr_obj)
+                # parent cannot be None, as it is the if condition
+                parent.remix_tree_children.append(curr_obj)  # type: ignore
 
         return mapping[root_id]
 
-    def remix_tree_pretty(self, indent: int = 0, *, formatter: Callable[[Project, int], str] = None):
+    def remix_tree_pretty(self, indent: int = 0, *, formatter: Optional[Callable[[Project, int], str]] = None):
         """
         Prettily formats and indents the remix tree attached to this project. (does NOT start at root)
         :param indent: default indent - recommend keeping this as 0
@@ -882,6 +883,8 @@ class Project(PartialProject):
 
         if self.remix_tree_children is None:
             self.remix_tree()
+
+        assert isinstance(self.remix_tree_children, list)
 
         ret = formatter(self, indent)
         for child in self.remix_tree_children:
