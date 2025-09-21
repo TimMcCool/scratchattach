@@ -19,7 +19,7 @@ def str_2_key(gen: str) -> bytes:
     return urlsafe_b64encode(gen.encode())
 
 
-_fernet_key_raw = os.getenv("FERNET_KEY")
+_fernet_key_raw = os.environ["FERNET_KEY"]
 FERNET_KEY = str_2_key(_fernet_key_raw)
 FERNET = Fernet(FERNET_KEY)
 
@@ -28,11 +28,11 @@ T = TypeVar("T")
 
 def _decrypt_val(v: T) -> T:
     if isinstance(v, str):
-        return FERNET.decrypt(v).decode()
+        return FERNET.decrypt(v).decode()  # type: ignore
     if isinstance(v, list):
-        return _decrypt_list(v)
+        return _decrypt_list(v)  # type: ignore
     if isinstance(v, dict):
-        return _decrypt_dict(v)
+        return _decrypt_dict(v)  # type: ignore
 
     return v
 
