@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 import os
+import string
 import warnings
 from io import BytesIO, TextIOWrapper
 from typing import Optional, Iterable, Generator, BinaryIO
 from typing_extensions import deprecated
 from zipfile import ZipFile
 
-from . import base, meta, extension, monitor, sprite, asset, vlb, twconfig, comment, commons
+from . import base, meta, extension, monitor, sprite, asset, vlb, twconfig, comment, commons, mutation
 from scratchattach.site import session
 from scratchattach.utils import exceptions
 
@@ -284,3 +285,96 @@ class Project(base.JSONExtractable):
         _monitor.project = self
         _monitor.reporter_id = self.new_id
         self.monitors.append(_monitor)
+        return _monitor
+
+    def obfuscate(self, *, goto_origin: bool=True) -> None:
+        """
+        Randomly set all the variable names etc. Do not upload this project to the scratch website, as it is
+        against the community guidelines.
+        """
+        # this code is an embarrassing mess. If certain features are added to sa.editor, then it could become a lot cleaner
+        chars = string.ascii_letters + string.digits + string.punctuation
+
+        def b10_to_cbase(b10: int | float):
+            ret = ''
+            new_base = len(chars)
+            while b10 >= 1:
+                ret = chars[int(b10 % new_base)] + ret
+                b10 /= new_base
+
+            return ret
+
+        used = 0
+
+        def rand():
+            nonlocal used
+            used += 1
+
+            return b10_to_cbase(used)
+
+        for _sprite in self.sprites:
+            procedure_mappings: dict[str, str] = {}
+            argument_mappings: dict[str, str] = {}
+            done_args: list[mutation.Argument] = []
+
+            for _variable in _sprite.variables:
+                _variable.name = rand()
+            for _list in _sprite.lists:
+                _list.name = rand()
+            # don't rename broadcasts as these can be dynamically called
+
+            def arg_get(name: str) -> str:
+                if name not in argument_mappings:
+                    argument_mappings[name] = rand()
+                return argument_mappings[name]
+
+            for _block in _sprite.blocks.values():
+                if goto_origin:
+                    _block.x, _block.y = 0, 0
+
+                if _block.opcode in ("procedures_call", "procedures_prototype", "procedures_definition"):
+                    if _block.mutation is None:
+                        continue
+
+                    proccode = _block.mutation.proc_code
+                    if proccode is None:
+                        continue
+
+                    if proccode not in procedure_mappings:
+                        parsed_ppc = _block.mutation.parsed_proc_code
+
+                        if parsed_ppc is None:
+                            continue
+
+                        new: list[str | mutation.ArgumentType] = []
+                        for item in parsed_ppc:
+                            if isinstance(item, str):
+                                item = rand()
+
+                            new.append(item)
+
+                        new_proccode = mutation.construct_proccode(*new)
+                        procedure_mappings[proccode] = new_proccode
+
+                    _block.mutation.proc_code = procedure_mappings[proccode]
+
+                    assert _block.mutation.arguments is not None
+                    for arg in _block.mutation.arguments:
+                        if arg in done_args:
+                            continue
+                        done_args.append(arg)
+
+                        arg.name = arg_get(arg.name)
+
+                    # print(_block, _block.mutation)
+                elif _block.opcode in ("argument_reporter_string_number", "argument_reporter_boolean"):
+                    arg_name = _block.fields["VALUE"].value
+                    assert isinstance(arg_name, str)
+                    _block.fields["VALUE"].value = arg_get(arg_name)
+
+
+                # print(argument_mappings)
+
+            if goto_origin:
+                for _comment in _sprite.comments:
+                    _comment.x, _comment.y = 0, 0

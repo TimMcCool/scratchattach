@@ -15,7 +15,7 @@ class AssetFile:
     - stores the filename, data, and md5 hash
     """
     filename: str
-    _data: bytes = field(repr=False, default_factory=bytes)
+    _data: Optional[bytes] = field(repr=False, default=None)
     _md5: str = field(repr=False, default_factory=str)
 
     @property
@@ -26,6 +26,7 @@ class AssetFile:
         if self._data is None:
             # Download and cache
             rq = requests.get(f"https://assets.scratch.mit.edu/internalapi/asset/{self.filename}/get/")
+            # print(f"Downloaded {url}")
             if rq.status_code != 200:
                 raise ValueError(f"Can't download asset {self.filename}\nIs not uploaded to scratch! Response: {rq.text}")
 
@@ -206,10 +207,12 @@ class Costume(Asset):
         """
         _json = super().to_json()
         _json.update({
-            "bitmapResolution": self.bitmap_resolution,
             "rotationCenterX": self.rotation_center_x,
             "rotationCenterY": self.rotation_center_y
         })
+        if self.bitmap_resolution is not None:
+            _json["bitmapResolution"] = self.bitmap_resolution
+
         return _json
 
 

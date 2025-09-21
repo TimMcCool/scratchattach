@@ -261,7 +261,7 @@ class Mutation(base.BlockSubComponent):
                            bool(commons.safe_get(self.argument_defaults, 0)))
 
     @property
-    def parsed_proc_code(self) -> list[str, ArgumentType] | None:
+    def parsed_proc_code(self) -> list[str | ArgumentType] | None:
         """
         Parse the proc code into arguments & strings
         """
