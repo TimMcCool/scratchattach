@@ -11,8 +11,8 @@ def test_project():
 
     project = sess.connect_project(104)
     body = project.body()
+    body.to_json()  # do nothing with the data, just make sure it works.
 
-    print(body)
 
 
 if __name__ == '__main__':

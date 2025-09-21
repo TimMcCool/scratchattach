@@ -388,7 +388,7 @@ class Project(PartialProject):
         """
         return self.raw_json()["meta"]["agent"]
 
-    def set_body(self, project_body: ProjectBody):
+    def set_body(self, project_body: editor.Project):
         """
         Sets the project's contents You can use this to upload projects to the Scratch website.
         Returns a dict with Scratch's raw JSON API response.
@@ -421,13 +421,13 @@ class Project(PartialProject):
             json=json_data,
         ).json()
 
-    def upload_json_from(self, project_id):
+    def upload_json_from(self, project_id: int | str):
         """
         Uploads the project json from the project with the given id to the project represented by this Project object
         """
         self._assert_auth()
-        other_project = self._session.connect_project(project_id)
-        self.set_json(other_project.get_raw_json())
+        other_project = self._session.connect_project(project_id)  # type: ignore
+        self.set_json(other_project.raw_json())
 
     # -- other -- #
     
