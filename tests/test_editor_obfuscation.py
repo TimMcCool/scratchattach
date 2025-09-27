@@ -23,6 +23,5 @@ def test_project():
     body.export("obfuscated.sb3")
 
 
-
 if __name__ == '__main__':
     test_project()

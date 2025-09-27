@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from scratchattach.cloud import _base
-from typing import TypedDict, Union, Optional
+from typing import TypedDict, Union, Optional, Required, NotRequired
 
 class SessionUserDict(TypedDict):
     id: int
@@ -67,11 +67,11 @@ class UserProfileDict(TypedDict):
     images: dict[str, str]
 
 class UserDict(TypedDict):
-    id: int
-    username: str
-    scratchteam: bool
-    history: UserHistoryDict
-    profile: UserProfileDict
+    id: NotRequired[int]
+    username: NotRequired[str]
+    scratchteam: NotRequired[bool]
+    history: NotRequired[UserHistoryDict]
+    profile: NotRequired[UserProfileDict]
 
 class CloudLogActivityDict(TypedDict):
     user: str
@@ -93,7 +93,8 @@ class ClassroomDict(TypedDict):
     title: str
     description: str
     status: str
-    date_start: str
-    date_end: Optional[str]
-    images: dict[str, str]
+    date_start: NotRequired[str]
+    date_end: NotRequired[Optional[str]]
+    images: NotRequired[dict[str, str]]
     educator: UserDict
+    is_closed: NotRequired[bool]
