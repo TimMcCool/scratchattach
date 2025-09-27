@@ -151,7 +151,7 @@ class User(BaseSiteComponent):
             details = soup.find("p", {"class": "profile-details"})
             assert isinstance(details, Tag)
 
-            class_name, class_id, is_closed = None, None, None
+            class_name, class_id, is_closed = None, 0, False
             for a in details.find_all("a"):
                 if not isinstance(a, Tag):
                     continue
@@ -162,12 +162,12 @@ class User(BaseSiteComponent):
                     if is_closed:
                         class_name = class_name[:-7].strip()
 
-                    class_id = href.split('/')[2]
+                    class_id = int(href.split('/')[2])
                     break
 
             if class_name:
                 self._classroom = True, classroom.Classroom(
-                    _session=self,
+                    _session=self._session,
                     id=class_id,
                     title=class_name,
                     is_closed=is_closed

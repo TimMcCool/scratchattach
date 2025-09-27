@@ -142,8 +142,10 @@ class Comment(BaseSiteComponent):
         """
         if (self.cached_replies is None) or (not use_cache):
             if self.source == "profile":
-                self.cached_replies = user.User(username=self.source_id, _session=self._session).comment_by_id(
-                    self.id).cached_replies[offset:offset + limit]
+                _cached_replies = user.User(username=self.source_id, _session=self._session).comment_by_id(
+                    self.id).cached_replies
+                if _cached_replies is not None:
+                    self.cached_replies = _cached_replies[offset:offset + limit]
 
             elif self.source == "project":
                 p = project.Project(id=self.source_id, _session=self._session)
