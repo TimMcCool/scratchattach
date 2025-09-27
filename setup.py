@@ -4,7 +4,11 @@ import os
 
 VERSION = '2.1.13'
 DESCRIPTION = 'A Scratch API Wrapper'
-LONG_DESCRIPTION = DESCRIPTION
+with open('README.md', encoding='utf-8') as f:
+    LONG_DESCRIPTION = f.read()
+
+with open('requirements.txt', encoding='utf-8') as f:
+    requirements = f.read().strip().splitlines()
 
 # Setting up
 setup(
@@ -14,11 +18,13 @@ setup(
     author_email="",
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
-    long_description=open('README.md', encoding='utf-8').read(),
+    long_description=LONG_DESCRIPTION,
     packages=find_packages(),
-    install_requires=["websocket-client","requests","bs4","SimpleWebSocketServer", "typing-extensions"],
+    install_requires=requirements,
+    extras_require={
+        "lark": ["lark"]
+    },
     keywords=['scratch api', 'scratchattach', 'scratch api python', 'scratch python', 'scratch for python', 'scratch', 'scratch cloud', 'scratch cloud variables', 'scratch bot'],
-    url='https://scratchattach.tim1de.net',
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -26,5 +32,9 @@ setup(
         "Operating System :: Unix",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
-    ]
+    ],
+    project_urls={
+        "Source": "https://github.com/timmccool/scratchattach",
+        "Homepage": 'https://scratchattach.tim1de.net'
+    }
 )

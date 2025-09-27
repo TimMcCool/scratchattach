@@ -8,8 +8,11 @@ from . import base, commons, prim
 from dataclasses import dataclass
 
 
-@dataclass(init=True)
+@dataclass
 class ShadowStatus:
+    """
+    Dataclass representing a possible shadow value and giving it a name
+    """
     idx: int
     name: str
 

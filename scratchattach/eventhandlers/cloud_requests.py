@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 from .cloud_events import CloudEvents
-from ..site import project
+from scratchattach.site import project
 from threading import Thread, Event, current_thread
 import time
 import random
 import traceback
-from ..utils.encoder import Encoding
-from ..utils import exceptions
+from scratchattach.utils.encoder import Encoding
+from scratchattach.utils import exceptions
 
 class Request:
 

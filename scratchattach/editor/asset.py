@@ -10,12 +10,19 @@ from typing import Optional
 
 @dataclass(init=True, repr=True)
 class AssetFile:
+    """
+    Represents the file information for an asset
+    - stores the filename, data, and md5 hash
+    """
     filename: str
-    _data: bytes = field(repr=False, default=None)
-    _md5: str = field(repr=False, default=None)
+    _data: bytes = field(repr=False, default_factory=bytes)
+    _md5: str = field(repr=False, default_factory=str)
 
     @property
     def data(self):
+        """
+        Return the contents of the asset file, as bytes
+        """
         if self._data is None:
             # Download and cache
             rq = requests.get(f"https://assets.scratch.mit.edu/internalapi/asset/{self.filename}/get/")
@@ -28,6 +35,9 @@ class AssetFile:
 
     @property
     def md5(self):
+        """
+        Compute/retrieve the md5 hash value of the asset file data
+        """
         if self._md5 is None:
             self._md5 = md5(self.data).hexdigest()
 
@@ -38,7 +48,7 @@ class Asset(base.SpriteSubComponent):
     def __init__(self,
                  name: str = "costume1",
                  file_name: str = "b7853f557e4426412e64bb3da6531a99.svg",
-                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
+                 _sprite: commons.SpriteInput = build_defaulting.SPRITE_DEFAULT):
         """
         Represents a generic asset. Can be a sound or an image.
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Assets
@@ -60,22 +70,40 @@ class Asset(base.SpriteSubComponent):
 
     @property
     def folder(self):
+        """
+        Get the folder name of this asset, based on the asset name. Uses the turbowarp syntax
+        """
         return commons.get_folder_name(self.name)
 
     @property
     def name_nfldr(self):
+        """
+        Get the asset name after removing the folder name
+        """
         return commons.get_name_nofldr(self.name)
 
     @property
     def file_name(self):
+        """
+        Get the exact file name, as it would be within an sb3 file
+        equivalent to the md5ext value using in scratch project JSON
+        """
         return f"{self.id}.{self.data_format}"
 
     @property
     def md5ext(self):
+        """
+        Get the exact file name, as it would be within an sb3 file
+        equivalent to the md5ext value using in scratch project JSON
+        """
         return self.file_name
 
     @property
     def parent(self):
+        """
+        Return the project that this asset is attached to. If there is no attached project,
+        try returning the attached sprite
+        """
         if self.project is None:
             return self.sprite
         else:
@@ -83,6 +111,9 @@ class Asset(base.SpriteSubComponent):
 
     @property
     def asset_file(self) -> AssetFile:
+        """
+        Get the associated asset file object for this asset object
+        """
         for asset_file in self.parent.asset_data:
             if asset_file.filename == self.file_name:
                 return asset_file
@@ -94,17 +125,27 @@ class Asset(base.SpriteSubComponent):
 
     @staticmethod
     def from_json(data: dict):
+        """
+        Load asset data from project.json
+        """
         _name = data.get("name")
+        assert isinstance(_name, str)
         _file_name = data.get("md5ext")
         if _file_name is None:
             if "dataFormat" in data and "assetId" in data:
                 _id = data["assetId"]
                 _data_format = data["dataFormat"]
                 _file_name = f"{_id}.{_data_format}"
+            else:
+                _file_name = ""
+        assert isinstance(_file_name, str)
 
         return Asset(_name, _file_name)
 
     def to_json(self) -> dict:
+        """
+        Convert asset data to project.json format
+        """
         return {
             "name": self.name,
 
@@ -113,6 +154,7 @@ class Asset(base.SpriteSubComponent):
             "dataFormat": self.data_format,
         }
 
+    # todo: implement below:
     """
     @staticmethod
     def from_file(fp: str, name: str = None):
@@ -132,9 +174,9 @@ class Costume(Asset):
                  bitmap_resolution=None,
                  rotation_center_x: int | float = 48,
                  rotation_center_y: int | float = 50,
-                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
+                 _sprite: commons.SpriteInput = build_defaulting.SPRITE_DEFAULT):
         """
-        A costume. An asset with additional properties
+        A costume (image). An asset with additional properties
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Costumes
         """
         super().__init__(name, file_name, _sprite)
@@ -145,6 +187,9 @@ class Costume(Asset):
 
     @staticmethod
     def from_json(data):
+        """
+        Load costume data from project.json
+        """
         _asset_load = Asset.from_json(data)
 
         bitmap_resolution = data.get("bitmapResolution")
@@ -156,6 +201,9 @@ class Costume(Asset):
                        bitmap_resolution, rotation_center_x, rotation_center_y)
 
     def to_json(self) -> dict:
+        """
+        Convert costume to project.json format
+        """
         _json = super().to_json()
         _json.update({
             "bitmapResolution": self.bitmap_resolution,
@@ -184,6 +232,9 @@ class Sound(Asset):
 
     @staticmethod
     def from_json(data):
+        """
+        Load sound from project.json
+        """
         _asset_load = Asset.from_json(data)
 
         rate = data.get("rate")
@@ -191,6 +242,9 @@ class Sound(Asset):
         return Sound(_asset_load.name, _asset_load.file_name, rate, sample_count)
 
     def to_json(self) -> dict:
+        """
+        Convert Sound to project.json format
+        """
         _json = super().to_json()
         commons.noneless_update(_json, {
             "rate": self.rate,

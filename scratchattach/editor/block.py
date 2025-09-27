@@ -1,20 +1,24 @@
 from __future__ import annotations
 
 import warnings
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Union
 from typing_extensions import Self
 
 from . import base, sprite, mutation, field, inputs, commons, vlb, blockshape, prim, comment, build_defaulting
-from ..utils import exceptions
+from scratchattach.utils import exceptions
 
 
 class Block(base.SpriteSubComponent):
+    """
+    Represents a block in the scratch editor, as a subcomponent of a sprite.
+    """
+    _id: Optional[str] = None
     def __init__(self, _opcode: str, _shadow: bool = False, _top_level: Optional[bool] = None,
                  _mutation: Optional[mutation.Mutation] = None, _fields: Optional[dict[str, field.Field]] = None,
                  _inputs: Optional[dict[str, inputs.Input]] = None, x: int = 0, y: int = 0, pos: Optional[tuple[int, int]] = None,
 
                  _next: Optional[Block] = None, _parent: Optional[Block] = None,
-                 *, _next_id: Optional[str] = None, _parent_id: Optional[str] = None, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
+                 *, _next_id: Optional[str] = None, _parent_id: Optional[str] = None, _sprite: commons.SpriteInput = build_defaulting.SPRITE_DEFAULT):
         # Defaulting for args
         if _fields is None:
             _fields = {}
@@ -34,14 +38,11 @@ class Block(base.SpriteSubComponent):
         self.fields = _fields
         self.inputs = _inputs
 
+        # Temporarily stores id of next block. Will be used later during project instantiation to find the next block object
         self._next_id = _next_id
-        """
-        Temporarily stores id of next block. Will be used later during project instantiation to find the next block object
-        """
+
+        # Temporarily stores id of parent block. Will be used later during project instantiation to find the parent block object
         self._parent_id = _parent_id
-        """
-        Temporarily stores id of parent block. Will be used later during project instantiation to find the parent block object
-        """
 
         self.next = _next
         self.parent = _parent
@@ -55,6 +56,9 @@ class Block(base.SpriteSubComponent):
         return f"Block<{self.opcode!r}>"
 
     def link_subcomponents(self):
+        """
+        Iterate through subcomponents and assign the 'block' attribute
+        """
         if self.mutation:
             self.mutation.block = self
 
@@ -63,6 +67,9 @@ class Block(base.SpriteSubComponent):
                 subcomponent.block = self
 
     def add_input(self, name: str, _input: inputs.Input) -> Self:
+        """
+        Add an input to the block. 
+        """ # not sure what else to say
         self.inputs[name] = _input
         for val in (_input.value, _input.obscurer):
             if isinstance(val, Block):
@@ -70,22 +77,34 @@ class Block(base.SpriteSubComponent):
         return self
 
     def add_field(self, name: str, _field: field.Field) -> Self:
+        """
+        Add a field to the block. 
+        """  # not sure what else to sa
         self.fields[name] = _field
         return self
 
     def set_mutation(self, _mutation: mutation.Mutation) -> Self:
+        """
+        Attach a mutation object and call mutation.link_arguments()
+        """ # this comment explains *what* this does, not *why*
         self.mutation = _mutation
         _mutation.block = self
         _mutation.link_arguments()
         return self
 
     def set_comment(self, _comment: comment.Comment) -> Self:
+        """
+        Attach a comment and add it to the sprite.
+        """
         _comment.block = self
         self.sprite.add_comment(_comment)
 
         return self
 
     def check_toplevel(self):
+        """
+        Edit the toplevel, x, and y attributes based on whether the parent attribute is None
+        """
         self.is_top_level = self.parent is None
 
         if not self.is_top_level:
@@ -95,7 +114,7 @@ class Block(base.SpriteSubComponent):
     def target(self):
         """
         Alias for sprite
-        """
+        """ # remove this?
         return self.sprite
 
     @property
@@ -107,7 +126,8 @@ class Block(base.SpriteSubComponent):
         _shape = blockshape.BlockShapes.find(self.opcode, "opcode")
         if _shape is None:
             warnings.warn(f"No blockshape {self.opcode!r} exists! Defaulting to {blockshape.BlockShapes.UNDEFINED}")
-            return blockshape.BlockShapes.UNDEFINED
+            _shape = blockshape.BlockShapes.UNDEFINED
+        assert isinstance(_shape, blockshape.BlockShape)
         return _shape
 
     @property
@@ -127,21 +147,32 @@ class Block(base.SpriteSubComponent):
             return self.mutation.has_next
 
     @property
-    def id(self) -> str | None:
+    def id(self) -> str:
         """
         Work out the id of this block by searching through the sprite dictionary
         """
+        if self._id:
+            return self.id
         # warnings.warn(f"Using block IDs can cause consistency issues and is not recommended")
         # This property is used when converting comments to JSON (we don't want random warning when exporting a project)
         for _block_id, _block in self.sprite.blocks.items():
             if _block is self:
-                return _block_id
+                self._id = _block_id
+                return self.id
 
         # Let's just automatically assign ourselves an id
         self.sprite.add_block(self)
+        return self.id
+    
+    @id.setter
+    def id(self, value: str) -> None:
+        self._id = value
 
     @property
     def parent_id(self):
+        """
+        Get the id of the parent block, if applicable
+        """
         if self.parent is not None:
             return self.parent.id
         else:
@@ -149,6 +180,9 @@ class Block(base.SpriteSubComponent):
 
     @property
     def next_id(self):
+        """
+        Get the id of the next block, if applicable
+        """
         if self.next is not None:
             return self.next.id
         else:
@@ -186,13 +220,19 @@ class Block(base.SpriteSubComponent):
 
     @property
     def previous_chain(self):
-        if self.parent is None:
+        """
+        Recursive getter method to get all previous blocks in the blockchain (until hitting a top-level block)
+        """
+        if self.parent is None: # todo: use is_top_level?
             return [self]
 
         return [self] + self.parent.previous_chain
 
     @property
     def attached_chain(self):
+        """
+        Recursive getter method to get all next blocks in the blockchain (until hitting a bottom-levell block)
+        """
         if self.next is None:
             return [self]
 
@@ -200,23 +240,30 @@ class Block(base.SpriteSubComponent):
 
     @property
     def complete_chain(self):
-        # Both previous and attached chains start with self
+        """
+        Attach previous and attached chains from this block
+        """
         return self.previous_chain[:1:-1] + self.attached_chain
 
     @property
     def top_level_block(self):
         """
+        Get the first block in the block stack that this block is part of
         same as the old stack_parent property from sbedtior v1
         """
         return self.previous_chain[-1]
 
     @property
     def bottom_level_block(self):
+        """
+        Get the last block in the block stack that this block is part of
+        """
         return self.attached_chain[-1]
 
     @property
     def stack_tree(self):
         """
+        Useful for showing a block stack in the console, using pprint
         :return: A tree-like nested list structure representing the stack of blocks, including inputs, starting at this block
         """
         _tree = [self]
@@ -254,6 +301,9 @@ class Block(base.SpriteSubComponent):
 
     @property
     def parent_input(self):
+        """
+        Fetch an input that this block is placed inside of (if applicable)
+        """
         if not self.parent:
             return None
 
@@ -268,6 +318,9 @@ class Block(base.SpriteSubComponent):
 
     @property
     def comment(self) -> comment.Comment | None:
+        """
+        Fetch an associated comment (if applicable) by searching the associated sprite
+        """
         for _comment in self.sprite.comments:
             if _comment.block is self:
                 return _comment
@@ -320,6 +373,9 @@ class Block(base.SpriteSubComponent):
 
     @property
     def is_turbowarp_block(self):
+        """
+        Return whether this block is actually a turbowarp debugger/boolean block, based on mutation
+        """
         return self.turbowarp_block_opcode is not None
 
     @staticmethod
@@ -356,6 +412,9 @@ class Block(base.SpriteSubComponent):
                      _parent_id=_parent_id)
 
     def to_json(self) -> dict:
+        """
+        Convert a block to the project.json format
+        """
         self.check_toplevel()
 
         _json = {
@@ -387,6 +446,9 @@ class Block(base.SpriteSubComponent):
         return _json
 
     def link_using_sprite(self, link_subs: bool = True):
+        """
+        Link this block to various other blocks once the sprite has been assigned
+        """
         if link_subs:
             self.link_subcomponents()
 
@@ -443,6 +505,9 @@ class Block(base.SpriteSubComponent):
 
     # Adding/removing block
     def attach_block(self, new: Block) -> Block:
+        """
+        Connect another block onto the boottom of this block (not necessarily bottom of chain)
+        """
         if not self.can_next:
             raise exceptions.BadBlockShape(f"{self.block_shape} cannot be stacked onto")
         elif new.block_shape.is_hat or not new.block_shape.is_stack:
@@ -474,6 +539,9 @@ class Block(base.SpriteSubComponent):
         )
 
     def slot_above(self, new: Block) -> Block:
+        """
+        Place a single block directly above this block
+        """
         if not new.can_next:
             raise exceptions.BadBlockShape(f"{new.block_shape} cannot be stacked onto")
 
@@ -503,6 +571,9 @@ class Block(base.SpriteSubComponent):
         self.sprite.remove_block(self)
 
     def delete_chain(self):
+        """
+        Delete all blocks in the attached blockchain (and self)
+        """
         for _block in self.attached_chain:
             _block.delete_single_block()
 

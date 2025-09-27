@@ -3,7 +3,7 @@ Module which stores the 'default' or 'current' selected Sprite/project (stored a
 """
 from __future__ import annotations
 
-from typing import Iterable, TYPE_CHECKING, Final
+from typing import Iterable, TYPE_CHECKING, Final, Literal
 
 if TYPE_CHECKING:
     from . import sprite, block, prim, comment
@@ -11,11 +11,12 @@ from . import commons
 
 
 class _SetSprite(commons.Singleton):
+    INSTANCE = 0
     def __repr__(self):
         return f'<Reminder to default your sprite to {current_sprite()}>'
 
 
-SPRITE_DEFAULT: Final[_SetSprite] = _SetSprite()
+SPRITE_DEFAULT: Final[Literal[_SetSprite.INSTANCE]] = _SetSprite.INSTANCE
 
 _sprite_stack: list[sprite.Sprite] = []
 
@@ -25,6 +26,9 @@ def stack_add_sprite(_sprite: sprite.Sprite):
 
 
 def current_sprite() -> sprite.Sprite | None:
+    """
+    Retrieve the default sprite from the top of the sprite stack
+    """
     if len(_sprite_stack) == 0:
         return None
     return _sprite_stack[-1]

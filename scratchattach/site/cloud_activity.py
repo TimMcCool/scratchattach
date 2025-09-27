@@ -91,8 +91,8 @@ class CloudActivity(BaseSiteComponent):
         """
         if self.username is None:
             return None
-        from ..site import user
-        from ..utils import exceptions
+        from scratchattach.site import user
+        from scratchattach.utils import exceptions
         return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
 
     def project(self):
@@ -101,7 +101,7 @@ class CloudActivity(BaseSiteComponent):
         """
         if self.cloud is None:
             return None
-        from ..site import project
-        from ..utils import exceptions
+        from scratchattach.site import project
+        from scratchattach.utils import exceptions
         return self._make_linked_object("id", self.cloud.project_id, project.Project, exceptions.ProjectNotFound)
 

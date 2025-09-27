@@ -5,6 +5,9 @@ from typing import Optional
 
 
 class Comment(base.IDComponent):
+    """
+    Represents a comment in the scratch editor.
+    """
     def __init__(self, _id: Optional[str] = None, _block: Optional[block.Block] = None, x: int = 0, y: int = 0, width: int = 200,
                  height: int = 200, minimized: bool = False, text: str = '', *, _block_id: Optional[str] = None,
                  _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT, pos: Optional[tuple[int, int]] = None):
@@ -32,6 +35,9 @@ class Comment(base.IDComponent):
 
     @property
     def block_id(self):
+        """
+        Retrieve the id of the associateed block (if applicable)
+        """
         if self.block is not None:
             return self.block.id
         elif self._block_id is not None:

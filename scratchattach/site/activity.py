@@ -5,7 +5,7 @@ from bs4 import PageElement
 
 from . import user, project, studio
 from ._base import BaseSiteComponent
-from ..utils import exceptions
+from scratchattach.utils import exceptions
 
 
 class Activity(BaseSiteComponent):
@@ -20,7 +20,6 @@ class Activity(BaseSiteComponent):
         return str(self.raw)
 
     def __init__(self, **entries):
-
         # Set attributes every Activity object needs to have:
         self._session = None
         self.raw = None
@@ -81,7 +80,8 @@ class Activity(BaseSiteComponent):
             recipient_username = None
 
         default_case = False
-        """Whether this is 'blank'; it will default to 'user performed an action'"""
+        # Even if `activity_type` is an invalid value; it will default to 'user performed an action'
+
         if activity_type == 0:
             # follow
             followed_username = data["followed_username"]
@@ -150,13 +150,7 @@ class Activity(BaseSiteComponent):
             self.project_id = project_id
             self.recipient_username = recipient_username
 
-        elif activity_type == 8:
-            default_case = True
-
-        elif activity_type == 9:
-            default_case = True
-
-        elif activity_type == 10:
+        elif activity_type in (8, 9, 10):
             # Share/Reshare project
             project_id = data["project"]
             is_reshare = data["is_reshare"]
@@ -187,9 +181,8 @@ class Activity(BaseSiteComponent):
             self.project_id = parent_id
             self.recipient_username = recipient_username
 
-        elif activity_type == 12:
-            default_case = True
-
+        # type 12 does not exist in the HTML. That's why it was removed, not merged with type 13.
+        
         elif activity_type == 13:
             # Create ('add') studio
             studio_id = data["gallery"]
@@ -216,16 +209,7 @@ class Activity(BaseSiteComponent):
             self.username = username
             self.gallery_id = studio_id
 
-        elif activity_type == 16:
-            default_case = True
-
-        elif activity_type == 17:
-            default_case = True
-
-        elif activity_type == 18:
-            default_case = True
-
-        elif activity_type == 19:
+        elif activity_type in (16, 17, 18, 19):
             # Remove project from studio
 
             project_id = data["project"]
@@ -240,13 +224,7 @@ class Activity(BaseSiteComponent):
             self.username = username
             self.project_id = project_id
 
-        elif activity_type == 20:
-            default_case = True
-
-        elif activity_type == 21:
-            default_case = True
-
-        elif activity_type == 22:
+        elif activity_type in (20, 21, 22):
             # Was promoted to manager for studio
             studio_id = data["gallery"]
 
@@ -260,13 +238,7 @@ class Activity(BaseSiteComponent):
             self.recipient_username = recipient_username
             self.gallery_id = studio_id
 
-        elif activity_type == 23:
-            default_case = True
-
-        elif activity_type == 24:
-            default_case = True
-
-        elif activity_type == 25:
+        elif activity_type in (23, 24, 25):
             # Update profile
             raw = f"{username} made a profile update"
 
@@ -276,10 +248,7 @@ class Activity(BaseSiteComponent):
 
             self.username = username
 
-        elif activity_type == 26:
-            default_case = True
-
-        elif activity_type == 27:
+        elif activity_type in (26, 27):
             # Comment (quite complicated)
             comment_type: int = data["comment_type"]
             fragment = data["comment_fragment"]
@@ -313,13 +282,12 @@ class Activity(BaseSiteComponent):
             self.comment_obj_id = comment_obj_id
             self.comment_obj_title = comment_obj_title
             self.comment_id = comment_id
-
         else:
             default_case = True
 
         if default_case:
             # This is coded in the scratch HTML, haven't found an example of it though
-            raw = f"{username} performed an action"
+            raw = f"{username} performed an action."
 
             self.raw = raw
             self.datetime_created = _time

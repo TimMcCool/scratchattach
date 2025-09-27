@@ -4,11 +4,11 @@ from __future__ import annotations
 import json
 import random
 from . import user, comment, project, activity
-from ..utils import exceptions, commons
-from ..utils.commons import api_iterative, headers
+from scratchattach.utils import exceptions, commons
+from scratchattach.utils.commons import api_iterative, headers
 from ._base import BaseSiteComponent
 
-from ..utils.requests import Requests as requests
+from scratchattach.utils.requests import requests
 
 
 class Studio(BaseSiteComponent):
@@ -49,7 +49,7 @@ class Studio(BaseSiteComponent):
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
-        self.update_API = f"https://api.scratch.mit.edu/studios/{entries['id']}"
+        self.update_api = f"https://api.scratch.mit.edu/studios/{entries['id']}"
 
         # Set attributes every Project object needs to have:
         self._session = None
@@ -156,7 +156,7 @@ class Studio(BaseSiteComponent):
         ).json()
         if r is None:
             raise exceptions.CommentNotFound()
-        _comment = comment.Comment(id=r["id"], _session=self._session, source="studio", source_id=self.id)
+        _comment = comment.Comment(id=r["id"], _session=self._session, source=comment.CommentSource.STUDIO, source_id=self.id)
         _comment._update_from_dict(r)
         return _comment
 
@@ -191,7 +191,7 @@ class Studio(BaseSiteComponent):
         ).json()
         if "id" not in r:
             raise exceptions.CommentPostFailure(r)
-        _comment = comment.Comment(id=r["id"], _session=self._session, source="studio", source_id=self.id)
+        _comment = comment.Comment(id=r["id"], _session=self._session, source=comment.CommentSource.STUDIO, source_id=self.id)
         _comment._update_from_dict(r)
         return _comment
 

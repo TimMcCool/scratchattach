@@ -1,27 +1,29 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import TypeVar, Optional
 
 import requests
-from ..utils import exceptions, commons
-from typing import TypeVar
-from types import FunctionType
+from scratchattach.utils import exceptions, commons
+from . import session
 
 C = TypeVar("C", bound="BaseSiteComponent")
 class BaseSiteComponent(ABC):
-    @abstractmethod
-    def __init__(self):
-        self._session = None
-        self._cookies = None
-        self._headers = None
-        self.update_API = None
+    _session: Optional[session.Session]
+    update_api: str
+    _headers: dict[str, str]
+    _cookies: dict[str, str]
+
+    # @abstractmethod
+    # def __init__(self):  # dataclasses do not implement __init__ directly
+    #     pass
 
     def update(self):
         """
         Updates the attributes of the object by performing an API response. Returns True if the update was successful.
         """
         response = self.update_function(
-            self.update_API,
+            self.update_api,
             headers=self._headers,
             cookies=self._cookies, timeout=10
         )
@@ -45,7 +47,6 @@ class BaseSiteComponent(ABC):
         """
         Parses the API response that is fetched in the update-method. Class specific, must be overridden in classes inheriting from this one.
         """
-        pass
 
     def _assert_auth(self):
         if self._session is None:
@@ -59,7 +60,7 @@ class BaseSiteComponent(ABC):
         """
         return commons._get_object(identificator_id, identificator, Class, NotFoundException, self._session)
 
-    update_function: FunctionType = requests.get
+    update_function = requests.get
     """
     Internal function run on update. Function is a method of the 'requests' module/class
     """

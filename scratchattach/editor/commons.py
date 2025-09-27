@@ -6,11 +6,19 @@ from __future__ import annotations
 import json
 import random
 import string
-from typing import Optional, Final, Any
+from typing import Optional, Final, Any, TYPE_CHECKING, Union
+from enum import Enum
 
-from ..utils import exceptions
+if TYPE_CHECKING:
+    from . import sprite, build_defaulting
 
-DIGITS: Final[tuple[str]] = tuple("0123456789")
+    SpriteInput = Union[sprite.Sprite, build_defaulting._SetSprite]
+else:
+    SpriteInput = Any
+
+from scratchattach.utils import exceptions
+
+DIGITS: Final[tuple[str, ...]] = tuple("0123456789")
 
 ID_CHARS: Final[str] = string.ascii_letters + string.digits  # + string.punctuation
 
@@ -72,7 +80,8 @@ def _read_json_number(_str: str) -> float | int:
 
     return json.loads(ret)
 
-
+# todo: consider if this should be moved to util.commons instead of editor.commons
+# note: this is currently unused code
 def consume_json(_str: str, i: int = 0) -> str | float | int | dict | list | bool | None:
     """
     *'gobble up some JSON until we hit something not quite so tasty'*
@@ -134,16 +143,20 @@ def is_partial_json(_str: str, i: int = 0) -> bool:
 
 
 def is_valid_json(_str: Any) -> bool:
+    """
+    Try to load a json string, if it fails, return False, else return true.
+    """
     try:
         json.loads(_str)
         return True
-    except ValueError:
-        return False
-    except TypeError:
+    except (ValueError, TypeError):
         return False
 
 
 def noneless_update(obj: dict, update: dict) -> None:
+    """
+    equivalent to dict.update, except and values of None are not assigned
+    """
     for key, value in update.items():
         if value is not None:
             obj[key] = value
@@ -163,6 +176,9 @@ def remove_nones(obj: dict) -> None:
 
 
 def safe_get(lst: list | tuple, _i: int, default: Optional[Any] = None) -> Any:
+    """
+    Like dict.get() but for lists
+    """
     if len(lst) <= _i:
         return default
     else:
@@ -182,7 +198,10 @@ def trim_final_nones(lst: list) -> list:
     return lst[:i]
 
 
-def dumps_ifnn(obj: Any) -> str:
+def dumps_ifnn(obj: Any) -> Optional[str]:
+    """
+    Return json.dumps(obj) if the object is not None
+    """
     if obj is None:
         return None
     else:
@@ -190,9 +209,13 @@ def dumps_ifnn(obj: Any) -> str:
 
 
 def gen_id() -> str:
-    # The old 'naïve' method but that chances of a repeat are so miniscule
-    # Have to check if whitespace chars break it
-    # May later add checking within sprites so that we don't need such long ids (we can save space this way)
+    """
+    Generate an id for scratch blocks/variables/lists/broadcasts
+
+    The old 'naïve' method but that chances of a repeat are so miniscule
+    Have to check if whitespace chars break it
+    May later add checking within sprites so that we don't need such long ids (we can save space this way)
+    """
     return ''.join(random.choices(ID_CHARS, k=20))
 
 
@@ -212,6 +235,9 @@ def sanitize_fn(filename: str):
 
 
 def get_folder_name(name: str) -> str | None:
+    """
+    Get the name of the folder if this is a turbowarp-style costume name
+    """
     if name.startswith('//'):
         return None
 
@@ -231,13 +257,8 @@ def get_name_nofldr(name: str) -> str:
     else:
         return name[len(fldr) + 2:]
 
-
-class Singleton(object):
-    _instance: Singleton
+# Parent enum class
+class Singleton(Enum):
 
     def __new__(cls, *args, **kwargs):
-        if hasattr(cls, "_instance"):
-            return cls._instance
-        else:
-            cls._instance = super(Singleton, cls).__new__(cls)
-            return cls._instance
+        return super().__new__(cls, 0)

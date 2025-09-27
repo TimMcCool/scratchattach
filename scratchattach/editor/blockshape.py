@@ -3,15 +3,18 @@ Enums stating the shape of a block from its opcode (i.e: stack, c-mouth, cap, ha
 """
 from __future__ import annotations
 
-# Perhaps this should be merged with pallet.py
+# Perhaps this should be merged with pallete.py
 from dataclasses import dataclass
 from typing import Final
 
 from . import commons
-from ..utils.enums import _EnumWrapper
+from scratchattach.utils.enums import _EnumWrapper
 
 
 class _MutationDependent(commons.Singleton):
+    """
+    Singleton value that represents the uncertainty of a vablue because it depends on block mutation data.
+    """
     def __bool__(self):
         raise TypeError("Need mutation data to work out attribute value.")
 
@@ -23,7 +26,7 @@ MUTATION_DEPENDENT: Final[_MutationDependent] = _MutationDependent()
 @dataclass(init=True, repr=True)
 class BlockShape:
     """
-    A class that describes the shape of a block; e.g. is it a stack, c-mouth, cap, hat reporter, boolean or menu block?
+    The shape of a block; e.g. is it a stack, c-mouth, cap, hat reporter, boolean or menu block?
     """
     is_stack: bool | _MutationDependent = False  # Most blocks - e.g. move [10] steps
     is_c_mouth: bool | _MutationDependent = False  # Has substack - e.g. repeat
@@ -262,7 +265,7 @@ class BlockShapes(_EnumWrapper):
     MAKEYMAKEY_MENU_KEY = BlockShape(is_reporter=True, is_menu=True, opcode="makeymakey_menu_KEY")
     MAKEYMAKEY_MENU_SEQUENCE = BlockShape(is_reporter=True, is_menu=True, opcode="makeymakey_menu_SEQUENCE")
 
-    MICROBIT_WHENBUTTONPRESSED = BlockShape(opcode="microbit_whenButtonPressed")
+    MICROBIT_WHENBUTTONPRESSED = BlockShape(opcode="microbit_whenButtonPressed")  # todo: finish this
     MICROBIT_ISBUTTONPRESSED = BlockShape(opcode="microbit_isButtonPressed")
     MICROBIT_WHENGESTURE = BlockShape(opcode="microbit_whenGesture")
     MICROBIT_DISPLAYSYMBOL = BlockShape(opcode="microbit_displaySymbol")

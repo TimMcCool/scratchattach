@@ -10,9 +10,9 @@ import random
 import string
 import zipfile
 from abc import ABC, abstractmethod
-from ..utils import exceptions
-from ..utils.commons import empty_project_json
-from ..utils.requests import Requests as requests
+from scratchattach.utils import exceptions
+from scratchattach.utils.commons import empty_project_json
+from scratchattach.utils.requests import requests
 # noinspection PyPep8Naming
 def load_components(json_data: list, ComponentClass: type, target_list: list):
     for element in json_data:

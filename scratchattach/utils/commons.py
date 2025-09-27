@@ -1,13 +1,17 @@
 """v2 ready: Common functions used by various internal modules"""
 from __future__ import annotations
 
+import string
+
 from typing import Optional, Final, Any, TypeVar, Callable, TYPE_CHECKING, Union
+from threading import Event as ManualResetEvent
 from threading import Lock
 
 from . import exceptions
-from .requests import Requests as requests
+from .requests import requests
 
-from ..site import _base
+from scratchattach.site import _base
+
 
 headers: Final = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -130,7 +134,7 @@ def _get_object(identificator_name, identificator, __class: type[C], NotFoundExc
     # Internal function: Generalization of the process ran by get_user, get_studio etc.
     # Builds an object of class that is inheriting from BaseSiteComponent
     # # Class must inherit from BaseSiteComponent
-    from ..site import project
+    from scratchattach.site import project
     try:
         use_class: type = __class
         if __class is project.PartialProject:
@@ -182,44 +186,41 @@ class LockEvent:
     """
     Can be waited on and triggered. Not to be confused with threading.Event, which has to be reset.
     """
-    locks: list[Lock]
+    _event: ManualResetEvent
+    _locks: list[Lock]
+    _access_locks: Lock
     def __init__(self):
-        self.locks = []
-        self.use_locks = Lock()
+        self._event = ManualResetEvent()
+        self._locks = []
+        self._access_locks = Lock()
 
     def wait(self, blocking: bool = True, timeout: Optional[Union[int, float]] = None) -> bool:
         """
         Wait for the event.
         """
-        timeout = -1 if timeout is None else timeout
-        if not blocking:
-            timeout = 0
-        return self.on().acquire(timeout=timeout)
+        return self._event.wait(timeout if blocking else 0)
 
     def trigger(self):
         """
         Trigger all threads waiting on this event to continue.
         """
-        with self.use_locks:
-            for lock in self.locks:
+        with self._access_locks:
+            for lock in self._locks:
                 try:
-                    lock.release() # Unlock the lock once to trigger the event.
+                    lock.release()
                 except RuntimeError:
-                    lock.acquire(timeout=0) # Lock the lock again.
-            for lock in self.locks.copy():
-                try:
-                    lock.release() # Unlock the lock once more to make sure it was waited on.
-                    self.locks.remove(lock)
-                except RuntimeError:
-                    lock.acquire(timeout=0) # Lock the lock again.
+                    pass
+            self._locks.clear()
+            self._event.set()
+            self._event = ManualResetEvent()
 
     def on(self) -> Lock:
         """
-        Return a lock that will unlock once the event takes place.
+        Return a lock that will unlock once the event takes place. Return value has to be waited on to wait for the event.
         """
         lock = Lock()
-        with self.use_locks:
-            self.locks.append(lock)
+        with self._access_locks:
+            self._locks.append(lock)
         lock.acquire(timeout=0)
         return lock
 
@@ -241,3 +242,14 @@ def get_class_sort_mode(mode: str) -> tuple[str, str]:
         descsort = "title"
 
     return ascsort, descsort
+
+
+def b62_decode(s: str):
+    chars = string.digits + string.ascii_uppercase + string.ascii_lowercase
+
+    ret = 0
+    for char in s:
+        ret = ret * 62 + chars.index(char)
+
+    return ret
+

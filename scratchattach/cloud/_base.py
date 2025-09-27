@@ -24,13 +24,13 @@ class SupportsClose(ABC):
 
 import websocket
 
-from ..site import session
-from ..eventhandlers import cloud_recorder
-from ..utils import exceptions
-from ..eventhandlers.cloud_requests import CloudRequests
-from ..eventhandlers.cloud_events import CloudEvents
-from ..eventhandlers.cloud_storage import CloudStorage
-from ..site import cloud_activity
+from scratchattach.site import session
+from scratchattach.eventhandlers import cloud_recorder
+from scratchattach.utils import exceptions
+from scratchattach.eventhandlers.cloud_requests import CloudRequests
+from scratchattach.eventhandlers.cloud_events import CloudEvents
+from scratchattach.eventhandlers.cloud_storage import CloudStorage
+from scratchattach.site import cloud_activity
 
 T = TypeVar("T")
 

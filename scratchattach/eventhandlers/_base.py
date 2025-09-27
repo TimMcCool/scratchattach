@@ -5,8 +5,8 @@ from collections import defaultdict
 from threading import Thread
 from collections.abc import Callable
 import traceback
-from ..utils.requests import Requests as requests
-from ..utils import exceptions
+from scratchattach.utils.requests import requests
+from scratchattach.utils import exceptions
 
 class BaseEventHandler(ABC):
     _events: defaultdict[str, list[Callable]]

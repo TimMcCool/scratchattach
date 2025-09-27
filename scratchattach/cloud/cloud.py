@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from ._base import BaseCloud
 from typing import Type
-from ..utils.requests import Requests as requests
-from ..utils import exceptions, commons
-from ..site import cloud_activity
+from scratchattach.utils.requests import requests
+from scratchattach.utils import exceptions, commons
+from scratchattach.site import cloud_activity
 
 
 class ScratchCloud(BaseCloud):
@@ -88,7 +88,7 @@ class ScratchCloud(BaseCloud):
 
     def events(self, *, use_logs=False):
         if self._session is None or use_logs:
-            from ..eventhandlers.cloud_events import CloudLogEvents
+            from scratchattach.eventhandlers.cloud_events import CloudLogEvents
             return CloudLogEvents(self)
         else:
             return super().events()

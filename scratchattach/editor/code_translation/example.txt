@@ -1,0 +1,15 @@
+## For testing. The file extension is temporary and might change in the future. ##
+
+when (green_flag_clicked) {
+    until {
+        say()
+        say()
+    }
+    sa()
+}
+
+custom_block hello_%s_ (<a>, awd) {
+    until(1) {
+        say((8 + 4) * (3 - 1) / (2 + 6 / 3) + (15 - (4 * 2)) * (9 + 1) / 5 - 18 / (3 + 2 * 1))
+    } ## Hi! ##  ## Hi1 ##  ## ##
+}

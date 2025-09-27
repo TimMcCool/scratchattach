@@ -1,14 +1,21 @@
+"""
+Enum & dataclass representing extension categories
+"""
+
 from __future__ import annotations
 
 
 from dataclasses import dataclass
 
 from . import base
-from ..utils import enums
+from scratchattach.utils import enums
 
 
-@dataclass(init=True, repr=True)
+@dataclass
 class Extension(base.JSONSerializable):
+    """
+    Represents an extension in the Scratch block pallete - e.g. video sensing
+    """
     code: str
     name: str = None
 
@@ -40,4 +47,4 @@ class Extensions(enums._EnumWrapper):
     TRANSLATE = Extension("translate", "Translate Extension")
     VIDEOSENSING = Extension("videoSensing", "Video Sensing Extension")
     WEDO2 = Extension("wedo2", "LEGO Education WeDo 2.0 Extension")
-    COREEXAMPLE = Extension("coreExample", "CoreEx Extension")
+    COREEXAMPLE = Extension("coreExample", "CoreEx Extension")  # hidden extension!

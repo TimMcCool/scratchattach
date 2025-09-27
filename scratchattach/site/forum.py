@@ -1,16 +1,21 @@
 """ForumTopic and ForumPost classes"""
 from __future__ import annotations
 
-from . import user
-from ..utils.commons import headers
-from ..utils import exceptions, commons
-from ._base import BaseSiteComponent
-import xml.etree.ElementTree as ET
-from bs4 import BeautifulSoup
+from dataclasses import dataclass, field
+from typing import Optional, Any
 from urllib.parse import urlparse, parse_qs
+import xml.etree.ElementTree as ET
 
-from ..utils.requests import Requests as requests
+from bs4 import BeautifulSoup, Tag
 
+from . import user
+from . import session as module_session
+from scratchattach.utils.commons import headers
+from scratchattach.utils import exceptions, commons
+from ._base import BaseSiteComponent
+from scratchattach.utils.requests import requests
+
+@dataclass
 class ForumTopic(BaseSiteComponent):
     '''
     Represents a Scratch forum topic.
@@ -33,28 +38,26 @@ class ForumTopic(BaseSiteComponent):
 
     :.update(): Updates the attributes
     '''
+    id: int
+    title: str
+    category_name: str
+    last_updated: str
+    _session: Optional[module_session.Session] = field(default=None)
+    reply_count: Optional[int] = field(default=None)
+    view_count: Optional[int] = field(default=None)
 
-    def __init__(self, **entries):
+    def __post_init__(self):
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
-        self.update_API = f"https://scratch.mit.edu/discuss/feeds/topic/{entries['id']}/"
-
-        # Set attributes every Project object needs to have:
-        self._session = None
-        self.id = 0
-        self.reply_count = None
-        self.view_count = None
-        
-        # Update attributes from entries dict:
-        self.__dict__.update(entries)
+        self.update_api = f"https://scratch.mit.edu/discuss/feeds/topic/{self.id}/"
 
         # Headers and cookies:
         if self._session is None:
             self._headers = headers
             self._cookies = {}
         else:
-            self._headers = self._session._headers
-            self._cookies = self._session._cookies
+            self._headers = self._session.get_headers()
+            self._cookies = self._session.get_cookies()
 
         # Headers for operations that require accept and Content-Type fields:
         self._json_headers = dict(self._headers)
@@ -65,7 +68,7 @@ class ForumTopic(BaseSiteComponent):
         # As there is no JSON API for getting forum topics anymore,
         # the data has to be retrieved from the XML feed.
         response = self.update_function(
-            self.update_API,
+            self.update_api,
             headers = self._headers,
             cookies = self._cookies, timeout=20 # fetching forums can take very long
         )
@@ -87,17 +90,22 @@ class ForumTopic(BaseSiteComponent):
                 raise exceptions.ScrapeError(str(e))
         else:
             raise exceptions.ForumContentNotFound
-
-        return self._update_from_dict(dict(
-            title = title, category_name = category_name, last_updated = last_updated
-        ))
-        
-
-    def _update_from_dict(self, data):
-        self.__dict__.update(data)
+        self.title = title
+        self.category_name = category_name
+        self.last_updated = last_updated
         return True
+    
+    @classmethod
+    def from_id(cls, __id: int, session: module_session.Session, update: bool = False):
+        new = cls(id=__id, _session=session, title="", last_updated="", category_name="")
+        if update:
+            new.update()
+        return new
+    
+    def _update_from_dict(self, data: dict[str, Any]):
+        self.__dict__.update(data)
 
-    def posts(self, *, page=1, order="oldest"):
+    def posts(self, *, page=1, order="oldest") -> list[ForumPost]:
         """
         Args:
             page (int): The page of the forum topic that should be returned. First page is at index 1.
@@ -117,10 +125,11 @@ class ForumTopic(BaseSiteComponent):
             raise exceptions.FetchError(str(e))
         try:
             soup = BeautifulSoup(response.content, 'html.parser')
-            soup = soup.find("div", class_="djangobb")
-
+            soup_elm = soup.find("div", class_="djangobb")
+            assert isinstance(soup_elm, Tag)
             try:
-                pagination_div = soup.find('div', class_='pagination')
+                pagination_div = soup_elm.find('div', class_='pagination')
+                assert isinstance(pagination_div, Tag)
                 num_pages = int(pagination_div.find_all('a', class_='page')[-1].text)
             except Exception:
                 num_pages = 1
@@ -128,8 +137,9 @@ class ForumTopic(BaseSiteComponent):
             try:
                 # get topic category:
                 topic_category = ""
-                breadcrumb_ul = soup.find_all('ul')[1]  # Find the second ul element
+                breadcrumb_ul = soup_elm.find_all('ul')[1]  # Find the second ul element
                 if breadcrumb_ul:
+                    assert isinstance(breadcrumb_ul, Tag)
                     link = breadcrumb_ul.find_all('a')[1]  # Get the right anchor tag
                     topic_category = link.text.strip()  # Extract and strip text content
             except Exception as e:
@@ -139,12 +149,14 @@ class ForumTopic(BaseSiteComponent):
             # get corresponding posts:
             post_htmls = soup.find_all('div', class_='blockpost')
             for raw_post in post_htmls:
-                post = ForumPost(id=int(raw_post['id'].replace("p", "")), topic_id=self.id, _session=self._session, topic_category=topic_category, topic_num_pages=num_pages)
-                post._update_from_html(raw_post)
+                if not isinstance(raw_post, Tag):
+                    continue
+                post = ForumPost(id=int(str(raw_post['id']).replace("p", "")), topic_id=self.id, _session=self._session, topic_category=topic_category, topic_num_pages=num_pages)
+                post.update_from_html(raw_post)
 
                 posts.append(post)
         except Exception as e:
-            raise exceptions.ScrapeError(str(e))
+            raise exceptions.ScrapeError() from e
 
         return posts
 
@@ -157,7 +169,7 @@ class ForumTopic(BaseSiteComponent):
         if len(posts) > 0:
             return posts[0]
 
-
+@dataclass
 class ForumPost(BaseSiteComponent):
     '''
     Represents a Scratch forum post.
@@ -190,34 +202,39 @@ class ForumPost(BaseSiteComponent):
         
     :.update(): Updates the attributes
     '''
-
-    def __init__(self, **entries):
+    id: int = field(default=0)
+    topic_id: int = field(default=0)
+    topic_name: str = field(default="")
+    topic_category: str = field(default="")
+    topic_num_pages: int = field(default=0)
+    author_name: str = field(default="")
+    author_avatar_url: str = field(default="")
+    posted: str = field(default="")
+    deleted: bool = field(default=False)
+    html_content: str = field(default="")
+    content: str = field(default="")
+    post_index: int = field(default=0)
+    _session: Optional[module_session.Session] = field(default=None)
+    def __post_init__(self):
 
         # A forum post can't be updated the usual way as there is no API anymore
-        self.update_function = None
-        self.update_API = None
-
-        # Set attributes every Project object needs to have:
-        self._session = None
-        self.id = 0
-        self.topic_id = 0
-        self.deleted = False
-
-        # Update attributes from entries dict:
-        self.__dict__.update(entries)
+        self.update_api = ""
 
         # Headers and cookies:
         if self._session is None:
             self._headers = headers
             self._cookies = {}
         else:
-            self._headers = self._session._headers
-            self._cookies = self._session._cookies
+            self._headers = self._session.get_headers()
+            self._cookies = self._session.get_cookies()
 
         # Headers for operations that require accept and Content-Type fields:
         self._json_headers = dict(self._headers)
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
+    
+    def update_function(self, *args, **kwargs):
+        raise TypeError("Forum posts cannot be updated like this")
 
     def update(self):
         """
@@ -225,32 +242,47 @@ class ForumPost(BaseSiteComponent):
         As there is no API for retrieving a single post anymore, this requires reloading the forum page.
         """
         page = 1
-        posts = ForumTopic(id=self.topic_id, _session=self._session).posts(page=1)
+        posts = ForumTopic.from_id(self.topic_id, session=self._session).posts(page=1)
         while posts != []:
             matching = list(filter(lambda x : int(x.id) == int(self.id), posts))
             if len(matching) > 0:
                 this = matching[0]
                 break
             page += 1
-            posts = ForumTopic(id=self.topic_id, _session=self._session).posts(page=page)
+            posts = ForumTopic.from_id(self.topic_id, session=self._session).posts(page=page)
         else:
             return False
-        
-        return self._update_from_dict(this.__dict__)
+        self._update_from_dict(vars(this))
 
-    def _update_from_dict(self, data):
+    def _update_from_dict(self, data: dict[str, Any]):
         self.__dict__.update(data)
         return True
+    
+    def update_from_html(self, soup_html: Tag):
+        return self._update_from_html(soup_html)
 
-    def _update_from_html(self, soup_html):
-        self.post_index = int(soup_html.find('span', class_='conr').text.strip('#'))
-        self.id = int(soup_html['id'].replace("p", ""))
-        self.posted = soup_html.find('a', href=True).text.strip()
-        self.content = soup_html.find('div', class_='post_body_html').text.strip()
+    def _update_from_html(self, soup_html: Tag):
+        post_index_elm = soup_html.find('span', class_='conr')
+        assert isinstance(post_index_elm, Tag)
+        id_attr = soup_html['id']
+        assert isinstance(id_attr, str)
+        posted_elm = soup_html.find('a', href=True)
+        assert isinstance(posted_elm, Tag)
+        content_elm = soup_html.find('div', class_='post_body_html')
+        assert isinstance(content_elm, Tag)
+        author_name_elm = soup_html.select_one('dl dt a')
+        assert isinstance(author_name_elm, Tag)
+        topic_name_elm = soup_html.find('h3')
+        assert isinstance(topic_name_elm, Tag)
+        
+        self.post_index = int(post_index_elm.text.strip('#'))
+        self.id = int(id_attr.replace("p", ""))
+        self.posted = posted_elm.text.strip()
+        self.content = content_elm.text.strip()
         self.html_content = str(soup_html.find('div', class_='post_body_html'))
-        self.author_name = soup_html.find('dl').find('dt').find('a').text.strip()
-        self.author_avatar_url = soup_html.find('dl').find('dt').find('a')['href']
-        self.topic_name = soup_html.find('h3').text.strip()
+        self.author_name = author_name_elm.text.strip()
+        self.author_avatar_url = str(author_name_elm['href'])
+        self.topic_name = topic_name_elm.text.strip()
         return True
 
     def topic(self):
@@ -270,7 +302,7 @@ class ForumPost(BaseSiteComponent):
         """
         return self._make_linked_object("username", self.author_name, user.User, exceptions.UserNotFound)
     
-    def edit(self, new_content):
+    def edit(self, new_content: str):
         """
         Changes the content of the forum post.  You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_post` or through another method that requires authentication. You must own the forum post.
         

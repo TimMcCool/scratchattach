@@ -3,22 +3,36 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import string
-from datetime import datetime
+from datetime import datetime, timezone
+from enum import Enum
 
-from ..eventhandlers import message_events
+from typing_extensions import deprecated
+from bs4 import BeautifulSoup, Tag
+
+from ._base import BaseSiteComponent
+from scratchattach.eventhandlers import message_events
+
+from scratchattach.utils import commons
+from scratchattach.utils import exceptions
+from scratchattach.utils.commons import headers
+from scratchattach.utils.requests import requests
+
 from . import project
-from ..utils import exceptions
 from . import studio
 from . import forum
-from bs4 import BeautifulSoup
-from ._base import BaseSiteComponent
-from ..utils.commons import headers
-from ..utils import commons
 from . import comment
 from . import activity
+from . import classroom
 
-from ..utils.requests import Requests as requests
+class Rank(Enum):
+    """
+    Possible ranks in scratch
+    """
+    NEW_SCRATCHER = 0
+    SCRATCHER = 1
+    SCRATCH_TEAM = 2
 
 class Verificator:
 
@@ -62,13 +76,17 @@ class User(BaseSiteComponent):
 
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
-        self.update_API = f"https://api.scratch.mit.edu/users/{entries['username']}"
+        self.update_api = f"https://api.scratch.mit.edu/users/{entries['username']}"
 
         # Set attributes every User object needs to have:
         self._session = None
         self.id = None
         self.username = None
         self.name = None
+
+        # cache value for classroom getter method (using @property)
+        # first value is whether the cache has actually been set (because it can be None), second is the value itself
+        self._classroom: tuple[bool, classroom.Classroom | None] = False, None
 
         # Update attributes from entries dict:
         entries.setdefault("name", entries.get("username"))
@@ -120,6 +138,45 @@ class User(BaseSiteComponent):
             raise exceptions.Unauthorized(
                 "You need to be authenticated as the profile owner to do this.")
 
+    @property
+    def classroom(self) -> classroom.Classroom | None:
+        """
+        Get a user's associated classroom, and return it as a `scratchattach.classroom.Classroom` object.
+        If there is no associated classroom, returns `None`
+        """
+        if not self._classroom[0]:
+            resp = requests.get(f"https://scratch.mit.edu/users/{self.username}/")
+            soup = BeautifulSoup(resp.text, "html.parser")
+
+            details = soup.find("p", {"class": "profile-details"})
+            assert isinstance(details, Tag)
+
+            class_name, class_id, is_closed = None, None, None
+            for a in details.find_all("a"):
+                if not isinstance(a, Tag):
+                    continue
+                href = str(a.get("href"))
+                if re.match(r"/classes/\d*/", href):
+                    class_name = a.text.strip()[len("Student of: "):]
+                    is_closed = class_name.endswith("\n            (ended)") # as this has a \n, we can be sure
+                    if is_closed:
+                        class_name = class_name[:-7].strip()
+
+                    class_id = href.split('/')[2]
+                    break
+
+            if class_name:
+                self._classroom = True, classroom.Classroom(
+                    _session=self,
+                    id=class_id,
+                    title=class_name,
+                    is_closed=is_closed
+                )
+            else:
+                self._classroom = True, None
+
+        return self._classroom[1]
+
     def does_exist(self):
         """
         Returns:
@@ -131,6 +188,8 @@ class User(BaseSiteComponent):
         elif status_code == 404:
             return False
 
+    # Will maybe be deprecated later, but for now still has its own purpose.
+    #@deprecated("This function is partially deprecated. Use user.rank() instead.")
     def is_new_scratcher(self):
         """
         Returns:
@@ -350,7 +409,7 @@ class User(BaseSiteComponent):
                     # A thumbnail link (no need to webscrape this)
                     # A title
                     # An Author (called an owner for some reason)
-
+                    assert isinstance(project_element, Tag)
                     project_anchors = project_element.find_all("a")
                     # Each list item has three <a> tags, the first two linking the project
                     # 1st contains <img> tag
@@ -359,10 +418,16 @@ class User(BaseSiteComponent):
 
                     # This function is pretty handy!
                     # I'll use it for an id from a string like: /projects/1070616180/
-                    project_id = commons.webscrape_count(project_anchors[0].attrs["href"],
+                    first_anchor = project_anchors[0]
+                    second_anchor = project_anchors[1]
+                    third_anchor = project_anchors[2]
+                    assert isinstance(first_anchor, Tag)
+                    assert isinstance(second_anchor, Tag)
+                    assert isinstance(third_anchor, Tag)
+                    project_id = commons.webscrape_count(first_anchor.attrs["href"],
                                                          "/projects/", "/")
-                    title = project_anchors[1].contents[0]
-                    author = project_anchors[2].contents[0]
+                    title = second_anchor.contents[0]
+                    author = third_anchor.contents[0]
 
                     # Instantiating a project with the properties that we know
                     # This may cause issues (see below)
@@ -545,11 +610,11 @@ class User(BaseSiteComponent):
             data = {
                 'id': text.split('<div id="comments-')[1].split('" class="comment')[0],
                 'author': {"username": text.split('" data-comment-user="')[1].split('"><img class')[0]},
-                'content': text.split('<div class="content">')[1].split('"</div>')[0],
+                'content': text.split('<div class="content">')[1].split('</div>')[0].strip(),
                 'reply_count': 0,
                 'cached_replies': []
             }
-            _comment = comment.Comment(source="profile", parent_id=None if parent_id=="" else parent_id, commentee_id=commentee_id, source_id=self.username, id=data["id"], _session = self._session)
+            _comment = comment.Comment(source=comment.CommentSource.USER_PROFILE, parent_id=None if parent_id=="" else parent_id, commentee_id=commentee_id, source_id=self.username, id=data["id"], _session = self._session, datetime = datetime.now())
             _comment._update_from_dict(data)
             return _comment
         except Exception:
@@ -560,7 +625,7 @@ class User(BaseSiteComponent):
                 raw_error_data = text.split('<script id="error-data" type="application/json">')[1].split('</script>')[0]
                 error_data = json.loads(raw_error_data)
                 expires = error_data['mute_status']['muteExpiresAt']
-                expires = datetime.utcfromtimestamp(expires)
+                expires = datetime.fromtimestamp(expires, timezone.utc)
                 raise(exceptions.CommentPostFailure(f"You have been muted. Mute expires on {expires}"))
             else:
                 raise(exceptions.FetchError(f"Couldn't parse API response: {r.text!r}"))
@@ -696,7 +761,7 @@ class User(BaseSiteComponent):
                 'content': content,
                 'datetime_created': time,
             }
-            _comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
+            _comment = comment.Comment(source=comment.CommentSource.USER_PROFILE, source_id=self.username, _session = self._session)
             _comment._update_from_dict(main_comment)
 
             ALL_REPLIES = []
@@ -719,7 +784,7 @@ class User(BaseSiteComponent):
                     "parent_id" : comment_id,
                     "cached_parent_comment" : _comment,
                 }
-                _r_comment = comment.Comment(source="profile", source_id=self.username, _session = self._session, cached_parent_comment=_comment)
+                _r_comment = comment.Comment(source=comment.CommentSource.USER_PROFILE, source_id=self.username, _session = self._session, cached_parent_comment=_comment)
                 _r_comment._update_from_dict(reply_data)
                 ALL_REPLIES.append(_r_comment)
 
@@ -819,6 +884,24 @@ class User(BaseSiteComponent):
 
         v = Verificator(self, verification_project_id)
         return v
+
+    def rank(self):
+        """
+        Finds the rank of the user.
+        May replace user.scratchteam and user.is_new_scratcher in the future.
+        """
+
+        if self.is_new_scratcher():
+            return Rank.NEW_SCRATCHER
+            # Is New Scratcher
+        
+        if not self.scratchteam:
+            return Rank.SCRATCHER
+            # Is Scratcher
+
+        return Rank.SCRATCH_TEAM
+        # Is Scratch Team member
+
 
 # ------ #
 
