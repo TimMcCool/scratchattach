@@ -9,6 +9,8 @@ from base64 import urlsafe_b64encode
 
 
 def str_2_key(gen: str) -> bytes:
+    if not gen:
+        warnings.warn("No key supplied!")
     if (length := len(gen)) < 32:
         warnings.warn(f"Short length {length}")
         gen = gen.zfill(32)
