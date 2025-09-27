@@ -26,7 +26,10 @@ class ScratchCloud(BaseCloud):
 
     def connect(self):
         self._assert_auth() # Connecting to Scratch's cloud websocket requires a login to the Scratch website
-        super().connect()
+        try:
+            super().connect()
+        except WebSocketBadStatusException as e:
+            raise WebSocketBadStatusException(f"Error: Scratch's Cloud system may be down. Please try again later.") from e
 
     def set_var(self, variable, value):
         self._assert_auth() # Setting a cloud var requires a login to the Scratch website
