@@ -91,13 +91,17 @@ class Classroom(BaseSiteComponent):
                 if pfx in script.text:
                     educator_username = commons.webscrape_count(script.text, pfx, sfx, str)
 
-            ret = {"id": self.id,
-                   "title": title,
-                   "description": description,
-                   "status": status,
-                   "educator": {"username": educator_username},
-                   "is_closed": True
-                   }
+            ret: typed_dicts.ClassroomDict = {
+                "id": self.id,
+                "title": title,
+                "description": description,
+                "educator": {},
+                "status": status,
+                "is_closed": True
+                }
+
+            if educator_username:
+                ret["educator"]["username"] = educator_username
 
             return self._update_from_dict(ret)
         return success
@@ -136,7 +140,7 @@ class Classroom(BaseSiteComponent):
             response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
             soup = BeautifulSoup(response.text, "html.parser")
             found = set("")
-            
+
             for result in soup.css.select("ul.scroll-content .user a"):
                 result_text = result.text.strip()
                 if result_text in found:
@@ -185,7 +189,7 @@ class Classroom(BaseSiteComponent):
             ret = []
             response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
             soup = BeautifulSoup(response.text, "html.parser")
-            
+
             for result in soup.css.select("ul.scroll-content .gallery a[href]:not([class])"):
                 value = result["href"]
                 if not isinstance(value, str):
