@@ -129,13 +129,13 @@ class EducatorAlert:
 
             if comment_type == 0:
                 # project
-                comment_source_type = comment.CommentSource.PROJECT
+                comment_source_type = "project"
             elif comment_type == 1:
                 # profile
-                comment_source_type = comment.CommentSource.USER_PROFILE
+                comment_source_type = "profile"
             else:
                 # probably a studio
-                comment_source_type = comment.CommentSource.STUDIO
+                comment_source_type = "studio"
                 warnings.warn(
                     f"The parser was not able to recognise the \"comment_type\" of {comment_type} in the alert JSON response.\n"
                     f"Full response: \n{pprint.pformat(data)}.\n\n"

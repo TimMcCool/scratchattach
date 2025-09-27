@@ -9,17 +9,12 @@ from . import user, project, studio
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions
 
-class CommentSource(Enum):
-    PROJECT = auto()
-    USER_PROFILE = auto()
-    STUDIO = auto()
-
 class Comment(BaseSiteComponent):
     """
     Represents a Scratch comment (on a profile, studio or project)
     """
     id: Union[int, str]
-    source: CommentSource
+    source: str
     source_id: Union[int, str]
     cached_replies: Optional[list[Comment]]
     parent_id: Optional[Union[int, str]]
@@ -109,14 +104,14 @@ class Comment(BaseSiteComponent):
 
         If the place can't be traced back, None is returned.
         """
-        if self.source == CommentSource.USER_PROFILE:
+        if self.source == "profile":
             return self._make_linked_object("username", self.source_id, user.User, exceptions.UserNotFound)
-        elif self.source == CommentSource.STUDIO:
+        elif self.source == "studio":
             return self._make_linked_object("id", self.source_id, studio.Studio, exceptions.UserNotFound)
-        elif self.source == CommentSource.PROJECT:
+        elif self.source == "project":
             return self._make_linked_object("id", self.source_id, project.Project, exceptions.UserNotFound)
         else:
-            assert_never(self.source)
+            raise ValueError("Unknown source.")
 
     def parent_comment(self) -> Comment | None:
         if self.parent_id is None:

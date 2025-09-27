@@ -614,7 +614,7 @@ class User(BaseSiteComponent):
                 'reply_count': 0,
                 'cached_replies': []
             }
-            _comment = comment.Comment(source=comment.CommentSource.USER_PROFILE, parent_id=None if parent_id=="" else parent_id, commentee_id=commentee_id, source_id=self.username, id=data["id"], _session = self._session, datetime = datetime.now())
+            _comment = comment.Comment(source="profile", parent_id=None if parent_id=="" else parent_id, commentee_id=commentee_id, source_id=self.username, id=data["id"], _session = self._session, datetime = datetime.now())
             _comment._update_from_dict(data)
             return _comment
         except Exception:
@@ -761,7 +761,7 @@ class User(BaseSiteComponent):
                 'content': content,
                 'datetime_created': time,
             }
-            _comment = comment.Comment(source=comment.CommentSource.USER_PROFILE, source_id=self.username, _session = self._session)
+            _comment = comment.Comment(source="profile", source_id=self.username, _session = self._session)
             _comment._update_from_dict(main_comment)
 
             ALL_REPLIES = []
@@ -784,7 +784,7 @@ class User(BaseSiteComponent):
                     "parent_id" : comment_id,
                     "cached_parent_comment" : _comment,
                 }
-                _r_comment = comment.Comment(source=comment.CommentSource.USER_PROFILE, source_id=self.username, _session = self._session, cached_parent_comment=_comment)
+                _r_comment = comment.Comment(source="profile", source_id=self.username, _session = self._session, cached_parent_comment=_comment)
                 _r_comment._update_from_dict(reply_data)
                 ALL_REPLIES.append(_r_comment)
 
