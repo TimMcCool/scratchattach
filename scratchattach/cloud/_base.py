@@ -350,7 +350,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             if self.print_connect_message:
                 print("Connected to cloud server ", self.cloud_host)
         except WebSocketBadStatusException as e:
-            print(f"Error: {e} --- Scratch's Cloud system may be down. Please try again later.")
+            raise WebSocketBadStatusException(f"Error: Scratch's Cloud system may be down. Please try again later.") from e
     def disconnect(self):
         self.active_connection = False
         if self.recorder is not None:
