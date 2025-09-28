@@ -17,6 +17,7 @@ class BaseEventHandler(ABC):
         self.running = False
         self._events = defaultdict(list)
         self._threaded_events = defaultdict(list)
+        print(f"{self._threaded_events=}")
 
     def start(self, *, thread=True, ignore_exceptions=True):
         """

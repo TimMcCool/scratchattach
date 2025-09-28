@@ -125,7 +125,9 @@ def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_li
     """
     class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         def __init__(self, hostname, *, port, websocketclass):
-            super().__init__(hostname, port=port, websocketclass=websocketclass)
+            SimpleWebSocketServer.__init__(self, hostname, port=port, websocketclass=websocketclass)
+            BaseEventHandler.__init__(self)
+
             self.running = False
             self._events = {} # saves event functions called on cloud updates
 
