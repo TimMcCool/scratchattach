@@ -8,6 +8,7 @@ from scratchattach.utils.requests import requests
 from scratchattach.utils import exceptions, commons
 from scratchattach.site import cloud_activity
 
+from websocket import WebSocketBadStatusException
 
 class ScratchCloud(BaseCloud):
     def __init__(self, *, project_id, _session=None):
