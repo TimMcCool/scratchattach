@@ -335,22 +335,20 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self._send_packet(packet)
 
     def connect(self):
-        try:
-            self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
-            self.websocket.connect(
-                self.cloud_host,
-                cookie=self.cookie,
-                origin=self.origin,
-                enable_multithread=True,
-                timeout=self.ws_timeout,
-                header=self.header
-            )
-            self._handshake()
-            self.active_connection = True
-            if self.print_connect_message:
-                print("Connected to cloud server ", self.cloud_host)
-        except WebSocketBadStatusException as e:
-            raise WebSocketBadStatusException(f"Error: Scratch's Cloud system may be down. Please try again later.") from e
+        self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
+        self.websocket.connect(
+            self.cloud_host,
+            cookie=self.cookie,
+            origin=self.origin,
+            enable_multithread=True,
+            timeout=self.ws_timeout,
+            header=self.header
+        )
+        self._handshake()
+        self.active_connection = True
+        if self.print_connect_message:
+            print("Connected to cloud server ", self.cloud_host)
+
     def disconnect(self):
         self.active_connection = False
         if self.recorder is not None:
