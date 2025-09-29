@@ -155,9 +155,9 @@ class Filterbot(MessageEvents):
             if self.log_deletions:
                 print(f"DETECTED: #{message.comment_id} violates {reason}")
             try:
-                message.target().delete()
+                resp = message.target().delete()
                 if self.log_deletions:
-                    print(f"DELETED: #{message.comment_id} by {message.actor_username!r}: '{content}'")
+                    print(f"DELETED: #{message.comment_id} by {message.actor_username!r}: '{content}' with message {resp.content!r} & headers {resp.headers!r}")
             except Exception as e:
                 if self.log_deletions:
                     print(f"DELETION FAILED: #{message.comment_id} by {message.actor_username!r}: '{content}'; exception: {e}")

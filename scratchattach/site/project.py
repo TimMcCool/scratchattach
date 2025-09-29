@@ -677,7 +677,7 @@ class Project(PartialProject):
             f"https://api.scratch.mit.edu/proxy/comments/project/{self.id}/comment/{comment_id}/",
             headers=self._headers,
             cookies=self._cookies,
-        ).headers
+        )
 
     def report_comment(self, *, comment_id):
         """
