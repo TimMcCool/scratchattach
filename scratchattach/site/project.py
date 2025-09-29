@@ -937,7 +937,9 @@ def get_project(project_id) -> Project:
     warnings.warn(
         "Warning: For methods that require authentication, use session.connect_project instead of get_project. "
         "If you want to remove this warning, "
-        "use `warnings.filterwarnings('ignore', category=scratchattach.ProjectAuthenticationWarning)`",
+        "use `warnings.filterwarnings('ignore', category=scratchattach.ProjectAuthenticationWarning)`. "
+        "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "
+        "warnings.filterwarning('ignore', category=GetAuthenticationWarning).",
         exceptions.ProjectAuthenticationWarning
     )
     return commons._get_object("id", project_id, Project, exceptions.ProjectNotFound)
