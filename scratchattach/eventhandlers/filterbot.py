@@ -113,11 +113,11 @@ class Filterbot(MessageEvents):
         if message.comment_type == 0: # project comment
             source_id = message.comment_obj_id
             if self.user._session.connect_project(message.comment_obj_id).author_name != self.user.username:
-                return # no permission to delete
+                return # no permission to delete comments that aren't on our own project
         elif message.comment_type == 1: # profile comment
             source_id = message.comment_obj_title
-            if message.comment_obj_title != self.user.username:
-                return # no permission to delete
+            if source_id != self.user.username:
+                return # no permission to delete messages that are not on our profile
         elif message.comment_type == 2: # studio comment
             return # studio comments aren't handled
         else:
@@ -157,7 +157,7 @@ class Filterbot(MessageEvents):
             try:
                 message.target().delete()
                 if self.log_deletions:
-                    print(f"DELETED: #{message.comment_id} by f{message.actor_username}: '{content}'")
+                    print(f"DELETED: #{message.comment_id} by {message.actor_username!r}: '{content}'")
             except Exception as e:
                 if self.log_deletions:
-                    print(f"DELETION FAILED: #{message.comment_id} by f{message.actor_username}: '{content}'")
+                    print(f"DELETION FAILED: #{message.comment_id} by {message.actor_username!r}: '{content}'; exception: {e}")
