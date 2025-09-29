@@ -594,7 +594,9 @@ def get_studio(studio_id) -> Studio:
     """
     warnings.warn(
         "Warning: For methods that require authentication, use session.connect_studio instead of get_studio."
-        "If you want to remove this warning, use warnings.filterwarning('ignore', category=StudioAuthenticationWarning)",
+        "If you want to remove this warning, use warnings.filterwarning('ignore', category=StudioAuthenticationWarning). "
+        "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "
+        "warnings.filterwarning('ignore', category=GetAuthenticationWarning).",
         exceptions.StudioAuthenticationWarning
     )
     return commons._get_object("id", studio_id, Studio, exceptions.StudioNotFound)
