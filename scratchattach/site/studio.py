@@ -592,7 +592,11 @@ def get_studio(studio_id) -> Studio:
 
         If you want to use these, get the studio with :meth:`scratchattach.session.Session.connect_studio` instead.
     """
-    print("Warning: For methods that require authentication, use session.connect_studio instead of get_studio")
+    warnings.warn(
+        "Warning: For methods that require authentication, use session.connect_studio instead of get_studio."
+        "If you want to remove this warning, use warnings.filterwarning('ignore', category=StudioAuthenticationWarning)",
+        exceptions.StudioAuthenticationWarning
+    )
     return commons._get_object("id", studio_id, Studio, exceptions.StudioNotFound)
 
 def search_studios(*, query="", mode="trending", language="en", limit=40, offset=0):
