@@ -396,7 +396,13 @@ def get_classroom(class_id: str) -> Classroom:
 
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_classroom` instead.
     """
-    warnings.warn("For methods that require authentication, use session.connect_classroom instead of get_classroom")
+    warnings.warn(
+        "For methods that require authentication, use session.connect_classroom instead of get_classroom\n"
+        "If you want to remove this warning, use warnings.filterwarnings('ignore', category=scratchattach.ClassroomAuthenticationWarning)\n"
+        "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "
+        "`warnings.filterwarnings('ignore', category=scratchattach.GetAuthenticationWarning)`.",
+        exceptions.ClassroomAuthenticationWarning
+    )
     return commons._get_object("id", class_id, Classroom, exceptions.ClassroomNotFound)
 
 
@@ -415,7 +421,13 @@ def get_classroom_from_token(class_token) -> Classroom:
 
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_classroom` instead.
     """
-    warnings.warn("For methods that require authentication, use session.connect_classroom instead of get_classroom")
+    warnings.warn(
+        "For methods that require authentication, use session.connect_classroom instead of get_classroom. "
+        "If you want to remove this warning, use warnings.filterwarnings('ignore', category=ClassroomAuthenticationWarning). "
+        "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "
+        "warnings.filterwarnings('ignore', category=GetAuthenticationWarning).",
+        exceptions.ClassroomAuthenticationWarning
+    )
     return commons._get_object("classtoken", class_token, Classroom, exceptions.ClassroomNotFound)
 
 
