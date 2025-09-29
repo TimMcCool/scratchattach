@@ -239,12 +239,24 @@ class InvalidUpdateWarning(UserWarning):
 
 class UserAuthenticationWarning(UserWarning):
     """
-    Warns you to use seesion.commect_user instead of session.get_user
+    Warns you to use session.connect_user instead of user.get_user
     for actions that require authentication.
     """
 
 class ProjectAuthenticationWarning(UserWarning):
     """
-    Warns you to use session.connect_project instead of seesion.get_project 
+    Warns you to use session.connect_project instead of project.get_project 
+    for actions that require authentication.
+    """
+
+class StudioAuthenticationWarning(UserWarning):
+    """
+    Warns you to use session.connect_studio instead of studio.get_studio 
+    for actions that require authentication.
+    """
+
+class ClassroomAuthenticationWarning(UserWarning):
+    """
+    Warns you to use session.connect_classroom or session.connect_classroom_from_token instead of classroom.get_classroom 
     for actions that require authentication.
     """
