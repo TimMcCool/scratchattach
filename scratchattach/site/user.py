@@ -992,7 +992,9 @@ def get_user(username) -> User:
     """
     warnings.warn(
         "Warning: For methods that require authentication, use session.connect_user instead of get_user. "
-        "To ignore this warning, use warnings.filterwarning('ignore', category=UserAuthenticationWarning)",
+        "To ignore this warning, use warnings.filterwarning('ignore', category=UserAuthenticationWarning). "
+        "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "
+        "warnings.filterwarning('ignore', category=GetAuthenticationWarning).",
         exceptions.UserAuthenticationWarning
     )
     return commons._get_object("username", username, User, exceptions.UserNotFound)
