@@ -421,7 +421,9 @@ def get_classroom_from_token(class_token) -> Classroom:
     """
     warnings.warn(
         "For methods that require authentication, use session.connect_classroom instead of get_classroom. "
-        "If you want to remove this warning, use warnings.filterwarning('ignore', category=ClassroomAuthenticationWarning)", 
+        "If you want to remove this warning, use warnings.filterwarning('ignore', category=ClassroomAuthenticationWarning). "
+        "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "
+        "warnings.filterwarning('ignore', category=GetAuthenticationWarning).",
         exceptions.ClassroomAuthenticationWarning
     )
     return commons._get_object("classtoken", class_token, Classroom, exceptions.ClassroomNotFound)
