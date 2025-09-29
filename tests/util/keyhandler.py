@@ -2,13 +2,15 @@ import warnings
 import os
 import tomllib
 from pathlib import Path
-from typing import TypeVar
+from typing import Any, Optional, TypeVar
 
 from cryptography.fernet import Fernet
 from base64 import urlsafe_b64encode
 
 
 def str_2_key(gen: str) -> bytes:
+    if not gen:
+        warnings.warn("No key supplied!")
     if (length := len(gen)) < 32:
         warnings.warn(f"Short length {length}")
         gen = gen.zfill(32)
@@ -57,8 +59,16 @@ __fp__ = Path(__file__).parent
 _auth_fp = __fp__ / "auth.toml"
 _local_auth_fp = __fp__ / "local_auth.toml"
 
-_auth = _decrypt_dict(tomllib.load(_auth_fp.open("rb")))
+_cached_auth: Optional[dict[str, Any]] = None
 
-_local_auth = tomllib.load(_local_auth_fp.open("rb")) if _local_auth_fp.exists() else {}
+def get_auth() -> dict[str, Any]:
+    try:
+        _auth = _decrypt_dict(tomllib.load(_auth_fp.open("rb")))
+    except Exception:
+        _auth = {}
 
-AUTH = _auth | _local_auth
+    _local_auth = tomllib.load(_local_auth_fp.open("rb")) if _local_auth_fp.exists() else {}
+
+    _cached_auth = _auth | _local_auth
+    
+    return _cached_auth

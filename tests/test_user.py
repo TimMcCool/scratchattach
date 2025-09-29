@@ -1,11 +1,14 @@
 import pprint
 import sys
-
+import warnings
 
 def test_user():
     sys.path.insert(0, ".")
     import scratchattach as sa
-    from util import session
+    from util import session, credentials_available
+    if not credentials_available():
+        warnings.warn("Skipped test_studio because there were no credentials available.")
+        return
     sess = session()
 
     user = sess.connect_user("faretek1")

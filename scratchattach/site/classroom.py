@@ -91,13 +91,17 @@ class Classroom(BaseSiteComponent):
                 if pfx in script.text:
                     educator_username = commons.webscrape_count(script.text, pfx, sfx, str)
 
-            ret = {"id": self.id,
-                   "title": title,
-                   "description": description,
-                   "status": status,
-                   "educator": {"username": educator_username},
-                   "is_closed": True
-                   }
+            ret: typed_dicts.ClassroomDict = {
+                "id": self.id,
+                "title": title,
+                "description": description,
+                "educator": {},
+                "status": status,
+                "is_closed": True
+                }
+
+            if educator_username:
+                ret["educator"]["username"] = educator_username
 
             return self._update_from_dict(ret)
         return success
@@ -136,7 +140,7 @@ class Classroom(BaseSiteComponent):
             response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
             soup = BeautifulSoup(response.text, "html.parser")
             found = set("")
-            
+
             for result in soup.css.select("ul.scroll-content .user a"):
                 result_text = result.text.strip()
                 if result_text in found:
@@ -185,7 +189,7 @@ class Classroom(BaseSiteComponent):
             ret = []
             response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
             soup = BeautifulSoup(response.text, "html.parser")
-            
+
             for result in soup.css.select("ul.scroll-content .gallery a[href]:not([class])"):
                 value = result["href"]
                 if not isinstance(value, str):
@@ -392,7 +396,13 @@ def get_classroom(class_id: str) -> Classroom:
 
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_classroom` instead.
     """
-    warnings.warn("For methods that require authentication, use session.connect_classroom instead of get_classroom")
+    warnings.warn(
+        "For methods that require authentication, use session.connect_classroom instead of get_classroom\n"
+        "If you want to remove this warning, use warnings.filterwarnings('ignore', category=scratchattach.ClassroomAuthenticationWarning)\n"
+        "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "
+        "`warnings.filterwarnings('ignore', category=scratchattach.GetAuthenticationWarning)`.",
+        exceptions.ClassroomAuthenticationWarning
+    )
     return commons._get_object("id", class_id, Classroom, exceptions.ClassroomNotFound)
 
 
@@ -411,7 +421,13 @@ def get_classroom_from_token(class_token) -> Classroom:
 
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_classroom` instead.
     """
-    warnings.warn("For methods that require authentication, use session.connect_classroom instead of get_classroom")
+    warnings.warn(
+        "For methods that require authentication, use session.connect_classroom instead of get_classroom. "
+        "If you want to remove this warning, use warnings.filterwarnings('ignore', category=ClassroomAuthenticationWarning). "
+        "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "
+        "warnings.filterwarnings('ignore', category=GetAuthenticationWarning).",
+        exceptions.ClassroomAuthenticationWarning
+    )
     return commons._get_object("classtoken", class_token, Classroom, exceptions.ClassroomNotFound)
 
 

@@ -1,11 +1,14 @@
 import sys
 from datetime import datetime, timedelta, timezone
-
+import warnings
 
 def test_comment():
     sys.path.insert(0, ".")
     import scratchattach as sa
     import util
+    if not util.credentials_available():
+        warnings.warn("Skipped test_comment because there were no credentials available.")
+        return
     sess = util.session()
 
     user = sess.connect_linked_user()
