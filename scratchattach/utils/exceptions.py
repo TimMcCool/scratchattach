@@ -236,3 +236,15 @@ class InvalidUpdateWarning(UserWarning):
     """
     Warns you that something cannot be updated.
     """
+
+class UserAuthenticationWarning(UserWarning):
+    """
+    Warns you to use seesion.commect_user instead of session.get_user
+    for actions that require authentication.
+    """
+
+class ProjectAuthenticationWarning(UserWarning):
+    """
+    Warns you to use session.connect_project instead of seesion.get_project 
+    for actions that require authentication.
+    """
