@@ -1,6 +1,7 @@
 """Studio class"""
 from __future__ import annotations
 
+import warnings
 import json
 import random
 from . import user, comment, project, activity
@@ -593,10 +594,10 @@ def get_studio(studio_id) -> Studio:
         If you want to use these, get the studio with :meth:`scratchattach.session.Session.connect_studio` instead.
     """
     warnings.warn(
-        "Warning: For methods that require authentication, use session.connect_studio instead of get_studio."
-        "If you want to remove this warning, use warnings.filterwarning('ignore', category=StudioAuthenticationWarning). "
+        "Warning: For methods that require authentication, use session.connect_studio instead of get_studio.\n"
+        "If you want to remove this warning, use warnings.filterwarnings('ignore', category=scratchattach.StudioAuthenticationWarning).\n"
         "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "
-        "warnings.filterwarning('ignore', category=GetAuthenticationWarning).",
+        "`warnings.filterwarnings('ignore', category=scratchattach.GetAuthenticationWarning)`.",
         exceptions.StudioAuthenticationWarning
     )
     return commons._get_object("id", studio_id, Studio, exceptions.StudioNotFound)

@@ -991,10 +991,10 @@ def get_user(username) -> User:
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_user` instead.
     """
     warnings.warn(
-        "Warning: For methods that require authentication, use session.connect_user instead of get_user. "
-        "To ignore this warning, use warnings.filterwarning('ignore', category=UserAuthenticationWarning). "
+        "Warning: For methods that require authentication, use session.connect_user instead of get_user.\n"
+        "To ignore this warning, use warnings.filterwarnings('ignore', category=scratchattach.UserAuthenticationWarning).\n"
         "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "
-        "warnings.filterwarning('ignore', category=GetAuthenticationWarning).",
+        "`warnings.filterwarnings('ignore', category=scratchattach.GetAuthenticationWarning)`.",
         exceptions.UserAuthenticationWarning
     )
     return commons._get_object("username", username, User, exceptions.UserNotFound)
