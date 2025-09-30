@@ -23,7 +23,7 @@ import websocket
 from scratchattach.site import session
 from scratchattach.eventhandlers import cloud_recorder
 from scratchattach.utils import exceptions
-from scratchattach.eventhandlers.cloud_requests import CloudRequests
+from scratchattach.eventhandlers.cloud_requests import CloudRequests, RespondOrder
 from scratchattach.eventhandlers.cloud_events import CloudEvents
 from scratchattach.eventhandlers.cloud_storage import CloudStorage
 from scratchattach.site import cloud_activity
@@ -98,7 +98,7 @@ class AnyCloud(ABC, Generic[T]):
         return CloudEvents(self)
 
     def requests(self, *, no_packet_loss: bool = False, used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-                 respond_order="receive", debug: bool = False) -> CloudRequests:
+                 respond_order=RespondOrder.RECEIVE, debug: bool = False) -> CloudRequests:
         return CloudRequests(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss,
                              respond_order=respond_order, debug=debug)
 

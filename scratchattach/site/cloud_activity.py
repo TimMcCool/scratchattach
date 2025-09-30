@@ -76,7 +76,8 @@ class CloudActivity(BaseSiteComponent[Union[typed_dicts.CloudActivityDict, typed
             self.type = data["verb"].removesuffix("_var")
         elif is_cloud_activity(data):
             self.type = data["method"]
-        self.cloud = data["cloud"]
+        if "cloud" in data:
+            self.cloud = data["cloud"]
         return True
 
     def load_log_data(self):

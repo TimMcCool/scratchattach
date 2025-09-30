@@ -1,6 +1,8 @@
 """CloudEvents class"""
 from __future__ import annotations
 
+import traceback
+
 from scratchattach.cloud import _base
 from ._base import BaseEventHandler
 from scratchattach.site import cloud_activity
@@ -34,16 +36,21 @@ class CloudEvents(BaseEventHandler):
         while True:
             try:
                 while True:
+                    # print("Checking for more events")
                     for data in self.source_stream.read():
+                        # print(f"Got event {data}")
                         try:
                             _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session, cloud=self.cloud)
                             if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
+                                # print(f"Skipped as {_a.timestamp} < {self.startup_time + 500}")
                                 continue
                             data["variable_name"] = data["name"]
                             data["name"] = data["variable_name"].replace("☁ ", "")
                             _a._update_from_dict(data)
+                            # print(f"sending event {_a}")
                             self.call_event("on_"+_a.type, [_a])
                         except Exception as e:
+                            print(f"Cloud events _updated ignored: {e} {traceback.format_exc()}")
                             pass
             except Exception:
                 print("CloudEvents: Disconnected. Reconnecting ...", time.time())
