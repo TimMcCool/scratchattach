@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import random
 import string
-from typing import Optional, Final, Any, TYPE_CHECKING, Union, Self
+from typing_extensions import Optional, Final, Any, TYPE_CHECKING, Union, Self
 from enum import EnumMeta, Enum
 
 if TYPE_CHECKING:
