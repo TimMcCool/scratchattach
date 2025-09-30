@@ -18,6 +18,7 @@ class Language:
     single_gender: bool = None
 
 
+# should this underscore be removed
 class _EnumWrapper(Enum):
     @classmethod
     def find(cls, value, by: str, apply_func: Optional[Callable] = None):

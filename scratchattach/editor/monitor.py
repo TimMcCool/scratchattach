@@ -144,8 +144,8 @@ class Monitor(base.ProjectSubcomponent):
                 self.reporter_id = None
 
     # todo: consider reimplementing this
-    @deprecated("This method does not work correctly (This may be fixed in the future)")
     @staticmethod
+    @deprecated("This method does not work correctly (This may be fixed in the future)")
     def from_reporter(reporter: block.Block, _id: str = None, mode: str = "default",
                       opcode: str = None, sprite_name: str = None, value=0, width: int | float = 0,
                       height: int | float = 0,

@@ -73,7 +73,7 @@ class List(base.NamedIDComponent):
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Targets:~:text=lists,as%20an%20array
         """
         if _value is None:
-            _value = []
+            _value: list[str | int | float] = []
 
         self.value = _value
         super().__init__(_id, _name, _sprite)
@@ -91,7 +91,7 @@ class List(base.NamedIDComponent):
 
         return List(_id, _name, _value)
 
-    def to_json(self) -> tuple[str, tuple[str, str | int | float, bool] | tuple[str, str | int | float]]:
+    def to_json(self) -> tuple[str, list[str | int | float]]:
         """
         Returns List data as a tuple
         """
