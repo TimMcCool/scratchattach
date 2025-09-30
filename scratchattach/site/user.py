@@ -202,7 +202,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             if status_code == 200:
                 return True
             elif status_code == 404:
-                    return False
+                return False
 
         return None
 
