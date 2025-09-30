@@ -1,0 +1,33 @@
+name: Feature
+description: Create a pull request for a new feature.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing to scratchattach!
+  - type: input
+    id: issue
+    attributes:
+      label: What issue does this solve?
+      description: Please provide a link to the issue that this solves, in [here](https://github.com/TimMcCool/scratchattach/issues?q=sort%3Aupdated-desc+is%3Aissue+is%3Aopen), if applicable.
+      placeholder: https://github.com/TimMcCool/scratchattach/issues/XXX
+    validations:
+      required: false
+  - type: textarea
+    id: how
+    attributes:
+      label: How does your PR solve this issue?
+      description: Please give details about your PR, e.g. names of functions you added, and/or a brief overview of how it internally works:
+      placeholder: This pull requests introduces the User.loves() and User.loves_count() functions that parse this page and return a list of project objects and the number of loved projects respectively, using https://scratch.mit.edu/projects/all/<user>/loves/
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Any other notes of interest:
+      description: Give any other context for your PR, e.g. minor unrelated changes
+      placeholder: Since the webpage only provides some of the detail for the projects compared to the detail provided by the API for projects, so the Project objects that are instantiated contain less detail. The parameter get_full_project can be set to True to make a web request for each project to fully instantiate it, using the Project.update() method.
+    validations:
+      required: true
