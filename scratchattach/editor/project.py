@@ -16,7 +16,7 @@ from scratchattach.utils import exceptions
 
 class Project(base.JSONExtractable):
     """
-    sa.editor's equivalent of the ProjectBody. Represents the editor contents of a scratch project
+    A Project (body). Represents the editor contents of a scratch project
     """
     def __init__(self, _name: Optional[str] = None, _meta: Optional[meta.Meta] = None, _extensions: Iterable[extension.Extension] = (),
                  _monitors: Iterable[monitor.Monitor] = (), _sprites: Iterable[sprite.Sprite] = (), *,
@@ -332,6 +332,7 @@ class Project(base.JSONExtractable):
                 if goto_origin:
                     _block.x, _block.y = 0, 0
 
+                # TODO: Add special handling for turbowarp debugger blocks
                 if _block.opcode in ("procedures_call", "procedures_prototype", "procedures_definition"):
                     if _block.mutation is None:
                         continue

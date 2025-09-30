@@ -1,18 +1,16 @@
 """
-Module to deal with the backpack's weird JSON format, by overriding with new load methods
+Module to deal with the backpack's weird JSON format, by overriding editor classes with new load methods
 """
 from __future__ import annotations
 
 from . import block, prim, field, inputs, mutation, sprite
 
 
-def parse_prim_fields(_fields: dict[str]) -> tuple[str | None, str | None, str | None]:
+def parse_prim_fields(_fields: dict[str, dict[str, str]]) -> tuple[str | None, str | None, str | None]:
     """
     Function for reading the fields in a backpack **primitive**
     """
     for key, value in _fields.items():
-        key: str
-        value: dict[str, str]
         prim_value, prim_name, prim_id = (None,) * 3
         if key == "NUM":
             prim_value = value.get("value")
@@ -103,7 +101,7 @@ def load_script(_script_data: list[dict]) -> sprite.Sprite:
     """
     Loads a script into a sprite from the backpack JSON format
     :param _script_data: Backpack script JSON data
-    :return: a blockchain object containing the script
+    :return: a Sprite object containing the script
     """
     # Using a sprite since it simplifies things, e.g. local global loading
     _blockchain = sprite.Sprite()

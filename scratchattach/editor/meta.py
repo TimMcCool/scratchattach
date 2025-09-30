@@ -9,13 +9,16 @@ from typing import Optional
 
 @dataclass
 class PlatformMeta(base.JSONSerializable):
+    """
+    Represents a TurboWarp platform meta object
+    """
     name: str = None
     url: str = field(repr=True, default=None)
 
     def __bool__(self):
         return self.name is not None or self.url is not None
 
-    def to_json(self) -> dict:
+    def to_json(self):
         _json = {"name": self.name, "url": self.url}
         commons.remove_nones(_json)
         return _json
@@ -42,7 +45,7 @@ def set_meta_platform(true_false: bool = None):
     """
     global META_SET_PLATFORM
     if true_false is None:
-        true_false = bool(1 - true_false)
+        true_false = bool(1 - META_SET_PLATFORM)
     META_SET_PLATFORM = true_false
 
 
@@ -76,12 +79,12 @@ class Meta(base.JSONSerializable):
     def vm_is_valid(self):
         """
         Check whether the vm value is valid using a regex
-        Thanks to TurboWarp for this pattern ↓↓↓↓, I just copied it
+        regex pattern from TurboWarp ↓↓↓↓
         """
         return re.match("^([0-9]+\\.[0-9]+\\.[0-9]+)($|-)", self.vm) is not None
 
     def to_json(self):
-        _json = {
+        _json: dict[str, str | dict[str, str]] = {
             "semver": self.semver,
             "vm": self.vm,
             "agent": self.agent
@@ -92,9 +95,9 @@ class Meta(base.JSONSerializable):
         return _json
 
     @staticmethod
-    def from_json(data):
+    def from_json(data: dict[str, str | dict[str, str]] | None):
         if data is None:
-            data = ""
+            data = {"semver": "3.0.0"}
 
         semver = data["semver"]
         vm = data.get("vm")

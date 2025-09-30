@@ -1,3 +1,7 @@
+"""
+The PrimType(s) and Prim classes
+"""
+
 from __future__ import annotations
 
 import warnings

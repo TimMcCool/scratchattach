@@ -93,7 +93,7 @@ class Field(base.BlockSubComponent):
         _value, _id = data
         return Field(_value, _id)
 
-    def to_json(self) -> dict:
+    def to_json(self):
         return commons.trim_final_nones([
             self.value_str, self.value_id
         ])

@@ -11,7 +11,7 @@ from dataclasses import dataclass
 @dataclass
 class ShadowStatus:
     """
-    Dataclass representing a possible shadow value and giving it a name
+    Dataclass representing a possible shadow value for a block and giving it a name
     """
     idx: int
     name: str
@@ -33,8 +33,7 @@ class ShadowStatuses:
             if status.idx == idx:
                 return status
 
-        if not 1 <= idx <= 3:
-            raise ValueError(f"Invalid ShadowStatus idx={idx}")
+        raise ValueError(f"Invalid ShadowStatus idx={idx}")
 
 
 class Input(base.BlockSubComponent):
@@ -111,6 +110,10 @@ class Input(base.BlockSubComponent):
         return data
 
     def link_using_block(self):
+        """
+        Link the Input object to any menu blocks, obscurer blocks, sprites, and links any of its subcomponents
+        """
+
         # Link to value
         if self._id is not None:
             new_value = self.sprite.find_block(self._id, "id")
