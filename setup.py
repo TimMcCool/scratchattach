@@ -20,6 +20,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
+    python_requires='>=3.10',
     install_requires=requirements,
     extras_require={
         "lark": ["lark"]
