@@ -12,7 +12,11 @@ Give details about your PR,
 e.g. names of functions you added, and/or a brief overview of how it internally works
 -->
 
-### Any other notes of interest:
+### Tests
+
 <!--
-Any other context, e.g. minor unrelated changes
+Please test your changes using python 3.12+ before submitting a PR.
+If you can, provide an automated test in the tests/ directory.
+
+You can add any other notes here.
 -->
