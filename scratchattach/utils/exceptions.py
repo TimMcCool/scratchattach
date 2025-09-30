@@ -236,3 +236,32 @@ class InvalidUpdateWarning(UserWarning):
     """
     Warns you that something cannot be updated.
     """
+    
+class GetAuthenticationWarning(UserWarning):
+    """
+    All authentication warnings.
+    """
+    
+class UserAuthenticationWarning(GetAuthenticationWarning):
+    """
+    Warns you to use session.connect_user instead of user.get_user
+    for actions that require authentication.
+    """
+
+class ProjectAuthenticationWarning(GetAuthenticationWarning):
+    """
+    Warns you to use session.connect_project instead of project.get_project 
+    for actions that require authentication.
+    """
+
+class StudioAuthenticationWarning(GetAuthenticationWarning):
+    """
+    Warns you to use session.connect_studio instead of studio.get_studio 
+    for actions that require authentication.
+    """
+
+class ClassroomAuthenticationWarning(GetAuthenticationWarning):
+    """
+    Warns you to use session.connect_classroom or session.connect_classroom_from_token instead of classroom.get_classroom 
+    for actions that require authentication.
+    """

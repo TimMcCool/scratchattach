@@ -1,5 +1,6 @@
 import sys
 from datetime import datetime, timedelta, timezone
+import warnings
 
 
 
@@ -8,6 +9,9 @@ def test_activity():
     import scratchattach as sa
     from scratchattach.utils import exceptions
     import util
+    if not util.credentials_available():
+        warnings.warn("Skipped test_activity because there were no credentials available.")
+        return
     sess = util.session()
 
     # we cannot do assertions, but we can probe for any errors.

@@ -345,7 +345,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
         return _json
 
     # Finding/getting from list/dict attributes
-    def find_asset(self, value: str, by: str = "name", multiple: bool = False, a_type: Optional[type]=None) -> asset.Asset | asset.Sound | asset.Costume | list[asset.Asset | asset.Sound | asset.Costume]:
+    def find_asset(self, value: str, by: str = "name", multiple: bool = False, a_type: Optional[type]=None) -> None | asset.Asset | asset.Sound | asset.Costume | list[asset.Asset | asset.Sound | asset.Costume]:
         if a_type is None:
             a_type = asset.Asset
 
@@ -366,8 +366,9 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
 
         if multiple:
             return _ret
+        return None
 
-    def find_variable(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Variable | list[vlb.Variable]:
+    def find_variable(self, value: str, by: str = "name", multiple: bool = False) -> None | vlb.Variable | list[vlb.Variable]:
         _ret = []
         by = by.lower()
         for _variable in self.variables + self._local_globals:
@@ -394,8 +395,9 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
 
         if multiple:
             return _ret
+        return None
 
-    def find_list(self, value: str, by: str = "name", multiple: bool = False) -> vlb.List | list[vlb.List]:
+    def find_list(self, value: str, by: str = "name", multiple: bool = False) -> None | vlb.List | list[vlb.List]:
         _ret = []
         by = by.lower()
         for _list in self.lists + self._local_globals:
@@ -421,8 +423,9 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
 
         if multiple:
             return _ret
+        return None
 
-    def find_broadcast(self, value: str, by: str = "name", multiple: bool = False) -> vlb.Broadcast | list[
+    def find_broadcast(self, value: str, by: str = "name", multiple: bool = False) -> None | vlb.Broadcast | list[
         vlb.Broadcast]:
         _ret = []
         by = by.lower()
@@ -449,6 +452,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
 
         if multiple:
             return _ret
+        return None
 
     def find_vlb(self, value: str, by: str = "name",
                  multiple: bool = False) -> vlb.Variable | vlb.List | vlb.Broadcast | list[
@@ -466,7 +470,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
                 return _ret
             return self.find_broadcast(value, by)
 
-    def find_block(self, value: str | Any, by: str, multiple: bool = False) -> block.Block | prim.Prim | list[
+    def find_block(self, value: str | Any, by: str, multiple: bool = False) -> None | block.Block | prim.Prim | list[
         block.Block | prim.Prim]:
         _ret = []
         by = by.lower()
@@ -512,6 +516,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
 
         if multiple:
             return _ret
+        return None
 
     def export(self, fp: Optional[str] = None, *, export_as_zip: bool = True):
         if fp is None:

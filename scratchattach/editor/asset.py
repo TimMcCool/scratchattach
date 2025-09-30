@@ -11,7 +11,7 @@ from typing import Optional
 @dataclass(init=True, repr=True)
 class AssetFile:
     """
-    Represents the file information for an asset
+    Represents the file information for an asset (not the asset metdata)
     - stores the filename, data, and md5 hash
     """
     filename: str
@@ -19,7 +19,7 @@ class AssetFile:
     _md5: str = field(repr=False, default_factory=str)
 
     @property
-    def data(self):
+    def data(self) -> bytes:
         """
         Return the contents of the asset file, as bytes
         """
@@ -35,9 +35,9 @@ class AssetFile:
         return self._data
 
     @property
-    def md5(self):
+    def md5(self) -> str:
         """
-        Compute/retrieve the md5 hash value of the asset file data
+        Compute/retrieve the md5 hex-digest of the asset file data
         """
         if self._md5 is None:
             self._md5 = md5(self.data).hexdigest()
@@ -51,7 +51,7 @@ class Asset(base.SpriteSubComponent):
                  file_name: str = "b7853f557e4426412e64bb3da6531a99.svg",
                  _sprite: commons.SpriteInput = build_defaulting.SPRITE_DEFAULT):
         """
-        Represents a generic asset. Can be a sound or an image.
+        Represents a generic asset, with metadata. Can be a sound or a costume.
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Assets
         """
         try:
@@ -72,14 +72,14 @@ class Asset(base.SpriteSubComponent):
     @property
     def folder(self):
         """
-        Get the folder name of this asset, based on the asset name. Uses the turbowarp syntax
+        Get the folder name of this asset, based on the asset name. Uses the TurboWarp syntax
         """
         return commons.get_folder_name(self.name)
 
     @property
     def name_nfldr(self):
         """
-        Get the asset name after removing the folder name
+        Get the asset name after removing the folder name. Uses the TurboWarp syntax
         """
         return commons.get_name_nofldr(self.name)
 
@@ -96,14 +96,16 @@ class Asset(base.SpriteSubComponent):
         """
         Get the exact file name, as it would be within an sb3 file
         equivalent to the md5ext value using in scratch project JSON
+
+        (alias for file_name)
         """
         return self.file_name
 
     @property
     def parent(self):
         """
-        Return the project that this asset is attached to. If there is no attached project,
-        try returning the attached sprite
+        Return the project (body) that this asset is attached to. If there is no attached project,
+        try returning the attached sprite instead.
         """
         if self.project is None:
             return self.sprite

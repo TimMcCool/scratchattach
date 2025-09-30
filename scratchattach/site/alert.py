@@ -7,8 +7,7 @@ import pprint
 import warnings
 from dataclasses import dataclass, field, KW_ONLY
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Optional, Union
-from typing_extensions import Self
+from typing_extensions import TYPE_CHECKING, Any, Optional, Union, Self
 
 from . import user, project, studio, comment, session
 from scratchattach.utils import enums

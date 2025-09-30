@@ -6,6 +6,7 @@ import pprint
 import random
 import base64
 import time
+import warnings
 import zipfile
 from io import BytesIO
 from typing import Callable
@@ -676,7 +677,7 @@ class Project(PartialProject):
             f"https://api.scratch.mit.edu/proxy/comments/project/{self.id}/comment/{comment_id}/",
             headers=self._headers,
             cookies=self._cookies,
-        ).headers
+        )
 
     def report_comment(self, *, comment_id):
         """
@@ -933,7 +934,14 @@ def get_project(project_id) -> Project:
 
         If you want to use these methods, get the project with :meth:`scratchattach.session.Session.connect_project` instead.
     """
-    print("Warning: For methods that require authentication, use session.connect_project instead of get_project")
+    warnings.warn(
+        "Warning: For methods that require authentication, use session.connect_project instead of get_project.\n"
+        "If you want to remove this warning, "
+        "use `warnings.filterwarnings('ignore', category=scratchattach.ProjectAuthenticationWarning)`.\n"
+        "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "
+        "`warnings.filterwarnings('ignore', category=scratchattach.GetAuthenticationWarning)`.",
+        exceptions.ProjectAuthenticationWarning
+    )
     return commons._get_object("id", project_id, Project, exceptions.ProjectNotFound)
 
 

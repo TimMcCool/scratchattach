@@ -1,8 +1,6 @@
 """
 Collection of block information, stating input/field names and opcodes
-New version of sbuild.py
-
-May want to completely change this later
+Not ready for use
 """
 from __future__ import annotations
 

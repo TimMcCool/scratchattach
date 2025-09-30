@@ -68,8 +68,8 @@ class Block(base.SpriteSubComponent):
 
     def add_input(self, name: str, _input: inputs.Input) -> Self:
         """
-        Add an input to the block. 
-        """ # not sure what else to say
+        Attach an input object to the block.
+        """
         self.inputs[name] = _input
         for val in (_input.value, _input.obscurer):
             if isinstance(val, Block):
@@ -78,15 +78,15 @@ class Block(base.SpriteSubComponent):
 
     def add_field(self, name: str, _field: field.Field) -> Self:
         """
-        Add a field to the block. 
-        """  # not sure what else to sa
+        Attach a field object to the block.
+        """
         self.fields[name] = _field
         return self
 
     def set_mutation(self, _mutation: mutation.Mutation) -> Self:
         """
-        Attach a mutation object and call mutation.link_arguments()
-        """ # this comment explains *what* this does, not *why*
+        Attach a mutation object and link it, also asking the mutation to link its own subcomponents.
+        """
         self.mutation = _mutation
         _mutation.block = self
         _mutation.link_arguments()
@@ -113,14 +113,15 @@ class Block(base.SpriteSubComponent):
     @property
     def target(self):
         """
-        Alias for sprite
-        """ # remove this?
+        Alias for .sprite
+        """
+        # should this be deprecated?
         return self.sprite
 
     @property
     def block_shape(self) -> blockshape.BlockShape:
         """
-        Search for the blockshape stored in blockshape.py
+        Search for & return the associated blockshape stored in blockshape.py
         :return: The block's block shape (by opcode)
         """
         _shape = blockshape.BlockShapes.find(self.opcode, "opcode")
@@ -133,7 +134,7 @@ class Block(base.SpriteSubComponent):
     @property
     def can_next(self):
         """
-        :return: Whether the block *can* have a next block (basically checks if it's not a cap block, also considering the behaviour of control_stop)
+        :return: Whether the block *can* have a next block (checks if it's not a cap block, but also considering the special behaviour of control_stop)
         """
         _shape = self.block_shape
         if _shape.is_cap is not blockshape.MUTATION_DEPENDENT:
@@ -141,7 +142,8 @@ class Block(base.SpriteSubComponent):
         else:
             if self.mutation is None:
                 # If there's no mutation, let's just assume yes
-                warnings.warn(f"{self} has no mutation! Assuming we can add block ;-;")
+                # add filterwarnings?
+                warnings.warn(f"{self} has no mutation! Assuming we can add blocks!")
                 return True
 
             return self.mutation.has_next
@@ -150,6 +152,7 @@ class Block(base.SpriteSubComponent):
     def id(self) -> str:
         """
         Work out the id of this block by searching through the sprite dictionary
+        If one cannot be found, generate a new one and return that.
         """
         if self._id:
             return self._id
@@ -191,8 +194,9 @@ class Block(base.SpriteSubComponent):
     @property
     def relatives(self) -> list[Block]:
         """
-        :return: A list of blocks which are related to this block (e.g. parent, next, inputs)
+        :return: A list of blocks which are related to this block (i.e. parent & next)
         """
+        # TODO: consider adding input blocks?
         _ret = []
 
         def yield_block(_block: Block | None):
@@ -209,6 +213,7 @@ class Block(base.SpriteSubComponent):
         """
         :return: A list of blocks that are inside of this block, **NOT INCLUDING THE ATTACHED BLOCK**
         """
+        # does this include procedure definitions' inner block?
         _children = []
         for _input in self.inputs.values():
             if isinstance(_input.value, Block) or isinstance(_input.value, prim.Prim):
@@ -223,7 +228,8 @@ class Block(base.SpriteSubComponent):
         """
         Recursive getter method to get all previous blocks in the blockchain (until hitting a top-level block)
         """
-        if self.parent is None: # todo: use is_top_level?
+        # TODO: check if this hits the recursion limit
+        if self.parent is None: # TODO: use is_top_level?
             return [self]
 
         return [self] + self.parent.previous_chain
@@ -233,6 +239,7 @@ class Block(base.SpriteSubComponent):
         """
         Recursive getter method to get all next blocks in the blockchain (until hitting a bottom-levell block)
         """
+        # TODO: check if this hits the recursion limit
         if self.next is None:
             return [self]
 
@@ -248,8 +255,7 @@ class Block(base.SpriteSubComponent):
     @property
     def top_level_block(self):
         """
-        Get the first block in the block stack that this block is part of
-        same as the old stack_parent property from sbedtior v1
+        Get the first (top level) block in the block stack that this block is part of
         """
         return self.previous_chain[-1]
 
@@ -266,7 +272,7 @@ class Block(base.SpriteSubComponent):
         Useful for showing a block stack in the console, using pprint
         :return: A tree-like nested list structure representing the stack of blocks, including inputs, starting at this block
         """
-        _tree = [self]
+        _tree: list[Block | prim.Prim | list[Block]] = [self]
         for child in self.children:
             if isinstance(child, prim.Prim):
                 _tree.append(child)
@@ -281,7 +287,7 @@ class Block(base.SpriteSubComponent):
     @property
     def category(self):
         """
-        Works out what category of block this is using the opcode. Does not perform validation
+        Works out what category of block this is as a string, using the opcode. Does not perform validation
         """
         return self.opcode.split('_')[0]
 
@@ -526,7 +532,7 @@ class Block(base.SpriteSubComponent):
     def duplicate_single_block(self) -> Block:
         return self.attach_block(self.dcopy())
 
-    def attach_chain(self, *chain: Iterable[Block]) -> Block:
+    def attach_chain(self, *chain: Block) -> Block:
         attaching_block = self
         for _block in chain:
             attaching_block = attaching_block.attach_block(_block)
@@ -576,4 +582,3 @@ class Block(base.SpriteSubComponent):
         """
         for _block in self.attached_chain:
             _block.delete_single_block()
-

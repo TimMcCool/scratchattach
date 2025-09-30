@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from . import sprite, block, prim, comment
 from . import commons
 
-
+# TODO: should deque be used here?
 class _SetSprite(commons.Singleton):
     INSTANCE = 0
     def __repr__(self):

@@ -49,7 +49,7 @@ def enforce_ratelimit(__type: str, name: str, amount: int = 5, duration: int = 6
     cache = ratelimit_cache
     cache.setdefault(__type, [])
     uses = cache[__type]
-    while uses[-1] < time.time() - duration:
+    while uses and uses[-1] < time.time() - duration:
         uses.pop()
     if len(uses) < amount:
         uses.insert(0, time.time())
@@ -94,6 +94,7 @@ class Session(BaseSiteComponent):
     
     has_outstanding_email_confirmation: bool = field(repr=False, default=False)
     is_teacher: bool = field(repr=False, default=False)
+    is_teacher_invitee: bool = field(repr=False, default=False)
     _session: Optional[Session] = field(kw_only=True, default=None)
 
     def __str__(self) -> str:
@@ -139,6 +140,7 @@ class Session(BaseSiteComponent):
 
         self.new_scratcher = data["permissions"]["new_scratcher"]
         self.is_teacher = data["permissions"]["educator"]
+        self.is_teacher_invitee = data["permissions"]["educator_invitee"]
 
         self.mute_status = data["permissions"]["mute_status"]
 

@@ -1,10 +1,13 @@
 import sys
 import os
+import warnings
 
-
-def test_import():
+def test_auth():
     sys.path.insert(0, ".")
     import util
+    if not util.credentials_available():
+        warnings.warn("Skipped test_auth because there were no credentials available.")
+        return
     sess = util.session()
 
     assert "FERNET_KEY" in os.environ

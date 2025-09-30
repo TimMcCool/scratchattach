@@ -52,7 +52,7 @@ class JSONSerializable(Base, ABC):
 
     def save_json(self, name: str = ''):
         """
-        Save a json file
+        Save json to a file. Adds '.json' for you.
         """
         data = self.to_json()
         with open(f"{self.__class__.__name__.lower()}{name}.json", "w") as f:

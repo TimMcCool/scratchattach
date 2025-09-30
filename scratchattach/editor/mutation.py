@@ -1,3 +1,7 @@
+"""
+Contains the mutation class and handlers for Arguments/ArgumentTypes/ArgSettings, and utilities for handling proc codes
+"""
+
 from __future__ import annotations
 
 import json
@@ -41,6 +45,9 @@ class ArgumentType(base.Base):
 
 @dataclass
 class ArgSettings(base.Base):
+    """
+    Contains whether the ids, names, and defaults of arguments in a mutation are None or not - i.e. the configuration of the arguments
+    """
     ids: bool
     names: bool
     defaults: bool

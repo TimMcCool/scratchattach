@@ -202,7 +202,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             if status_code == 200:
                 return True
             elif status_code == 404:
-                    return False
+                return False
 
         return None
 
@@ -775,12 +775,13 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             comment_id: The id of the comment that should be deleted
         """
         self._assert_permission()
-        return requests.post(
-            f"https://scratch.mit.edu/site-api/comments/user/{self.username}/del/",
-            headers = headers,
-            cookies = self._cookies,
-            data = json.dumps({"id":str(comment_id)})
-        )
+        with requests.no_error_handling():
+            return requests.post(
+                f"https://scratch.mit.edu/site-api/comments/user/{self.username}/del/",
+                headers = headers,
+                cookies = self._cookies,
+                data = json.dumps({"id":str(comment_id)})
+            )
 
     def report_comment(self, *, comment_id):
         """
@@ -990,5 +991,11 @@ def get_user(username) -> User:
 
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_user` instead.
     """
-    print("Warning: For methods that require authentication, use session.connect_user instead of get_user")
+    warnings.warn(
+        "Warning: For methods that require authentication, use session.connect_user instead of get_user.\n"
+        "To ignore this warning, use warnings.filterwarnings('ignore', category=scratchattach.UserAuthenticationWarning).\n"
+        "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "
+        "`warnings.filterwarnings('ignore', category=scratchattach.GetAuthenticationWarning)`.",
+        exceptions.UserAuthenticationWarning
+    )
     return commons._get_object("username", username, User, exceptions.UserNotFound)
