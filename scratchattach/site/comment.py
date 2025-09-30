@@ -199,15 +199,17 @@ class Comment(BaseSiteComponent):
         """
         self._assert_auth()
         if self.source == CommentSource.USER_PROFILE:
-            user.User(username=self.source_id, _session=self._session).delete_comment(comment_id=self.id)
+            return user.User(username=self.source_id, _session=self._session).delete_comment(comment_id=self.id)
 
         elif self.source == CommentSource.PROJECT:
             p = project.Project(id=self.source_id, _session=self._session)
             p.update()
-            p.delete_comment(comment_id=self.id)
+            return p.delete_comment(comment_id=self.id)
 
         elif self.source == CommentSource.STUDIO:
-            studio.Studio(id=self.source_id, _session=self._session).delete_comment(comment_id=self.id)
+            return studio.Studio(id=self.source_id, _session=self._session).delete_comment(comment_id=self.id)
+        
+        return None  # raise error?
 
     def report(self):
         """

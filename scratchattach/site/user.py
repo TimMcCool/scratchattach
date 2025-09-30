@@ -775,12 +775,13 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             comment_id: The id of the comment that should be deleted
         """
         self._assert_permission()
-        return requests.post(
-            f"https://scratch.mit.edu/site-api/comments/user/{self.username}/del/",
-            headers = headers,
-            cookies = self._cookies,
-            data = json.dumps({"id":str(comment_id)})
-        )
+        with requests.no_error_handling():
+            return requests.post(
+                f"https://scratch.mit.edu/site-api/comments/user/{self.username}/del/",
+                headers = headers,
+                cookies = self._cookies,
+                data = json.dumps({"id":str(comment_id)})
+            )
 
     def report_comment(self, *, comment_id):
         """

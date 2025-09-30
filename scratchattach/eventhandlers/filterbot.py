@@ -1,40 +1,34 @@
 """FilterBot class"""
 from __future__ import annotations
-
 from .message_events import MessageEvents
 import time
+from collections import deque
 
 class HardFilter:
-
+    
     def __init__(self, filter_name="UntitledFilter", *, equals=None, contains=None, author_name=None, project_id=None, profile=None, case_sensitive=False):
-        self.equals=equals
-        self.contains=contains
-        self.author_name=author_name
-        self.project_id=project_id
-        self.profile=profile
-        self.case_sensitive=case_sensitive
+        self.equals = equals
+        self.contains = contains
+        self.author_name = author_name
+        self.project_id = project_id
+        self.profile = profile
+        self.case_sensitive = case_sensitive
         self.filter_name = filter_name
     
     def apply(self, content, author_name, source_id):
-        if not self.case_sensitive:
-            content = content.lower()
+        text_to_check = content if self.case_sensitive else content.lower()
         if self.equals is not None:
-            if self.case_sensitive:
-                if self.equals == content:
-                    return True
-            else:
-                if self.equals.lower() == content:
-                    return True
+            comparison_equals = self.equals if self.case_sensitive else self.equals.lower()
+            if text_to_check == comparison_equals:
+                return True
         if self.contains is not None:
-            if self.case_sensitive:
-                if self.contains.lower() in content:
-                    return True
-            else:
-                if self.contains in content:
-                    return True
-        if self.author_name == author_name:
+            comparison_contains = self.contains if self.case_sensitive else self.contains.lower()
+            if comparison_contains in text_to_check:
+                return True
+        if self.author_name is not None and self.author_name == author_name:
             return True
-        if self.project_id == source_id or self.profile == source_id:
+        if (self.project_id is not None and self.project_id == source_id) or \
+           (self.profile is not None and self.profile == source_id):
             return True
         return False
 
@@ -45,20 +39,27 @@ class SoftFilter(HardFilter):
 
 class SpamFilter(HardFilter):
     def __init__(self, filter_name="UntitledFilter", *, equals=None, contains=None, author_name=None, project_id=None, profile=None, case_sensitive=False):
-        self.memory = []
         super().__init__(filter_name, equals=equals, contains=contains, author_name=author_name, project_id=project_id, profile=profile, case_sensitive=case_sensitive)
+        self.memory = deque()
+        self.retention_period = 300
 
     def apply(self, content, author_name, source_id):
-        applies = super().apply(content, author_name, source_id)
-        if not applies:
+        if not super().apply(content, author_name, source_id):
             return False
-        self.memory.insert(0, {"content":content, "time":time.time()})
-        print(content, self.memory)
-        for comment in list(self.memory)[1:]:
-            if comment["time"] < time.time() -300:
-                self.memory.remove(comment)
-            if comment["content"].lower() == content.lower():
+        current_time = time.time()
+        
+        # Prune old entries from memory
+        while self.memory and self.memory[-1]["time"] < current_time - self.retention_period:
+            self.memory.pop()
+
+        content_lower = content.lower()
+        # Check for duplicates
+        for comment in self.memory:
+            if comment["content"].lower() == content_lower:
                 return True
+
+        # Add new comment to memory
+        self.memory.appendleft({"content": content, "time": current_time})
         return False
 
 class Filterbot(MessageEvents):
@@ -75,10 +76,10 @@ class Filterbot(MessageEvents):
         self.update_interval = 2
 
     def add_filter(self, filter_obj):
-        if isinstance(filter_obj, SoftFilter):
-            self.soft_filters.append(filter_obj)
-        elif isinstance(filter_obj, SpamFilter): # careful: SpamFilter is also HardFilter due to inheritence
+        if isinstance(filter_obj, SpamFilter):
             self.spam_filters.append(filter_obj)
+        elif isinstance(filter_obj, SoftFilter):
+            self.soft_filters.append(filter_obj)
         elif isinstance(filter_obj, HardFilter):
             self.hard_filters.append(filter_obj)
 
@@ -105,57 +106,58 @@ class Filterbot(MessageEvents):
         self.add_filter(HardFilter("(genalpha_nonsene_filter) 'fanum tax'", contains="fanum tax"))
 
     def on_message(self, message):
-        if message.type == "addcomment":
-            delete = False
-            content = message.comment_fragment
+        if message.type != "addcomment":
+            return
+        source_id = None
+        content = message.comment_fragment
+        if message.comment_type == 0: # project comment
+            source_id = message.comment_obj_id
+            if self.user._session.connect_project(message.comment_obj_id).author_name != self.user.username:
+                return # no permission to delete comments that aren't on our own project
+        elif message.comment_type == 1: # profile comment
+            source_id = message.comment_obj_title
+            if source_id != self.user.username:
+                return # no permission to delete messages that are not on our profile
+        elif message.comment_type == 2: # studio comment
+            return # studio comments aren't handled
+        else:
+            return
+        delete = False
+        reason = ""
 
-            if message.comment_type == 0: # project comment
-                source_id = message.comment_obj_id
-                if self.user._session.connect_project(message.comment_obj_id).author_name != self.user.username:
-                    return # no permission to delete
-            if message.comment_type == 1: # profile comment
-                source_id = message.comment_obj_title
-                if message.comment_obj_title != self.user.username:
-                    return # no permission to delete
-            if message.comment_type == 2: # studio comment
-                return # studio comments aren't handled
+        # Apply hard filters
+        for hard_filter in self.hard_filters:
+            if hard_filter.apply(content, message.actor_username, source_id):
+                delete = True
+                reason = f"hard filter: {hard_filter.filter_name}"
+                break
 
-            # Apply hard filters
-            for hard_filter in self.hard_filters:
-                if hard_filter.apply(content, message.actor_username, source_id):
-                    delete=True
-                    if self.log_deletions:
-                        print(f"DETECTED: #{message.comment_id} violates hard filter: {hard_filter.filter_name}")
+        # Apply spam filters
+        if not delete:
+            for spam_filter in self.spam_filters:
+                if spam_filter.apply(content, message.actor_username, source_id):
+                    delete = True
+                    reason = f"spam filter: {spam_filter.filter_name}"
                     break
 
-            # Apply spam filters
-            if delete is False:
-                for spam_filter in self.spam_filters:
-                    if spam_filter.apply(content, message.actor_username, source_id):
-                        delete=True
-                        if self.log_deletions:
-                            print(f"DETECTED: #{message.comment_id} violates spam filter: {spam_filter.filter_name}")
-                        break
-
-            # Apply soft filters
-            if delete is False:
-                score = 0
-                violated_filers = []
-                for soft_filter in self.soft_filters:
-                    if soft_filter.apply(content, message.actor_username, source_id):
-                        score += soft_filter.score
-                        violated_filers.append(soft_filter.name)
-                if score >= 1:
-                    print(f"DETECTED: #{message.comment_id} violates too many soft filters: {violated_filers}")
-                    delete = True
-            
-            if delete is True:
-                try:
-                    message.target().delete()
-                    if self.log_deletions:
-                        print(f"DELETED: #{message.comment_id} by f{message.actor_username}: '{content}'")
-                except Exception as e:
-                    if self.log_deletions:
-                        print(f"DELETION FAILED: #{message.comment_id} by f{message.actor_username}: '{content}'")
-
-        
+        # Apply soft filters
+        if not delete:
+            score = 0
+            violated_filters = []
+            for soft_filter in self.soft_filters:
+                if soft_filter.apply(content, message.actor_username, source_id):
+                    score += soft_filter.score
+                    violated_filters.append(soft_filter.filter_name)
+            if score >= 1:
+                delete = True
+                reason = f"too many soft filters: {violated_filters}"
+        if delete:
+            if self.log_deletions:
+                print(f"DETECTED: #{message.comment_id} violates {reason}")
+            try:
+                resp = message.target().delete()
+                if self.log_deletions:
+                    print(f"DELETED: #{message.comment_id} by {message.actor_username!r}: '{content}' with message {resp.content!r} & headers {resp.headers!r}")
+            except Exception as e:
+                if self.log_deletions:
+                    print(f"DELETION FAILED: #{message.comment_id} by {message.actor_username!r}: '{content}'; exception: {e}")
