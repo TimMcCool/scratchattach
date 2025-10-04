@@ -34,3 +34,5 @@ from .site._base import BaseSiteComponent
 from .site.browser_cookies import Browser, ANY, FIREFOX, CHROME, CHROMIUM, VIVALDI, EDGE, EDGE_DEV, SAFARI
 
 from . import editor
+
+# note: do NOT import scratch CLI here
