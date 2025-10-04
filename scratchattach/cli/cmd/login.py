@@ -24,7 +24,7 @@ def login():
     session = sa.login(username, password)
     db.conn.execute("BEGIN")
     db.cursor.execute(
-        "INSERT INTO SESSIONS (ID, USERNAME, PASSWORD) "
+        "INSERT OR REPLACE INTO SESSIONS (ID, USERNAME, PASSWORD) "
         "VALUES (?, ?, ?)", (session.id, session.username, password)
     )
     db.conn.commit()

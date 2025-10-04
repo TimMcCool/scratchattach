@@ -29,7 +29,7 @@ cursor.execute("""
     CREATE TABLE IF NOT EXISTS SESSIONS (
         ID TEXT NOT NULL,
         USERNAME TEXT NOT NULL PRIMARY KEY,
-        PASSWORD TEXT NOT NULL -- SessID is included, so is there harm in this?
+        PASSWORD TEXT NOT NULL -- TODO: consider if this is needed
     )
 """)
 conn.commit()
