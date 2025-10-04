@@ -1,0 +1,24 @@
+"""
+Basic connections to the scratch.sqlite file
+"""
+import sqlite3
+import sys
+import os
+
+from pathlib import Path
+
+def _gen_appdata_folder() -> Path:
+    name = "scratchattach"
+    match sys.platform:
+        case "win32":
+            return Path(os.getenv('APPDATA')) / name
+        case "linux":
+            return Path.home() / f".{name}"
+        case plat:
+            raise NotImplementedError(f"No 'appdata' folder implemented for {plat}")
+
+_path = _gen_appdata_folder()
+_path.mkdir(parents=True, exist_ok=True)
+
+conn = sqlite3.connect(_path / "cli.sqlite")
+cursor = conn.cursor()
