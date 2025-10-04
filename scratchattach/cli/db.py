@@ -31,4 +31,20 @@ cursor.execute("""
         USERNAME TEXT NOT NULL PRIMARY KEY
     )
 """)
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS GROUPS (
+        NAME TEXT NOT NULL PRIMARY KEY,
+        DESCRIPTION TEXT
+        -- If you want to add users to a group, you add to the next table
+    )
+""")
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS GROUP_USERS (
+        GROUP_NAME TEXT NOT NULL,
+        USERNAME TEXT NOT NULL 
+    )
+""")
+
 conn.commit()
