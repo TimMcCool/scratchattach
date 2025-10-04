@@ -22,6 +22,11 @@ setup(
     packages=find_packages(),
     python_requires='>=3.12',
     install_requires=requirements,
+    entry_points={
+        'console_scripts': [
+            "scratch=scratchattach.__main__:main"
+        ]
+    },
     extras_require={
         "lark": ["lark"]
     },
