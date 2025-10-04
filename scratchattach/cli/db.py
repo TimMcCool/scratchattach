@@ -22,3 +22,14 @@ _path.mkdir(parents=True, exist_ok=True)
 
 conn = sqlite3.connect(_path / "cli.sqlite")
 cursor = conn.cursor()
+
+# Init any tables
+conn.execute("BEGIN")
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS SESSIONS (
+        ID TEXT NOT NULL,
+        USERNAME TEXT NOT NULL PRIMARY KEY,
+        PASSWORD TEXT NOT NULL -- SessID is included, so is there harm in this?
+    )
+""")
+conn.commit()
