@@ -8,23 +8,22 @@ import warnings
 
 warnings.filterwarnings("ignore", category=sa.LoginDataWarning)
 
-def login_by_sessid():
-    raise NotImplementedError
 
 def login():
-    print(ctx.args)
-
     if ctx.args.sessid:
-        login_by_sessid()
-        return
+        if isinstance(ctx.args.sessid, bool):
+            ctx.args.sessid = getpass("Session ID: ")
 
-    username = input("Username: ")
-    password = getpass()
+        session = sa.login_by_id(ctx.args.sessid)
+    else:
+        username = input("Username: ")
+        password = getpass()
 
-    session = sa.login(username, password)
+        session = sa.login(username, password)
+
     db.conn.execute("BEGIN")
     db.cursor.execute(
-        "INSERT OR REPLACE INTO SESSIONS (ID, USERNAME, PASSWORD) "
-        "VALUES (?, ?, ?)", (session.id, session.username, password)
+        "INSERT OR REPLACE INTO SESSIONS (ID, USERNAME) "
+        "VALUES (?, ?)", (session.id, session.username)
     )
     db.conn.commit()

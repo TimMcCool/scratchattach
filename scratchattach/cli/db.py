@@ -28,8 +28,7 @@ conn.execute("BEGIN")
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS SESSIONS (
         ID TEXT NOT NULL,
-        USERNAME TEXT NOT NULL PRIMARY KEY,
-        PASSWORD TEXT NOT NULL -- TODO: consider if this is needed
+        USERNAME TEXT NOT NULL PRIMARY KEY
     )
 """)
 conn.commit()
