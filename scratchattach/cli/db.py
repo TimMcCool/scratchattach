@@ -29,34 +29,35 @@ cursor = conn.cursor()
 # Init any tables
 def add_col(table: LiteralString, column: LiteralString, _type: LiteralString):
     try:
-        return cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {_type}")
+        return cursor.execute("ALTER TABLE ? ADD COLUMN ? ?", (table, column, _type))
     except sqlite3.OperationalError as e:
         if "duplicate column name" not in str(e).lower():
             raise
 
 # NOTE: IF YOU WANT TO ADD EXTRA KEYS TO A TABLE RETROACTIVELY, USE add_col
-
+# note: avoide using select * with tuple unpacking/indexing, because if fields are added, things will break.
 conn.execute("BEGIN")
-cursor.execute("""
+cursor.executescript("""
     CREATE TABLE IF NOT EXISTS SESSIONS (
         ID TEXT NOT NULL,
         USERNAME TEXT NOT NULL PRIMARY KEY
-    )
-""")
-
-cursor.execute("""
+    );
+        
     CREATE TABLE IF NOT EXISTS GROUPS (
         NAME TEXT NOT NULL PRIMARY KEY,
         DESCRIPTION TEXT
         -- If you want to add users to a group, you add to the next table
-    )
-""")
-
-cursor.execute("""
+    );
+    
     CREATE TABLE IF NOT EXISTS GROUP_USERS (
         GROUP_NAME TEXT NOT NULL,
         USERNAME TEXT NOT NULL
-    )
+    );
+    
+    -- stores info like current group, last project/studio, etc
+    CREATE TABLE IF NOT EXISTS CURRENT (
+        GROUP_NAME TEXT NOT NULL
+    );
 """)
 
 conn.commit()

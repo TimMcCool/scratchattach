@@ -18,6 +18,8 @@ def main():
     if commands := parser.add_subparsers(dest="command"):
         if login := commands.add_parser("login", help="Login to Scratch"):
             login.add_argument("--sessid", dest="sessid", nargs="?", default=False, const=True, help="Login by session ID")
+        if group := commands.add_parser("group", help="View current session group"):
+            ...
 
     args = parser.parse_args(namespace=cli.ArgSpace())
     cli.ctx.args = args
@@ -26,6 +28,8 @@ def main():
     match args.command:
         case "login":
             cmd.login()
+        case "group":
+            cmd.group()
         case None:
             parser.print_help()
 

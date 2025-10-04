@@ -1,5 +1,6 @@
 """
 Handles data like current session for 'sessionable' commands.
+Also provides wrappers for some SQL info
 """
 import argparse
 from dataclasses import dataclass, field
