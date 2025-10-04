@@ -22,3 +22,9 @@ def login():
     password = getpass()
 
     session = sa.login(username, password)
+    db.conn.execute("BEGIN")
+    db.cursor.execute(
+        "INSERT INTO SESSIONS (ID, USERNAME, PASSWORD) "
+        "VALUES (?, ?, ?)", (session.id, session.username, password)
+    )
+    db.conn.commit()
