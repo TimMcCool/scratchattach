@@ -195,11 +195,11 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         desc.add_row(escape(featured_data.get("label", "Featured Project")),
                      escape(str(self.connect_featured_project())))
 
-        ret = Columns((
-            Group(Panel(info, title=url)),
-            Group(Panel(desc, title="Description"))),
-            expand=True,
-        )
+        ret = Table.grid(expand=True)
+
+        ret.add_column(ratio=1)
+        ret.add_column(ratio=3)
+        ret.add_row(Panel(info, title=url), Panel(desc, title="Description"))
 
         return ret
 
