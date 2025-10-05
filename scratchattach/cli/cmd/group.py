@@ -20,6 +20,11 @@ def _list():
 
     console.print(table)
 
+def add(group_name: str):
+    accounts = input("Add accounts (split by space): ").split()
+    for account in accounts:
+        ctx.db_add_to_group(group_name, account)
+
 def new():
     console.rule(f"New group {escape(ctx.args.group_name)}")
     if ctx.db_group_exists(ctx.args.group_name):
@@ -29,9 +34,7 @@ def new():
     db.cursor.execute("INSERT INTO GROUPS (NAME, DESCRIPTION) "
                       "VALUES (?, ?)", (ctx.args.group_name, input("Description: ")))
     db.conn.commit()
-    accounts = input("Add accounts (split by space): ").split()
-    for account in accounts:
-        ctx.db_add_to_group(ctx.args.group_name, account)
+    add(ctx.args.group_name)
 
     _group(ctx.args.group_name)
 
@@ -76,5 +79,7 @@ def group():
             new()
         case "switch":
             switch()
+        case "add":
+            add(ctx.current_group_name)
         case None:
             _group(ctx.current_group_name)
