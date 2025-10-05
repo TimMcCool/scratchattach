@@ -162,7 +162,10 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         from rich import box
         from rich.markup import escape
         from rich.layout import Layout
+        from rich.console import Group
+        from rich.columns import Columns
 
+        featured_data = self.featured_data() or {}
         ocular_data = self.ocular_status()
         ocular = 'No ocular status'
 
@@ -189,14 +192,24 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         desc = Table("Profile", ocular, box=box.SIMPLE)
         desc.add_row("About me", escape(self.about_me))
         desc.add_row("Wiwo", escape(self.wiwo))
+        desc.add_row(escape(featured_data.get("label", "Featured Project")),
+                     escape(str(self.connect_featured_project())))
 
-        ret = Layout()
-        ret.split_row(
-            Layout(Panel(info, title=url), ratio=2),
-            Layout(Panel(desc, title="Description"), ratio=5)
+        ret = Columns((
+            Group(Panel(info, title=url)),
+            Group(Panel(desc, title="Description"))),
+            expand=True,
         )
 
         return ret
+
+    def connect_featured_project(self) -> Optional[project.Project]:
+        data = self.featured_data() or {}
+        if pid := data.get("id"):
+            return self._session.connect_project(int(pid))
+        if projs := self.projects(limit=1):
+            return projs[0]
+        return None
 
     @property
     def classroom(self) -> classroom.Classroom | None:
