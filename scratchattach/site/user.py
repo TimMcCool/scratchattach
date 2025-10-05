@@ -100,7 +100,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     _session: Optional[session.Session] = field(kw_only=True, default=None)
 
     def __str__(self):
-        return str(self.username)
+        return f"-U {self.username}"
 
     @property
     def status(self) -> str:
@@ -151,6 +151,52 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         if self._session.username != self.username:
             raise exceptions.Unauthorized(
                 "You need to be authenticated as the profile owner to do this.")
+
+    @property
+    def url(self):
+        return f"https://scratch.mit.edu/users/{self.username}"
+
+    def __rich__(self):
+        from rich.panel import Panel
+        from rich.table import Table
+        from rich import box
+        from rich.console import escape
+        from rich.layout import Layout
+
+        ocular_data = self.ocular_status()
+        ocular = 'No ocular status'
+
+        if status := ocular_data.get("status"):
+            color_str = ''
+            color_data = ocular_data.get("color")
+            if color_data is not None:
+                color_str = f"[{color_data}] ⬤ [/]"
+
+            ocular = f"[i]{escape(status)}[/]{color_str}"
+
+        _classroom = self.classroom
+        url = f"[link={self.url}]{escape(self.username)}[/]"
+
+        info = Table(box=box.SIMPLE)
+        info.add_column(url, overflow="fold")
+        info.add_column(f"#{self.id}", overflow="fold")
+
+        info.add_row("Joined", escape(self.join_date))
+        info.add_row("Country", escape(self.country))
+        info.add_row("Messages", str(self.message_count()))
+        info.add_row("Class", str(_classroom.title if _classroom is not None else 'None'))
+
+        desc = Table("Profile", ocular, box=box.SIMPLE)
+        desc.add_row("About me", escape(self.about_me))
+        desc.add_row("Wiwo", escape(self.wiwo))
+
+        ret = Layout()
+        ret.split_row(
+            Layout(Panel(info, title=url), ratio=2),
+            Layout(Panel(desc, title="Description"), ratio=5)
+        )
+
+        return ret
 
     @property
     def classroom(self) -> classroom.Classroom | None:

@@ -22,6 +22,7 @@ def main():
 
     # Using walrus operator & ifs for artificial indentation
     if commands := parser.add_subparsers(dest="command"):
+        commands.add_parser("profile", help="View your profile")
         if login := commands.add_parser("login", help="Login to Scratch"):
             login.add_argument("--sessid", dest="sessid", nargs="?", default=False, const=True,
                                help="Login by session ID")
@@ -44,6 +45,8 @@ def main():
             cmd.login()
         case "group":
             cmd.group()
+        case "profile":
+            cmd.profile()
         case None:
             parser.print_help()
 
