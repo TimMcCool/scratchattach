@@ -22,6 +22,9 @@ def login():
 
         session = sa.login(username, password)
 
+    console.rule()
+    console.print(f"Logged in as [b]{session.username}[/]")
+
     # register session
     db.conn.execute("BEGIN")
     db.cursor.execute(
@@ -33,7 +36,7 @@ def login():
     # make new group
     db.cursor.execute("SELECT NAME FROM GROUPS WHERE NAME = ?", (session.username,))
     if not db.cursor.fetchone():
-        console.print(f"Registering [blue]{escape(session.username)}[/] as group")
+        console.rule(f"Registering [b]{escape(session.username)}[/] as group")
         db.conn.execute("BEGIN")
         db.cursor.execute(
             "INSERT INTO GROUPS (NAME, DESCRIPTION) "
@@ -44,3 +47,13 @@ def login():
         )
 
         db.conn.commit()
+
+    console.rule()
+    if input("Add to current session group? (Y/n)").lower() not in ("y", ''):
+        return
+
+    db.conn.execute("BEGIN")
+    db.cursor.execute("INSERT INTO GROUP_USERS (GROUP_NAME, USERNAME) "
+                      "VALUES (?, ?)", (ctx.current_group_name, session.username))
+    db.conn.commit()
+    console.print(f"Added to [b]{escape(ctx.current_group_name)}[/]")

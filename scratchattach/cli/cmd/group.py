@@ -27,7 +27,7 @@ def group():
             return
 
     db.cursor.execute(
-        "SELECT NAME, DESCRIPTION FROM GROUPS WHERE NAME IN (SELECT * FROM CURRENT WHERE GROUP_NAME IS NOT NULL)")
+        "SELECT NAME, DESCRIPTION FROM GROUPS WHERE NAME = ?", (ctx.current_group_name,))
     result = db.cursor.fetchone()
     if result is None:
         print("No group selected!!")

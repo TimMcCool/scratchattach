@@ -10,7 +10,9 @@ import rich.console
 from typing_extensions import Optional
 
 from scratchattach.cli.namespace import ArgSpace
+from scratchattach.cli import db
 import scratchattach as sa
+
 
 @dataclass
 class _Ctx:
@@ -24,6 +26,7 @@ class _Ctx:
         """
         Decorate a command that will be run for every session in the group.
         """
+
         def wrapper(*args, **kwargs):
             for session in self.sessions:
                 self._session = session
@@ -35,13 +38,22 @@ class _Ctx:
     def session(self):
         return self._session
 
+    @property
+    def current_group_name(self):
+        return db.cursor \
+            .execute("SELECT * FROM CURRENT WHERE GROUP_NAME IS NOT NULL") \
+            .fetchone()[0]
+
+
 ctx = _Ctx()
 console = rich.console.Console()
+
 
 def format_esc(text: str, *args, **kwargs) -> str:
     """
     Format string with args, escaped.
     """
+
     def esc(s):
         return rich.console.escape(s) if isinstance(s, str) else s
 
