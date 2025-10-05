@@ -60,6 +60,13 @@ def _group(group_name: str):
 
     console.print(table)
 
+def switch():
+    console.rule(f"Switching to {escape(ctx.args.group_name)}")
+    if not ctx.db_group_exists(ctx.args.group_name):
+        raise ValueError(f"Group {escape(ctx.args.group_name)} does not exist")
+
+    ctx.current_group_name = ctx.args.group_name
+    _group(ctx.current_group_name)
 
 def group():
     match ctx.args.group_command:
@@ -67,5 +74,7 @@ def group():
             _list()
         case "new":
             new()
+        case "switch":
+            switch()
         case None:
             _group(ctx.current_group_name)

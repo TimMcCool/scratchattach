@@ -47,6 +47,13 @@ class _Ctx:
             .execute("SELECT * FROM CURRENT WHERE GROUP_NAME IS NOT NULL") \
             .fetchone()[0]
 
+    @current_group_name.setter
+    def current_group_name(self, value: str):
+        db.conn.execute("BEGIN")
+        db.cursor.execute("DELETE FROM CURRENT WHERE GROUP_NAME IS NOT NULL")
+        db.cursor.execute("INSERT INTO CURRENT (GROUP_NAME) VALUES (?)", (value,))
+        db.conn.commit()
+
     @staticmethod
     def db_group_exists(name: str) -> bool:
         return db.cursor.execute("SELECT NAME FROM GROUPS WHERE NAME = ?", (name,)).fetchone() is not None

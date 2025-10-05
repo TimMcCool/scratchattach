@@ -30,6 +30,8 @@ def main():
                 group_commands.add_parser("list", help="List all session groups")
                 if group_new := group_commands.add_parser("new", help="Create a new group"):
                     group_new.add_argument("group_name")
+                if group_switch := group_commands.add_parser("switch", help="Change the current group"):
+                    group_switch.add_argument("group_name")
 
     args = parser.parse_args(namespace=cli.ArgSpace())
     cli.ctx.args = args
