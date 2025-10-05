@@ -1,9 +1,12 @@
 """
 Handles data like current session for 'sessionable' commands.
-Also provides wrappers for some SQL info
+Holds objects that should be available for the whole CLI system
+Also provides wrappers for some SQL info.
 """
 import argparse
 from dataclasses import dataclass, field
+
+import rich.console
 from typing_extensions import Optional
 
 from scratchattach.cli.namespace import ArgSpace
@@ -33,3 +36,14 @@ class _Ctx:
         return self._session
 
 ctx = _Ctx()
+console = rich.console.Console()
+
+def format_esc(text: str, *args, **kwargs) -> str:
+    """
+    Format string with args, escaped.
+    """
+    def esc(s):
+        return rich.console.escape(s) if isinstance(s, str) else s
+
+    kwargs = {k: esc(v) for k, v in kwargs.items()}
+    return text.format(*map(esc, args), **kwargs)

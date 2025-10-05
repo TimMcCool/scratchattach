@@ -5,3 +5,4 @@ SimpleWebSocketServer
 typing-extensions
 browser_cookie3
 aiohttp
+rich
