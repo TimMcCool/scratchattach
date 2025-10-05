@@ -1,6 +1,6 @@
 from scratchattach.cli.context import ctx, console
 from scratchattach.cli import db
-from rich.console import escape
+from rich.markup import escape
 
 from getpass import getpass
 

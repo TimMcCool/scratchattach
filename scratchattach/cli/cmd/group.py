@@ -1,7 +1,7 @@
 from scratchattach.cli import db
 from scratchattach.cli.context import console, ctx
 
-from rich.console import escape
+from rich.markup import escape
 from rich.table import Table
 
 def _list():

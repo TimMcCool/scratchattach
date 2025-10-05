@@ -160,7 +160,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         from rich.panel import Panel
         from rich.table import Table
         from rich import box
-        from rich.console import escape
+        from rich.markup import escape
         from rich.layout import Layout
 
         ocular_data = self.ocular_status()
