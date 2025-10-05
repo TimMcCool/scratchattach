@@ -38,5 +38,9 @@ def login():
         db.cursor.execute(
             "INSERT INTO GROUPS (NAME, DESCRIPTION) "
             "VALUES (?, ?)", (session.username, input(f"Description for {session.username}: "))
+        ).execute(
+            "INSERT INTO GROUP_USERS (GROUP_NAME, USERNAME) "
+            "VALUES (?, ?)", (session.username, session.username)
         )
+
         db.conn.commit()
