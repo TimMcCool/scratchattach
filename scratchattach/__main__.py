@@ -7,6 +7,8 @@ import argparse
 from scratchattach import cli
 from scratchattach.cli import db, cmd
 
+
+# noinspection PyUnusedLocal
 def main():
     parser = argparse.ArgumentParser(
         prog="scratch",
@@ -19,7 +21,9 @@ def main():
         if login := commands.add_parser("login", help="Login to Scratch"):
             login.add_argument("--sessid", dest="sessid", nargs="?", default=False, const=True, help="Login by session ID")
         if group := commands.add_parser("group", help="View current session group"):
-            ...
+            if group_commands := group.add_subparsers(dest="group_command"):
+                if group_list := group_commands.add_parser("list", help="List all session groups"):
+                    ...
 
     args = parser.parse_args(namespace=cli.ArgSpace())
     cli.ctx.args = args
