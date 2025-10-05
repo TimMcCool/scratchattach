@@ -54,7 +54,9 @@ def main():
             cmd.profile()
         case None:
             if args.username:
-                console.print(ctx.session.connect_user(args.username))
+                user = ctx.session.connect_user(args.username)
+                console.print(cli.try_get_img(user.icon, (30, 30)))
+                console.print(user)
                 return
             if args.studio_id:
                 console.print(ctx.session.connect_studio(args.studio_id))

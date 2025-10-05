@@ -111,6 +111,11 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         return self.about_me
 
     @property
+    def icon(self) -> bytes:
+        with requests.no_error_handling():
+            return requests.get(self.icon_url).content
+
+    @property
     def name(self) -> str:
         return self.username
 
