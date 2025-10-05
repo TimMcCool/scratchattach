@@ -60,6 +60,7 @@ def main():
                 console.print(ctx.session.connect_studio(args.studio_id))
                 return
             if args.project_id:
+                console.print(ctx.session.connect_project(args.project_id))
                 return
 
             parser.print_help()
