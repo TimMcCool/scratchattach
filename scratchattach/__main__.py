@@ -57,6 +57,7 @@ def main():
                 console.print(ctx.session.connect_user(args.username))
                 return
             if args.studio_id:
+                console.print(ctx.session.connect_studio(args.studio_id))
                 return
             if args.project_id:
                 return

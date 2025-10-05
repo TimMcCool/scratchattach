@@ -161,9 +161,6 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         from rich.table import Table
         from rich import box
         from rich.markup import escape
-        from rich.layout import Layout
-        from rich.console import Group
-        from rich.columns import Columns
 
         featured_data = self.featured_data() or {}
         ocular_data = self.ocular_status()

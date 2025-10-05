@@ -55,6 +55,7 @@ class Studio(BaseSiteComponent):
         # Set attributes every Project object needs to have:
         self._session = None
         self.id = 0
+        self.title = None
 
         # Update attributes from entries dict:
         self.__dict__.update(entries)
@@ -79,11 +80,11 @@ class Studio(BaseSiteComponent):
         except Exception: pass
         try: self.description = studio["description"]
         except Exception: pass
-        try: self.host_id = studio["host"]
+        try: self.host_id: int = studio["host"]
         except Exception: pass
-        try: self.open_to_all = studio["open_to_all"]
+        try: self.open_to_all: bool = studio["open_to_all"]
         except Exception: pass
-        try: self.comments_allowed = studio["comments_allowed"]
+        try: self.comments_allowed: bool = studio["comments_allowed"]
         except Exception: pass
         try: self.image_url = studio["image"]
         except Exception: pass
@@ -91,13 +92,57 @@ class Studio(BaseSiteComponent):
         except Exception: pass
         try: self.modified = studio["history"]["modified"]
         except Exception: pass
-        try: self.follower_count = studio["stats"]["followers"]
+        try: self.follower_count: int = studio["stats"]["followers"]
         except Exception: pass
-        try: self.manager_count = studio["stats"]["managers"]
+        try: self.manager_count: int = studio["stats"]["managers"]
         except Exception: pass
-        try: self.project_count = studio["stats"]["projects"]
+        try: self.project_count: int = studio["stats"]["projects"]
         except Exception: pass
         return True
+
+    def __str__(self):
+        ret = f"-S {self.id}"
+        if self.title:
+            ret += f" ({self.title})"
+        return ret
+
+    def __rich__(self):
+        from rich.panel import Panel
+        from rich.table import Table
+        from rich import box
+        from rich.markup import escape
+
+        url = f"[link={self.url}]{escape(self.title)}[/]"
+
+        ret = Table.grid(expand=True)
+        ret.add_column(ratio=1)
+        ret.add_column(ratio=3)
+
+        info = Table(box=box.SIMPLE)
+        info.add_column(url, overflow="fold")
+        info.add_column(f"#{self.id}", overflow="fold")
+        info.add_row("Host ID", str(self.host_id))
+        info.add_row("Followers", str(self.follower_count))
+        info.add_row("Projects", str(self.project_count))
+        info.add_row("Managers", str(self.manager_count))
+        info.add_row("Comments allowed", str(self.comments_allowed))
+        info.add_row("Open", str(self.open_to_all))
+        info.add_row("Created", self.created)
+        info.add_row("Modified", self.modified)
+
+        desc = Table(box=box.SIMPLE)
+        desc.add_row("Description", escape(self.description))
+
+        ret.add_row(
+            Panel(info, title=url),
+            Panel(desc, title="Description"),
+        )
+
+        return ret
+
+    @property
+    def url(self):
+        return f"https://scratch.mit.edu/studios/{self.id}"
 
     def follow(self):
         """
