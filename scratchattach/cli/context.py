@@ -67,6 +67,13 @@ class _Ctx:
         return [i for (i,) in db.cursor.execute(
             "SELECT USERNAME FROM GROUP_USERS WHERE GROUP_NAME = ?", (name,)).fetchall()]
 
+    def db_remove_from_group(self, group_name: str, username: str):
+        if username in self.db_users_in_group(group_name):
+            db.conn.execute("BEGIN")
+            db.cursor.execute("DELETE FROM GROUP_USERS "
+                              "WHERE USERNAME = ? AND GROUP_NAME = ?", (username, group_name))
+            db.conn.commit()
+
     def db_add_to_group(self, group_name: str, username: str):
         if username in self.db_users_in_group(group_name) or not self.db_session_exists(username):
             return

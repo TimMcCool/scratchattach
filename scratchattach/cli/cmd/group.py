@@ -25,6 +25,11 @@ def add(group_name: str):
     for account in accounts:
         ctx.db_add_to_group(group_name, account)
 
+def remove(group_name: str):
+    accounts = input("Remove accounts (split by space): ").split()
+    for account in accounts:
+        ctx.db_remove_from_group(group_name, account)
+
 def new():
     console.rule(f"New group {escape(ctx.args.group_name)}")
     if ctx.db_group_exists(ctx.args.group_name):
@@ -81,5 +86,7 @@ def group():
             switch()
         case "add":
             add(ctx.current_group_name)
+        case "remove":
+            remove(ctx.current_group_name)
         case None:
             _group(ctx.current_group_name)
