@@ -84,15 +84,3 @@ class _Ctx:
 
 ctx = _Ctx()
 console = rich.console.Console()
-
-
-def format_esc(text: str, *args, **kwargs) -> str:
-    """
-    Format string with args, escaped.
-    """
-
-    def esc(s):
-        return rich.console.escape(s) if isinstance(s, str) else s
-
-    kwargs = {k: esc(v) for k, v in kwargs.items()}
-    return text.format(*map(esc, args), **kwargs)
