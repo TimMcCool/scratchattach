@@ -309,6 +309,11 @@ class Project(PartialProject):
     def __str__(self):
         return f"-P {self.id} ({self.title})"
 
+    @property
+    def thumbnail(self) -> bytes:
+        with requests.no_error_handling():
+            return requests.get(self.thumbnail_url).content
+
     def _assert_permission(self):
         self._assert_auth()
         if self._session._username != self.author_name:
