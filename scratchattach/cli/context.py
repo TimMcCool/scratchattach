@@ -36,9 +36,16 @@ class _Ctx:
         return wrapper
 
     @property
+    def username(self):
+        if not self._username:
+            self._username = self.db_users_in_group(self.current_group_name)[0]
+
+        return self._username
+
+    @property
     def session(self):
         if not self._session:
-            self._session = sa.login_by_id(self.db_get_sessid(self._username))
+            self._session = sa.login_by_id(self.db_get_sessid(self.username))
 
         return self._session
 

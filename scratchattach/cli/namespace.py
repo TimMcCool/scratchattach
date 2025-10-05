@@ -5,6 +5,9 @@ from typing_extensions import Optional, Literal
 class ArgSpace(argparse.Namespace):
     command: Optional[Literal['login', 'group', 'profile']]
     sessid: bool | str
+    username: Optional[str]
+    studio_id: Optional[str]
+    project_id: Optional[str]
 
     group_command: Optional[Literal['list', 'new', 'switch', 'add', 'remove']]
     group_name: str

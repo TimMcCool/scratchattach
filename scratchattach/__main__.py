@@ -6,6 +6,7 @@ import argparse
 
 from scratchattach import cli
 from scratchattach.cli import db, cmd
+from scratchattach.cli.context import ctx, console
 
 import rich.traceback
 
@@ -36,6 +37,10 @@ def main():
                 if group_switch := group_commands.add_parser("switch", help="Change the current group"):
                     group_switch.add_argument("group_name")
 
+    parser.add_argument("-U", "--username", dest="username", help="Name of user to look at")
+    parser.add_argument("-P", "--project", dest="project_id", help="ID of project to look at")
+    parser.add_argument("-S", "--studio", dest="studio_id", help="ID of studio to look at")
+
     args = parser.parse_args(namespace=cli.ArgSpace())
     cli.ctx.args = args
     cli.ctx.parser = parser
@@ -48,6 +53,14 @@ def main():
         case "profile":
             cmd.profile()
         case None:
+            if args.username:
+                console.print(ctx.session.connect_user(args.username))
+                return
+            if args.studio_id:
+                return
+            if args.project_id:
+                return
+
             parser.print_help()
 
 
