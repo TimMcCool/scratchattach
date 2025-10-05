@@ -6,4 +6,5 @@ class ArgSpace(argparse.Namespace):
     command: Optional[Literal['login', 'group']]
     sessid: bool | str
 
-    group_command: Optional[Literal['list']]
+    group_command: Optional[Literal['list', 'new']]
+    group_name: str

@@ -38,12 +38,35 @@ class _Ctx:
     def session(self):
         return self._session
 
+    # helper functions with DB
+    # if possible, put all db funcs here
+
     @property
     def current_group_name(self):
         return db.cursor \
             .execute("SELECT * FROM CURRENT WHERE GROUP_NAME IS NOT NULL") \
             .fetchone()[0]
 
+    @staticmethod
+    def db_group_exists(name: str) -> bool:
+        return db.cursor.execute("SELECT NAME FROM GROUPS WHERE NAME = ?", (name,)).fetchone() is not None
+
+    @staticmethod
+    def db_session_exists(name: str) -> bool:
+        return db.cursor.execute("SELECT USERNAME FROM SESSIONS WHERE USERNAME = ?", (name,)).fetchone() is not None
+
+    @staticmethod
+    def db_users_in_group(name: str) -> list[str]:
+        return [i for (i,) in db.cursor.execute(
+            "SELECT USERNAME FROM GROUP_USERS WHERE GROUP_NAME = ?", (name,)).fetchall()]
+
+    def db_add_to_group(self, group_name: str, username: str):
+        if username in self.db_users_in_group(group_name) or not self.db_session_exists(username):
+            return
+        db.conn.execute("BEGIN")
+        db.cursor.execute("INSERT INTO GROUP_USERS (GROUP_NAME, USERNAME) "
+                          "VALUES (?, ?)", (group_name, username))
+        db.conn.commit()
 
 ctx = _Ctx()
 console = rich.console.Console()

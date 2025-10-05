@@ -27,8 +27,9 @@ def main():
                                help="Login by session ID")
         if group := commands.add_parser("group", help="View current session group"):
             if group_commands := group.add_subparsers(dest="group_command"):
-                if group_list := group_commands.add_parser("list", help="List all session groups"):
-                    ...
+                group_commands.add_parser("list", help="List all session groups")
+                if group_new := group_commands.add_parser("new", help="Create a new group"):
+                    group_new.add_argument("group_name")
 
     args = parser.parse_args(namespace=cli.ArgSpace())
     cli.ctx.args = args

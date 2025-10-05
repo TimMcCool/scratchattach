@@ -20,14 +20,27 @@ def _list():
 
     console.print(table)
 
-def group():
-    match ctx.args.group_command:
-        case "list":
-            _list()
-            return
+def new():
+    console.rule(f"New group {escape(ctx.args.group_name)}")
+    if ctx.db_group_exists(ctx.args.group_name):
+        raise ValueError(f"Group {escape(ctx.args.group_name)} already exists")
 
+    db.conn.execute("BEGIN")
+    db.cursor.execute("INSERT INTO GROUPS (NAME, DESCRIPTION) "
+                      "VALUES (?, ?)", (ctx.args.group_name, input("Description: ")))
+    db.conn.commit()
+    accounts = input("Add accounts (split by space): ").split()
+    for account in accounts:
+        ctx.db_add_to_group(ctx.args.group_name, account)
+
+    _group(ctx.args.group_name)
+
+def _group(group_name: str):
+    """
+    Display information about a group
+    """
     db.cursor.execute(
-        "SELECT NAME, DESCRIPTION FROM GROUPS WHERE NAME = ?", (ctx.current_group_name,))
+        "SELECT NAME, DESCRIPTION FROM GROUPS WHERE NAME = ?", (group_name,))
     result = db.cursor.fetchone()
     if result is None:
         print("No group selected!!")
@@ -38,7 +51,7 @@ def group():
     db.cursor.execute("SELECT USERNAME FROM GROUP_USERS WHERE GROUP_NAME = ?", (name,))
     usernames = [name for (name,) in db.cursor.fetchall()]
 
-    table = Table(title="Current Group")
+    table = Table(title=escape(group_name))
     table.add_column(escape(name))
     table.add_column('Usernames')
 
@@ -46,3 +59,13 @@ def group():
                   '\n'.join(f"{i}. {u}" for i, u in enumerate(usernames)))
 
     console.print(table)
+
+
+def group():
+    match ctx.args.group_command:
+        case "list":
+            _list()
+        case "new":
+            new()
+        case None:
+            _group(ctx.current_group_name)
