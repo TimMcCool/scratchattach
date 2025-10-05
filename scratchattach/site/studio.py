@@ -86,7 +86,7 @@ class Studio(BaseSiteComponent):
         except Exception: pass
         try: self.comments_allowed: bool = studio["comments_allowed"]
         except Exception: pass
-        try: self.image_url = studio["image"]
+        try: self.image_url = studio["image"]  # rename/alias to thumbnail_url?
         except Exception: pass
         try: self.created = studio["history"]["created"]
         except Exception: pass
@@ -143,6 +143,11 @@ class Studio(BaseSiteComponent):
     @property
     def url(self):
         return f"https://scratch.mit.edu/studios/{self.id}"
+
+    @property
+    def thumbnail(self) -> bytes:
+        with requests.no_error_handling():
+            return requests.get(self.image_url).content
 
     def follow(self):
         """

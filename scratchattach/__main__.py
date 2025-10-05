@@ -59,7 +59,9 @@ def main():
                 console.print(user)
                 return
             if args.studio_id:
-                console.print(ctx.session.connect_studio(args.studio_id))
+                studio = ctx.session.connect_studio(args.studio_id)
+                console.print(cli.try_get_img(studio.thumbnail, (34, 20)))
+                console.print(studio)
                 return
             if args.project_id:
                 console.print(ctx.session.connect_project(args.project_id))
