@@ -210,6 +210,10 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             soup = BeautifulSoup(resp.text, "html.parser")
 
             details = soup.find("p", {"class": "profile-details"})
+            if details is None:
+                # No details, e.g. if the user is banned
+                return None
+
             assert isinstance(details, Tag)
 
             class_name, class_id, is_closed = None, None, False
