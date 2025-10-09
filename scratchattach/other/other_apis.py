@@ -17,7 +17,7 @@ def get_news(*, limit=10, offset=0):
     return commons.api_iterative("https://api.scratch.mit.edu/news", limit=limit, offset=offset)
 
 
-def featured_data():
+def featured_data() -> dict[str, list[dict[str, str | int]]]:
     return requests.get("https://api.scratch.mit.edu/proxy/featured").json()
 
 
