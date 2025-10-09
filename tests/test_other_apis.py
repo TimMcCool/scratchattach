@@ -52,5 +52,10 @@ def test_activity():
     assert int(site_traffic["users"]) > 10000
     assert int(site_traffic["sessions"]) > 10000
 
+    country_counts = sa.country_counts()
+    for name, count in country_counts.items():
+        assert count > 0, f"country_counts[{name!r}] = {count}"
+
+
 if __name__ == "__main__":
     test_activity()
