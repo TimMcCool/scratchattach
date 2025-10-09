@@ -65,8 +65,12 @@ def total_site_stats() -> TotalSiteStats:
     data.pop("_TS")
     return data
 
+class MonthlySiteTraffic(TypedDict):
+    pageviews: str
+    users: str
+    sessions: str
 
-def monthly_site_traffic():
+def monthly_site_traffic() -> MonthlySiteTraffic:
     data = requests.get("https://scratch.mit.edu/statistics/data/monthly-ga/").json()
     data.pop("_TS")
     return data

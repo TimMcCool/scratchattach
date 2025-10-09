@@ -47,5 +47,10 @@ def test_activity():
     assert stats["COMMENT_COUNT"] >= 989937824
     assert stats["PROJECT_COMMENT_COUNT"] >= 399349632
 
+    site_traffic = sa.monthly_site_traffic()
+    assert int(site_traffic["pageviews"]) > 10000
+    assert int(site_traffic["users"]) > 10000
+    assert int(site_traffic["sessions"]) > 10000
+
 if __name__ == "__main__":
     test_activity()
