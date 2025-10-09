@@ -8,7 +8,7 @@ from scratchattach.utils import commons
 from scratchattach.utils.enums import Languages, Language, TTSVoices, TTSVoice
 from scratchattach.utils.exceptions import BadRequest, InvalidLanguage, InvalidTTSGender
 from scratchattach.utils.requests import requests
-from typing import Optional
+from typing import Optional, TypedDict
 
 
 # --- Front page ---
@@ -51,7 +51,16 @@ def design_studio_projects():
 
 # --- Statistics ---
 
-def total_site_stats():
+class TotalSiteStats(TypedDict):
+    PROJECT_COUNT: int
+    USER_COUNT: int
+    STUDIO_COMMENT_COUNT: int
+    PROFILE_COMMENT_COUNT: int
+    STUDIO_COUNT: int
+    COMMENT_COUNT: int
+    PROJECT_COMMENT_COUNT: int
+
+def total_site_stats() -> TotalSiteStats:
     data = requests.get("https://scratch.mit.edu/statistics/data/daily/").json()
     data.pop("_TS")
     return data

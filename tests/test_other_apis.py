@@ -38,7 +38,14 @@ def test_activity():
     test_featured_data("featured curated_projects", curated_projects)
     test_featured_data("featured design_studio_projects", design_studio_projects)
 
-    print(sa.total_site_stats())
+    stats = sa.total_site_stats()
+    assert stats["PROJECT_COUNT"] >= 164307034
+    assert stats["USER_COUNT"] >= 135078559
+    assert stats["STUDIO_COMMENT_COUNT"] >= 259801679
+    assert stats["PROFILE_COMMENT_COUNT"] >= 330786513
+    assert stats["STUDIO_COUNT"] >= 34866300
+    assert stats["COMMENT_COUNT"] >= 989937824
+    assert stats["PROJECT_COMMENT_COUNT"] >= 399349632
 
 if __name__ == "__main__":
     test_activity()
