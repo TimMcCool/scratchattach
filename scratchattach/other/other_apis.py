@@ -8,7 +8,7 @@ from scratchattach.utils import commons
 from scratchattach.utils.enums import Languages, Language, TTSVoices, TTSVoice
 from scratchattach.utils.exceptions import BadRequest, InvalidLanguage, InvalidTTSGender
 from scratchattach.utils.requests import requests
-from typing import Optional
+from typing import Optional, TypedDict
 
 
 # --- Front page ---
@@ -17,7 +17,7 @@ def get_news(*, limit=10, offset=0):
     return commons.api_iterative("https://api.scratch.mit.edu/news", limit=limit, offset=offset)
 
 
-def featured_data():
+def featured_data() -> dict[str, list[dict[str, str | int]]]:
     return requests.get("https://api.scratch.mit.edu/proxy/featured").json()
 
 
@@ -51,19 +51,322 @@ def design_studio_projects():
 
 # --- Statistics ---
 
-def total_site_stats():
+class TotalSiteStats(TypedDict):
+    PROJECT_COUNT: int
+    USER_COUNT: int
+    STUDIO_COMMENT_COUNT: int
+    PROFILE_COMMENT_COUNT: int
+    STUDIO_COUNT: int
+    COMMENT_COUNT: int
+    PROJECT_COMMENT_COUNT: int
+
+
+def total_site_stats() -> TotalSiteStats:
     data = requests.get("https://scratch.mit.edu/statistics/data/daily/").json()
     data.pop("_TS")
     return data
 
 
-def monthly_site_traffic():
+class MonthlySiteTraffic(TypedDict):
+    pageviews: str
+    users: str
+    sessions: str
+
+
+def monthly_site_traffic() -> MonthlySiteTraffic:
     data = requests.get("https://scratch.mit.edu/statistics/data/monthly-ga/").json()
     data.pop("_TS")
     return data
 
 
-def country_counts():
+type CountryCounts = TypedDict("CountryCounts", {
+    '0': int,  # not sure what 0 is. maybe it's the 'other' category
+    'AT': int,
+    'Afghanistan': int,
+    'Aland Islands': int,
+    'Albania': int,
+    'Algeria': int,
+    'American Samoa': int,
+    'Andorra': int,
+    'Angola': int,
+    'Anguilla': int,
+    'Antigua and Barbuda': int,
+    'Argentina': int,
+    'Armenia': int,
+    'Aruba': int,
+    'Australia': int,
+    'Austria': int,
+    'Azerbaijan': int,
+    'Bahamas': int,
+    'Bahrain': int,
+    'Bangladesh': int,
+    'Barbados': int,
+    'Belarus': int,
+    'Belgium': int,
+    'Belize': int,
+    'Benin': int,
+    'Bermuda': int,
+    'Bhutan': int,
+    'Bolivia': int,
+    'Bonaire, Sint Eustatius and Saba': int,
+    'Bosnia and Herzegovina': int,
+    'Botswana': int,
+    'Bouvet Island': int,
+    'Brazil': int,
+    'British Indian Ocean Territory': int,
+    'Brunei': int,
+    'Brunei Darussalam': int,
+    'Bulgaria': int,
+    'Burkina Faso': int,
+    'Burundi': int,
+    'CA': int,
+    'Cambodia': int,
+    'Cameroon': int,
+    'Canada': int,
+    'Cape Verde': int,
+    'Cayman Islands': int,
+    'Central African Republic': int,
+    'Chad': int,
+    'Chile': int,
+    'China': int,
+    'Christmas Island': int,
+    'Cocos (Keeling) Islands': int,
+    'Colombia': int,
+    'Comoros': int,
+    'Congo': int,
+    'Congo, Dem. Rep. of The': int,
+    'Congo, The Democratic Republic of The': int,
+    'Cook Islands': int,
+    'Costa Rica': int,
+    "Cote D'ivoire": int,
+    'Croatia': int,
+    'Cuba': int,
+    'Curacao': int,
+    'Cyprus': int,
+    'Czech Republic': int,
+    'Denmark': int,
+    'Djibouti': int,
+    'Dominica': int,
+    'Dominican Republic': int,
+    'Ecuador': int,
+    'Egypt': int,
+    'El Salvador': int,
+    'England': int,
+    'Equatorial Guinea': int,
+    'Eritrea': int,
+    'Estonia': int,
+    'Ethiopia': int,
+    'Falkland Islands (Malvinas)': int,
+    'Faroe Islands': int,
+    'Fiji': int,
+    'Finland': int,
+    'France': int,
+    'French Guiana': int,
+    'French Polynesia': int,
+    'French Southern Territories': int,
+    'GB': int,
+    'GG': int,
+    'Gabon': int,
+    'Gambia': int,
+    'Georgia': int,
+    'Germany': int,
+    'Ghana': int,
+    'Gibraltar': int,
+    'Greece': int,
+    'Greenland': int,
+    'Grenada': int,
+    'Guadeloupe': int,
+    'Guam': int,
+    'Guatemala': int,
+    'Guernsey': int,
+    'Guinea': int,
+    'Guinea-Bissau': int,
+    'Guyana': int,
+    'Haiti': int,
+    'Heard Island and Mcdonald Islands': int,
+    'Holy See (Vatican City State)': int,
+    'Honduras': int,
+    'Hong Kong': int,
+    'Hungary': int,
+    'IT': int,
+    'Iceland': int,
+    'India': int,
+    'Indonesia': int,
+    'Iran': int,
+    'Iran, Islamic Republic of': int,
+    'Iraq': int,
+    'Ireland': int,
+    'Isle of Man': int,
+    'Israel': int,
+    'Italy': int,
+    'Jamaica': int,
+    'Japan': int,
+    'Jersey': int,
+    'Jordan': int,
+    'Kazakhstan': int,
+    'Kenya': int,
+    'Kiribati': int,
+    "Korea, Dem. People's Rep.": int,
+    "Korea, Democratic People's Republic of": int,
+    'Korea, Republic of': int,
+    'Kosovo': int,
+    'Kuwait': int,
+    'Kyrgyzstan': int,
+    'Laos': int,
+    'Latvia': int,
+    'Lebanon': int,
+    'Lesotho': int,
+    'Liberia': int,
+    'Libya': int,
+    'Libyan Arab Jamahiriya': int,
+    'Liechtenstein': int,
+    'Lithuania': int,
+    'Location not given': int,
+    'Luxembourg': int,
+    'Macao': int,
+    'Macedonia': int,
+    'Macedonia, The Former Yugoslav Republic of': int,
+    'Madagascar': int,
+    'Malawi': int,
+    'Malaysia': int,
+    'Maldives': int,
+    'Mali': int,
+    'Malta': int,
+    'Marshall Islands': int,
+    'Martinique': int,
+    'Mauritania': int,
+    'Mauritius': int,
+    'Mayotte': int,
+    'Mexico': int,
+    'Micronesia, Federated States of': int,
+    'Moldova': int,
+    'Moldova, Republic of': int,
+    'Monaco': int,
+    'Mongolia': int,
+    'Montenegro': int,
+    'Montserrat': int,
+    'Morocco': int,
+    'Mozambique': int,
+    'Myanmar': int,
+    'NO': int,
+    'Namibia': int,
+    'Nauru': int,
+    'Nepal': int,
+    'Netherlands': int,
+    'Netherlands Antilles': int,
+    'New Caledonia': int,
+    'New Zealand': int,
+    'Nicaragua': int,
+    'Niger': int,
+    'Nigeria': int,
+    'Niue': int,
+    'Norfolk Island': int,
+    'North Korea': int,
+    'Northern Mariana Islands': int,
+    'Norway': int,
+    'Oman': int,
+    'Pakistan': int,
+    'Palau': int,
+    'Palestine': int,
+    'Palestine, State of': int,
+    'Palestinian Territory, Occupied': int,
+    'Panama': int,
+    'Papua New Guinea': int,
+    'Paraguay': int,
+    'Peru': int,
+    'Philippines': int,
+    'Pitcairn': int,
+    'Poland': int,
+    'Portugal': int,
+    'Puerto Rico': int,
+    'Qatar': int,
+    'Reunion': int,
+    'Romania': int,
+    'Russia': int,
+    'Russian Federation': int,
+    'Rwanda': int,
+    'ST': int,
+    'Saint Barthelemy': int,
+    'Saint Helena': int,
+    'Saint Kitts and Nevis': int,
+    'Saint Lucia': int,
+    'Saint Martin': int,
+    'Saint Pierre and Miquelon': int,
+    'Saint Vincent and The Grenadines': int,
+    'Samoa': int,
+    'San Marino': int,
+    'Sao Tome and Principe': int,
+    'Saudi Arabia': int,
+    'Senegal': int,
+    'Serbia': int,
+    'Serbia and Montenegro': int,
+    'Seychelles': int,
+    'Sierra Leone': int,
+    'Singapore': int,
+    'Sint Maarten': int,
+    'Slovakia': int,
+    'Slovenia': int,
+    'Solomon Islands': int,
+    'Somalia': int,
+    'Somewhere': int,
+    'South Africa': int,
+    'South Georgia and the South Sandwich Islands': int,
+    'South Korea': int,
+    'South Sudan': int,
+    'Spain': int,
+    'Sri Lanka': int,
+    'St. Vincent': int,
+    'Sudan': int,
+    'Suriname': int,
+    'Svalbard and Jan Mayen': int,
+    'Swaziland': int,
+    'Sweden': int,
+    'Switzerland': int,
+    'Syria': int,
+    'Syrian Arab Republic': int,
+    'TV': int,
+    'Taiwan': int,
+    'Taiwan, Province of China': int,
+    'Tajikistan': int,
+    'Tanzania': int,
+    'Tanzania, United Republic of': int,
+    'Thailand': int,
+    'Timor-leste': int,
+    'Togo': int,
+    'Tokelau': int,
+    'Tonga': int,
+    'Trinidad and Tobago': int,
+    'Tunisia': int,
+    'Turkey': int,
+    'Turkmenistan': int,
+    'Turks and Caicos Islands': int,
+    'Tuvalu': int,
+    'US': int,
+    'US Minor': int,
+    'Uganda': int,
+    'Ukraine': int,
+    'United Arab Emirates': int,
+    'United Kingdom': int,
+    'United States': int,
+    'United States Minor Outlying Islands': int,
+    'Uruguay': int,
+    'Uzbekistan': int,
+    'Vanuatu': int,
+    'Vatican City': int,
+    'Venezuela': int,
+    'Viet Nam': int,
+    'Vietnam': int,
+    'Virgin Islands, British': int,
+    'Virgin Islands, U.S.': int,
+    'Wallis and Futuna': int,
+    'Western Sahara': int,
+    'Yemen': int,
+    'Zambia': int,
+    'Zimbabwe': int
+})
+
+
+def country_counts() -> CountryCounts:
     return requests.get("https://scratch.mit.edu/statistics/data/monthly/").json()["country_distribution"]
 
 
@@ -137,68 +440,6 @@ def aprilfools_increment_counter() -> int:
 # --- Resources ---
 def get_resource_urls():
     return requests.get("https://resources.scratch.mit.edu/localized-urls.json").json()
-
-
-# --- ScratchTools endpoints ---
-def scratchtools_online_status(username: str) -> bool | None:
-    """
-    Get the online status of an account.
-    :return: Boolean whether the account is online; if they do not use scratchtools, return None.
-    """
-    data = requests.get(f"https://data.scratchtools.app/isonline/{username}").json()
-
-    if data["scratchtools"]:
-        return data["online"]
-    else:
-        return None
-
-
-def scratchtools_beta_user(username: str) -> bool:
-    """
-    Get whether a user is a scratchtools beta tester (I think that's what it means)
-    """
-    return requests.get(f"https://data.scratchtools.app/isbeta/{username}").json()["beta"]
-
-
-def scratchtools_display_name(username: str) -> str | None:
-    """
-    Get the display name of a user for scratchtools. Returns none if there is no display name or the username is invalid
-    """
-    return requests.get(f"https://data.scratchtools.app/name/{username}").json().get("displayName")
-
-
-@dataclass(init=True, repr=True)
-class ScratchToolsTutorial:
-    title: str
-    description: str = field(repr=False)
-    id: str
-
-    @classmethod
-    def from_json(cls, data: dict[str, str]) -> ScratchToolsTutorial:
-        return cls(**data)
-
-    @property
-    def yt_link(self):
-        return f"https://www.youtube.com/watch?v={self.id}"
-
-
-def scratchtools_tutorials() -> list[ScratchToolsTutorial]:
-    """
-    Returns a list of scratchtools tutorials (just yt videos)
-    """
-    data_list = requests.get("https://data.scratchtools.app/tutorials/").json()
-    return [ScratchToolsTutorial.from_json(data) for data in data_list]
-
-
-def scratchtools_emoji_status(username: str) -> str | None:
-    return requests.get(f"https://data.scratchtools.app/status/{username}").json().get("status",
-                                                                                       '🍪')  # Cookie is the default status, even if the user does not use ScratchTools
-
-
-def scratchtools_pinned_comment(project_id: int) -> dict[str, str | int]:
-    data = requests.get(f"https://data.scratchtools.app/pinned/{project_id}/").json()
-    # Maybe use this info to instantiate a partial comment object?
-    return data
 
 
 # --- Misc ---
