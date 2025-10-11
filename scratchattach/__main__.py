@@ -32,6 +32,7 @@ def main():
                 group_commands.add_parser("list", help="List all session groups")
                 group_commands.add_parser("add", help="Add sessions to group")
                 group_commands.add_parser("remove", help="Remove sessions from a group")
+                group_commands.add_parser("delete", help="Delete current group")
                 if group_new := group_commands.add_parser("new", help="Create a new group"):
                     group_new.add_argument("group_name")
                 if group_switch := group_commands.add_parser("switch", help="Change the current group"):

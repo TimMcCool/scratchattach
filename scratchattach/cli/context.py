@@ -100,5 +100,16 @@ class _Ctx:
                           "VALUES (?, ?)", (group_name, username))
         db.conn.commit()
 
+    @staticmethod
+    def db_group_delete(group_name: str):
+        db.conn.execute("BEGIN")
+        # delete links to sessions first
+        db.cursor.execute("DELETE FROM GROUP_USERS WHERE GROUP_NAME = ?", (group_name,))
+        # delete group itself
+        db.cursor.execute("DELETE FROM GROUPS WHERE NAME = ?", (group_name,))
+        db.conn.commit()
+
+
+
 ctx = _Ctx()
 console = rich.console.Console()

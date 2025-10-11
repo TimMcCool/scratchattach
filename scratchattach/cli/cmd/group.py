@@ -76,6 +76,14 @@ def switch():
     ctx.current_group_name = ctx.args.group_name
     _group(ctx.current_group_name)
 
+def delete(group_name: str):
+    print(f"Deleting {group_name}")
+    if not ctx.db_group_exists(group_name):
+        raise ValueError(f"Group {group_name} does not exist")
+
+    ctx.db_group_delete(group_name)
+
+
 def group():
     match ctx.args.group_command:
         case "list":
@@ -88,5 +96,9 @@ def group():
             add(ctx.current_group_name)
         case "remove":
             remove(ctx.current_group_name)
+        case "delete":
+            if input("Are you sure? (y/N): ").lower() != "y":
+                return
+            delete(ctx.current_group_name)
         case None:
             _group(ctx.current_group_name)
