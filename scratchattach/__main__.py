@@ -46,6 +46,8 @@ def main():
     parser.add_argument("-U", "--username", dest="username", help="Name of user to look at")
     parser.add_argument("-P", "--project", dest="project_id", help="ID of project to look at")
     parser.add_argument("-S", "--studio", dest="studio_id", help="ID of studio to look at")
+    parser.add_argument("-L", "--session_name", dest="session_name",
+                        help="Name of (registered) session/login to look at")
 
     args = parser.parse_args(namespace=cli.ArgSpace())
     cli.ctx.args = args
@@ -75,6 +77,13 @@ def main():
                 project = ctx.session.connect_project(args.project_id)
                 console.print(cli.try_get_img(project.thumbnail, (30, 23)))
                 console.print(project)
+                return
+            if args.session_name:
+                if sess := ctx.db_get_sess(args.session_name):
+                    console.print(sess)
+                else:
+                    raise ValueError(f"No session logged in called {args.session_name!r} "
+                                     f"- try using `scratch sessions` to see available sessions")
                 return
 
             parser.print_help()

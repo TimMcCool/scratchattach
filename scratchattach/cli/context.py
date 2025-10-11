@@ -132,6 +132,11 @@ class _Ctx:
         db.cursor.execute("SELECT COUNT(*) FROM GROUPS")
         return db.cursor.fetchone()[0]
 
+    def db_get_sess(self, sess_name: str):
+        if sess_id := self.db_get_sessid(sess_name):
+            return sa.login_by_id(sess_id)
+        return None
+
 
 ctx = _Ctx()
 console = rich.console.Console()
