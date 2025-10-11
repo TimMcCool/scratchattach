@@ -24,6 +24,7 @@ def main():
     # Using walrus operator & ifs for artificial indentation
     if commands := parser.add_subparsers(dest="command"):
         commands.add_parser("profile", help="View your profile")
+        commands.add_parser("sessions", help="View session list")
         if login := commands.add_parser("login", help="Login to Scratch"):
             login.add_argument("--sessid", dest="sessid", nargs="?", default=False, const=True,
                                help="Login by session ID")
@@ -51,6 +52,8 @@ def main():
     cli.ctx.parser = parser
 
     match args.command:
+        case "sessions":
+            cmd.sessions()
         case "login":
             cmd.login()
         case "group":

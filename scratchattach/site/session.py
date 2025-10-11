@@ -61,7 +61,7 @@ def enforce_ratelimit(__type: str, name: str, amount: int = 5, duration: int = 6
         "Don't spam-create studios or similar, it WILL get you banned."
     )
 
-C = TypeVar("C", bound=BaseSiteComponent) 
+C = TypeVar("C", bound=BaseSiteComponent)
 
 @dataclass
 class Session(BaseSiteComponent):
@@ -91,14 +91,40 @@ class Session(BaseSiteComponent):
 
     time_created: datetime.datetime = field(repr=False, default=datetime.datetime.fromtimestamp(0.0))
     language: str = field(repr=False, default="en")
-    
+
     has_outstanding_email_confirmation: bool = field(repr=False, default=False)
     is_teacher: bool = field(repr=False, default=False)
     is_teacher_invitee: bool = field(repr=False, default=False)
     _session: Optional[Session] = field(kw_only=True, default=None)
 
     def __str__(self) -> str:
-        return f"<Login for {self.username!r}>"
+        return f"-L {self.username}"
+
+    def __rich__(self):
+        from rich.panel import Panel
+        from rich.table import Table
+        from rich import box
+        from rich.markup import escape
+
+        try:
+            self.update()
+        except KeyError as e:
+            warnings.warn(f"Ignored KeyError: {e}")
+
+        ret = Table(
+            f"[link={self.connect_linked_user().url}]{escape(self.username)}[/]",
+                    f"Created: {self.time_created}", expand=True)
+
+        ret.add_row("Email", escape(str(self.email)))
+        ret.add_row("Language", escape(str(self.language)))
+        ret.add_row("Mute status", escape(str(self.mute_status)))
+        ret.add_row("New scratcher?", str(self.new_scratcher))
+        ret.add_row("Banned?", str(self.banned))
+        ret.add_row("Has outstanding email confirmation?", str(self.has_outstanding_email_confirmation))
+        ret.add_row("Is teacher invitee?", str(self.is_teacher_invitee))
+        ret.add_row("Is teacher?", str(self.is_teacher))
+
+        return ret
 
     @property
     def _username(self) -> str:
@@ -121,14 +147,14 @@ class Session(BaseSiteComponent):
 
         if self.id:
             self._process_session_id()
-        
+
         self._session = self
 
     def _update_from_dict(self, data: Union[dict, typed_dicts.SessionDict]):
         # Note: there are a lot more things you can get from this data dict.
         # Maybe it would be a good idea to also store the dict itself?
         # self.data = data
-        
+
         data = cast(typed_dicts.SessionDict, data)
 
         self.xtoken = data['user']['token']
@@ -142,7 +168,7 @@ class Session(BaseSiteComponent):
         self.is_teacher = data["permissions"]["educator"]
         self.is_teacher_invitee = data["permissions"]["educator_invitee"]
 
-        self.mute_status = data["permissions"]["mute_status"]
+        self.mute_status: dict = data["permissions"]["mute_status"]
 
         self.username = data["user"]["username"]
         self.banned = data["user"]["banned"]
@@ -577,7 +603,7 @@ class Session(BaseSiteComponent):
             To prevent accidental spam, a rate limit (5 studios per minute) is implemented for this function.
         """
         enforce_ratelimit("create_scratch_studio", "creating Scratch studios")
-        
+
         if self.new_scratcher:
             raise exceptions.Unauthorized(f"\nNew scratchers (like {self.username}) cannot create studios.")
 
@@ -781,7 +807,7 @@ class Session(BaseSiteComponent):
 
     # --- Connect classes inheriting from BaseCloud ---
 
-    
+
     @overload
     def connect_cloud(self, project_id, *, cloud_class: type[T]) -> T:
         """
@@ -796,7 +822,7 @@ class Session(BaseSiteComponent):
         Returns: Type[scratchattach.cloud._base.BaseCloud]: An object representing the cloud of a project. Can be of any
         class inheriting from BaseCloud.
         """
-    
+
     @overload
     def connect_cloud(self, project_id) -> cloud.ScratchCloud:
         """
@@ -1042,10 +1068,10 @@ sess
     def get_session_string(self) -> str:
         assert self.session_string
         return self.session_string
-    
+
     def get_headers(self) -> dict[str, str]:
         return self._headers
-    
+
     def get_cookies(self) -> dict[str, str]:
         return self._cookies
 
