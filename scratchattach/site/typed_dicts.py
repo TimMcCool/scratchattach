@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing_extensions import OrderedDict
+
 from scratchattach.cloud import _base
 from typing import TypedDict, Union, Optional, Required, NotRequired
 
@@ -124,3 +126,13 @@ class StudioRoleDict(TypedDict):
     curator: bool
     invited: bool
     following: bool
+
+class PlaceholderProjectDataMetadataDict(TypedDict):
+    title: str
+    description: str
+
+# https://github.com/GarboMuffin/placeholder/blob/e1e98953342a40abbd626a111f621711f74e783b/src/routes/projects/%5Bproject%5D/%2Bpage.server.ts#L19
+class PlaceholderProjectDataDict(TypedDict):
+    metadata: PlaceholderProjectDataMetadataDict
+    md5extsToSha256: OrderedDict[str, str]
+    adminOwnershipToken: Optional[str]
