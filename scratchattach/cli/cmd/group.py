@@ -80,8 +80,14 @@ def delete(group_name: str):
     print(f"Deleting {group_name}")
     if not ctx.db_group_exists(group_name):
         raise ValueError(f"Group {group_name} does not exist")
+    if ctx.db_group_count == 1:
+        raise ValueError(f"Make another group first")
 
     ctx.db_group_delete(group_name)
+    new_current = ctx.db_first_group_name
+    print(f"Switching to {new_current}")
+    ctx.current_group_name = new_current
+    _group(new_current)
 
 def copy(group_name: str, new_name: str):
     print(f"Copying {group_name} as {new_name}")

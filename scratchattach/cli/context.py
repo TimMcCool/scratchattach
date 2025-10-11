@@ -121,6 +121,16 @@ class _Ctx:
 
         db.conn.commit()
 
+    @property
+    def db_first_group_name(self) -> str:
+        """Just get a group, I don't care which"""
+        db.cursor.execute("SELECT NAME FROM GROUPS")
+        return db.cursor.fetchone()[0]
+
+    @property
+    def db_group_count(self):
+        db.cursor.execute("SELECT COUNT(*) FROM GROUPS")
+        return db.cursor.fetchone()[0]
 
 
 ctx = _Ctx()
