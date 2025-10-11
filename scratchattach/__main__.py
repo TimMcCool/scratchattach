@@ -35,6 +35,8 @@ def main():
                 group_commands.add_parser("delete", help="Delete current group")
                 if group_copy := group_commands.add_parser("copy", help="Copy current group with a new name"):
                     group_copy.add_argument("group_name", help="New group name")
+                if group_rename := group_commands.add_parser("rename", help="Rename current group"):
+                    group_rename.add_argument("group_name", help="New group name")
                 if group_new := group_commands.add_parser("new", help="Create a new group"):
                     group_new.add_argument("group_name")
                 if group_switch := group_commands.add_parser("switch", help="Change the current group"):

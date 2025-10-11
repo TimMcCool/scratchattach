@@ -84,10 +84,6 @@ def delete(group_name: str):
         raise ValueError(f"Make another group first")
 
     ctx.db_group_delete(group_name)
-    new_current = ctx.db_first_group_name
-    print(f"Switching to {new_current}")
-    ctx.current_group_name = new_current
-    _group(new_current)
 
 def copy(group_name: str, new_name: str):
     print(f"Copying {group_name} as {new_name}")
@@ -96,6 +92,9 @@ def copy(group_name: str, new_name: str):
 
     ctx.db_group_copy(group_name, new_name)
 
+def rename(group_name: str, new_name: str):
+    copy(group_name, new_name)
+    delete(group_name)
 
 def group():
     match ctx.args.group_command:
@@ -113,7 +112,16 @@ def group():
             if input("Are you sure? (y/N): ").lower() != "y":
                 return
             delete(ctx.current_group_name)
+            new_current = ctx.db_first_group_name
+            print(f"Switching to {new_current}")
+            ctx.current_group_name = new_current
+            _group(new_current)
+
         case "copy":
             copy(ctx.current_group_name, ctx.args.group_name)
+        case "rename":
+            rename(ctx.current_group_name, ctx.args.group_name)
+            ctx.current_group_name = ctx.args.group_name
+            _group(ctx.args.group_name)
         case None:
             _group(ctx.current_group_name)
