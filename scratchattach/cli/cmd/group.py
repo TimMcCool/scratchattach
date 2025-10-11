@@ -83,6 +83,13 @@ def delete(group_name: str):
 
     ctx.db_group_delete(group_name)
 
+def copy(group_name: str, new_name: str):
+    print(f"Copying {group_name} as {new_name}")
+    if not ctx.db_group_exists(group_name):
+        raise ValueError(f"Group {group_name} does not exist")
+
+    ctx.db_group_copy(group_name, new_name)
+
 
 def group():
     match ctx.args.group_command:
@@ -100,5 +107,7 @@ def group():
             if input("Are you sure? (y/N): ").lower() != "y":
                 return
             delete(ctx.current_group_name)
+        case "copy":
+            copy(ctx.current_group_name, ctx.args.group_name)
         case None:
             _group(ctx.current_group_name)

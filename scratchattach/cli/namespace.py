@@ -9,5 +9,5 @@ class ArgSpace(argparse.Namespace):
     studio_id: Optional[str]
     project_id: Optional[str]
 
-    group_command: Optional[Literal['list', 'new', 'switch', 'add', 'remove',  'delete']]
+    group_command: Optional[Literal['list', 'new', 'switch', 'add', 'remove',  'delete', 'copy']]
     group_name: str

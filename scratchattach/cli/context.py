@@ -109,6 +109,18 @@ class _Ctx:
         db.cursor.execute("DELETE FROM GROUPS WHERE NAME = ?", (group_name,))
         db.conn.commit()
 
+    @staticmethod
+    def db_group_copy(group_name: str, copy_name: str):
+        db.conn.execute("BEGIN")
+        # copy group metadata
+        db.cursor.execute("INSERT INTO GROUPS (NAME, DESCRIPTION) "
+                          "SELECT ?, DESCRIPTION FROM GROUPS WHERE NAME = ?", (copy_name, group_name,))
+        # copy sessions
+        db.cursor.execute("INSERT INTO GROUP_USERS (GROUP_NAME, USERNAME)  "
+                          "SELECT ?, USERNAME FROM GROUP_USERS WHERE GROUP_NAME = ?", (copy_name, group_name,))
+
+        db.conn.commit()
+
 
 
 ctx = _Ctx()
