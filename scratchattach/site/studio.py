@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing_extensions import Optional
 
 from . import user, comment, project, activity, session
-from scratchattach.site.typed_dicts import StudioDict
+from scratchattach.site.typed_dicts import StudioDict, StudioRoleDict
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions, commons
 from scratchattach.utils.commons import api_iterative, headers
@@ -615,7 +615,7 @@ class Studio(BaseSiteComponent):
             timeout=10,
         ).json()
     
-    def your_role(self):
+    def your_role(self) -> StudioRoleDict:
         """
         Returns a dict with information about your role in the studio (whether you're following, curating, managing it or are invited)
         """

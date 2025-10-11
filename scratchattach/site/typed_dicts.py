@@ -118,3 +118,9 @@ class StudioDict(TypedDict):
     image: str
     history: StudioHistoryDict
     stats: NotRequired[StudioStatsDict]
+
+class StudioRoleDict(TypedDict):
+    manager: bool
+    curator: bool
+    invited: bool
+    following: bool
