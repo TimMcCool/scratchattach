@@ -11,6 +11,9 @@ def test_studio():
         return
     sess = session()
 
+    studio = sess.connect_studio(34253687)
+    assert studio.get_exact_project_count() == 1251
+
     studio = sess.connect_studio(50809872)
 
     assert studio.title == "Sample studio"

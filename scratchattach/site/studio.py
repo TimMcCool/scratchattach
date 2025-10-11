@@ -6,6 +6,7 @@ import json
 import random
 
 from dataclasses import dataclass, field
+
 from typing_extensions import Optional
 
 from . import user, comment, project, activity, session
@@ -342,7 +343,7 @@ class Studio(BaseSiteComponent):
             content, parent_id=parent_id, commentee_id=commentee_id
         )
 
-    def projects(self, limit=40, offset=0):
+    def projects(self, limit=40, offset=0) -> list[project.Project]:
         """
         Gets the studio projects.
 
@@ -626,6 +627,41 @@ class Studio(BaseSiteComponent):
             cookies=self._cookies,
             timeout=10,
         ).json()
+
+    def get_exact_project_count(self) -> int:
+        """
+        Get the exact project count of a studio using a binary-search-like strategy
+        """
+        if self.project_count is not None and self.project_count < 100:
+            return self.project_count
+
+        # Get maximum possible project count before binary search
+        maximum = 100
+        minimum = 0
+
+        while True:
+            if not self.projects(offset=maximum):
+                break
+            minimum = maximum
+            maximum *= 2
+
+        # Binary search
+        while True:
+            middle = (minimum + maximum) // 2
+            projects = self.projects(limit=40, offset=middle)
+
+            if not projects:
+                # too high - no projects found
+                maximum = middle
+            elif len(projects) < 40:
+                # we are 40 within true value, and can infer the rest
+                break
+            else:
+                # too low - full project list
+                minimum = middle
+
+        return middle + len(projects)
+
 
 
 def get_studio(studio_id) -> Studio:
