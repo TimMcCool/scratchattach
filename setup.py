@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = '2.1.13'
+VERSION = '2.1.13'  # consider updating the CLI version number too
 DESCRIPTION = 'A Scratch API Wrapper'
 with open('README.md', encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
@@ -22,6 +22,11 @@ setup(
     packages=find_packages(),
     python_requires='>=3.12',
     install_requires=requirements,
+    entry_points={
+        'console_scripts': [
+            "scratch=scratchattach.__main__:main"
+        ]
+    },
     extras_require={
         "lark": ["lark"]
     },

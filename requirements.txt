@@ -5,3 +5,5 @@ SimpleWebSocketServer
 typing-extensions
 browser_cookie3
 aiohttp
+rich
+# install rich-pixels if you want CLI image support. This is an optional dependency.
