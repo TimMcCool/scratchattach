@@ -197,8 +197,8 @@ class Costume(Asset):
 
         bitmap_resolution = data.get("bitmapResolution")
 
-        rotation_center_x = data["rotationCenterX"]
-        rotation_center_y = data["rotationCenterY"]
+        rotation_center_x = data.get("rotationCenterX", 0)
+        rotation_center_y = data.get("rotationCenterY", 0)
         return Costume(_asset_load.name, _asset_load.file_name,
 
                        bitmap_resolution, rotation_center_x, rotation_center_y)
