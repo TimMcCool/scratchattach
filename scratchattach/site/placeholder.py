@@ -60,19 +60,27 @@ class PlaceholderProject:
                     break
 
     def get_project_body(self):
+        self.update_by_html()
+
         data = self.get_json()
         body = editor.Project.from_json(data)
+        body.name = self.title
 
         for asset in body.assets:
-            print(asset.md5ext)
+            data = get_asset(self.md5exts_to_sha256[asset.md5ext])
+            asset.asset_file.data = data
 
         return body
 
+
+def get_asset(sha256: str):
+    with requests.no_error_handling():
+        return requests.get(f"https://share.turbowarp.org/api/assets/{sha256}").content
 
 def get_placeholder_project(_id: str):
     return PlaceholderProject(_id)
 
 if __name__ == '__main__':
     p = get_placeholder_project("44c35afc-fe00-49d8-afe7-d71f4430c121")
-    p.update_by_html()
-    print(p)
+    pb = p.get_project_body()
+    pb.export("test plac.sb3")
