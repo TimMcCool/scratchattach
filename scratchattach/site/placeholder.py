@@ -11,6 +11,7 @@ from scratchattach.site.typed_dicts import PlaceholderProjectDataDict
 from scratchattach.utils.requests import requests
 from scratchattach import editor
 
+
 @dataclass
 class PlaceholderProject:
     id: str
@@ -43,7 +44,8 @@ class PlaceholderProject:
                 if not isinstance(script, bs4.element.Tag):
                     continue
 
-                if raw_data := re.search("const data = \\[.*\"data\":{metadata:{.*},md5extsToSha256:.*];", str(script.contents[0])):
+                if raw_data := re.search("const data = \\[.*\"data\":{metadata:{.*},md5extsToSha256:.*];",
+                                         str(script.contents[0])):
                     data = raw_data.group().removeprefix("const data = ").removesuffix(";")
                     # this data is NOT json. Therefore, we can't just JSON.parse it.
                     # it's actually native JavaScript, but we can extract the information in a relatively stable way using hjson
@@ -77,8 +79,10 @@ def get_asset(sha256: str):
     with requests.no_error_handling():
         return requests.get(f"https://share.turbowarp.org/api/assets/{sha256}").content
 
+
 def get_placeholder_project(_id: str):
     return PlaceholderProject(_id)
+
 
 if __name__ == '__main__':
     p = get_placeholder_project("44c35afc-fe00-49d8-afe7-d71f4430c121")
