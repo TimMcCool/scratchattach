@@ -16,6 +16,7 @@ def login():
             ctx.args.sessid = getpass("Session ID: ")
 
         session = sa.login_by_id(ctx.args.sessid)
+        password = None
     else:
         username = input("Username: ")
         password = getpass()
@@ -28,8 +29,8 @@ def login():
     # register session
     db.conn.execute("BEGIN")
     db.cursor.execute(
-        "INSERT OR REPLACE INTO SESSIONS (ID, USERNAME) "
-        "VALUES (?, ?)", (session.id, session.username)
+        "INSERT OR REPLACE INTO SESSIONS (ID, USERNAME, PASSWORD) "
+        "VALUES (?, ?, ?)", (session.id, session.username, password)
     )
     db.conn.commit()
 
