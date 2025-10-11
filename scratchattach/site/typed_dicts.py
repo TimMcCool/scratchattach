@@ -98,3 +98,23 @@ class ClassroomDict(TypedDict):
     images: NotRequired[dict[str, str]]
     educator: UserDict
     is_closed: NotRequired[bool]
+
+class StudioHistoryDict(TypedDict):
+    created: str
+    modified: str
+
+class StudioStatsDict(TypedDict):
+    followers: int
+    managers: int
+    projects: int
+
+class StudioDict(TypedDict):
+    id: int
+    title: str
+    description: str
+    host: int
+    open_to_all: bool
+    comments_allowed: bool
+    image: str
+    history: StudioHistoryDict
+    stats: NotRequired[StudioStatsDict]

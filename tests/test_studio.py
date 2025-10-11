@@ -56,3 +56,6 @@ def test_studio():
     # If we run out of 'add everything!' studios, clearly something has gone wrong.
     assert sa.search_studios(query="add everything!")
     assert sa.explore_studios(query="*")
+
+if __name__ == '__main__':
+    test_studio()

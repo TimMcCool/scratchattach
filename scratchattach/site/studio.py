@@ -4,14 +4,19 @@ from __future__ import annotations
 import warnings
 import json
 import random
-from . import user, comment, project, activity
+
+from dataclasses import dataclass, field
+from typing_extensions import Optional
+
+from . import user, comment, project, activity, session
+from scratchattach.site.typed_dicts import StudioDict
+from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions, commons
 from scratchattach.utils.commons import api_iterative, headers
-from ._base import BaseSiteComponent
-
 from scratchattach.utils.requests import requests
 
 
+@dataclass
 class Studio(BaseSiteComponent):
     """
     Represents a Scratch studio.
@@ -45,20 +50,25 @@ class Studio(BaseSiteComponent):
     :.update(): Updates the attributes
 
     """
+    id: int = 0
+    title: Optional[str] = None
+    description: Optional[str] = None
+    host_id: Optional[int] = None
+    follower_count: Optional[int] = None
+    manager_count: Optional[int] = None
+    project_count: Optional[int] = None
+    image_url: Optional[str] = None
+    open_to_all: Optional[bool] = None
+    comments_allowed: Optional[bool] = None
+    created: Optional[str] = None
+    modified: Optional[str] = None
+    _session: Optional[session.Session] = None
 
-    def __init__(self, **entries):
 
+    def __post_init__(self):
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
-        self.update_api = f"https://api.scratch.mit.edu/studios/{entries['id']}"
-
-        # Set attributes every Project object needs to have:
-        self._session = None
-        self.id = 0
-        self.title = None
-
-        # Update attributes from entries dict:
-        self.__dict__.update(entries)
+        self.update_api = f"https://api.scratch.mit.edu/studios/{self.id}"
 
         # Headers and cookies:
         if self._session is None:
@@ -73,31 +83,21 @@ class Studio(BaseSiteComponent):
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
-    def _update_from_dict(self, studio):
-        try: self.id = int(studio["id"])
-        except Exception: pass
-        try: self.title = studio["title"]
-        except Exception: pass
-        try: self.description = studio["description"]
-        except Exception: pass
-        try: self.host_id: int = studio["host"]
-        except Exception: pass
-        try: self.open_to_all: bool = studio["open_to_all"]
-        except Exception: pass
-        try: self.comments_allowed: bool = studio["comments_allowed"]
-        except Exception: pass
-        try: self.image_url = studio["image"]  # rename/alias to thumbnail_url?
-        except Exception: pass
-        try: self.created = studio["history"]["created"]
-        except Exception: pass
-        try: self.modified = studio["history"]["modified"]
-        except Exception: pass
-        try: self.follower_count: int = studio["stats"]["followers"]
-        except Exception: pass
-        try: self.manager_count: int = studio["stats"]["managers"]
-        except Exception: pass
-        try: self.project_count: int = studio["stats"]["projects"]
-        except Exception: pass
+    def _update_from_dict(self, studio: StudioDict):
+        self.id = int(studio["id"])
+        self.title = studio["title"]
+        self.description = studio["description"]
+        self.host_id = studio["host"]
+        self.open_to_all = studio["open_to_all"]
+        self.comments_allowed = studio["comments_allowed"]
+        self.image_url = studio["image"]  # rename/alias to thumbnail_url?
+        self.created = studio["history"]["created"]
+        self.modified = studio["history"]["modified"]
+
+        stats = studio.get("stats", {})
+        self.follower_count = stats.get("followers", self.follower_count)
+        self.manager_count = stats.get("managers", self.manager_count)
+        self.project_count = stats.get("projects", self.project_count)
         return True
 
     def __str__(self):
