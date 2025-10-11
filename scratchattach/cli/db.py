@@ -29,7 +29,8 @@ cursor = conn.cursor()
 # Init any tables
 def add_col(table: LiteralString, column: LiteralString, _type: LiteralString):
     try:
-        return cursor.execute("ALTER TABLE ? ADD COLUMN ? ?", (table, column, _type))
+        # strangely, using `?` here doesn't seem to work. Make sure to use LiteralStrings, not str
+        return cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {_type}")
     except sqlite3.OperationalError as e:
         if "duplicate column name" not in str(e).lower():
             raise
@@ -59,5 +60,7 @@ cursor.executescript("""
         GROUP_NAME TEXT NOT NULL
     );
 """)
+add_col("SESSIONS", "PASSWORD", "TEXT")
+
 
 conn.commit()
