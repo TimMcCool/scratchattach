@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
 
-from scratchattach.site import project, studio
+from scratchattach.site import project, studio, session
 from scratchattach.utils import commons
 from scratchattach.utils.commons import parse_object_list
 from scratchattach.utils.enums import Languages, Language, TTSVoices, TTSVoice
@@ -36,48 +35,46 @@ class FeaturedData(TypedDict):
 def get_news(*, limit=10, offset=0):
     return commons.api_iterative("https://api.scratch.mit.edu/news", limit=limit, offset=offset)
 
-
-def featured_data() -> FeaturedData:
+def get_featured_data(sess: Optional[session.Session] = None) -> FeaturedData:
     data: FeaturedDataRaw = requests.get("https://api.scratch.mit.edu/proxy/featured").json()
 
-
     return {
-        "community_newest_projects": parse_object_list(data["community_newest_projects"], project.Project),
-        "community_most_remixed_projects": parse_object_list(data["community_most_remixed_projects"], project.Project),
-        "scratch_design_studio": parse_object_list(data["scratch_design_studio"], studio.Studio),
-        "curator_top_projects": parse_object_list(data["curator_top_projects"], project.Project),
-        "community_featured_studios": parse_object_list(data["community_featured_studios"], studio.Studio),
-        "community_most_loved_projects": parse_object_list(data["community_most_loved_projects"], project.Project),
-        "community_featured_projects": parse_object_list(data["community_featured_projects"], project.Project)
+        "community_newest_projects": parse_object_list(data["community_newest_projects"], project.Project, sess),
+        "community_most_remixed_projects": parse_object_list(data["community_most_remixed_projects"], project.Project, sess),
+        "scratch_design_studio": parse_object_list(data["scratch_design_studio"], studio.Studio, sess),
+        "curator_top_projects": parse_object_list(data["curator_top_projects"], project.Project, sess),
+        "community_featured_studios": parse_object_list(data["community_featured_studios"], studio.Studio, sess),
+        "community_most_loved_projects": parse_object_list(data["community_most_loved_projects"], project.Project, sess),
+        "community_featured_projects": parse_object_list(data["community_featured_projects"], project.Project, sess)
     }
 
 
 def featured_projects():
-    return featured_data()["community_featured_projects"]
+    return get_featured_data()["community_featured_projects"]
 
 
 def featured_studios():
-    return featured_data()["community_featured_studios"]
+    return get_featured_data()["community_featured_studios"]
 
 
 def top_loved():
-    return featured_data()["community_most_loved_projects"]
+    return get_featured_data()["community_most_loved_projects"]
 
 
 def top_remixed():
-    return featured_data()["community_most_remixed_projects"]
+    return get_featured_data()["community_most_remixed_projects"]
 
 
 def newest_projects():
-    return featured_data()["community_newest_projects"]
+    return get_featured_data()["community_newest_projects"]
 
 
 def curated_projects():
-    return featured_data()["curator_top_projects"]
+    return get_featured_data()["curator_top_projects"]
 
 
 def design_studio_projects():
-    return featured_data()["scratch_design_studio"]
+    return get_featured_data()["scratch_design_studio"]
 
 
 # --- Statistics ---

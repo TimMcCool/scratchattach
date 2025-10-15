@@ -37,7 +37,7 @@ from . import typed_dicts
 from ._base import BaseSiteComponent
 from scratchattach.cloud import cloud, _base
 from scratchattach.eventhandlers import message_events, filterbot
-from scratchattach.other import project_json_capabilities
+from scratchattach.other import other_apis
 from scratchattach.utils import commons, exceptions
 from scratchattach.utils.commons import headers, empty_project_json, webscrape_count, get_class_sort_mode
 from scratchattach.utils.requests import requests
@@ -1028,6 +1028,12 @@ sess
             return return_topics
         except Exception as e:
             raise exceptions.ScrapeError(str(e))
+
+    def connect_featured(self) -> other_apis.FeaturedData:
+        """
+        Request and return connected featured projects and studios from the front page.
+        """
+        return other_apis.get_featured_data(self)
 
     # --- Connect classes inheriting from BaseEventHandler ---
 
