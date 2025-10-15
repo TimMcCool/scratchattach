@@ -313,7 +313,7 @@ class Session(BaseSiteComponent):
             "authorization": self.ocular_token
         }
 
-    def get_ocular_status(self):
+    def get_ocular_status(self) -> typed_dicts.OcularUserDict:
         # You can use sess.connect_linked_user().ocular_status() but this uses the ocular token to work out the username.
         # In the case the username does not match the session, this would mismatch, and a warning could even be issued
         self._assert_ocular_auth()
@@ -321,6 +321,16 @@ class Session(BaseSiteComponent):
         resp = requests.get("https://my-ocular.jeffalo.net/auth/me", headers=self.ocular_headers).json()
         return resp
 
+    def set_ocular_status(self, status: Optional[str] = None, color: Optional[str] = None) -> None:
+        self._assert_ocular_auth()
+        old = self.get_ocular_status()
+        payload = {"color": color or old["color"],
+                   "status": status or old["status"]}
+
+        assert requests.put(f"https://my-ocular.jeffalo.net/api/user/{old["name"]}",
+                            json=payload, headers=self.ocular_headers).json() == {
+            "ok": "user updated"
+        }, f"Error occured on setting ocular status. auth/me response: {old}"
 
     def messages(self, *, limit: int = 40, offset: int = 0, date_limit=None, filter_by=None) -> list[activity.Activity]:
         """

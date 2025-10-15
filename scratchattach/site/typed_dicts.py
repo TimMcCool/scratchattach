@@ -58,6 +58,17 @@ class SessionDict(TypedDict):
     permissions: SessionPermissionsDict
     flags: SessionFlagsDict
 
+class OcularUserMetaDict(TypedDict):
+    updated: str
+    updatedBy: str
+
+class OcularUserDict(TypedDict):
+    _id: str
+    name: str
+    status: str
+    color: str
+    meta: OcularUserMetaDict
+
 class UserHistoryDict(TypedDict):
     joined: str
 
