@@ -4,14 +4,20 @@ from __future__ import annotations
 import warnings
 import json
 import random
-from . import user, comment, project, activity
+
+from dataclasses import dataclass, field
+
+from typing_extensions import Optional
+
+from . import user, comment, project, activity, session
+from scratchattach.site.typed_dicts import StudioDict, StudioRoleDict
+from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions, commons
 from scratchattach.utils.commons import api_iterative, headers
-from ._base import BaseSiteComponent
-
 from scratchattach.utils.requests import requests
 
 
+@dataclass
 class Studio(BaseSiteComponent):
     """
     Represents a Scratch studio.
@@ -45,19 +51,25 @@ class Studio(BaseSiteComponent):
     :.update(): Updates the attributes
 
     """
+    id: int = 0
+    title: Optional[str] = None
+    description: Optional[str] = None
+    host_id: Optional[int] = None
+    follower_count: Optional[int] = None
+    manager_count: Optional[int] = None
+    project_count: Optional[int] = None
+    image_url: Optional[str] = None
+    open_to_all: Optional[bool] = None
+    comments_allowed: Optional[bool] = None
+    created: Optional[str] = None
+    modified: Optional[str] = None
+    _session: Optional[session.Session] = None
 
-    def __init__(self, **entries):
 
+    def __post_init__(self):
         # Info on how the .update method has to fetch the data:
         self.update_function = requests.get
-        self.update_api = f"https://api.scratch.mit.edu/studios/{entries['id']}"
-
-        # Set attributes every Project object needs to have:
-        self._session = None
-        self.id = 0
-
-        # Update attributes from entries dict:
-        self.__dict__.update(entries)
+        self.update_api = f"https://api.scratch.mit.edu/studios/{self.id}"
 
         # Headers and cookies:
         if self._session is None:
@@ -72,35 +84,71 @@ class Studio(BaseSiteComponent):
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
 
-    def _update_from_dict(self, studio):
-        try: self.id = int(studio["id"])
-        except Exception: pass
-        try: self.title = studio["title"]
-        except Exception: pass
-        try: self.description = studio["description"]
-        except Exception: pass
-        try: self.host_id = studio["host"]
-        except Exception: pass
-        try: self.open_to_all = studio["open_to_all"]
-        except Exception: pass
-        try: self.comments_allowed = studio["comments_allowed"]
-        except Exception: pass
-        try: self.image_url = studio["image"]
-        except Exception: pass
-        try: self.created = studio["history"]["created"]
-        except Exception: pass
-        try: self.modified = studio["history"]["modified"]
-        except Exception: pass
-        try: self.follower_count = studio["stats"]["followers"]
-        except Exception: pass
-        try: self.manager_count = studio["stats"]["managers"]
-        except Exception: pass
-        try: self.project_count = studio["stats"]["projects"]
-        except Exception: pass
+    def _update_from_dict(self, studio: StudioDict):
+        self.id = int(studio["id"])
+        self.title = studio["title"]
+        self.description = studio["description"]
+        self.host_id = studio["host"]
+        self.open_to_all = studio["open_to_all"]
+        self.comments_allowed = studio["comments_allowed"]
+        self.image_url = studio["image"]  # rename/alias to thumbnail_url?
+        self.created = studio["history"]["created"]
+        self.modified = studio["history"]["modified"]
+
+        stats = studio.get("stats", {})
+        self.follower_count = stats.get("followers", self.follower_count)
+        self.manager_count = stats.get("managers", self.manager_count)
+        self.project_count = stats.get("projects", self.project_count)
         return True
 
-    def __repr__(self):
-        return f"-S {self.id} ({self.title})"
+    def __str__(self):
+        ret = f"-S {self.id}"
+        if self.title:
+            ret += f" ({self.title})"
+        return ret
+
+    def __rich__(self):
+        from rich.panel import Panel
+        from rich.table import Table
+        from rich import box
+        from rich.markup import escape
+
+        url = f"[link={self.url}]{escape(self.title)}[/]"
+
+        ret = Table.grid(expand=True)
+        ret.add_column(ratio=1)
+        ret.add_column(ratio=3)
+
+        info = Table(box=box.SIMPLE)
+        info.add_column(url, overflow="fold")
+        info.add_column(f"#{self.id}", overflow="fold")
+        info.add_row("Host ID", str(self.host_id))
+        info.add_row("Followers", str(self.follower_count))
+        info.add_row("Projects", str(self.project_count))
+        info.add_row("Managers", str(self.manager_count))
+        info.add_row("Comments allowed", str(self.comments_allowed))
+        info.add_row("Open", str(self.open_to_all))
+        info.add_row("Created", self.created)
+        info.add_row("Modified", self.modified)
+
+        desc = Table(box=box.SIMPLE)
+        desc.add_row("Description", escape(self.description))
+
+        ret.add_row(
+            Panel(info, title=url),
+            Panel(desc, title="Description"),
+        )
+
+        return ret
+
+    @property
+    def url(self):
+        return f"https://scratch.mit.edu/studios/{self.id}"
+
+    @property
+    def thumbnail(self) -> bytes:
+        with requests.no_error_handling():
+            return requests.get(self.image_url).content
 
     def follow(self):
         """
@@ -295,7 +343,7 @@ class Studio(BaseSiteComponent):
             content, parent_id=parent_id, commentee_id=commentee_id
         )
 
-    def projects(self, limit=40, offset=0):
+    def projects(self, limit=40, offset=0) -> list[project.Project]:
         """
         Gets the studio projects.
 
@@ -568,7 +616,7 @@ class Studio(BaseSiteComponent):
             timeout=10,
         ).json()
     
-    def your_role(self):
+    def your_role(self) -> StudioRoleDict:
         """
         Returns a dict with information about your role in the studio (whether you're following, curating, managing it or are invited)
         """
@@ -579,6 +627,41 @@ class Studio(BaseSiteComponent):
             cookies=self._cookies,
             timeout=10,
         ).json()
+
+    def get_exact_project_count(self) -> int:
+        """
+        Get the exact project count of a studio using a binary-search-like strategy
+        """
+        if self.project_count is not None and self.project_count < 100:
+            return self.project_count
+
+        # Get maximum possible project count before binary search
+        maximum = 100
+        minimum = 0
+
+        while True:
+            if not self.projects(offset=maximum):
+                break
+            minimum = maximum
+            maximum *= 2
+
+        # Binary search
+        while True:
+            middle = (minimum + maximum) // 2
+            projects = self.projects(limit=40, offset=middle)
+
+            if not projects:
+                # too high - no projects found
+                maximum = middle
+            elif len(projects) < 40:
+                # we are 40 within true value, and can infer the rest
+                break
+            else:
+                # too low - full project list
+                minimum = middle
+
+        return middle + len(projects)
+
 
 
 def get_studio(studio_id) -> Studio:

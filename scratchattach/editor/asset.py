@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from hashlib import md5
+from hashlib import md5, sha256
 import requests
 
 from . import base, commons, sprite, build_defaulting
@@ -34,6 +34,10 @@ class AssetFile:
 
         return self._data
 
+    @data.setter
+    def data(self, data: bytes):
+        self._data = data
+
     @property
     def md5(self) -> str:
         """
@@ -44,6 +48,9 @@ class AssetFile:
 
         return self._md5
 
+    @property
+    def sha256(self) -> str:
+        return sha256(self.data).hexdigest()
 
 class Asset(base.SpriteSubComponent):
     def __init__(self,
@@ -197,8 +204,8 @@ class Costume(Asset):
 
         bitmap_resolution = data.get("bitmapResolution")
 
-        rotation_center_x = data["rotationCenterX"]
-        rotation_center_y = data["rotationCenterY"]
+        rotation_center_x = data.get("rotationCenterX", 0)
+        rotation_center_y = data.get("rotationCenterY", 0)
         return Costume(_asset_load.name, _asset_load.file_name,
 
                        bitmap_resolution, rotation_center_x, rotation_center_y)

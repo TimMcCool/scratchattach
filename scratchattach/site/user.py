@@ -100,7 +100,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     _session: Optional[session.Session] = field(kw_only=True, default=None)
 
     def __str__(self):
-        return str(self.username)
+        return f"-U {self.username}"
 
     @property
     def status(self) -> str:
@@ -109,6 +109,11 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     @property
     def bio(self) -> str:
         return self.about_me
+
+    @property
+    def icon(self) -> bytes:
+        with requests.no_error_handling():
+            return requests.get(self.icon_url).content
 
     @property
     def name(self) -> str:
@@ -153,6 +158,62 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                 "You need to be authenticated as the profile owner to do this.")
 
     @property
+    def url(self):
+        return f"https://scratch.mit.edu/users/{self.username}"
+
+    def __rich__(self):
+        from rich.panel import Panel
+        from rich.table import Table
+        from rich import box
+        from rich.markup import escape
+
+        featured_data = self.featured_data() or {}
+        ocular_data = self.ocular_status()
+        ocular = 'No ocular status'
+
+        if status := ocular_data.get("status"):
+            color_str = ''
+            color_data = ocular_data.get("color")
+            if color_data is not None:
+                color_str = f"[{color_data}] ⬤ [/]"
+
+            ocular = f"[i]{escape(status)}[/]{color_str}"
+
+        _classroom = self.classroom
+        url = f"[link={self.url}]{escape(self.username)}[/]"
+
+        info = Table(box=box.SIMPLE)
+        info.add_column(url, overflow="fold")
+        info.add_column(f"#{self.id}", overflow="fold")
+
+        info.add_row("Joined", escape(self.join_date))
+        info.add_row("Country", escape(self.country))
+        info.add_row("Messages", str(self.message_count()))
+        info.add_row("Class", str(_classroom.title if _classroom is not None else 'None'))
+
+        desc = Table("Profile", ocular, box=box.SIMPLE)
+        desc.add_row("About me", escape(self.about_me))
+        desc.add_row("Wiwo", escape(self.wiwo))
+        desc.add_row(escape(featured_data.get("label", "Featured Project")),
+                     escape(str(self.connect_featured_project())))
+
+        ret = Table.grid(expand=True)
+
+        ret.add_column(ratio=1)
+        ret.add_column(ratio=3)
+        ret.add_row(Panel(info, title=url), Panel(desc, title="Description"))
+
+        return ret
+
+    def connect_featured_project(self) -> Optional[project.Project]:
+        data = self.featured_data() or {}
+        if pid := data.get("id"):
+            return self._session.connect_project(int(pid))
+        if projs := self.projects(limit=1):
+            return projs[0]
+        return None
+
+    @property
     def classroom(self) -> classroom.Classroom | None:
         """
         Get a user's associated classroom, and return it as a `scratchattach.classroom.Classroom` object.
@@ -164,6 +225,10 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             soup = BeautifulSoup(resp.text, "html.parser")
 
             details = soup.find("p", {"class": "profile-details"})
+            if details is None:
+                # No details, e.g. if the user is banned
+                return None
+
             assert isinstance(details, Tag)
 
             class_name, class_id, is_closed = None, None, False

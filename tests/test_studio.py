@@ -11,6 +11,9 @@ def test_studio():
         return
     sess = session()
 
+    studio = sess.connect_studio(34253687)
+    assert studio.get_exact_project_count() == 1251
+
     studio = sess.connect_studio(50809872)
 
     assert studio.title == "Sample studio"
@@ -39,6 +42,10 @@ def test_studio():
     assert projs[0].title == "Sample remix"
     assert projs[1].title == "Sample project #1"
 
+    role = studio.your_role()
+    assert role["manager"]
+    assert role["following"]
+
     curator_names = [curator.name for curator in studio.managers()]
     assert "ScratchAttachV2" in curator_names
 
@@ -56,3 +63,7 @@ def test_studio():
     # If we run out of 'add everything!' studios, clearly something has gone wrong.
     assert sa.search_studios(query="add everything!")
     assert sa.explore_studios(query="*")
+
+
+if __name__ == '__main__':
+    test_studio()

@@ -145,6 +145,40 @@ class PartialProject(BaseSiteComponent):
             return False
         return True
 
+    def __rich__(self):
+        from rich.panel import Panel
+        from rich.table import Table
+        from rich import box
+        from rich.markup import escape
+
+        url = f"[link={self.url}]{self.title}[/]"
+
+        ret = Table.grid(expand=True)
+        ret.add_column(ratio=1)
+        ret.add_column(ratio=3)
+
+        info = Table(box=box.SIMPLE)
+        info.add_column(url, overflow="fold")
+        info.add_column(f"#{self.id}", overflow="fold")
+
+        info.add_row("By", self.author_name)
+        info.add_row("Created", escape(self.created))
+        info.add_row("Shared", escape(self.share_date))
+        info.add_row("Modified", escape(self.last_modified))
+        info.add_row("Comments allowed", escape(str(self.comments_allowed)))
+        info.add_row("Loves", str(self.loves))
+        info.add_row("Faves", str(self.favorites))
+        info.add_row("Remixes", str(self.remix_count))
+        info.add_row("Views", str(self.views))
+
+        desc = Table(box=box.SIMPLE)
+        desc.add_row("Instructions", escape(self.instructions))
+        desc.add_row("Notes & Credits", escape(self.notes))
+
+        ret.add_row(Panel(info, title=url), Panel(desc, title="Description"))
+
+        return ret
+
     @property
     def embed_url(self):
         """
@@ -272,8 +306,13 @@ class Project(PartialProject):
     :.update(): Updates the attributes
     """
 
-    def __repr__(self):
+    def __str__(self):
         return f"-P {self.id} ({self.title})"
+
+    @property
+    def thumbnail(self) -> bytes:
+        with requests.no_error_handling():
+            return requests.get(self.thumbnail_url).content
 
     def _assert_permission(self):
         self._assert_auth()

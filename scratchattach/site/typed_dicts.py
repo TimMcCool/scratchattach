@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing_extensions import OrderedDict
+
 from scratchattach.cloud import _base
 from typing import TypedDict, Union, Optional, Required, NotRequired
 
@@ -98,3 +100,39 @@ class ClassroomDict(TypedDict):
     images: NotRequired[dict[str, str]]
     educator: UserDict
     is_closed: NotRequired[bool]
+
+class StudioHistoryDict(TypedDict):
+    created: str
+    modified: str
+
+class StudioStatsDict(TypedDict):
+    followers: int
+    managers: int
+    projects: int
+
+class StudioDict(TypedDict):
+    id: int
+    title: str
+    description: str
+    host: int
+    open_to_all: bool
+    comments_allowed: bool
+    image: str
+    history: StudioHistoryDict
+    stats: NotRequired[StudioStatsDict]
+
+class StudioRoleDict(TypedDict):
+    manager: bool
+    curator: bool
+    invited: bool
+    following: bool
+
+class PlaceholderProjectDataMetadataDict(TypedDict):
+    title: str
+    description: str
+
+# https://github.com/GarboMuffin/placeholder/blob/e1e98953342a40abbd626a111f621711f74e783b/src/routes/projects/%5Bproject%5D/%2Bpage.server.ts#L19
+class PlaceholderProjectDataDict(TypedDict):
+    metadata: PlaceholderProjectDataMetadataDict
+    md5extsToSha256: OrderedDict[str, str]
+    adminOwnershipToken: Optional[str]

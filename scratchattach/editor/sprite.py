@@ -283,18 +283,18 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
         _tempo, _video_state, _video_transparency, _text_to_speech_language = (None,) * 4
         _visible, _x, _y, _size, _direction, _draggable, _rotation_style = (None,) * 7
         if _is_stage:
-            _tempo = data["tempo"]
-            _video_state = data["videoState"]
-            _video_transparency = data["videoTransparency"]
-            _text_to_speech_language = data["textToSpeechLanguage"]
+            _tempo = data.get("tempo", 0)
+            _video_state = data.get("videoState", "off")
+            _video_transparency = data.get("videoTransparency", 0)
+            _text_to_speech_language = data.get("textToSpeechLanguage", "en")
         else:
             _visible = data["visible"]
-            _x = data["x"]
-            _y = data["y"]
-            _size = data["size"]
-            _direction = data["direction"]
-            _draggable = data["draggable"]
-            _rotation_style = data["rotationStyle"]
+            _x = data.get("x", 0)
+            _y = data.get("y", 0)
+            _size = data.get("size", 100)
+            _direction = data.get("direction", 90)
+            _draggable = data.get("draggable", False)
+            _rotation_style = data.get("rotationStyle", "all-around")
 
         return Sprite(_is_stage, _name, _current_costume, _layer_order, _volume, _broadcasts, _variables, _lists,
                       _costumes,
