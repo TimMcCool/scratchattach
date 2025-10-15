@@ -26,12 +26,11 @@ def test_activity():
     curated_projects = sa.curated_projects()
     design_studio_projects = sa.design_studio_projects()
 
-    def test_featured_data(name, data: list[dict[str, str | int]]):
+    def test_featured_data(_name, data: list[sa.Project | sa.Studio]):
         if not data:
-            warnings.warn(f"Did not find {name}! {data}")
-
-    for project in featured_projects:
-        print(project)
+            warnings.warn(f"Did not find {_name}! {data}")
+        else:
+            print(data)
 
     test_featured_data("featured featured_projects", featured_projects)
     test_featured_data("featured featured_studios", featured_studios)

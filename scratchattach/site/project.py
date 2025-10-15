@@ -272,8 +272,8 @@ class Project(PartialProject):
     :.update(): Updates the attributes
     """
 
-    def __str__(self):
-        return str(self.title)
+    def __repr__(self):
+        return f"-P {self.id} ({self.title})"
 
     def _assert_permission(self):
         self._assert_auth()

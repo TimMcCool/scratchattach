@@ -99,6 +99,9 @@ class Studio(BaseSiteComponent):
         except Exception: pass
         return True
 
+    def __repr__(self):
+        return f"-S {self.id} ({self.title})"
+
     def follow(self):
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_studio`
