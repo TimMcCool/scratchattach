@@ -11,3 +11,5 @@ scratchattach.code-workspace
 tests/manual_tests/**
 tests/util/local_auth.toml
 .venv
+identifier.sqlite
+obfuscated.sb3
