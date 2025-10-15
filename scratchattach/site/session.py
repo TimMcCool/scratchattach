@@ -95,6 +95,7 @@ class Session(BaseSiteComponent):
     has_outstanding_email_confirmation: bool = field(repr=False, default=False)
     is_teacher: bool = field(repr=False, default=False)
     is_teacher_invitee: bool = field(repr=False, default=False)
+    ocular_token: Optional[str] = field(repr=False, default=None)  # note that this is a header, not a cookie
     _session: Optional[Session] = field(kw_only=True, default=None)
 
     def __str__(self) -> str:
@@ -201,6 +202,13 @@ class Session(BaseSiteComponent):
         self.language = data.get("_language", "en")
         # self._cookies["scratchlanguage"] = self.language
 
+    def _assert_ocular_auth(self):
+        if not self.ocular_token:
+            raise ValueError(f"No ocular token supplied for {self}! You can add one by using Session.set_ocular_token(YOUR_TOKEN).")
+
+    def set_ocular_token(self, token: str):
+        self.ocular_token = token
+
     def connect_linked_user(self) -> user.User:
         """
         Gets the user associated with the login / session.
@@ -294,6 +302,25 @@ class Session(BaseSiteComponent):
         """
         requests.post("https://scratch.mit.edu/accounts/logout/",
                       headers=self._headers, cookies=self._cookies)
+
+    @property
+    def ocular_headers(self) -> dict[str, str]:
+        self._assert_ocular_auth()
+        return {
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
+            "referer": "https://ocular.jeffalo.net/",
+            "authorization": self.ocular_token
+        }
+
+    def get_ocular_status(self):
+        # You can use sess.connect_linked_user().ocular_status() but this uses the ocular token to work out the username.
+        # In the case the username does not match the session, this would mismatch, and a warning could even be issued
+        self._assert_ocular_auth()
+
+        resp = requests.get("https://my-ocular.jeffalo.net/auth/me", headers=self.ocular_headers).json()
+        return resp
+
 
     def messages(self, *, limit: int = 40, offset: int = 0, date_limit=None, filter_by=None) -> list[activity.Activity]:
         """
