@@ -30,6 +30,9 @@ def test_activity():
         if not data:
             warnings.warn(f"Did not find {name}! {data}")
 
+    for project in featured_projects:
+        print(project)
+
     test_featured_data("featured featured_projects", featured_projects)
     test_featured_data("featured featured_studios", featured_studios)
     test_featured_data("featured top_loved", top_loved)

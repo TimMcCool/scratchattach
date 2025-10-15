@@ -178,7 +178,7 @@ def webscrape_count(raw, text_before, text_after, cls = int):
 if TYPE_CHECKING:
     C = TypeVar("C", bound=_base.BaseSiteComponent)
 
-def parse_object_list(raw, __class: type[C], session=None, primary_key="id") -> list[C]:
+def parse_object_list(raw, /, __class: type[C], session=None, primary_key="id") -> list[C]:
     results = []
     for raw_dict in raw:
         try:
