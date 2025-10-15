@@ -306,8 +306,11 @@ class Project(PartialProject):
     :.update(): Updates the attributes
     """
 
-    def __str__(self):
+    def __repr__(self):
         return f"-P {self.id} ({self.title})"
+
+    def __str__(self):
+        return repr(self)
 
     @property
     def thumbnail(self) -> bytes:

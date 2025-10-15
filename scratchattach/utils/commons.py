@@ -260,4 +260,3 @@ def b62_decode(s: str):
         ret = ret * 62 + chars.index(char)
 
     return ret
-

@@ -452,39 +452,45 @@ class Session(BaseSiteComponent):
         )
         return commons.parse_object_list(data, project.Project, self)
 
-    """
-    These methods are disabled because it is unclear if there is any case in which the response is not empty. 
     def shared_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
-        '''
+        """
         Returns the "Projects by Scratchers I'm following" section (frontpage).
-        This section is only visible to old accounts (according to the Scratch wiki).
+        This section is only visible to old accounts (until ~2018).
         For newer users, this method will always return an empty list.
 
         Returns:
-            list<scratchattach.project.Project>: List that contains all "Projects loved by Scratchers I'm following" 
+            list<scratchattach.project.Project>: List that contains all "Projects by Scratchers I'm following"
             entries as Project objects
-        '''
+        """
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/following/users/projects",
-            limit = limit, offset = offset, headers = self._headers, cookies = self._cookies
+            limit = limit, offset = offset, _headers = self._headers, cookies = self._cookies
         )
-        return commons.parse_object_list(data, project.Project, self)
+        ret = commons.parse_object_list(data, project.Project, self)
+        if not ret:
+            warnings.warn(f"`shared_by_followed_users` got empty list `[]`. Note that this method is not supported for "
+                          f"accounts made after 2018.")
+        return ret
 
     def in_followed_studios(self, *, limit=40, offset=0) -> list['project.Project']:
-        '''
+        """
         Returns the "Projects in studios I'm following" section (frontpage).
-        This section is only visible to old accounts (according to the Scratch wiki).
+        This section is only visible to old accounts (until ~2018)
         For newer users, this method will always return an empty list.
 
         Returns:
-            list<scratchattach.project.Project>: List that contains all "Projects loved by Scratchers I'm following" 
+            list<scratchattach.project.Project>: List that contains all "Projects in studios I'm following" section"
             entries as Project objects
-        '''
+        """
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/following/studios/projects",
-            limit = limit, offset = offset, headers = self._headers, cookies = self._cookies
+            limit = limit, offset = offset, _headers=self._headers, cookies = self._cookies
         )
-        return commons.parse_object_list(data, project.Project, self)"""
+        ret = commons.parse_object_list(data, project.Project, self)
+        if not ret:
+            warnings.warn(f"`in_followed_studios` got empty list `[]`. Note that this method is not supported for "
+                          f"accounts made after 2018.")
+        return ret
 
     # -- Project JSON editing capabilities ---
     # These are set to staticmethods right now, but they probably should not be
