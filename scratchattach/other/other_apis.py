@@ -435,6 +435,17 @@ def get_csrf_token():
         "https://scratch.mit.edu/csrf_token/"
     ).headers["set-cookie"].split(";")[3][len(" Path=/, scratchcsrftoken="):]
 
+# --- Accounts --- #
+
+def check_email(email: str) -> bool:
+    """
+    Returns whether an email is considered valid for registering a scratch account or not
+    """
+    data = requests.get(f"https://scratch.mit.edu/accounts/check_email/", params={
+        "email": email,
+    }).json()[0]
+    return data["msg"] == "valid email"  # either "valid email" or "Enter a valid email address." or "This field is required."
+
 
 # --- Various other api.scratch.mit.edu API endpoints ---
 
