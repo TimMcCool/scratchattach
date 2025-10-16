@@ -58,7 +58,7 @@ class Activity(BaseSiteComponent):
     topic_title: Optional[str] = None
     topic_id: Optional[int] = None
     target_name: Optional[str] = None
-    target_id: Optional[int] = None
+    target_id: Optional[int | str] = None
 
     parent_title: Optional[str] = None
     parent_id: Optional[int] = None
@@ -344,7 +344,8 @@ class Activity(BaseSiteComponent):
 
         self.target_name = data.find('div').find('span').find_next().text
         self.target_link = data.find('div').find('span').find_next()["href"]
-        self.target_id = int(data.find('div').find('span').find_next()["href"].split("/")[-2])
+        # note that target_id can also be a username, so it isn't exclusively an int
+        self.target_id = data.find('div').find('span').find_next()["href"].split("/")[-2]
 
         _type = data.find('div').find_all('span')[0].next_sibling.strip()
         if _type == "loved":
