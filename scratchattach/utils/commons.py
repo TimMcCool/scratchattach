@@ -183,6 +183,7 @@ def parse_object_list(raw, /, __class: type[C], session=None, primary_key="id") 
     for raw_dict in raw:
         try:
             _obj = __class(**{primary_key: raw_dict[primary_key], "_session": session})
+            # noinspection PyProtectedMember
             _obj._update_from_dict(raw_dict)
             results.append(_obj)
         except Exception as e:

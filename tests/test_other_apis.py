@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 import warnings
 
 
-def test_activity():
+def test_other_apis():
     sys.path.insert(0, ".")
     import scratchattach as sa
     from scratchattach.utils import exceptions
@@ -63,4 +63,4 @@ def test_activity():
 
 
 if __name__ == "__main__":
-    test_activity()
+    test_other_apis()

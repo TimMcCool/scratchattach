@@ -19,7 +19,7 @@ from .utils.exceptions import (
     ProjectAuthenticationWarning,
     UserAuthenticationWarning)
 
-from .site.activity import Activity, ActvityTypes
+from .site.activity import Activity, ActivityTypes
 from .site.backpack_asset import BackpackAsset
 from .site.comment import Comment, CommentSource
 from .site.cloud_activity import CloudActivity

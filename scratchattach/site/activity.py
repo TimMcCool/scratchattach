@@ -6,6 +6,7 @@ import warnings
 
 from dataclasses import dataclass
 from typing import Optional, Any
+from enum import Enum
 
 from bs4 import Tag
 
@@ -13,8 +14,7 @@ from . import user, project, studio, session, forum
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions
 
-class ActvityTypes:
-    # not an enum to preserve backwards compatability. Can be changed though.
+class ActivityTypes(Enum):
     loveproject = "loveproject"
     favoriteproject = "favoriteproject"
     becomecurator = "becomecurator"
@@ -74,7 +74,7 @@ class Activity(BaseSiteComponent):
 
     datetime_created: Optional[str] = None
     time: Any = None
-    type: Optional[str] = None
+    type: Optional[ActivityTypes] = None
 
     def __repr__(self):
         return f"Activity({repr(self.raw)})"
@@ -89,26 +89,26 @@ class Activity(BaseSiteComponent):
         :return: A list of parts of the message. Join the parts to get a readable version, which is done with str(activity)
         """
         match self.type:
-            case "loveproject":
+            case ActivityTypes.loveproject:
                 return [f"{self.actor_username}", "loved", f"-P {self.title!r} ({self.project_id})"]
-            case "favoriteproject":
+            case ActivityTypes.favoriteproject:
                 return [f"{self.actor_username}", "favorited", f"-P {self.project_title!r} ({self.project_id})"]
-            case "becomecurator":
+            case ActivityTypes.becomecurator:
                 return [f"{self.actor_username}", "now curating", f"-S {self.title!r} ({self.gallery_id})"]
-            case "followuser":
+            case ActivityTypes.followuser:
                 return [f"{self.actor_username}", "followed", f"-U {self.followed_username}"]
-            case "followstudio":
+            case ActivityTypes.followstudio:
                 return [f"{self.actor_username}", "followed", f"-S {self.title!r} ({self.gallery_id})"]
-            case "shareproject":
+            case ActivityTypes.shareproject:
                 return [f"{self.actor_username}", "reshared" if self.is_reshare else "shared",
                         f"-P {self.title!r} ({self.project_id})"]
-            case "remixproject":
+            case ActivityTypes.remixproject:
                 return [f"{self.actor_username}", "remixed",
                         f"-P {self.parent_title!r} ({self.parent_id}) as -P {self.title!r} ({self.project_id})"]
-            case "becomeownerstudio":
+            case ActivityTypes.becomeownerstudio:
                 return [f"{self.actor_username}", "became owner of", f"-S {self.gallery_title!r} ({self.gallery_id})"]
 
-            case "addcomment":
+            case ActivityTypes.addcomment:
                 ret = [self.actor_username, "commented on"]
 
                 match self.comment_type:
@@ -132,42 +132,42 @@ class Activity(BaseSiteComponent):
 
                 return ret
 
-            case "curatorinvite":
+            case ActivityTypes.curatorinvite:
                 return [f"{self.actor_username}", "invited you to curate", f"-S {self.title!r} ({self.gallery_id})"]
 
-            case "userjoin":
+            case ActivityTypes.userjoin:
                 # This is also the first message you get - 'Welcome to Scratch'
                 return [f"{self.actor_username}", "joined Scratch"]
 
-            case "studioactivity":
+            case ActivityTypes.studioactivity:
                 # the actor username should be systemuser
                 return [f"{self.actor_username}", 'Studio activity', '', f"-S {self.title!r} ({self.gallery_id})"]
 
-            case "forumpost":
+            case ActivityTypes.forumpost:
                 return [f"{self.actor_username}", "posted in", f"-F {self.topic_title} ({self.topic_id})"]
 
-            case "updatestudio":
+            case ActivityTypes.updatestudio:
                 return [f"{self.actor_username}", "updated", f"-S {self.gallery_title} ({self.gallery_id})"]
 
-            case "createstudio":
+            case ActivityTypes.createstudio:
                 return [f"{self.actor_username}", "created", f"-S {self.gallery_title} ({self.gallery_id})"]
 
-            case "promotetomanager":
+            case ActivityTypes.promotetomanager:
                 return [f"{self.actor_username}", "promoted", f"-U {self.recipient_username}", "in",
                         f"-S {self.gallery_title} ({self.gallery_id})"]
 
-            case "updateprofile":
+            case ActivityTypes.updateprofile:
                 return [f"{self.actor_username}", "updated their profile.", f"Changed fields: {self.changed_fields}"]
 
-            case "removeprojectfromstudio":
+            case ActivityTypes.removeprojectfromstudio:
                 return [f"{self.actor_username}", "removed", f"-P {self.project_title} ({self.project_id})", "from",
                         f"-S {self.gallery_title} ({self.gallery_id})"]
 
-            case "addprojecttostudio":
+            case ActivityTypes.addprojecttostudio:
                 return [f"{self.actor_username}", "added", f"-P {self.project_title} ({self.project_id})", "to",
                         f"-S {self.gallery_title} ({self.gallery_id})"]
 
-            case "performaction":
+            case ActivityTypes.performaction:
                 return [f"{self.actor_username}", "performed an action"]
 
             case _:
@@ -182,7 +182,45 @@ class Activity(BaseSiteComponent):
 
     def _update_from_dict(self, data):
         self.raw = data
-        self.__dict__.update(data)
+
+        self._session = data.get("_session", self._session)
+        self.raw = data.get("raw", self.raw)
+
+        self.id = data.get("id", self.id)
+        self.actor_username = data.get("actor_username", self.actor_username)
+
+        self.project_id = data.get("project_id", self.project_id)
+        self.gallery_id = data.get("gallery_id", self.gallery_id)
+        self.username = data.get("username", self.username)
+        self.followed_username = data.get("followed_username", self.followed_username)
+        self.recipient_username = data.get("recipient_username", self.recipient_username)
+        self.title = data.get("title", self.title)
+        self.project_title = data.get("project_title", self.project_title)
+        self.gallery_title = data.get("gallery_title", self.gallery_title)
+        self.topic_title = data.get("topic_title", self.topic_title)
+        self.topic_id = data.get("topic_id", self.topic_id)
+        self.target_name = data.get("target_name", self.target_name)
+        self.target_id = data.get("target_id", self.target_id)
+
+        self.parent_title = data.get("parent_title", self.parent_title)
+        self.parent_id = data.get("parent_id", self.parent_id)
+
+        self.comment_type = data.get("comment_type", self.comment_type)
+        self.comment_obj_id = data.get("comment_obj_id", self.comment_obj_id)
+        self.comment_obj_title = data.get("comment_obj_title", self.comment_obj_title)
+        self.comment_id = data.get("comment_id", self.comment_id)
+        self.comment_fragment = data.get("comment_fragment", self.comment_fragment)
+
+        self.changed_fields = data.get("changed_fields", self.changed_fields)
+        self.is_reshare = data.get("is_reshare", self.is_reshare)
+
+        self.datetime_created = data.get("datetime_created", self.datetime_created)
+        self.time = data.get("time", self.time)
+
+        _type = data.get("type", self.type)
+        if _type:
+            self.type = ActivityTypes[_type]
+
         return True
 
     def _update_from_json(self, data: dict):
@@ -216,37 +254,37 @@ class Activity(BaseSiteComponent):
         self.raw = data
         self.datetime_created = _time
         if activity_type == 0:
-            self.type = "followuser"
+            self.type = ActivityTypes.followuser
             self.followed_username = data["followed_username"]
 
         elif activity_type == 1:
-            self.type = "followstudio"
+            self.type = ActivityTypes.followstudio
             self.gallery_id = data["gallery"]
 
         elif activity_type == 2:
-            self.type = "loveproject"
+            self.type = ActivityTypes.loveproject
             self.project_id = data["project"]
             self.recipient_username = recipient_username
 
         elif activity_type == 3:
-            self.type = "favoriteproject"
+            self.type = ActivityTypes.favoriteproject
             self.project_id = data["project"]
             self.recipient_username = recipient_username
 
         elif activity_type == 7:
-            self.type = "addprojecttostudio"
+            self.type = ActivityTypes.addprojecttostudio
             self.project_id = data["project"]
             self.gallery_id = data["gallery"]
             self.recipient_username = recipient_username
 
         elif activity_type in (8, 9, 10):
-            self.type = "shareproject"
+            self.type = ActivityTypes.shareproject
             self.is_reshare = data["is_reshare"]
             self.project_id = data["project"]
             self.recipient_username = recipient_username
 
         elif activity_type == 11:
-            self.type = "remixproject"
+            self.type = ActivityTypes.remixproject
             self.parent_id = data["parent"]
             warnings.warn(f"This may be incorrectly implemented.\n"
                           f"Raw data: {data}\n"
@@ -256,30 +294,30 @@ class Activity(BaseSiteComponent):
         # type 12 does not exist in the HTML. That's why it was removed, not merged with type 13.
 
         elif activity_type == 13:
-            self.type = "createstudio"
+            self.type = ActivityTypes.createstudio
             self.gallery_id = data["gallery"]
 
         elif activity_type == 15:
-            self.type = "updatestudio"
+            self.type = ActivityTypes.updatestudio
             self.gallery_id = data["gallery"]
 
         elif activity_type in (16, 17, 18, 19):
-            self.type = "removeprojectfromstudio"
+            self.type = ActivityTypes.removeprojectfromstudio
             self.gallery_id = data["gallery"]
             self.project_id = data["project"]
 
         elif activity_type in (20, 21, 22):
-            self.type = "promotetomanager"
+            self.type = ActivityTypes.promotetomanager
             self.recipient_username = recipient_username
             self.gallery_id = data["gallery"]
 
         elif activity_type in (23, 24, 25):
-            self.type = "updateprofile"
+            self.type = ActivityTypes.updateprofile
             self.changed_fields = data.get("changed_fields", {})
 
         elif activity_type in (26, 27):
             # Comment in either project, user, or studio
-            self.type = "addcomment"
+            self.type = ActivityTypes.addcomment
             self.comment_fragment = data["comment_fragment"]
             self.comment_type = data["comment_type"]
             self.comment_obj_id = data["comment_obj_id"]
@@ -288,7 +326,7 @@ class Activity(BaseSiteComponent):
 
         else:
             # This is coded in the scratch HTML, haven't found an example of it though
-            self.type = "performaction"
+            self.type = ActivityTypes.performaction
 
 
     def _update_from_html(self, data: Tag):
@@ -306,26 +344,26 @@ class Activity(BaseSiteComponent):
 
         self.target_name = data.find('div').find('span').find_next().text
         self.target_link = data.find('div').find('span').find_next()["href"]
-        self.target_id = data.find('div').find('span').find_next()["href"].split("/")[-2]
+        self.target_id = int(data.find('div').find('span').find_next()["href"].split("/")[-2])
 
-        self.type = data.find('div').find_all('span')[0].next_sibling.strip()
-        if self.type == "loved":
-            self.type = "loveproject"
+        _type = data.find('div').find_all('span')[0].next_sibling.strip()
+        if _type == "loved":
+            self.type = ActivityTypes.loveproject
 
-        elif self.type == "favorited":
-            self.type = "favoriteproject"
+        elif _type == "favorited":
+            self.type = ActivityTypes.favoriteproject
 
-        elif "curator" in self.type:
-            self.type = "becomecurator"
+        elif "curator" in _type:
+            self.type = ActivityTypes.becomecurator
 
-        elif "shared" in self.type:
-            self.type = "shareproject"
+        elif "shared" in _type:
+            self.type = ActivityTypes.shareproject
 
-        elif "is now following" in self.type:
+        elif "is now following" in _type:
             if "users" in self.target_link:
-                self.type = "followuser"
+                self.type = ActivityTypes.followuser
             else:
-                self.type = "followstudio"
+                self.type = ActivityTypes.followstudio
 
         return True
 
@@ -340,14 +378,15 @@ class Activity(BaseSiteComponent):
         Returns the activity's target (depending on the activity, this is either a User, Project, Studio or Comment object).
         May also return None if the activity type is unknown.
         """
+        _type = self.type.value
 
-        if "project" in self.type:  # target is a project
+        if "project" in _type:  # target is a project
             if self.target_id:
                 return self._make_linked_object("id", self.target_id, project.Project, exceptions.ProjectNotFound)
             if self.project_id:
                 return self._make_linked_object("id", self.project_id, project.Project, exceptions.ProjectNotFound)
 
-        if self.type == "becomecurator" or self.type == "followstudio":  # target is a studio
+        if _type == "becomecurator" or _type == "followstudio":  # target is a studio
             if self.target_id:
                 return self._make_linked_object("id", self.target_id, studio.Studio, exceptions.StudioNotFound)
             if self.gallery_id:
@@ -356,7 +395,7 @@ class Activity(BaseSiteComponent):
             if self.username:
                 return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
 
-        if self.type == "followuser" or "curator" in self.type:  # target is a user
+        if _type == "followuser" or "curator" in _type:  # target is a user
             if self.target_name:
                 return self._make_linked_object("username", self.target_name, user.User, exceptions.UserNotFound)
             if self.followed_username:
@@ -365,7 +404,7 @@ class Activity(BaseSiteComponent):
         if self.recipient_username:  # the recipient_username field always indicates the target is a user
             return self._make_linked_object("username", self.recipient_username, user.User, exceptions.UserNotFound)
 
-        if self.type == "addcomment":  # target is a comment
+        if _type == "addcomment":  # target is a comment
             if self.comment_type == 0:
                 # we need author name, but it has not been saved in this object
                 _proj = self._session.connect_project(self.comment_obj_id)
@@ -380,7 +419,7 @@ class Activity(BaseSiteComponent):
 
             return _c
 
-        if self.type == "forumpost":
+        if _type == "forumpost":
             return forum.ForumTopic(id=603418, _session=self._session, title=self.title)
 
         return None
