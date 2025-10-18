@@ -40,6 +40,7 @@ class CloudEvents(BaseEventHandler):
                     # print("Checking for more events")
                     for data in self.source_stream.read():
                         # print(f"Got event {data}")
+                        subsequent_reconnects = 0
                         try:
                             _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session, cloud=self.cloud)
                             if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
@@ -54,10 +55,11 @@ class CloudEvents(BaseEventHandler):
                             print(f"Cloud events _updated ignored: {e} {traceback.format_exc()}")
                             pass
             except Exception:
-                print("CloudEvents: Disconnected. Reconnecting ...", time.time())
+                self.subsequent_reconnects += 1
                 time.sleep(0.1) # cooldown
 
-            print("CloudEvents: Reconnected.", time.time())
+            if subsequent_reconnects >= 5:
+                print(f"Warning: {subsequent_reconnects} subsequent cloud disconnects. Cloud may be down, causing CloudEvents to not call events.")
             self.call_event("on_reconnect", [])
 
 class ManualCloudLogEvents:
@@ -71,7 +73,7 @@ class ManualCloudLogEvents:
         self.source_cloud = cloud
         self._session = cloud._session
         self.last_timestamp = 0
-        self.failed_log_fetches = 0
+        self.subsequent_failed_log_fetches = 0
 
     def update(self) -> Iterator[tuple[str, list[cloud_activity.CloudActivity]]]:
         """
@@ -79,15 +81,15 @@ class ManualCloudLogEvents:
         """
         try:
             data = self.source_cloud.logs(limit=25)
-            self.failed_log_fetches = 0
+            self.subsequent_failed_log_fetches = 0
             for _a in data[::-1]:
                 if _a.timestamp <= self.last_timestamp:
                     continue
                 self.last_timestamp = _a.timestamp
                 yield ("on_"+_a.type, [_a])
         except Exception:
-            self.failed_log_fetches += 1
-            if self.failed_log_fetches == 20:
+            self.subsequent_failed_log_fetches += 1
+            if self.subsequent_failed_log_fetches == 20:
                 print("Warning: 20 subsequent clouddata log fetches failed. Scrach's cloud logs may be down, causing CloudLogEvents to not call events.")
         
 class CloudLogEvents(BaseEventHandler):
