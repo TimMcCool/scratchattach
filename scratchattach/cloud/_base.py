@@ -385,8 +385,9 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         wait_time = self.ws_shortterm_ratelimit * n
         if time.time() - self.first_var_set > 25:  # if cloud variables have been continously set fast (wait time smaller than long-term rate limit) for 25 seconds, they should be set slow now (wait time = long-term rate limit) to avoid getting rate-limited
             wait_time = self.ws_longterm_ratelimit * n
-        while self.last_var_set + wait_time >= time.time():
-            time.sleep(0.001)
+        sleep_time = self.last_var_set + wait_time - time.time()
+        if sleep_time > 0:
+            time.sleep(sleep_time)
 
     def set_var(self, variable, value):
         """
