@@ -35,6 +35,7 @@ class SupportsClose(ABC):
 
 T = TypeVar("T")
 
+
 class EventStream(SupportsRead[Iterator[dict[str, Any]]], SupportsClose):
     """
     Allows you to stream events
@@ -65,17 +66,20 @@ class AnyCloud(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def set_var(self, variable: str, value: T) -> None:
+    def set_var(self, variable: str, value: T, *, max_retries : int) -> None:
         """
         Sets a cloud variable.
 
         Args:
             variable (str): The name of the cloud variable that should be set (provided without the cloud emoji)
             value (Any): The value the cloud variable should be set to
+
+        Kwargs:
+            max_retries (int) : Maximum number of times to retry setting the var if setting fails before raising an exception
         """
 
     @abstractmethod
-    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True):
+    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries : int):
         """
         Sets multiple cloud variables at once (works for an unlimited amount of variables).
 
@@ -84,6 +88,7 @@ class AnyCloud(ABC, Generic[T]):
         
         Kwargs:
             intelligent_waits (boolean): When enabled, the method will automatically decide how long to wait before performing this cloud variable set, to make sure no rate limits are triggered
+            max_retries (int) : Maximum number of times to retry setting the var if setting fails before raising an exception        
         """
 
     @abstractmethod
@@ -129,10 +134,10 @@ class DummyCloud(AnyCloud[Any]):
     def _enforce_ratelimit(self, *, n: int) -> None:
         pass
 
-    def set_var(self, variable: str, value: T) -> None:
+    def set_var(self, variable: str, value: T, *, max_retries : int) -> None:
         pass
 
-    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True):
+    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries : int):
         pass
 
     def get_var(self, var, *, recorder_initial_values={}) -> Any:
@@ -229,6 +234,9 @@ class BaseCloud(AnyCloud[Union[str, int]]):
 
         print_connect_messages: Whether to print a message on every connect to the cloud server. Defaults to False.
     """
+
+    _PACKET_FAILURE_SLEEPDURATIONS = (0.1, 0.2, 1.5) 
+
     project_id: Optional[Union[str, int]]
     cloud_host: str
     ws_shortterm_ratelimit: float
@@ -278,57 +286,26 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             raise exceptions.Unauthenticated(
                 "You need to use session.connect_cloud (NOT get_cloud) in order to perform this operation.")
 
-    def _send_packet(self, packet):
+    def _send_recursive(self, data : str, *, current_depth :int, max_depth=0):
         try:
-            self.websocket.send(json.dumps(packet) + "\n")
+            self.websocket.send(data)
         except Exception:
-            time.sleep(0.1)
-            self.connect()
-            time.sleep(0.1)
-            try:
-                self.websocket.send(json.dumps(packet) + "\n")
-            except Exception:
-                time.sleep(0.2)
+            if current_depth < max_depth:
+                sleep_duration = self._PACKET_FAILURE_SLEEPDURATIONS[min(current_depth, len(self._PACKET_FAILURE_SLEEPDURATIONS)-1)]
+                time.sleep(sleep_duration)
                 self.connect()
-                time.sleep(0.2)
-                try:
-                    self.websocket.send(json.dumps(packet) + "\n")
-                except Exception:
-                    time.sleep(1.6)
-                    self.connect()
-                    time.sleep(1.4)
-                    try:
-                        self.websocket.send(json.dumps(packet) + "\n")
-                    except Exception:
-                        self.active_connection = False
-                        raise exceptions.CloudConnectionError(f"Sending packet failed three times in a row: {packet}")
+                time.sleep(sleep_duration)
+                self._send_recursive(data, current_depth=current_depth+1, max_depth=max_depth)
+            else:
+                self.active_connection = False
+                raise exceptions.CloudConnectionError(f"Sending packet failed {max_depth+1} tries: {data}")
 
-    def _send_packet_list(self, packet_list):
+    def _send_packet(self, packet, *, max_retries=2):
+        self._send_recursive(json.dumps(packet) + "\n", max_depth=max_retries)
+
+    def _send_packet_list(self, packet_list, *, max_retries=2):
         packet_string = "".join([json.dumps(packet) + "\n" for packet in packet_list])
-        try:
-            self.websocket.send(packet_string)
-        except Exception:
-            time.sleep(0.1)
-            self.connect()
-            time.sleep(0.1)
-            try:
-                self.websocket.send(packet_string)
-            except Exception:
-                time.sleep(0.2)
-                self.connect()
-                time.sleep(0.2)
-                try:
-                    self.websocket.send(packet_string)
-                except Exception:
-                    time.sleep(1.6)
-                    self.connect()
-                    time.sleep(1.4)
-                    try:
-                        self.websocket.send(packet_string)
-                    except Exception:
-                        self.active_connection = False
-                        raise exceptions.CloudConnectionError(
-                            f"Sending packet list failed four times in a row: {packet_list}")
+        self._send_recursive(packet_string, max_depth=max_retries)
 
     def _handshake(self):
         packet = {"method": "handshake", "user": self.username, "project_id": self.project_id}
@@ -389,13 +366,16 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         if sleep_time > 0:
             time.sleep(sleep_time)
 
-    def set_var(self, variable, value):
+    def set_var(self, variable, value, *, max_retries:int=2):
         """
         Sets a cloud variable.
 
         Args:
             variable (str): The name of the cloud variable that should be set (provided without the cloud emoji)
             value (str): The value the cloud variable should be set to
+
+        Kwargs:
+            max_retries (int) : Maximum number of times to retry setting the var if setting fails before raising an exception        
         """
         self._assert_valid_value(value)
         if not isinstance(variable, str):
@@ -414,10 +394,10 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             "user": self.username,
             "project_id": self.project_id,
         }
-        self._send_packet(packet)
+        self._send_packet(packet, max_retries=max_retries)
         self.last_var_set = time.time()
 
-    def set_vars(self, var_value_dict, *, intelligent_waits=True):
+    def set_vars(self, var_value_dict, *, intelligent_waits=True, max_retries:int=2):
         """
         Sets multiple cloud variables at once (works for an unlimited amount of variables).
 
@@ -426,13 +406,14 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         
         Kwargs:
             intelligent_waits (boolean): When enabled, the method will automatically decide how long to wait before performing this cloud variable set, to make sure no rate limits are triggered
+            max_retries (int) : Maximum number of times to retry setting the var if setting fails before raising an exception        
         """
         if not self.active_connection:
             self.connect()
         if intelligent_waits:
-            self._enforce_ratelimit(n=len(list(var_value_dict.keys())))
+            self._enforce_ratelimit(n=len(var_value_dict))
 
-        self.var_sets_since_first += len(list(var_value_dict.keys()))
+        self.var_sets_since_first += len(var_value_dict)
 
         packet_list = []
         for variable in var_value_dict:
@@ -449,7 +430,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
                 "project_id": self.project_id,
             }
             packet_list.append(packet)
-        self._send_packet_list(packet_list)
+        self._send_packet_list(packet_list, max_retries=max_retries)
         self.last_var_set = time.time()
 
     def get_var(self, var, *, recorder_initial_values={}):
