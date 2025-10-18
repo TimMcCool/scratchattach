@@ -433,23 +433,22 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self._send_packet_list(packet_list, max_retries=max_retries)
         self.last_var_set = time.time()
 
-    def get_var(self, var, *, recorder_initial_values={}):
-        var = "☁ "+var.removeprefix("☁ ")
+    def _assert_recorder_running(self):
         if self.recorder is None:
             self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
             self.recorder.start()
             start_time = time.time()
             while not (self.recorder.cloud_values != {} or start_time < time.time() - 5):
                 time.sleep(0.01)
+
+
+    def get_var(self, var, *, recorder_initial_values={}):
+        var = "☁ "+var.removeprefix("☁ ")
+        self._assert_recorder_running()
         return self.recorder.get_var(var)
 
     def get_all_vars(self, *, recorder_initial_values={}):
-        if self.recorder is None:
-            self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
-            self.recorder.start()
-            start_time = time.time()
-            while not (self.recorder.cloud_values != {} or start_time < time.time() - 5):
-                time.sleep(0.01)
+        self._assert_recorder_running()
         return self.recorder.get_all_vars()
 
     def create_event_stream(self):
