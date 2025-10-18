@@ -5,6 +5,7 @@ import traceback
 
 from scratchattach.cloud import _base
 from ._base import BaseEventHandler
+from scratchattach.utils import exceptions
 from scratchattach.site import cloud_activity
 import time
 import json
@@ -81,9 +82,12 @@ class ManualCloudLogEvents:
                 if _a.timestamp <= self.last_timestamp:
                     continue
                 self.last_timestamp = _a.timestamp
+                self.failed_log_fetches = 0
                 yield ("on_"+_a.type, [_a])
         except Exception:
-            pass
+            self.failed_log_fetches += 1
+            if self.failed_log_fetches == 20:
+                print("Warning: 20 subsequent clouddata log fetches failed. Scrach's cloud logs may be down, causing CloudLogEvents to not call events.")
         
 
 class CloudLogEvents(BaseEventHandler):
@@ -99,10 +103,15 @@ class CloudLogEvents(BaseEventHandler):
         self.update_interval = update_interval
         self._session = cloud._session
         self.last_timestamp = 0
+        self.failed_log_fetches = 0
         self.manual_cloud_log_events = ManualCloudLogEvents(cloud)
 
     def _updater(self):
-        logs = self.source_cloud.logs(limit=25)
+        try:
+            logs = self.source_cloud.logs(limit=25)
+        except exceptions.FetchError:
+            logs = []
+
         self.last_timestamp = 0
         if len(logs) != 0:
             self.last_timestamp = logs[0].timestamp
