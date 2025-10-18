@@ -103,7 +103,6 @@ class CloudLogEvents(BaseEventHandler):
         self.update_interval = update_interval
         self._session = cloud._session
         self.last_timestamp = 0
-        self.failed_log_fetches = 0
         self.manual_cloud_log_events = ManualCloudLogEvents(cloud)
 
     def _updater(self):
