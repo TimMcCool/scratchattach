@@ -162,7 +162,10 @@ class WebSocketEventStream(EventStream):
         self.source_cloud.username = cloud.username
         self.source_cloud.ws_timeout = None # No timeout -> allows continous listening
         self.reading = Lock()
-        self.source_cloud.connect()
+        try:
+            self.source_cloud.connect()
+        except websocket.WebSocketBadStatusException:
+            print("Warning: Initial cloud connection attempt failed, retrying...")
         self.packets_left = []
 
     def receive_new(self, non_blocking: bool = False):
