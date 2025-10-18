@@ -164,7 +164,7 @@ class WebSocketEventStream(EventStream):
         self.reading = Lock()
         try:
             self.source_cloud.connect()
-        except websocket.WebSocketBadStatusException:
+        except exceptions.CloudConnectionError:
             print("Warning: Initial cloud connection attempt failed, retrying...")
         self.packets_left = []
 

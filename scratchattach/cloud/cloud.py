@@ -30,7 +30,7 @@ class ScratchCloud(BaseCloud):
         try:
             super().connect()
         except WebSocketBadStatusException as e:
-            raise WebSocketBadStatusException(f"Error: Scratch's Cloud system may be down. Please try again later.") from e
+            raise exceptions.CloudConnectionError(f"Error: Scratch's Cloud system may be down. Please try again later.") from e
 
     def set_var(self, variable, value):
         self._assert_auth() # Setting a cloud var requires a login to the Scratch website
