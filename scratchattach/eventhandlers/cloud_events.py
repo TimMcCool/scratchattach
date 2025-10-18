@@ -89,7 +89,6 @@ class ManualCloudLogEvents:
             if self.failed_log_fetches == 20:
                 print("Warning: 20 subsequent clouddata log fetches failed. Scrach's cloud logs may be down, causing CloudLogEvents to not call events.")
         
-
 class CloudLogEvents(BaseEventHandler):
     """
     Class that calls events on cloud updates that are received from a clouddata log.
