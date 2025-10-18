@@ -78,11 +78,11 @@ class ManualCloudLogEvents:
         """
         try:
             data = self.source_cloud.logs(limit=25)
+            self.failed_log_fetches = 0
             for _a in data[::-1]:
                 if _a.timestamp <= self.last_timestamp:
                     continue
                 self.last_timestamp = _a.timestamp
-                self.failed_log_fetches = 0
                 yield ("on_"+_a.type, [_a])
         except Exception:
             self.failed_log_fetches += 1
