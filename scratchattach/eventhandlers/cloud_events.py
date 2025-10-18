@@ -21,6 +21,7 @@ class CloudEvents(BaseEventHandler):
         self._session = cloud._session
         self.source_stream = cloud.create_event_stream()
         self.startup_time = time.time() * 1000
+        self.subsequent_reconnects = 0
 
     def disconnect(self):
         self.source_stream.close()
