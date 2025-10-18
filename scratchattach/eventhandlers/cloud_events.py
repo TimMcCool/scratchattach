@@ -71,7 +71,8 @@ class ManualCloudLogEvents:
         self.source_cloud = cloud
         self._session = cloud._session
         self.last_timestamp = 0
-    
+        self.failed_log_fetches = 0
+
     def update(self) -> Iterator[tuple[str, list[cloud_activity.CloudActivity]]]:
         """
         Update once and yield all packets
