@@ -42,7 +42,7 @@ class CloudEvents(BaseEventHandler):
                     # print("Checking for more events")
                     for data in self.source_stream.read():
                         # print(f"Got event {data}")
-                        subsequent_reconnects = 0
+                        self.subsequent_reconnects = 0
                         try:
                             _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session, cloud=self.cloud)
                             if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
@@ -60,8 +60,8 @@ class CloudEvents(BaseEventHandler):
                 self.subsequent_reconnects += 1
                 time.sleep(0.1) # cooldown
 
-            if subsequent_reconnects >= 5:
-                print(f"Warning: {subsequent_reconnects} subsequent cloud disconnects. Cloud may be down, causing CloudEvents to not call events.")
+            if self.subsequent_reconnects >= 5:
+                print(f"Warning: {self.subsequent_reconnects} subsequent cloud disconnects. Cloud may be down, causing CloudEvents to not call events.")
             self.call_event("on_reconnect", [])
 
 class ManualCloudLogEvents:
