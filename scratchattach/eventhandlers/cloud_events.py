@@ -34,6 +34,8 @@ class CloudEvents(BaseEventHandler):
 
         if self.running is False:
             return
+        
+        # TODO: refactor this method. It works, but is hard to read
         while True:
             try:
                 while True:
