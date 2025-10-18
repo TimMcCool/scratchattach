@@ -59,6 +59,7 @@ class AnyCloud(ABC, Generic[T]):
 
     def reconnect(self):
         self.disconnect()
+        time.sleep(0.1)
         self.connect()
         
     @abstractmethod
