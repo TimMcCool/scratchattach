@@ -47,9 +47,6 @@ class PartialProject(BaseSiteComponent):
         self.parent_title = None
         self._moderation_status = None
 
-        self.remix_tree_children: Optional[list[Project]] = None
-        self.remix_tree_parent: Optional[Project] = None
-
         # Update attributes from entries dict:
         self.__dict__.update(entries)
 
@@ -288,10 +285,6 @@ class Project(PartialProject):
     :.share_date:
 
     :.thumbnail_url:
-
-    :.remix_parent:
-
-    :.remix_root:
 
     :.loves: The project's love count
 
@@ -859,24 +852,6 @@ class Project(PartialProject):
         self._assert_auth()
         return requests.get(f"https://api.scratch.mit.edu/users/{self._session.username}/projects/{self.id}/visibility",
                             headers=self._headers, cookies=self._cookies).json()
-
-    @property
-    def remix_depth(self) -> int:
-        """
-        Get the 'remix depth' of this project - i.e. the number of layers of remixing until one reaches the remix root.
-        """
-        if self.remix_tree_children is None:
-            self.remix_tree()
-
-        depth = 0
-        p = self
-        while p.remix_tree_parent:
-            # this could also be done recursively, but it can hit the recursion limit in extreme cases
-            # > and this happens often, because of remix chains
-            p = p.remix_tree_parent
-            depth += 1
-
-        return depth
 
 
 # ------ #
