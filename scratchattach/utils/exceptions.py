@@ -231,3 +231,13 @@ class LoginDataWarning(UserWarning):
     """
     Warns you not to accidentally share your login data.
     """
+
+class AnonymousSiteComponentWarning(UserWarning):
+    """
+    Warns about a usage of an anonymous site component.
+    """
+
+class UnexpectedWebsocketEventWarning(RuntimeWarning):
+    """
+    Warns about an unexpected occurrence with a websocket.
+    """

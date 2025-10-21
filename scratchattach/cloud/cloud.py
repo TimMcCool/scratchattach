@@ -1,6 +1,9 @@
 """v2 ready: ScratchCloud, TwCloud and CustomCloud classes"""
 
 from __future__ import annotations
+import warnings
+
+from websocket import WebSocketBadStatusException
 
 from ._base import BaseCloud
 from typing import Type
@@ -26,7 +29,10 @@ class ScratchCloud(BaseCloud):
 
     def connect(self):
         self._assert_auth() # Connecting to Scratch's cloud websocket requires a login to the Scratch website
-        super().connect()
+        try:
+            super().connect()
+        except WebSocketBadStatusException as e:
+            raise exceptions.CloudConnectionError(f"Error: Scratch's Cloud system may be down. Please try again later.") from e
 
     def set_var(self, variable, value):
         self._assert_auth() # Setting a cloud var requires a login to the Scratch website
@@ -146,7 +152,10 @@ def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> BaseClo
     Returns:
         Type[scratchattach.cloud._base.BaseCloud]: An object representing the cloud of a project. Can be of any class inheriting from BaseCloud.
     """
-    print("Warning: To set Scratch cloud variables, use session.connect_cloud instead of get_cloud")
+    warnings.warn(
+        "Warning: To set Scratch cloud variables, use session.connect_cloud instead of get_cloud",
+        exceptions.AnonymousSiteComponentWarning
+    )
     return CloudClass(project_id=project_id)
 
 def get_scratch_cloud(project_id):
@@ -160,7 +169,10 @@ def get_scratch_cloud(project_id):
     Returns:
         scratchattach.cloud.ScratchCloud: An object representing the Scratch cloud of a project.
     """
-    print("Warning: To set Scratch cloud variables, use session.connect_scratch_cloud instead of get_scratch_cloud")
+    warnings.warn(
+        "To set Scratch cloud variables, use session.connect_scratch_cloud instead of get_scratch_cloud",
+        exceptions.AnonymousSiteComponentWarning
+    )
     return ScratchCloud(project_id=project_id)
 
 def get_tw_cloud(project_id, *, purpose="", contact="", cloud_host="wss://clouddata.turbowarp.org"):

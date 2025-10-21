@@ -7,6 +7,7 @@ from typing import Optional, Union, TypeVar, Generic, TYPE_CHECKING, Any
 from abc import ABC, abstractmethod, ABCMeta
 from threading import Lock
 from collections.abc import Iterator
+import warnings
 
 if TYPE_CHECKING:
     from _typeshed import SupportsRead
@@ -122,7 +123,10 @@ class WebSocketEventStream(EventStream):
         self.source_cloud.username = cloud.username
         self.source_cloud.ws_timeout = None # No timeout -> allows continous listening
         self.reading = Lock()
-        self.source_cloud.connect()
+        try:
+            self.source_cloud.connect()
+        except exceptions.CloudConnectionError:
+            warnings.warn("Initial cloud connection attempt failed, retrying...", exceptions.UnexpectedWebsocketEventWarning)
         self.packets_left = []
 
     def receive_new(self, non_blocking: bool = False):
