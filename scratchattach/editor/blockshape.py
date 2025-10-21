@@ -15,6 +15,7 @@ class _MutationDependent(commons.Singleton):
     """
     Singleton value that represents the uncertainty of a vablue because it depends on block mutation data.
     """
+    INSTANCE = 0
     def __bool__(self):
         raise TypeError("Need mutation data to work out attribute value.")
 
