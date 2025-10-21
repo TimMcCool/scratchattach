@@ -77,7 +77,7 @@ class Session(BaseSiteComponent):
     username: str = None
     _user: user.User = field(repr=False, default=None)
 
-    id: str = None
+    id: str = field(repr=False, default=None)
     session_string: str | None = field(repr=False, default=None)
     xtoken: str = field(repr=False, default=None)
     email: str = field(repr=False, default=None)
