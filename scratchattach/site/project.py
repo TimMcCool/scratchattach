@@ -977,7 +977,7 @@ def get_project(project_id) -> Project:
         If you want to use these methods, get the project with :meth:`scratchattach.session.Session.connect_project` instead.
     """
     warnings.warn(
-        "Warning: For methods that require authentication, use session.connect_project instead of get_project.\n"
+        "For methods that require authentication, use session.connect_project instead of get_project.\n"
         "If you want to remove this warning, "
         "use `warnings.filterwarnings('ignore', category=scratchattach.ProjectAuthenticationWarning)`.\n"
         "To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use "

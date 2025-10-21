@@ -1,14 +1,14 @@
 """CloudRecorder class (used by ScratchCloud, TwCloud and other classes inheriting from BaseCloud to deliver cloud var values)"""
 from __future__ import annotations
 
+from typing import Optional, Any
+
 from .cloud_events import CloudEvents
-from typing import Optional
 
 
 class CloudRecorder(CloudEvents):
-    def __init__(self, cloud, *, initial_values: Optional[dict] = None):
-        if initial_values is None:
-            initial_values = {}
+    def __init__(self, cloud, *, initial_values: Optional[dict[str, Any]] = None):
+        initial_values = initial_values or {}
 
         super().__init__(cloud)
         self.cloud_values = initial_values

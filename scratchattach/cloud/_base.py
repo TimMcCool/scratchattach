@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import ssl
 import time
+import warnings
 from typing import Optional, Union, TypeVar, Generic, TYPE_CHECKING, Any
 from abc import ABC, abstractmethod, ABCMeta
 from threading import Lock
@@ -67,7 +68,7 @@ class AnyCloud(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def set_var(self, variable: str, value: T, *, max_retries : int) -> None:
+    def set_var(self, variable: str, value: T, *, max_retries : int = 2) -> None:
         """
         Sets a cloud variable.
 
@@ -80,7 +81,7 @@ class AnyCloud(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries : int):
+    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries : int = 2):
         """
         Sets multiple cloud variables at once (works for an unlimited amount of variables).
 
@@ -93,22 +94,24 @@ class AnyCloud(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def get_var(self, var, *, recorder_initial_values={}) -> T:
+    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> T:
         pass
 
     @abstractmethod
-    def get_all_vars(self, *, recorder_initial_values={}) -> dict[str, T]:
+    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> dict[str, T]:
         pass
 
     def events(self) -> CloudEvents:
         return CloudEvents(self)
 
-    def requests(self, *, no_packet_loss: bool = False, used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+    def requests(self, *, no_packet_loss: bool = False, used_cloud_vars: Optional[list[str]] = None,
                  respond_order=RespondOrder.RECEIVE, debug: bool = False) -> CloudRequests:
+        used_cloud_vars = used_cloud_vars or ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         return CloudRequests(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss,
                              respond_order=respond_order, debug=debug)
 
-    def storage(self, *, no_packet_loss: bool = False, used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]) -> CloudStorage:
+    def storage(self, *, no_packet_loss: bool = False, used_cloud_vars: Optional[list[str]] = None) -> CloudStorage:
+        used_cloud_vars = used_cloud_vars or ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         return CloudStorage(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
     
     @abstractmethod
@@ -135,16 +138,16 @@ class DummyCloud(AnyCloud[Any]):
     def _enforce_ratelimit(self, *, n: int) -> None:
         pass
 
-    def set_var(self, variable: str, value: T, *, max_retries : int) -> None:
+    def set_var(self, variable: str, value: T, *, max_retries : int = 2) -> None:
         pass
 
-    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries : int):
+    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries : int = 2):
         pass
 
-    def get_var(self, var, *, recorder_initial_values={}) -> Any:
+    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> Any:
         pass
 
-    def get_all_vars(self, *, recorder_initial_values={}) -> dict[str, Any]:
+    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         return {}
 
 
@@ -165,7 +168,7 @@ class WebSocketEventStream(EventStream):
         try:
             self.source_cloud.connect()
         except exceptions.CloudConnectionError:
-            print("Warning: Initial cloud connection attempt failed, retrying...")
+            warnings.warn("Initial cloud connection attempt failed, retrying...", exceptions.UnexpectedWebsocketEventWarning)
         self.packets_left = []
 
     def receive_new(self, non_blocking: bool = False):
@@ -255,6 +258,12 @@ class BaseCloud(AnyCloud[Union[str, int]]):
     ws_timeout: Optional[int]
     websocket: websocket.WebSocket
     event_stream: Optional[EventStream] = None
+    
+    recorder: Optional[cloud_recorder.CloudRecorder]
+    
+    first_var_set: float
+    last_var_set: float
+    var_sets_since_first: int
 
     def __init__(self, *, project_id: Optional[Union[int, str]] = None, _session=None):
 
@@ -265,8 +274,8 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
         self.recorder = None  # A CloudRecorder object that records cloud activity for the values to be retrieved later,
         # which will be saved in this attribute as soon as .get_var is called
-        self.first_var_set = 0
-        self.last_var_set = 0
+        self.first_var_set = 0.0
+        self.last_var_set = 0.0
         self.var_sets_since_first = 0
 
         # Set default values for attributes that save configurations specific to the represented cloud:
@@ -290,7 +299,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             raise exceptions.Unauthenticated(
                 "You need to use session.connect_cloud (NOT get_cloud) in order to perform this operation.")
 
-    def _send_recursive(self, data : str, *, current_depth :int, max_depth=0):
+    def _send_recursive(self, data : str, *, current_depth: int = 0, max_depth=0):
         try:
             self.websocket.send(data)
         except Exception:
@@ -370,7 +379,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         if sleep_time > 0:
             time.sleep(sleep_time)
 
-    def set_var(self, variable, value, *, max_retries:int=2):
+    def set_var(self, variable, value, *, max_retries: int = 2):
         """
         Sets a cloud variable.
 
@@ -401,7 +410,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self._send_packet(packet, max_retries=max_retries)
         self.last_var_set = time.time()
 
-    def set_vars(self, var_value_dict, *, intelligent_waits=True, max_retries:int=2):
+    def set_vars(self, var_value_dict, *, intelligent_waits=True, max_retries: int = 2):
         """
         Sets multiple cloud variables at once (works for an unlimited amount of variables).
 
@@ -437,23 +446,24 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self._send_packet_list(packet_list, max_retries=max_retries)
         self.last_var_set = time.time()
 
-    def _assert_recorder_running(self, *, recorder_initial_values={}):
+    def _assert_recorder_running(self, *, recorder_initial_values: dict[str, Any]) -> cloud_recorder.CloudRecorder:
         if self.recorder is None:
             self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
             self.recorder.start()
             start_time = time.time()
             while not (self.recorder.cloud_values != {} or start_time < time.time() - 5):
                 time.sleep(0.01)
+        return self.recorder
 
 
-    def get_var(self, var, *, recorder_initial_values={}):
+    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None):
         var = "☁ "+var.removeprefix("☁ ")
-        self._assert_recorder_running(recorder_initial_values=recorder_initial_values)
-        return self.recorder.get_var(var)
+        recorder = self._assert_recorder_running(recorder_initial_values=recorder_initial_values or {})
+        return recorder.get_var(var)
 
-    def get_all_vars(self, *, recorder_initial_values={}):
-        self._assert_recorder_running()
-        return self.recorder.get_all_vars(recorder_initial_values=recorder_initial_values)
+    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None):
+        recorder = self._assert_recorder_running(recorder_initial_values=recorder_initial_values or {})
+        return recorder.get_all_vars()
 
     def create_event_stream(self):
         if self.event_stream:

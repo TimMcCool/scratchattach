@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from ._base import BaseCloud
-from typing import Type
+import warnings
+from typing import Optional, Any
+
+from websocket import WebSocketBadStatusException
+
 from scratchattach.utils.requests import requests
 from scratchattach.utils import exceptions, commons
 from scratchattach.site import cloud_activity
-
-from websocket import WebSocketBadStatusException
+from ._base import BaseCloud
 
 class ScratchCloud(BaseCloud):
     def __init__(self, *, project_id, _session=None):
@@ -30,15 +32,15 @@ class ScratchCloud(BaseCloud):
         try:
             super().connect()
         except WebSocketBadStatusException as e:
-            raise exceptions.CloudConnectionError(f"Error: Scratch's Cloud system may be down. Please try again later.") from e
+            raise exceptions.CloudConnectionError("Error: Scratch's Cloud system may be down. Please try again later.") from e
 
-    def set_var(self, variable, value):
+    def set_var(self, variable, value, *, max_retries : int = 2):
         self._assert_auth() # Setting a cloud var requires a login to the Scratch website
-        super().set_var(variable, value)
-    
-    def set_vars(self, var_value_dict, *, intelligent_waits=True):
+        super().set_var(variable, value, max_retries=max_retries)
+
+    def set_vars(self, var_value_dict, *, intelligent_waits=True, max_retries : int = 2):
         self._assert_auth() 
-        super().set_vars(var_value_dict, intelligent_waits=intelligent_waits)
+        super().set_vars(var_value_dict, intelligent_waits=intelligent_waits, max_retries=max_retries)
 
     def logs(self, *, filter_by_var_named=None, limit=100, offset=0) -> list[cloud_activity.CloudActivity]:
         """
@@ -61,7 +63,7 @@ class ScratchCloud(BaseCloud):
         except Exception as e:
             raise exceptions.FetchError(str(e))
 
-    def get_var(self, var, *, use_logs=False):
+    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None, use_logs=False):
         var = var.removeprefix("☁ ")
         if self._session is None or use_logs:
             filtered = self.logs(limit=100, filter_by_var_named="☁ "+var)
@@ -73,9 +75,9 @@ class ScratchCloud(BaseCloud):
                 initial_values = self.get_all_vars(use_logs=True)
                 return super().get_var("☁ "+var, recorder_initial_values=initial_values)
             else:
-                return super().get_var("☁ "+var)
+                return super().get_var("☁ "+var, recorder_initial_values=recorder_initial_values)
 
-    def get_all_vars(self, *, use_logs=False):
+    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None, use_logs=False):
         if self._session is None or use_logs:
             logs = self.logs(limit=100)
             logs.reverse()
@@ -88,7 +90,7 @@ class ScratchCloud(BaseCloud):
                 initial_values = self.get_all_vars(use_logs=True)
                 return super().get_all_vars(recorder_initial_values=initial_values)
             else:
-                return super().get_all_vars()
+                return super().get_all_vars(recorder_initial_values=recorder_initial_values)
 
     def events(self, *, use_logs=False):
         if self._session is None or use_logs:
@@ -132,7 +134,7 @@ class CustomCloud(BaseCloud):
         # If even more customization is needed, the developer can create a class inheriting from cloud._base.BaseCloud to override functions like .set_var etc.
 
 
-def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> BaseCloud:
+def get_cloud(project_id, *, CloudClass: type[BaseCloud] = ScratchCloud) -> BaseCloud:
     """
     Connects to a cloud (by default Scratch's cloud) as logged out user.
 
@@ -150,7 +152,10 @@ def get_cloud(project_id, *, CloudClass:Type[BaseCloud]=ScratchCloud) -> BaseClo
     Returns:
         Type[scratchattach.cloud._base.BaseCloud]: An object representing the cloud of a project. Can be of any class inheriting from BaseCloud.
     """
-    print("Warning: To set Scratch cloud variables, use session.connect_cloud instead of get_cloud")
+    warnings.warn(
+        "To set Scratch cloud variables, use session.connect_cloud instead of get_cloud",
+        exceptions.CloudAuthenticationWarning
+    )
     return CloudClass(project_id=project_id)
 
 def get_scratch_cloud(project_id):
@@ -164,7 +169,10 @@ def get_scratch_cloud(project_id):
     Returns:
         scratchattach.cloud.ScratchCloud: An object representing the Scratch cloud of a project.
     """
-    print("Warning: To set Scratch cloud variables, use session.connect_scratch_cloud instead of get_scratch_cloud")
+    warnings.warn(
+        "To set Scratch cloud variables, use session.connect_scratch_cloud instead of get_scratch_cloud",
+        exceptions.CloudAuthenticationWarning
+    )
     return ScratchCloud(project_id=project_id)
 
 def get_tw_cloud(project_id, *, purpose="", contact="", cloud_host="wss://clouddata.turbowarp.org"):

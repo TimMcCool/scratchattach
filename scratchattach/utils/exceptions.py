@@ -265,3 +265,13 @@ class ClassroomAuthenticationWarning(GetAuthenticationWarning):
     Warns you to use session.connect_classroom or session.connect_classroom_from_token instead of classroom.get_classroom 
     for actions that require authentication.
     """
+
+class CloudAuthenticationWarning(GetAuthenticationWarning):
+    """
+    Warns you about usage of 
+    """
+
+class UnexpectedWebsocketEventWarning(RuntimeWarning):
+    """
+    Warns about an unexpected occurrence with a websocket.
+    """
