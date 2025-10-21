@@ -740,7 +740,8 @@ class User(BaseSiteComponent):
         URL = f"https://scratch.mit.edu/site-api/comments/user/{self.username}/?page={page}"
         DATA = []
 
-        page_contents = requests.get(URL).content
+        with requests.no_error_handling():
+            page_contents = requests.get(URL).content
 
         soup = BeautifulSoup(page_contents, "html.parser")
 

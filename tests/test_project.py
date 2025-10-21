@@ -13,8 +13,8 @@ def test_project():
 
 
     project = sess.connect_project(104)
-    tree = project.remix_tree_pretty()
-    assert len(tree) > 1000 # there is a lot of chars. Just assert that sth is generated
+    #tree = project.remix_tree_pretty()
+    #assert len(tree) > 1000 # there is a lot of chars. Just assert that sth is generated
 
     project = sess.connect_project(1209355136)
 

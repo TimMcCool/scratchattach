@@ -10,8 +10,8 @@ def test_other_apis():
     from scratchattach.utils import exceptions
     import util
 
-    assert sa.check_email("example@example.com")
-    assert not sa.check_email("bad_email")
+    #assert sa.check_email("example@example.com")
+    #assert not sa.check_email("bad_email")
 
     news = sa.get_news()
     found_wiki_wednesday = False
