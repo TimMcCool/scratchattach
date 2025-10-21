@@ -85,6 +85,7 @@ class Session(BaseSiteComponent):
     new_scratcher: bool = field(repr=False, default=None)
     mute_status: Any = field(repr=False, default=None)
     banned: bool = field(repr=False, default=None)
+    is_teacher: bool = field(repr=False, default=None)
 
     time_created: datetime.datetime = None
     language: str = field(repr=False, default="en")

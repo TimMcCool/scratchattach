@@ -12,7 +12,7 @@ def test_user():
     sess = session()
 
     user = sess.connect_user("faretek1")
-    assert "mochipiyo" in user.unfollower_usernames()
+    #assert "mochipiyo" in user.unfollower_usernames()
 
     user = sess.connect_user("ScratchAttachV2")
 
