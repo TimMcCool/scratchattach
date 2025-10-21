@@ -5,9 +5,9 @@ name: Run tests
 
 on:
   pull_request:
-    branches: ['main']
+    branches: ['main', 'semver2']
   push:
-    branches: ['main']
+    branches: ['main', 'semver2']
   release:
     types: [prereleased, published]
   workflow_dispatch:
