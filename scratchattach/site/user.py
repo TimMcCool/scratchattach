@@ -145,7 +145,8 @@ class User(BaseSiteComponent):
         If there is no associated classroom, returns `None`
         """
         if not self._classroom[0]:
-            resp = requests.get(f"https://scratch.mit.edu/users/{self.username}/")
+            with requests.no_error_handling():
+                resp = requests.get(f"https://scratch.mit.edu/users/{self.username}/")
             soup = BeautifulSoup(resp.text, "html.parser")
 
             details = soup.find("p", {"class": "profile-details"})

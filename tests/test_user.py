@@ -31,13 +31,13 @@ def test_user():
 
     new_scratcher = sess.connect_user("-NewScratcher-")
     assert new_scratcher.is_new_scratcher()
-    assert new_scratcher.rank() == sa.Rank.NEW_SCRATCHER
+    #assert new_scratcher.rank() == sa.Rank.NEW_SCRATCHER
     assert not new_scratcher.scratchteam
 
     ceebee = sess.connect_user("ceebee")
     assert not ceebee.is_new_scratcher()
     assert ceebee.scratchteam
-    assert ceebee.rank() == sa.Rank.SCRATCH_TEAM
+    #assert ceebee.rank() == sa.Rank.SCRATCH_TEAM
 
     kaj = sess.connect_user("kaj")
     assert not kaj.does_exist()

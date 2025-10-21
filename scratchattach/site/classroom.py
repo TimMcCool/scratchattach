@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -367,9 +368,15 @@ class Classroom(BaseSiteComponent):
 
         ascsort, descsort = commons.get_class_sort_mode(mode)
 
-        data = requests.get(f"https://scratch.mit.edu/site-api/classrooms/activity/{self.id}/{student}/",
-                            params={"page": page, "ascsort": ascsort, "descsort": descsort},
-                            headers=self._headers, cookies=self._cookies).json()
+        with requests.no_error_handling():
+            try:
+                data = requests.get(
+                    f"https://scratch.mit.edu/site-api/classrooms/activity/{self.id}/{student}/",
+                    params={"page": page, "ascsort": ascsort, "descsort": descsort},
+                    headers=self._headers, cookies=self._cookies
+                ).json()
+            except json.JSONDecodeError:
+                return []
 
         _activity = []
         for activity_json in data:

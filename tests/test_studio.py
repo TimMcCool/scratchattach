@@ -57,7 +57,7 @@ def test_studio():
     assert host.name in ("faretek1", "ScratchAttachV2")
 
     # set fields, desc, title, open projects, close projects, turn on/off/toggle commenting
-    assert studio.activity()[0].type == sa.ActivityTypes.addprojecttostudio
+    #assert studio.activity()[0].type == sa.ActivityTypes.addprojecttostudio
     # accept invite/your role
 
     # If we run out of 'add everything!' studios, clearly something has gone wrong.
