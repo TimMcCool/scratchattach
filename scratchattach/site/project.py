@@ -285,11 +285,15 @@ class Project(PartialProject):
     :.share_date:
 
     :.thumbnail_url:
+    
+    :.remix_parent:
+
+    :.remix_root:
 
     :.loves: The project's love count
 
     :.favorites: The project's favorite count
-
+    
     :.remix_count: The number of remixes
 
     :.views: The view count
