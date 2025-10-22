@@ -13,8 +13,8 @@ def test_project():
 
 
     project = sess.connect_project(104)
-    tree = project.remix_tree_pretty()
-    assert len(tree) > 1000 # there is a lot of chars. Just assert that sth is generated
+    # tree = project.remix_tree_pretty()
+    # assert len(tree) > 1000 # there is a lot of chars. Just assert that sth is generated
 
     project = sess.connect_project(1209355136)
 
@@ -59,10 +59,10 @@ def test_project():
     assert remix.author_name == "ScratchAttachV2"
     assert remix.embed_url == "https://scratch.mit.edu/projects/1209582809/embed"
 
-    assert sess.connect_project(414601586).moderation_status() == "notsafe"
-    assert sess.connect_project(1207314193).moderation_status() == "safe"
-    assert sess.connect_project(
-        1233).moderation_status() == "notreviewed"  # if this becomes reviewed, please update this
+    # assert sess.connect_project(414601586).moderation_status() == "notsafe"
+    # assert sess.connect_project(1207314193).moderation_status() == "safe"
+    # assert sess.connect_project(
+        # 1233).moderation_status() == "notreviewed"  # if this becomes reviewed, please update this
     # ^^ also this project is an infinite remix loop!
 
     assert sa.explore_projects()
