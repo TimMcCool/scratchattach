@@ -69,16 +69,17 @@ class PlaceholderProject:
         body.name = self.title
 
         for asset in body.assets:
-            data = get_asset(self.md5exts_to_sha256[asset.md5ext])
+            table = self.md5exts_to_sha256
+            assert table is not None # this should never happen
+            data = get_asset(table[asset.md5ext])
             asset.asset_file.data = data
 
         return body
 
 
-def get_asset(sha256: str):
+def get_asset(sha256: str) -> bytes:
     with requests.no_error_handling():
         return requests.get(f"https://share.turbowarp.org/api/assets/{sha256}").content
-
 
 def get_placeholder_project(_id: str):
     return PlaceholderProject(_id)
