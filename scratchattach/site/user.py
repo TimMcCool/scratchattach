@@ -399,8 +399,9 @@ class User(BaseSiteComponent):
             # The index of the first project on page #n is just (n-1) * 40
             first_idx = (page - 1) * 40
 
-            page_content = requests.get(f"https://scratch.mit.edu/projects/all/{self.username}/loves/"
-                                        f"?page={page}", headers=self._headers).content
+            with requests.no_error_handling():
+                page_content = requests.get(f"https://scratch.mit.edu/projects/all/{self.username}/loves/"
+                                            f"?page={page}", headers=self._headers).content
 
             soup = BeautifulSoup(
                 page_content,
