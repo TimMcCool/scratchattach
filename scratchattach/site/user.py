@@ -282,7 +282,7 @@ class User(BaseSiteComponent):
         """
         return [i.name for i in self.following(limit=limit, offset=offset)]
 
-    def is_following(self, user):
+    def is_following(self, user: str):
         """
         Returns:
             boolean: Whether the user is following the user provided as argument
@@ -296,11 +296,11 @@ class User(BaseSiteComponent):
                 if user in following_names:
                     following = True
                     break
-                if following_names == []:
+                if not following_names:
                     break
                 offset += 20
-            except Exception:
-                print("Warning: API error when performing following check")
+            except Exception as e:
+                print(f"Warning: API error when performing following check: {e=}")
                 return following
         return following
 
@@ -309,7 +309,22 @@ class User(BaseSiteComponent):
         Returns:
             boolean: Whether the user is followed by the user provided as argument
         """
-        return User(username=user).is_following(self.username)
+        offset = 0
+        followed = False
+
+        while True:
+            try:
+                followed_names = self.follower_names(limit=20, offset=offset)
+                if user in followed_names:
+                    followed = True
+                    break
+                if not followed_names:
+                    break
+                offset += 20
+            except Exception as e:
+                print(f"Warning: API error when performing following check: {e=}")
+                return followed
+        return followed
 
     def project_count(self):
         text = requests.get(
