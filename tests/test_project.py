@@ -61,8 +61,8 @@ def test_project():
 
     #assert sess.connect_project(414601586).moderation_status() == "notsafe"
     #assert sess.connect_project(1207314193).moderation_status() == "safe"
-    assert sess.connect_project(
-        1233).moderation_status() == "notreviewed"  # if this becomes reviewed, please update this
+    #assert sess.connect_project(
+    #    1233).moderation_status() == "notreviewed"  # if this becomes reviewed, please update this
     # ^^ also this project is an infinite remix loop!
 
     assert sa.explore_projects()

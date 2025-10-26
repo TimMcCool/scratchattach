@@ -183,7 +183,7 @@ class User(BaseSiteComponent):
         Returns:
             boolean : True if the user exists, False if the user is deleted, None if an error occured
         """
-        with requests.no_error_handling:
+        with requests.no_error_handling():
             status_code = requests.get(f"https://scratch.mit.edu/users/{self.username}/").status_code
         if status_code == 200:
             return True

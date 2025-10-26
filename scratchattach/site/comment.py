@@ -1,6 +1,7 @@
 """Comment class"""
 from __future__ import annotations
 
+import html
 from typing import Union, Optional, Any
 from typing_extensions import assert_never  # importing from typing caused me errors
 from enum import Enum, auto
@@ -92,6 +93,12 @@ class Comment(BaseSiteComponent):
         except Exception:
             pass
         return True
+
+    @property
+    def text(self) -> str:
+        if self.source == "profile":
+            return self.content
+        return str(html.unescape(self.content))
 
     # Methods for getting related entities
 
