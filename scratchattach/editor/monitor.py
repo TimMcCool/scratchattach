@@ -6,6 +6,7 @@ from typing import Optional, TYPE_CHECKING
 from typing_extensions import deprecated
 
 if TYPE_CHECKING:
+    from .block import Block
     from . import project
 
 from . import base
@@ -143,7 +144,7 @@ class Monitor(base.ProjectSubcomponent):
     # todo: consider reimplementing this
     @deprecated("This method does not work correctly (This may be fixed in the future)")
     @staticmethod
-    def from_reporter(reporter: Block, _id: str = None, mode: str = "default",
+    def from_reporter(reporter: "Block", _id: str = None, mode: str = "default",
                       opcode: str = None, sprite_name: str = None, value=0, width: int | float = 0,
                       height: int | float = 0,
                       x: int | float = 5, y: int | float = 5, visible: bool = False, slider_min: int | float = 0,
