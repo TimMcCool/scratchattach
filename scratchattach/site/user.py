@@ -682,7 +682,8 @@ class User(BaseSiteComponent):
         Returns:
             list<scratchattach.Activity>: The user's activity data as parsed list of scratchattach.activity.Activity objects
         """
-        soup = BeautifulSoup(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text, 'html.parser')
+        with requests.no_error_handling():
+            soup = BeautifulSoup(requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text, 'html.parser')
 
         activities = []
         source = soup.find_all("li")
@@ -700,7 +701,8 @@ class User(BaseSiteComponent):
         Returns:
             str: The raw user activity HTML data
         """
-        return requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text
+        with requests.no_error_handling():
+            return requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text
 
 
     def follow(self):
