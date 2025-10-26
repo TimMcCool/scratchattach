@@ -7,6 +7,7 @@ import re
 import string
 from datetime import datetime, timezone
 from enum import Enum
+import warnings
 
 from typing_extensions import deprecated
 from bs4 import BeautifulSoup, Tag
@@ -198,10 +199,13 @@ class User(BaseSiteComponent):
             boolean : True if the user has the New Scratcher status, else False
         """
         try:
-            res = requests.get(f"https://scratch.mit.edu/users/{self.username}/").text
-            group=res[res.rindex('<span class="group">'):][:70]
-            return "new scratcher" in group.lower()
-        except Exception:
+            with requests.no_error_handling():
+                res = requests.get(f"https://scratch.mit.edu/users/{self.username}/").text
+                group = res[res.rindex('<span class="group">'):][:70]
+                return "new scratcher" in group.lower()
+
+        except Exception as e:
+            warnings.warn(f"Caught exception {e=}")
             return None
 
     def message_count(self):
