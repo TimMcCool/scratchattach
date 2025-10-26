@@ -474,10 +474,11 @@ class User(BaseSiteComponent):
         return _projects
 
     def loves_count(self):
-        text = requests.get(
-            f"https://scratch.mit.edu/projects/all/{self.username}/loves/",
-            headers=self._headers
-        ).text
+        with requests.no_error_handling():
+            text = requests.get(
+                f"https://scratch.mit.edu/projects/all/{self.username}/loves/",
+                headers=self._headers
+            ).text
 
         # If there are no loved projects, then Scratch doesn't actually display the number - so we have to catch this
         soup = BeautifulSoup(text, "html.parser")
@@ -498,10 +499,11 @@ class User(BaseSiteComponent):
         return commons.parse_object_list(_projects, project.Project, self._session)
 
     def favorites_count(self):
-        text = requests.get(
-            f"https://scratch.mit.edu/users/{self.username}/favorites/",
-            headers = self._headers
-        ).text
+        with requests.no_error_handling():
+            text = requests.get(
+                f"https://scratch.mit.edu/users/{self.username}/favorites/",
+                headers=self._headers
+            ).text
         return commons.webscrape_count(text, "Favorites (", ")")
 
     def toggle_commenting(self):
