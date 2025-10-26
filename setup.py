@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = '2.1.13'
+VERSION = '2.1.14'
 DESCRIPTION = 'A Scratch API Wrapper'
 with open('README.md', encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
