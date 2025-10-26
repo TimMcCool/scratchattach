@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Optional, TYPE_CHECKING
 
 from typing_extensions import deprecated
