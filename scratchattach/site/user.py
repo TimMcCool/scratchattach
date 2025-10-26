@@ -243,11 +243,12 @@ class User(BaseSiteComponent):
 
     def following_count(self):
         # following count
-        text = requests.get(
-            f"https://scratch.mit.edu/users/{self.username}/following/",
-            headers = self._headers
-        ).text
-        return commons.webscrape_count(text, "Following (", ")")
+        with requests.no_error_handling():
+            text = requests.get(
+                f"https://scratch.mit.edu/users/{self.username}/following/",
+                headers = self._headers
+            ).text
+            return commons.webscrape_count(text, "Following (", ")")
 
     def followers(self, *, limit=40, offset=0):
         """
