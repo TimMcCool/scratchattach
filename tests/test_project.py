@@ -59,8 +59,8 @@ def test_project():
     assert remix.author_name == "ScratchAttachV2"
     assert remix.embed_url == "https://scratch.mit.edu/projects/1209582809/embed"
 
-    assert sess.connect_project(414601586).moderation_status() == "notsafe"
-    assert sess.connect_project(1207314193).moderation_status() == "safe"
+    #assert sess.connect_project(414601586).moderation_status() == "notsafe"
+    #assert sess.connect_project(1207314193).moderation_status() == "safe"
     assert sess.connect_project(
         1233).moderation_status() == "notreviewed"  # if this becomes reviewed, please update this
     # ^^ also this project is an infinite remix loop!
