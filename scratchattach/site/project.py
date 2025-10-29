@@ -243,7 +243,7 @@ class Project(PartialProject):
         # Overrides the load_description method that exists for unshared projects
         self.update()
 
-    def download(self, *, filename=None, dir=""):
+    def download(self, *, filename=None, dir="."):
         """
         Downloads the project json to the given directory.
 
@@ -255,14 +255,15 @@ class Project(PartialProject):
             if filename is None:
                 filename = str(self.id)
             if not (dir.endswith("/") or dir.endswith("\\")):
-                dir = dir+"/"
+                dir += "/"
             self.update()
             response = requests.get(
                 f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
                 timeout=10,
             )
-            filename = filename.replace(".sb3", "")
-            open(f"{dir}{filename}.sb3", "wb").write(response.content)
+            filename = filename.removesuffix(".sb3")
+            with open(f"{dir}{filename}.sb3", "wb") as f:
+                f.write(response.content)
         except Exception:
             raise (
                 exceptions.FetchError(
