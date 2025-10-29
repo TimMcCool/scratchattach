@@ -326,7 +326,7 @@ class Project(PartialProject):
     
     # -- Project contents (body/json) -- #
     
-    def download(self, *, filename=None, dir=""):
+    def download(self, *, filename=None, dir="."):
         """
         Downloads the project json to the given directory.
 
@@ -338,7 +338,7 @@ class Project(PartialProject):
             if filename is None:
                 filename = str(self.id)
             if not (dir.endswith("/") or dir.endswith("\\")):
-                dir = dir + "/"
+                dir += "/"
             self.update()
             response = requests.get(
                 f"https://projects.scratch.mit.edu/{self.id}?token={self.project_token}",
