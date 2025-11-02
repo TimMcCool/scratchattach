@@ -27,11 +27,12 @@ def serve_js(filename):
     return send_from_directory('source/js', filename)
 
 # community projects are cached to prevent spamming Scratch's API
-community_projects_cache = []
+community_projects_cache: list[dict] = []
 last_cache_time = 0
 
 @app.route('/api/community_projects/')
 def community_projects():
+    global community_projects_cache
     if time.time() - 300 > last_cache_time:
         projects = sa.Studio(id=31478892).projects(limit=40)
         if isinstance(projects[0], dict): #atm the server this is running on still uses scratchattach 1.7.4 that returns a list of dicts here
