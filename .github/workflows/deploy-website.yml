@@ -1,0 +1,26 @@
+name: Deploy the scratchattach website
+
+on:
+  push:
+    branches:
+      - main              # ✅ only run on this branch
+    paths:
+      - 'website/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Move website directory
+        run: |
+          git checkout main
+          git worktree add /tmp/website website
+          cd /tmp/website
+          rm -rf *
+          cp -r ../../website/* .
+          git add --all
+          git commit -m "Deploy mydir contents to website"
+          git push origin website --force
