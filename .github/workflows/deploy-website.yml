@@ -14,13 +14,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Move website directory
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git
         run: |
-          git checkout main
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Deploy website directory to website branch
+        run: |
           git worktree add /tmp/website --orphan website
           cd /tmp/website
           rm -rf *
-          cp -r ../../website/* .
-          git add --all
-          git commit -m "Deploy mydir contents to website"
-          git push origin website --force
+          cp -r ${{ github.workspace }}/website/* .
+          git add .
+          git commit -m "Deploy website directory to website branch"
+          git push -u origin website --force
