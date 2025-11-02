@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>scratchattach</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/feather-icons"></link>
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+    <header>
+        <div class="logo-section" id="icon" style="cursor: pointer;" onclick="scrollToSection('intro')">
+            <img src="images/logo_small.svg" alt="scratchattach logo" class="logo">
+        </div>
+        <h1 style="font-family: 'Fira Code', monospace; cursor: pointer;" onclick="scrollToSection('intro')">scratchattach</h1> <!-- Change font here -->
+        <div class="nav-buttons">
+            <button onclick="window.open('https://github.com/TimMcCool/scratchattach/wiki/Documentation', '_blank');" class="header-btn">
+                </i>Documentation
+            </button>
+            <button onclick="window.open('https://github.com/TimMcCool/scratchattach/', '_blank');" class="header-btn">
+                <i data-feather="github" class="icon"></i> Source
+            </button>
+            <button onclick="scrollToSection('installation');" class="header-btn filled-btn">
+                <i data-feather="download" class="icon"></i> Install
+            </button>
+        </div>
+
+        <button onclick="openorclose();" class=" filled-btn" id="menu-button" style="display: none">
+            <i data-feather="more-vertical" class="icon"></i>
+        </button>
+
+        <div class="menu" style="display: none" id="menu">
+            <button onclick="openwin('https://github.com/TimMcCool/scratchattach/wiki/Documentation', '_blank');" class="">
+            </i>Documentation
+        </button>
+        <button onclick="openwin('https://github.com/TimMcCool/scratchattach/', '_blank');" class="">
+            <i data-feather="github" class="icon"></i> Source
+        </button>
+        <button onclick="scrollToSection('installation');" class="filled-btn">
+            <i data-feather="download" class="icon"></i> Install
+        </button>
+        </div>
+    </header>
+
+    <script>
+    let open = 0;
+    function openorclose() {
+        if (open === 0) {
+            document.getElementById('menu').style = "display: flex;";
+            open = 1;
+        } else { 
+            document.getElementById('menu').style = "display: none;";
+            open = 0;
+        }
+    }
+
+    function openwin(win, target) {
+        window.open(win, target);
+    }
+    </script>
+
+
+    <div class="background-container">
+        <div class="background-image"></div> <!-- New div for the background image -->
+        <section class="section-1" id="intro">
+            <div class="content">
+                <div class="row">
+                    <img src="images/logo.svg" alt="API Image" class="section-image">
+                    <div class="text-content">
+                        <h2>Scratch API made easy</h2>
+                        <p>scratchattach is the biggest and most popular Python library for Scratch.</p>
+                        <p style="margin-bottom:20px;">It allows setting cloud variables, following users, updating your profile, and<br>so much more!</p>
+                        <p style="margin-bottom:30px;">Additionally, it provides frameworks that simplify sending data through cloud variables.</p>
+                        <div class="buttons">
+                            <button onclick="window.open('https://github.com/TimMcCool/scratchattach/wiki/Documentation', '_blank');" class="outline-btn">Documentation</button>
+                            <button onclick="window.open('https://github.com/TimMcCool/scratchattach/', '_blank');" class="outline-btn"><i data-feather="github" class="icon"></i> Source</button>
+                            <button onclick="scrollToSection('installation');" class="filled-btn">
+                                <i data-feather="download" class="icon"></i> Install
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    
+        <div class="gradient-1"></div>
+    </div>
+
+    <section class="section-2" id="installation">
+        <div class="content">
+            <h2>Installation</h2>
+            <p style="margin-bottom:20px">Run the following command in your computer's command prompt / shell:</p>
+            <div class="expand-box" data-width="400px" id="pipInstallCmd">
+                <p id="expandText0" data-text="python -m pip install scratchattach"></p>
+            </div>                    
+            <p style="margin-bottom:20px">Import the library in Python:</p>
+            <div class="expand-box" data-width="400px" id="pyImportCmd">
+                <p id="expandText0" data-text="import scratchattach as sa"></p>
+            </div>                    
+            <p style="margin-bottom:20px">You need to have Python installed on your device.<br><a href="https://www.python.org/downloads/" style="color:white">Download Python here</a> if you don't have it.<br><br>You should learn the basics of Python before you use scratchattach.</p>
+            <a href="https://pypi.python.org/pypi/scratchattach/" rel="nofollow"><img src="https://camo.githubusercontent.com/715fa946e0de1274dbfda07203b9cbc02155cb6be4c7610d58b63e796c5ce422/68747470733a2f2f696d672e736869656c64732e696f2f707970692f7374617475732f736372617463686174746163682e737667" alt="PyPI status" data-canonical-src="https://img.shields.io/pypi/status/scratchattach.svg" style="max-width: 100%;"></a>
+            <a href="https://pypi.python.org/pypi/scratchattach/" rel="nofollow"><img src="https://camo.githubusercontent.com/1787273aecaf8a888999c8f95a5f305cad73aba9548c946496488a25d3751480/68747470733a2f2f696d672e736869656c64732e696f2f707970692f646d2f736372617463686174746163682e737667" alt="PyPI download month" data-canonical-src="https://img.shields.io/pypi/dm/scratchattach.svg" style="max-width: 100%;"></a>
+            <a href="https://pypi.python.org/pypi/scratchattach/" rel="nofollow"><img src="https://camo.githubusercontent.com/b5766bea5702fbbc90c82324445805ef72c8a4bae77cd6b01ff282c45975c784/68747470733a2f2f696d672e736869656c64732e696f2f707970692f762f736372617463686174746163682e737667" alt="PyPI version shields.io" data-canonical-src="https://img.shields.io/pypi/v/scratchattach.svg" style="max-width: 100%;"></a>
+            <a href="https://github.com/TimMcCool/scratchattach/blob/master/LICENSE"><img src="https://camo.githubusercontent.com/31b90e304f329ac89c5d7ddeabd82d7cdd09b2f1ef68300f0be37016cf3d1b66/68747470733a2f2f62616467656e2e6e65742f6769746875622f6c6963656e73652f54696d4d63436f6f6c2f73637261746368617474616368" alt="GitHub license" data-canonical-src="https://badgen.net/github/license/TimMcCool/scratchattach" style="max-width: 100%;"></a>
+            <a href="https://scratchattach.readthedocs.io/en/latest/?badge=latest" rel="nofollow"><img src="https://camo.githubusercontent.com/985f762d3b1f2d96600033ce94c787e8e38e243d9a0bea315c2c142eb6627cc3/68747470733a2f2f72656164746865646f63732e6f72672f70726f6a656374732f736372617463686174746163682f62616467652f3f76657273696f6e3d6c6174657374" alt="Documentation Status" data-canonical-src="https://readthedocs.org/projects/scratchattach/badge/?version=latest" style="max-width: 100%;"></a>
+        </div>
+    </section>
+
+    <div class="gradient-2">
+    </div>
+
+    <section class="section-3">
+        <div class="content">
+            <h2>Features</h2>
+            <div class="features">
+                <div class="feature-box">
+                    <div class="icon-circle">
+                        <i data-feather="key"></i>
+                    </div>
+                    <h3>Logging in</h3>
+                    <p>scratchattach allows you to login with your username / password or with your session id.<br><br>Your login is saved in a Session object. <a href="https://github.com/TimMcCool/scratchattach/wiki/Documentation#logging-in">Docs</a></p>
+                </div>
+                <div class="feature-box">
+                    <div class="icon-circle">
+                        <i data-feather="cloud"></i>
+                    </div>
+                    <h3>Cloud variables</h3>
+                    <p>Using a Session object, you can connect to a project's cloud variables and set / get cloud variables anytimes.<br><br>You can also set / get TurboWarp cloud variables and get variables without logging in. <a href="https://github.com/TimMcCool/scratchattach/wiki/Documentation#cloud-variables">Docs</a></p>
+                </div>
+                <div class="feature-box">
+                    <div class="icon-circle">
+                        <i data-feather="clipboard"></i>
+                    </div>
+                    <h3>Users, projects, studios and other site features</h3>
+                    <p>Almost all site features of the Scratch website can be used with scratchattach.<br>You can get and follow users, post comments, edit und upload projects, get message counts and forum posts, and do much more. <a href="https://github.com/TimMcCool/scratchattach/wiki/Documentation#users">Docs</a></p>
+                </div>
+                <div class="feature-box">
+                    <div class="icon-circle">
+                        <i data-feather="database"></i>
+                    </div>
+                    <h3>Cloud events and cloud storage</h3>
+                    <p>Cloud events allow reacting to cloud updates in real time. If a Scratcher sets / creates / deletes a cloud var on the given project, an event will be called. 
+                        <a href="https://github.com/TimMcCool/scratchattach/wiki/Documentation#cloud-events">Docs</a><br><br>
+                        Cloud storages provide an easy way to store project data by sending it over cloud variables.
+                        <a href="https://github.com/TimMcCool/scratchattach/wiki/Cloud Storage">Docs</a><br><br>
+                    </p>
+                </div>
+                <div class="feature-box">
+                    <div class="icon-circle">
+                        <i data-feather="message-square"></i>
+                    </div>
+                    <h3>Cloud requests</h3>
+                    <p>Cloud requests are similar to cloud events, but they also send back data to the project and automatically encode / decode and parse the received data. There's no length limit for the sent and returned data.<br><br>This allows seamless communication between Scratch and Python.
+                        <a href="https://github.com/TimMcCool/scratchattach/wiki/Cloud Requests">Docs</a></p>
+                </div>
+                <div class="feature-box">
+                    <div class="icon-circle">
+                        <i data-feather="mail"></i>
+                    </div>
+                    <h3>Message events and Filterbot</h3>
+                    <p>Message events allow reacting to messages in real time. Every time you receive a message on Scratch, an event will be called. 
+                        <a href="https://github.com/TimMcCool/scratchattach/wiki/Documentation#message-events">Docs</a><br><br>
+                        scratchattach provides a filterbot framework that can be used to automatically delete spam comments.
+                        <a href="https://github.com/TimMcCool/scratchattach/wiki/Filterbot">Docs</a><br><br>
+                    </p>
+                </div>
+                <div class="feature-box">
+                    <div class="icon-circle">
+                        <i data-feather="file-text"></i>
+                    </div>
+                    <h3>Project JSON downloading and editing</h3>
+                    <p>scratchattach allows getting, parsing and editing the contents of a project, either from the Scratch website or from a file.<br><br>Saving the edited project to a file or uploading it to the Scratch website is also possible.
+                        <a href="https://github.com/TimMcCool/scratchattach/wiki/Documentation#project-json-editing">Docs</a><br><br>
+                    </p>
+                </div>
+                <div class="feature-box">
+                    <div class="icon-circle">
+                        <i data-feather="server"></i>
+                    </div>
+                    <h3>Self-hosting TurboWarp websocket servers</h3>
+                    <p>scratchattach supports hosting a customizable cloud websocket server that allows non-numeric cloud values, supports IP blocking and much more - with almost no effort required.<br>The server can be used as cloud host for cloud projects on TurboWarp.
+                        <a href="https://github.com/TimMcCool/scratchattach/wiki/Documentation#hosting-a-cloud-server">Docs</a><br><br>
+                    </p>
+                </div>
+                <div class="feature-box">
+                    <div class="icon-circle">
+                        <i data-feather="plus"></i>
+                    </div>
+                    <h3>... and more!</h3>
+                    <p style="margin-bottom:20px">See the documentation for all features</p>
+                    <button onclick="window.open('https://github.com/TimMcCool/scratchattach/wiki/Documentation', '_blank');" class="outline-btn">Documentation</button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    
+    <div class="gradient-3"></div>
+
+    <section class="section-2" id="gettingstarted">
+        <div class="content">
+            <h2 style="padding-top:20px">Getting started</h2>
+            <p style="margin-bottom:20px">Log in with your Scratch account:</p>
+            <div class="expand-box" data-width="700px" id="logInCmd">
+                <p id="expandText0" data-text="import scratchattach as sa" margin="0"></p>
+                <p id="expandText1" data-text="session = sa.login('username', 'password')" margin="0"></p>
+            </div>                    
+            <p style="margin-bottom:20px">Set and get cloud variables anytime:</p>
+            <div class="expand-box" data-width="700px" id="cloudCmd">
+                <p id="expandText0" data-text="cloud = session.connect_cloud('project_id')"></p>
+                <p id="expandText1" data-text="‎"></p>
+                <p id="expandText2" data-text="cloud.set_var('variable', 'value')"></p>
+                <p id="expandText3" data-text="cloud.get_var('variable')"></p>
+            </div>                    
+            <p style="margin-bottom:20px">Follow users, love their projects and comment:</p>
+            <div class="expand-box" data-width="700px" id="siteCmd">
+                <p id="expandText0" data-text="user = session.connect_user('username')"></p>
+                <p id="expandText1" data-text="user.follow()"></p>
+                <p id="expandText2" data-text="‎"></p>
+                <p id="expandText3" data-text="project = user.projects()[0]"></p>
+                <p id="expandText4" data-text="project.love()"></p>
+                <p id="expandText5" data-text="project.post_comment('Great project!')"></p>
+            </div>                    
+            <div class="buttons">
+                <button onclick="window.open('https://github.com/TimMcCool/scratchattach/wiki/Examples', '_blank');" class="outline-btn">More examples</button>
+                <button onclick="window.open('https://github.com/TimMcCool/scratchattach/wiki/Documentation', '_blank');" class="filled-btn"><i data-feather="book-open" class="icon"></i> Documentation</button>            
+            </div>
+        </div>
+    </section>
+
+    <div class="gradient-2"></div>
+    <section class="section-3" id="hosting">
+        <div class="content">
+            <div class="row" style="margin:0; padding:0;">
+                <img src="images/section5_image.svg" alt="API Image" width="270", style="margin:60px">
+                <div class="text-content">
+                    <h2>Hosting</h2>
+                    <p style="margin-bottom:20px;">To run your Python code 24/7, you will need to host it.</p>
+                    <p style="margin-bottom:20px;">In the wiki, you can find a list of recommended hosting services that can be used for this purpose.</p>
+                    <div class="buttons">
+                        <button onclick="window.open('https://github.com/TimMcCool/scratchattach/wiki/Hosting', '_blank');" class="outline-btn">Hosting services</button>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="gradient-3"></div>
+    <section class="section-2" id="community">
+        <h2 style="padding-top:20px">Community Projects</h2>
+        <p>Community-made Scratch projects that use scratchattach on their backends.</p>
+        <div class="content" style="margin-top:45px; margin-bottom:45px;">
+            <div class="project-container" id="community-project-container">
+                Loading ...
+            </div>
+        </div>
+        <div class="buttons">
+            <button onclick="window.open('https://scratch.mit.edu/studios/31478892/', '_blank');" class="outline-btn">More</button>
+        </button>
+    </section>
+
+    <div class="gradient-2"></div>
+    <section class="section-3" id="footer" style="padding-top:45px;">
+        Made by <a href="https://scratch.mit.edu/users/TimMcCool">TimMcCool</a>. Not affiliated with the Scratch team or the Scratch foundation.<br>scratchattach is fully open source and not commercial. You are welcome to contribute to the codebase on GitHub.<br><br>scratchattach values your privacy and does not send any data to external servers, other than the Scratch API, TurboWarp or Ocular.<br><br>scratchattach was made for building more powerful Scratch projects.<br>You are responsible for using scratchattach in an appropriate way that aligns with Scratch's Terms of Service.
+    </section>
+
+
+    <script>
+        feather.replace();
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const elementPosition = section.getBoundingClientRect().top + window.scrollY; // Add current scroll position
+            window.scrollTo({ behavior: 'smooth', top: elementPosition-75});
+            document.getElementById('menu').style = "display: none;";
+            open = 0;
+        }
+
+    </script>
+    <script src="js/flyInAni.js"></script>
+    <script src="js/loadCommunityProjects.js"></script>
+</body>
+</html>
