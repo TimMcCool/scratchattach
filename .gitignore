@@ -1,0 +1,15 @@
+build/
+dist/
+scratchattach.egg-info/
+__pycache__/
+README.md
+setup.py
+scratchattach/test.py
+scratchattach.code-workspace
+**/.DS_Store
+.env
+tests/manual_tests/**
+tests/util/local_auth.toml
+.venv
+identifier.sqlite
+obfuscated.sb3
