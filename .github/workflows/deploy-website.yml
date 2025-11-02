@@ -3,7 +3,7 @@ name: Deploy the scratchattach website
 on:
   push:
     branches:
-      - main              # ✅ only run on this branch
+      - main
     paths:
       - 'website/**'
   workflow_dispatch:
@@ -17,7 +17,7 @@ jobs:
       - name: Move website directory
         run: |
           git checkout main
-          git worktree add /tmp/website website
+          git worktree add /tmp/website --orphan website
           cd /tmp/website
           rm -rf *
           cp -r ../../website/* .
