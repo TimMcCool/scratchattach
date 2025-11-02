@@ -24,9 +24,10 @@ jobs:
 
       - name: Deploy website directory to website branch
         run: |
+          SRC_DIR="${GITHUB_WORKSPACE}/website"
           git switch --orphan website-tmp
           git rm -rf . || true
-          cp -r website/* .
+          cp -r "$SRC_DIR"/. .
           git add .
           git commit -m "Deploy website directory"
           git push origin website --force
