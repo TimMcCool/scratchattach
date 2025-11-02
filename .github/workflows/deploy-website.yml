@@ -1,4 +1,4 @@
-name: Deploy the scratchattach website
+name: Deploy website
 
 on:
   push:
@@ -11,9 +11,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -24,10 +24,9 @@ jobs:
 
       - name: Deploy website directory to website branch
         run: |
-          git worktree add /tmp/website --orphan website
-          cd /tmp/website
-          rm -rf *
-          cp -r ${{ github.workspace }}/website/* .
+          git switch --orphan website-tmp
+          git rm -rf .
+          cp -r website/* .
           git add .
-          git commit -m "Deploy website directory to website branch"
-          git push -u origin website --force
+          git commit -m "Deploy website directory"
+          git push origin website --force
