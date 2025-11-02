@@ -11,6 +11,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+      statuses: write
+      pull-requests: write
     steps:
       - name: Checkout main branch
         uses: actions/checkout@v4
@@ -26,3 +31,40 @@ jobs:
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
           commit_message: ${{ github.event.head_commit.message }}
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install cryptography
+
+      - name: Get vercel auth
+        env:
+          FERNET_KEY: ${{ secrets.FERNET_KEY }}
+        run: |
+          cd tests
+          python -m util vercel | {
+            read vercel_token
+            read org_id
+            read project_id
+          } >/dev/null 2>/dev/null
+          cd ..
+      
+      - name: Checkout website branch
+        uses: actions/checkout@v4
+        with:
+          ref: 'website'
+
+      - uses: nexterias/actions-vercel@v1
+        id: vercel
+        with:
+          token: $vercel_token
+          org-id: $org_id
+          project-id: $project_id
+          production: true
+          prebuilt: true

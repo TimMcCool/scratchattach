@@ -42,3 +42,4 @@ def teacher_session() -> Optional[_Session]:
         _teacher_session = login(data["username"], data["password"])
 
     return _teacher_session
+

@@ -6,8 +6,10 @@ import secrets
 
 try:
     from .keyhandler import FERNET
-except ImportError:
+    from .vercelauth import vercel_auth
+except ImportError as excp:
     from keyhandler import FERNET
+    from vercelauth import vercel_auth
 
 
 def gen_keystr():
@@ -28,6 +30,8 @@ def main():
             decrypt.add_argument("content", nargs="?")
         if keygen := command.add_parser("keygen", help="Generate a key. You could set this to $FERNET_KEY if you want"):
             ...
+        if vercelauth := command.add_parser("vercel", help="Output the vercel auth data."):
+            ...
 
     args = parser.parse_args(namespace=Args())
 
@@ -44,6 +48,11 @@ def main():
 
         case "keygen":
             print(gen_keystr())
+            
+        case "vercel":
+            print(
+                "\n".join(vercel_auth())
+            )
 
 
 if __name__ == "__main__":

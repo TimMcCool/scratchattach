@@ -21,8 +21,8 @@ def str_2_key(gen: str) -> bytes:
     return urlsafe_b64encode(gen.encode())
 
 
-_fernet_key_raw = os.environ["FERNET_KEY"]
-FERNET_KEY = str_2_key(_fernet_key_raw)
+_fernet_key_raw = os.getenv("FERNET_KEY")
+FERNET_KEY = str_2_key(_fernet_key_raw) if _fernet_key_raw is not None else Fernet.generate_key()
 FERNET = Fernet(FERNET_KEY)
 
 T = TypeVar("T")
