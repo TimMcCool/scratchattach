@@ -33,7 +33,8 @@ last_cache_time = 0
 @app.route('/api/community_projects/')
 def community_projects():
     global community_projects_cache
-    if time.time() - 300 > last_cache_time:
+    global last_cache_time
+    if time.time() > last_cache_time + 300:
         projects = sa.Studio(id=31478892).projects(limit=40)
         if isinstance(projects[0], dict): #atm the server this is running on still uses scratchattach 1.7.4 that returns a list of dicts here
             community_projects_cache = [
@@ -43,4 +44,5 @@ def community_projects():
             community_projects_cache = [
                 {"project_id":p.id, "title":p.title, "author":p.author_name, "thumbnail_url":f"https://uploads.scratch.mit.edu/get_image/project/{p.id}_480x360.png"} for p in projects
             ]
+        last_cache_time = time.time()
     return jsonify(random.choices(community_projects_cache, k=5))
