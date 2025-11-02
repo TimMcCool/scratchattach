@@ -51,9 +51,12 @@ jobs:
         run: |
           cd tests
           python -m util vercel | {
-            read vercel_token
-            read org_id
-            read project_id
+            read vercel_token_val
+            read org_id_val
+            read project_id_val
+            echo "vercel_token=$vercel_token_val" >> $GITHUB_OUTPUT
+            echo "org_id=$org_id_val" >> $GITHUB_OUTPUT
+            echo "project_id=$project_id_val" >> $GITHUB_OUTPUT
           } >/dev/null 2>/dev/null
           cd ..
       
