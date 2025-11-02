@@ -269,38 +269,5 @@ class SingletonMeta(EnumMeta):
         self.__bases__ = old_bases
         return result
 
+Singleton = Enum
 
-if TYPE_CHECKING:
-    Singleton = Enum
-else:
-    class Singleton(metaclass=SingletonMeta):
-
-        def __new__(cls, val=None):
-            if cls is Singleton:
-                raise TypeError("Singleton cannot be created directly.")
-            if hasattr(cls, "INSTANCE"):
-                return getattr(cls, "INSTANCE")
-            if val == 0:
-                return super().__new__(cls)
-            raise TypeError("Has no instance.")
-
-        def __init__(self, *args, **kwds):
-            pass
-
-        def __repr__(self):
-            return self.__class__.__name__
-
-        def __str__(self):
-            return self.__class__.__name__
-
-        def __format__(self, format_spec):
-            return str.__format__(str(self), format_spec)
-
-        def __hash__(self):
-            return hash(self.__class__)
-
-        def __reduce_ex__(self, proto):
-            return self.__class__, ()
-
-        def __deepcopy__(self, memo):
-            return self
