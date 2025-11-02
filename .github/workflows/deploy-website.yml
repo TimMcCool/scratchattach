@@ -11,23 +11,16 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Checkout main branch
+        uses: actions/checkout@v4
 
       - name: Deploy website directory to website branch
-        run: |
-          SRC_DIR="${GITHUB_WORKSPACE}/website"
-          git switch --orphan website-tmp
-          git rm -rf . || true
-          cp -r "$SRC_DIR"/. .
-          git add .
-          git commit -m "Deploy website directory"
-          git push origin website --force
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./website
+          publish_branch: website
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: ${{ github.event.head_commit.message }}
