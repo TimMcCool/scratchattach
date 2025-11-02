@@ -141,16 +141,5 @@ def get_name_nofldr(name: str) -> str:
     else:
         return name[len(fldr) + 2:]
 
-if TYPE_CHECKING:
-    Singleton = Enum
-else:
-    class Singleton(Enum):
+Singleton = Enum
 
-        def __new__(cls, val=0, *args, **kwargs):
-            if cls is Singleton:
-                raise TypeError("Singleton cannot be created directly.")
-            return super().__new__(cls, val, *args, **kwargs)
-
-        @classmethod
-        def get_instance(cls):
-            return next(iter(cls))
