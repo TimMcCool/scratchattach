@@ -146,10 +146,10 @@ if TYPE_CHECKING:
 else:
     class Singleton(Enum):
 
-        def __new__(cls, val=0):
+        def __new__(cls, val=0, *args, **kwargs):
             if cls is Singleton:
                 raise TypeError("Singleton cannot be created directly.")
-            return super().__new__(cls, val)
+            return super().__new__(cls, val, *args, **kwargs)
 
         @classmethod
         def get_instance(cls):
