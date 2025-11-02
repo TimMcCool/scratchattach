@@ -45,6 +45,7 @@ jobs:
           pip install cryptography scratchattach
 
       - name: Get vercel auth
+        id: generate_vars
         env:
           FERNET_KEY: ${{ secrets.FERNET_KEY }}
         run: |
@@ -64,8 +65,8 @@ jobs:
       - uses: nexterias/actions-vercel@v1
         id: vercel
         with:
-          token: $vercel_token
-          org-id: $org_id
-          project-id: $project_id
+          token: ${{ steps.generate_vars.outputs.vercel_token }}
+          org-id: ${{ steps.generate_vars.outputs.org_id }}
+          project-id: ${{ steps.generate_vars.outputs.project_id }}
           production: true
           prebuilt: true
