@@ -25,7 +25,7 @@ jobs:
       - name: Deploy website directory to website branch
         run: |
           git switch --orphan website-tmp
-          git rm -rf .
+          git rm -rf . || true
           cp -r website/* .
           git add .
           git commit -m "Deploy website directory"
