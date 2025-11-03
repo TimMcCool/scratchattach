@@ -39,42 +39,46 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Python deps
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install cryptography scratchattach
+
+      - name: Generate and mask Vercel secrets
+        id: generate_vars
+        env:
+          FERNET_KEY: ${{ secrets.FERNET_KEY }}
+        run: |
+          cd tests
+          # Extract secrets securely
+          vercel_token_val=$(python -m util vercel | sed -n '1p')
+          org_id_val=$(python -m util vercel | sed -n '2p')
+          project_id_val=$(python -m util vercel | sed -n '3p')
+
+          # Mask values so they never appear in logs
+          echo "::add-mask::$vercel_token_val"
+          echo "::add-mask::$org_id_val"
+          echo "::add-mask::$project_id_val"
+
+          # Store them as environment variables (scoped to this job)
+          echo "vercel_token=$vercel_token_val" >> $GITHUB_ENV
+          echo "org_id=$org_id_val" >> $GITHUB_ENV
+          echo "project_id=$project_id_val" >> $GITHUB_ENV
+
+          cd ..
+        shell: bash
 
       - name: Checkout website branch
         uses: actions/checkout@v4
         with:
           ref: 'website'
 
-      # New single-step secure deploy:
-      - name: Generate Vercel token and deploy (keeps secrets in-step only)
-        env:
-          FERNET_KEY: ${{ secrets.FERNET_KEY }}
-        run: |
-          set -euo pipefail
-
-          # run token generator and capture output into variables WITHOUT printing
-          # Adjust this read pattern if `python -m util vercel` emits a different format.
-          cd tests
-          IFS=$'\n' read -r VERCEL_TOKEN ORG_ID PROJECT_ID < <(python -m util vercel)
-          cd ..
-
-          # Mask the values so accidental prints later are redacted
-          echo "::add-mask::$VERCEL_TOKEN"
-          echo "::add-mask::$ORG_ID"
-          echo "::add-mask::$PROJECT_ID"
-
-          # Install node / vercel CLI (no global logs of the token)
-          curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-          sudo apt-get install -y nodejs
-          npm install -g vercel
-
-          # Run Vercel deploy using the token only in this step (no exporting)
-          # Use --confirm so it won't prompt; adapt flags for your project.
-          cd website
-          vercel --token "$VERCEL_TOKEN" --prod --confirm --org "$ORG_ID" --scope "$ORG_ID" --force --local-config ./vercel.json -- --project "$PROJECT_ID"
-        shell: bash
+      - uses: nexterias/actions-vercel@v1
+        id: vercel
+        with:
+          token: ${{ env.vercel_token }}
+          org-id: ${{ env.org_id }}
+          project-id: ${{ env.project_id }}
+          production: true
+          prebuilt: true
