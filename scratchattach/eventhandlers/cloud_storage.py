@@ -105,7 +105,6 @@ class CloudStorage(CloudRequests):
                 return f"Error: Key {key} doesn't exist in database {db_name}"
 
     def set(self, db_name, key, value):
-        print(db_name, key, value, self._databases)
         return self.get_database(db_name).set(key, value)
 
     def keys(self, db_name) -> list:

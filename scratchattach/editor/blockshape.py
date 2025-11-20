@@ -5,7 +5,7 @@ from __future__ import annotations
 
 # Perhaps this should be merged with pallete.py
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, Literal
 
 from . import commons
 from scratchattach.utils.enums import _EnumWrapper
@@ -20,7 +20,7 @@ class _MutationDependent(commons.Singleton):
         raise TypeError("Need mutation data to work out attribute value.")
 
 
-MUTATION_DEPENDENT: Final[_MutationDependent] = _MutationDependent()
+MUTATION_DEPENDENT: Final[Literal[_MutationDependent.INSTANCE]] = _MutationDependent.INSTANCE
 """Value used when mutation data is required to work out the attribute value"""
 
 
