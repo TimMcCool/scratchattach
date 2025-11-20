@@ -2,7 +2,6 @@
 import re
 import bs4
 import json
-import httpx
 import io
 
 from dataclasses import dataclass
@@ -103,7 +102,7 @@ def create_placeholder_project(title: str, data: bytes):
     print(f"{asset_information = }")
     print(f"{body.name = }")
     with requests.no_error_handling():
-        resp = httpx.post("https://share.turbowarp.org/api/projects/new", data={
+        resp = requests.post("https://share.turbowarp.org/api/projects/new", data={
             "title": title,
             "assetInformation": asset_information,
         }, files={
