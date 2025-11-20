@@ -106,6 +106,12 @@ def monthly_site_traffic() -> MonthlySiteTraffic:
     data.pop("_TS")
     return data
 
+def check_cloud_status(): # MilesWK Actually did something good!
+    try:
+        resp = requests.get("https://clouddata.scratch.mit.edu/health", timeout=5)
+        return "Online" if resp.status_code == 200 else "Offline"
+    except requests.RequestException:
+        return "Offline"
 
 type CountryCounts = TypedDict("CountryCounts", {
     '0': int,  # not sure what 0 is. maybe it's the 'other' category
