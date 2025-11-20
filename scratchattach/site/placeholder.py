@@ -1,6 +1,9 @@
 # Classes and methods for interacting with turbowarp placeholder (https://share.turbowarp.org/)
 import re
 import bs4
+import json
+import httpx
+import io
 
 from dataclasses import dataclass
 from typing_extensions import Optional
@@ -10,6 +13,7 @@ from scratchattach.site import session
 from scratchattach.site.typed_dicts import PlaceholderProjectDataDict
 from scratchattach.utils.requests import requests
 from scratchattach import editor
+from scratchattach.utils import commons
 
 
 @dataclass
@@ -84,6 +88,44 @@ def get_asset(sha256: str) -> bytes:
 def get_placeholder_project(_id: str):
     return PlaceholderProject(_id)
 
+def create_placeholder_project(title: str, data: bytes):
+    body = editor.Project.from_sb3(data)
+
+    asset_information: dict[str, dict[str, str | int]] = {}
+    for asset in body.assets:
+        print(asset)
+        print(asset.asset_file.sha256)
+        asset_information[asset.md5ext] = {
+            "sha256": asset.asset_file.sha256,
+            "size": len(asset.asset_file.data)
+        }
+
+    print(f"{asset_information = }")
+    print(f"{body.name = }")
+    with requests.no_error_handling():
+        resp = httpx.post("https://share.turbowarp.org/api/projects/new", data={
+            "title": title,
+            "assetInformation": asset_information,
+        }, files={
+                          "project": ("blob", data, 'application/octet-stream'), 
+                             }, headers={
+                             'accept': '*/*',
+                             'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8',
+                             # 'content-type': 'multipart/form-data; boundary=----WebKitFormBoundaryYzpNqB5A2GEr99Vd',
+                             'dnt': '1',
+                             'origin': 'https://share.turbowarp.org',
+                             'priority': 'u=1, i',
+                             'referer': 'https://share.turbowarp.org/',
+                             'sec-ch-ua': '"Google Chrome";v="141", "Not?A_Brand";v="8", "Chromium";v="141"',
+                             'sec-ch-ua-mobile': '?0',
+                             'sec-ch-ua-platform': '"Windows"',
+                             'sec-fetch-dest': 'empty',
+                             'sec-fetch-mode': 'cors',
+                             'sec-fetch-site': 'same-origin',
+                             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36'
+                             })
+
+    print(resp, resp.content)
 
 if __name__ == '__main__':
     p = get_placeholder_project("44c35afc-fe00-49d8-afe7-d71f4430c121")
