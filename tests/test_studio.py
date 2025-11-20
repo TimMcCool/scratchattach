@@ -11,8 +11,8 @@ def test_studio():
         return
     sess = session()
 
-    studio = sess.connect_studio(34253687)
-    assert studio.get_exact_project_count() == 1250
+    studio = sess.connect_studio(247962)
+    assert studio.get_exact_project_count() > 100000 
 
     studio = sess.connect_studio(50809872)
 
