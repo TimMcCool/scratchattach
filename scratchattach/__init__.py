@@ -32,6 +32,6 @@ from .site.classroom import Classroom, get_classroom
 from .site.user import User, get_user, Rank
 from .site._base import BaseSiteComponent
 from .site.browser_cookies import Browser, ANY, FIREFOX, CHROME, CHROMIUM, VIVALDI, EDGE, EDGE_DEV, SAFARI
-from .site.placeholder import PlaceholderProject, get_placeholder_project
+from .site.placeholder import PlaceholderProject, get_placeholder_project, create_placeholder_project
 
 from . import editor
