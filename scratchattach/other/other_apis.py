@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import json
+import traceback
 
 from scratchattach.site import project, studio, session
 from scratchattach.utils import commons
+from scratchattach.utils import exceptions
 from scratchattach.utils.commons import parse_object_list
 from scratchattach.utils.enums import Languages, Language, TTSVoices, TTSVoice
 from scratchattach.utils.exceptions import BadRequest, InvalidLanguage, InvalidTTSGender
@@ -106,12 +108,13 @@ def monthly_site_traffic() -> MonthlySiteTraffic:
     data.pop("_TS")
     return data
 
-def check_cloud_status(): # MilesWK Actually did something good!
-    try:
-        resp = requests.get("https://clouddata.scratch.mit.edu/health", timeout=5)
-        return "Online" if resp.status_code == 200 else "Offline"
-    except requests.RequestException:
-        return "Offline"
+def check_cloud_status():
+    with requests.no_error_handling():
+        try:
+            resp = requests.get("https://clouddata.scratch.mit.edu/health", timeout=5)
+            return f"Online: {resp.content}" if resp.status_code == 200 else "Offline" # WIP!
+        except exceptions.FetchError as e:
+            return f"Offline {e}"
 
 type CountryCounts = TypedDict("CountryCounts", {
     '0': int,  # not sure what 0 is. maybe it's the 'other' category
