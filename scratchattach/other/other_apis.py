@@ -1,8 +1,10 @@
 """Other Scratch API-related functions"""
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+from typing import Any
 import json
-import traceback
+import dataclasses
 
 from scratchattach.site import project, studio, session
 from scratchattach.utils import commons
@@ -102,19 +104,42 @@ class MonthlySiteTraffic(TypedDict):
     users: str
     sessions: str
 
+class CloudStatusRedis(TypedDict):
+    connected: bool
+    ready: bool
+
+@dataclass
+class CloudStatus:
+    is_online: bool
+    _raw: Any = field(repr=False, default=None)
+    
+    _: dataclasses.KW_ONLY
+    uptime: Optional[float] = None
+    load: Optional[list[float]] = None
+    redis: Optional[CloudStatusRedis] = None
 
 def monthly_site_traffic() -> MonthlySiteTraffic:
     data = requests.get("https://scratch.mit.edu/statistics/data/monthly-ga/").json()
     data.pop("_TS")
     return data
 
-def check_cloud_status():
+def get_cloud_status() -> CloudStatus:
     with requests.no_error_handling():
         try:
             resp = requests.get("https://clouddata.scratch.mit.edu/health", timeout=5)
-            return f"Online: {resp.content}" if resp.status_code == 200 else "Offline" # WIP!
-        except exceptions.FetchError as e:
-            return f"Offline {e}"
+            if resp.status_code != 200:
+                return CloudStatus(False, resp.content)
+            try:
+                data = resp.json()
+                return CloudStatus(True, resp.content,
+                                   uptime=data["uptime"],
+                                   load=data["load"],
+                                   redis=data["redis"])
+
+            except json.JSONDecodeError:
+                return CloudStatus(True, resp.content)
+        except exceptions.FetchError:
+            return CloudStatus(False)
 
 type CountryCounts = TypedDict("CountryCounts", {
     '0': int,  # not sure what 0 is. maybe it's the 'other' category
