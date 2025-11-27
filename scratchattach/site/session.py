@@ -46,7 +46,7 @@ def enforce_ratelimit(__type: str, name: str, amount: int = 5, duration: int = 6
     cache = ratelimit_cache
     cache.setdefault(__type, [])
     uses = cache[__type]
-    while uses[-1] < time.time() - duration:
+    while uses and uses[-1] < time.time() - duration:
         uses.pop()
     if len(uses) < amount:
         uses.insert(0, time.time())
