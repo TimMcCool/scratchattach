@@ -147,3 +147,36 @@ class PlaceholderProjectDataDict(TypedDict):
     metadata: PlaceholderProjectDataMetadataDict
     md5extsToSha256: OrderedDict[str, str]
     adminOwnershipToken: Optional[str]
+
+class ActivityDict(TypedDict):
+    id: int
+    datetime_created: str
+    actor_username: str
+    actor_id: int
+    type: str
+
+    # addcomment
+    comment_type: NotRequired[int]
+    comment_obj_id: NotRequired[int]
+    comment_id: NotRequired[int]
+    comment_fragment: NotRequired[str]
+    comment_obj_title: NotRequired[str]
+    commentee_username: NotRequired[Optional[str]]
+
+    # forumpost
+    topic_id: NotRequired[int]
+    topic_title: NotRequired[str]
+
+    # followuser
+    followed_user_id: NotRequired[int]
+    followed_username: NotRequired[str]
+
+    # loveproject
+    project_id: NotRequired[int]
+    title: NotRequired[str]
+
+    # favoriteproject
+    project_title: NotRequired[str]
+
+    # curatorinvite & studioactivity
+    gallery_id: NotRequired[int]
