@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "scratchattach"
 version = "2.1.13"
-authors = [{name = "TimMcCool", email = ""}]
+authors = [{name = "TimMcCool"}]
 description = "A Scratch API Wrapper"
 requires-python = ">= 3.12"
 dependencies = [
@@ -41,3 +41,6 @@ scratch = "scratchattach.__main__:main"
 [project.optional-dependencies]
 cli = ["rich-pixels"]
 lark = ["lark"]
+
+[tool.setuptools.packages]
+find = {include = ["scratchattach"]}
