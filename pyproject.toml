@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+version = "2.1.13"
+name = "scratchattach"
+dependencies = [
+	"websocket-client",
+	"requests",
+	"bs4",
+	"SimpleWebSocketServer",
+	"typing-extensions",
+	"browser_cookie3",
+	"aiohttp",
+	"rich"
+]
+requires-python = ">= 3.12"
+authors = [{name = "TimMcCool", email = ""}]
+description = "A Scratch API Wrapper"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["scratch api", "scratchattach", "scratch api python", "scratch python", "scratch for python", "scratch", "scratch cloud", "scratch cloud variables", "scratch bot"]
+classifiers=[
+	"Development Status :: 5 - Production/Stable",
+	"Intended Audience :: Developers",
+	"Programming Language :: Python :: 3",
+	"Operating System :: Unix",
+	"Operating System :: MacOS :: MacOS X",
+	"Operating System :: Microsoft :: Windows",
+]
+
+[project.urls]
+Source = "https://github.com/timmccool/scratchattach"
+Homepage = "https://scratchattach.tim1de.net"
+
+[project.optional-dependencies]
+cli = ["rich-pixels"]
+lark = ["lark"]
+
+[project.entry-points."console_scripts"]
+scratch = "scratchattach.__main__:main"
