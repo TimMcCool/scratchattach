@@ -7,10 +7,12 @@ import warnings
 from dataclasses import dataclass
 from typing import Optional, Any
 from enum import Enum
+from datetime import datetime
 
 from bs4 import Tag
 
 from . import user, project, studio, session, forum
+from .typed_dicts import ActivityDict
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions
 
@@ -72,7 +74,8 @@ class Activity(BaseSiteComponent):
     changed_fields: Optional[dict[str, str]] = None
     is_reshare: Optional[bool] = None
 
-    datetime_created: Optional[str] = None
+    datetime_created: Optional[datetime] = None
+    datetime_created_raw: Optional[str] = None
     time: Any = None
     type: Optional[ActivityTypes] = None
 
@@ -180,7 +183,7 @@ class Activity(BaseSiteComponent):
         print("Warning: Activity objects can't be updated")
         return False  # Objects of this type cannot be updated
 
-    def _update_from_dict(self, data):
+    def _update_from_dict(self, data: ActivityDict):
         self.raw = data
 
         self._session = data.get("_session", self._session)
@@ -214,7 +217,8 @@ class Activity(BaseSiteComponent):
         self.changed_fields = data.get("changed_fields", self.changed_fields)
         self.is_reshare = data.get("is_reshare", self.is_reshare)
 
-        self.datetime_created = data.get("datetime_created", self.datetime_created)
+        self.datetime_created_raw = data.get("datetime_created", self.datetime_created_raw)
+        self.datetime_created = datetime.fromisoformat(self.datetime_created_raw)
         self.time = data.get("time", self.time)
 
         _type = data.get("type", self.type)
@@ -252,7 +256,8 @@ class Activity(BaseSiteComponent):
         self.actor_username = username
         self.username = username
         self.raw = data
-        self.datetime_created = _time
+        self.datetime_created_raw = _time
+        self.datetime_created = datetime.fromisoformat(self.datetime_created_raw)
         if activity_type == 0:
             self.type = ActivityTypes.followuser
             self.followed_username = data["followed_username"]
@@ -339,7 +344,8 @@ class Activity(BaseSiteComponent):
             while '\xa0' in _time:
                 _time = _time.replace('\xa0', ' ')
 
-        self.datetime_created = _time
+        self.datetime_created_raw = _time
+        self.datetime_created = datetime.fromisoformat(self.datetime_created_raw)
         self.actor_username = data.find('div').find('span').text
 
         self.target_name = data.find('div').find('span').find_next().text
