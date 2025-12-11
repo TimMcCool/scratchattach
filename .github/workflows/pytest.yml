@@ -31,6 +31,7 @@ jobs:
           pip install . # install scratchattach from fs and dependencies
           pip install pytest
           pip install cryptography
+          pip install websockets
 
       - name: Test with pytest
         env:
