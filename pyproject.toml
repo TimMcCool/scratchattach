@@ -44,3 +44,8 @@ lark = ["lark"]
 
 [tool.setuptools.packages]
 find = {include = ["scratchattach"]}
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
