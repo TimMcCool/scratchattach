@@ -78,6 +78,8 @@ class UserProfileDict(TypedDict):
     bio: str
     country: str
     images: dict[str, str]
+    membership_label: NotRequired[int]
+    membership_avatar_badge: NotRequired[int]
 
 class UserDict(TypedDict):
     id: NotRequired[int]

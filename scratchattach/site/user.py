@@ -93,6 +93,8 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     icon_url: str = field(kw_only=True, default="")
     id: int = field(kw_only=True, default=0)
     scratchteam: bool = field(kw_only=True, repr=False, default=False)
+    is_member: bool = field(kw_only=True, repr=False, default=False)
+    has_ears: bool = field(kw_only=True, repr=False, default=False)
     _classroom: tuple[bool, Optional[classroom.Classroom]] = field(init=False, default=(False, None))
     _headers: dict[str, str] = field(init=False, default_factory=headers.copy)
     _cookies: dict[str, str] = field(init=False, default_factory=dict)
@@ -141,14 +143,20 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
 
     def _update_from_dict(self, data: Union[dict, typed_dicts.UserDict]):
         data = cast(typed_dicts.UserDict, data)
-        self.id = data["id"]
-        self.username = data["username"]
-        self.scratchteam = data["scratchteam"]
-        self.join_date = data["history"]["joined"]
-        self.about_me = data["profile"]["bio"]
-        self.wiwo = data["profile"]["status"]
-        self.country = data["profile"]["country"]
-        self.icon_url = data["profile"]["images"]["90x90"]
+
+        self.id = data.get("id", self.id)
+        self.username = data.get("username", self.username)
+        self.scratchteam = data.get("scratchteam", self.scratchteam)
+        if history := data.get("history"):
+            self.join_date = history["joined"]
+
+        if profile := data.get("profile"):
+            self.about_me = profile["bio"]
+            self.wiwo = profile["status"]
+            self.country = profile["country"]
+            self.icon_url = profile["images"]["90x90"]
+            self.is_member = bool(profile.get("membership_label", False))
+            self.has_ears = bool(profile.get("membership_avatar_badge", False))
         return True
 
     def _assert_permission(self):
@@ -611,6 +619,25 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                 headers=self._headers
             ).text
         return commons.webscrape_count(text, "Favorites (", ")")
+
+    def has_badge(self) -> bool:
+        """
+        Returns:
+            bool: Whether the user has a scratch membership badge on their profile (located next to the follow button)
+        """
+        with requests.no_error_handling():
+            resp = requests.get(self.url)
+            soup = BeautifulSoup(resp.text, "html.parser")
+            head = soup.find("div", {"class": "box-head"})
+            if not head:
+                return False
+            for child in head.children:
+                if child.name == "img":
+                    if child["src"] == "//cdn.scratch.mit.edu/scratchr2/static/__ff7229f036c458728e45c39b0751aa44__/membership/membership-badge.svg":
+                        return True
+        return False
+                
+        
 
     def toggle_commenting(self):
         """
