@@ -5,6 +5,7 @@ import json
 import random
 import re
 import string
+from sys import exception
 import warnings
 from typing import Union, cast, Optional, TypedDict
 from dataclasses import dataclass, field
@@ -905,7 +906,12 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         DATA = []
 
         with requests.no_error_handling():
-            page_contents = requests.get(URL).content
+            resp = requests.get(URL)
+            page_contents = resp.content
+        
+        if resp.status_code == 404:
+            # this is different to returning `[]` because there are instances where there are pages with content after ones without content
+            raise exceptions.CommentNotFound(f"No comment page '{page}'")
 
         soup = BeautifulSoup(page_contents, "html.parser")
 
@@ -959,7 +965,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             DATA.append(_comment)
         return DATA
 
-    def comment_by_id(self, comment_id) -> comment.Comment:
+    def comment_by_id(self, comment_id: int | str) -> comment.Comment:
         """
         Gets a comment on this user's profile by id.
 
@@ -969,20 +975,62 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         Returns:
             scratchattach.comments.Comment: The request comment.
         """
-
+        comment_id = int(comment_id)
         page = 1
-        page_content = self.comments(page=page)
-        while page_content != []:
-            results = list(filter(lambda x : str(x.id) == str(comment_id), page_content))
-            if results == []:
-                results = list(filter(lambda x : str(x.id) == str(comment_id), [item for x in page_content for item in x.cached_replies]))
-                if results != []:
-                    return results[0]
+        small = 1
+        big: int = 0
+
+        def getcomments() -> Optional[list[comments.Comment]]:
+            try:
+                return self.comments(page=page)
+            except exceptions.CommentNotFound:
+                return None
+
+        while True:
+            try:
+                comments = self.comments(page=page)
+            except exceptions.CommentNotFound:
+                big = page
+                break
+            print(page, comments[0].id, comments[-1].id, comment_id)
+ 
+            if comments and int(comments[0].id) >= comment_id:
+                small = page
+
+            if comments and int(comments[-1].id) <= comment_id:
+                big = page
+                if small == big:
+                    ... # there is an optimisation available here
+                break
+            page *= 2
+        assert big > 0
+        print(small, big)
+        
+        while True:
+            mid = (small + big) // 2
+            print(f"{mid=}")
+            comments = getcomments()
+            # there is a possible bug here because of the no-comments case
+            # in this case, we might as well just go as far back and and as far forward as we can
+            # we will need to check if this interval contains our comment - and if so, then the comment is not found
+            if not comments:
+                print("uh oh")
             else:
-                return results[0]
-            page += 1
-            page_content = self.comments(page=page)
-        raise exceptions.CommentNotFound()
+                minid = int(comments[-1].id)
+                maxid = int(comments[0].id)
+                print(minid, maxid, comment_id)
+                # if the page id is too small, then the comment indexes will be higher.
+                # so if the minid > ourid then our page is too small
+                # if the maxid is < ourid then our page is too big
+                # if minid <= ourid <= maxid then we are on the right page
+                if minid > comment_id:
+                    small = mid
+                elif maxid < comment_id:
+                    big = mid
+                else:
+                    print(page)
+                    break
+        print(page)
 
     def message_events(self):
         return message_events.MessageEvents(self)
