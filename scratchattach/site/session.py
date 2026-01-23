@@ -1150,7 +1150,7 @@ def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetim
     """
     p1, p2, _ = session_id.split(':')
     p1_bytes = base64.urlsafe_b64decode(p1 + "==")
-    if p1.startswith('.'):
+    if p1.startswith('".'):
         p1_bytes = zlib.decompress(p1_bytes)
 
     return (
