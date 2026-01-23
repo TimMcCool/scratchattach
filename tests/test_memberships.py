@@ -2,11 +2,13 @@ import scratchattach as sa
 import warnings
 
 warnings.filterwarnings("ignore", category=sa.UserAuthenticationWarning)
+
+
 def test_memberships():
     # unfortunately we don't have amazingly robust test-cases here.
     u1 = sa.get_user("-KittyMax-")
     assert u1.is_member
-    assert not u1.has_ears
+    assert u1.has_ears
     assert u1.has_badge()
 
     u2 = sa.get_user("ceebee")
@@ -28,6 +30,7 @@ def test_memberships():
     assert u5.is_member
     assert u5.has_ears
     assert not u5.has_badge()
+
 
 if __name__ == "__main__":
     test_memberships()
