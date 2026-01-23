@@ -1133,7 +1133,7 @@ def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetim
     Session id is in the format:
     <p1: long base64 string>:<p2: short base64 string>:<p3: medium base64 string>
 
-    p1 contains a base64-zlib compressed JSON string
+    p1 contains a base64 JSON string (if it starts with `.`, then it is zlib compressed)
     p2 is a base 62 encoded timestamp
     p3 might be a `synchronous signature` for the first 2 parts (might be useless for us)
 
@@ -1148,10 +1148,13 @@ def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetim
     - django_timezone
     - _auth_user_hash
     """
-    p1, p2, p3 = session_id.split(':')
+    p1, p2, _ = session_id.split(':')
+    p1_bytes = base64.urlsafe_b64decode(p1 + "==")
+    if p1.startswith('.'):
+        p1_bytes = zlib.decompress(p1_bytes)
 
     return (
-        json.loads(zlib.decompress(base64.urlsafe_b64decode(p1 + "=="))),
+        json.loads(p1_bytes),
         datetime.datetime.fromtimestamp(commons.b62_decode(p2))
     )
 
