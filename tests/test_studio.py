@@ -1,18 +1,19 @@
-import sys
 from datetime import datetime, timezone
 import warnings
+import scratchattach as sa
+from util import session, credentials_available
+
 
 def test_studio():
-    sys.path.insert(0, ".")
-    import scratchattach as sa
-    from util import session, credentials_available
     if not credentials_available():
-        warnings.warn("Skipped test_studio because there were no credentials available.")
+        warnings.warn(
+            "Skipped test_studio because there were no credentials available."
+        )
         return
     sess = session()
 
     studio = sess.connect_studio(247962)
-    assert studio.get_exact_project_count() > 100000 
+    assert studio.get_exact_project_count() > 100000
 
     studio = sess.connect_studio(50809872)
 
@@ -21,9 +22,13 @@ def test_studio():
     assert studio.host_id == 58743127
     assert studio.open_to_all is False
     assert studio.comments_allowed is False
-    assert studio.image_url == 'https://cdn2.scratch.mit.edu/get_image/gallery/50809872_170x100.png'
-    assert (datetime.fromisoformat(studio.created) ==
-            datetime(2025, 8, 26, 15, 3, 5, tzinfo=timezone.utc))
+    assert (
+        studio.image_url
+        == "https://cdn2.scratch.mit.edu/get_image/gallery/50809872_170x100.png"
+    )
+    assert datetime.fromisoformat(studio.created) == datetime(
+        2025, 8, 26, 15, 3, 5, tzinfo=timezone.utc
+    )
     assert studio.follower_count > 0
     assert 0 < studio.manager_count <= 2
     assert studio.project_count == 2
@@ -65,5 +70,5 @@ def test_studio():
     assert sa.explore_studios(query="*")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_studio()

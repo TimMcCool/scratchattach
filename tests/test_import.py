@@ -1,4 +1,5 @@
-import sys
+import scratchattach as sa
+
+
 def test_import():
-    sys.path.insert(0, ".")
-    import scratchattach as sa
+    pass

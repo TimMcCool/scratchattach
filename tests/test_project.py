@@ -1,15 +1,15 @@
-import sys
 import warnings
+from util import session, credentials_available
+import scratchattach as sa
+
 
 def test_project():
-    sys.path.insert(0, ".")
-    import scratchattach as sa
-    from util import session, credentials_available
     if not credentials_available():
-        warnings.warn("Skipped test_project because there were no credentials available.")
+        warnings.warn(
+            "Skipped test_project because there were no credentials available."
+        )
         return
     sess = session()
-
 
     project = sess.connect_project(104)
     # tree = project.remix_tree_pretty()
@@ -61,12 +61,12 @@ def test_project():
     # assert sess.connect_project(414601586).moderation_status() == "notsafe"
     # assert sess.connect_project(1207314193).moderation_status() == "safe"
     # assert sess.connect_project(
-        # 1233).moderation_status() == "notreviewed"  # if this becomes reviewed, please update this
+    # 1233).moderation_status() == "notreviewed"  # if this becomes reviewed, please update this
     # ^^ also this project is an infinite remix loop!
 
     assert sa.explore_projects()
     assert sa.search_projects(query="scratchattach")
 
-if __name__ == '__main__':
-    test_project()
 
+if __name__ == "__main__":
+    test_project()

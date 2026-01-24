@@ -1,13 +1,10 @@
-import sys
 from datetime import datetime, timedelta, timezone
+import scratchattach as sa
+from scratchattach.utils import exceptions
+import util
 
 
 def test_teacher_activity():
-    sys.path.insert(0, ".")
-    import scratchattach as sa
-    from scratchattach.utils import exceptions
-    import util
-
     if not (sess := util.teacher_session()):
         return
 

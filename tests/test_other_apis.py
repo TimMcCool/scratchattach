@@ -1,15 +1,12 @@
 import pprint
-import sys
 from datetime import datetime, timedelta, timezone
 import warnings
+import scratchattach as sa
+from scratchattach.utils import exceptions
+import util
 
 
 def test_other_apis():
-    sys.path.insert(0, ".")
-    import scratchattach as sa
-    from scratchattach.utils import exceptions
-    import util
-
     assert sa.check_email("example@example.com")
     assert not sa.check_email("bad_email")
 

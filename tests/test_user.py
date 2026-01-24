@@ -1,13 +1,13 @@
-import pprint
-import sys
 import warnings
+import scratchattach as sa
+from util import session, credentials_available
+
 
 def test_user():
-    sys.path.insert(0, ".")
-    import scratchattach as sa
-    from util import session, credentials_available
     if not credentials_available():
-        warnings.warn("Skipped test_studio because there were no credentials available.")
+        warnings.warn(
+            "Skipped test_studio because there were no credentials available."
+        )
         return
     sess = session()
 
@@ -25,7 +25,7 @@ def test_user():
     assert not user.is_new_scratcher()
     assert user.rank() == sa.Rank.SCRATCHER
     assert not user.scratchteam
-    assert user.join_date == '2024-12-09T19:58:44.000Z'
+    assert user.join_date == "2024-12-09T19:58:44.000Z"
     assert user.classroom is None
     assert user.does_exist()
 
@@ -57,25 +57,37 @@ def test_user():
     assert user.following_count() > 5
     assert kaj.followers(limit=1)[0].name == "DarkLava"
     assert kaj.follower_names(limit=1)[0] == "DarkLava"
-    assert user.following(offset=user.following_count() - 1, limit=1)[0].name == "TimMcCool"
+    assert (
+        user.following(offset=user.following_count() - 1, limit=1)[0].name
+        == "TimMcCool"
+    )
     assert user.is_following("TimMcCool")
     assert kaj.is_followed_by("DarkLava")
     assert griffpatch.project_count() > 15
     user_studio_count = user.studio_count()
     assert user_studio_count > 0
     assert user.studios_following_count() > 1
-    assert user.studios(limit=1, offset=user_studio_count-1)[0].title == "Sample studio"
+    assert (
+        user.studios(limit=1, offset=user_studio_count - 1)[0].title == "Sample studio"
+    )
     user_project_count = user.project_count()
     assert user_project_count > 1
-    assert user.projects(limit=1, offset=user_project_count - 2)[0].title == "Sample project #1"
+    assert (
+        user.projects(limit=1, offset=user_project_count - 2)[0].title
+        == "Sample project #1"
+    )
     loves_count = user.loves_count()
     assert loves_count > 0
-    assert (user.loves(limit=1, offset=loves_count - 1)[0].title ==
-            "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python")
+    assert (
+        user.loves(limit=1, offset=loves_count - 1)[0].title
+        == "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python"
+    )
     favorites_count = user.favorites_count()
     assert favorites_count > 0
-    assert (user.favorites(limit=1, offset=favorites_count - 1)[0].title ==
-            "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python")
+    assert (
+        user.favorites(limit=1, offset=favorites_count - 1)[0].title
+        == "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python"
+    )
     # toggle commenting
     # viewed projects
     # set pfp, bio, wiwo, set featured, forum_signature
@@ -94,5 +106,7 @@ def test_user():
     assert status_data["status"] == "Sample status"
     assert status_data["color"] == "#855cd6"
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_user()
+

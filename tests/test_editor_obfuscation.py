@@ -1,11 +1,9 @@
 import pprint
-import sys
 from pathlib import Path
+import scratchattach as sa
 
 
 def test_project():
-    sys.path.insert(0, ".")
-    import scratchattach as sa
 
     path = Path(__file__).parent.parent / "intro for kelmare (yoda tour) (p2).sb3"
 
@@ -23,5 +21,5 @@ def test_project():
     body.export("obfuscated.sb3")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_project()
