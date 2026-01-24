@@ -1,9 +1,21 @@
 """v2 ready: Common functions used by various internal modules"""
+
 from __future__ import annotations
 
 import string
 
-from typing import Optional, Final, Any, TypeVar, Callable, TYPE_CHECKING, Union, overload
+from typing_extensions import (
+    Iterable,
+    Iterator,
+    Optional,
+    Final,
+    Any,
+    TypeVar,
+    Callable,
+    TYPE_CHECKING,
+    Union,
+    overload,
+)
 from threading import Event as ManualResetEvent
 from threading import Lock
 
@@ -15,60 +27,65 @@ from scratchattach.site import _base
 
 headers: Final = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
+    "(KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
     "x-csrftoken": "a",
     "x-requested-with": "XMLHttpRequest",
     "referer": "https://scratch.mit.edu",
 }
 empty_project_json: Final = {
-    'targets': [
+    "targets": [
         {
-            'isStage': True,
-            'name': 'Stage',
-            'variables': {
-                '`jEk@4|i[#Fk?(8x)AV.-my variable': [
-                    'my variable',
+            "isStage": True,
+            "name": "Stage",
+            "variables": {
+                "`jEk@4|i[#Fk?(8x)AV.-my variable": [
+                    "my variable",
                     0,
                 ],
             },
-            'lists': {},
-            'broadcasts': {},
-            'blocks': {},
-            'comments': {},
-            'currentCostume': 0,
-            'costumes': [
+            "lists": {},
+            "broadcasts": {},
+            "blocks": {},
+            "comments": {},
+            "currentCostume": 0,
+            "costumes": [
                 {
-                    'name': '',
-                    'bitmapResolution': 1,
-                    'dataFormat': 'svg',
-                    'assetId': '14e46ec3e2ba471c2adfe8f119052307',
-                    'md5ext': '14e46ec3e2ba471c2adfe8f119052307.svg',
-                    'rotationCenterX': 0,
-                    'rotationCenterY': 0,
+                    "name": "",
+                    "bitmapResolution": 1,
+                    "dataFormat": "svg",
+                    "assetId": "14e46ec3e2ba471c2adfe8f119052307",
+                    "md5ext": "14e46ec3e2ba471c2adfe8f119052307.svg",
+                    "rotationCenterX": 0,
+                    "rotationCenterY": 0,
                 },
             ],
-            'sounds': [],
-            'volume': 100,
-            'layerOrder': 0,
-            'tempo': 60,
-            'videoTransparency': 50,
-            'videoState': 'on',
-            'textToSpeechLanguage': None,
+            "sounds": [],
+            "volume": 100,
+            "layerOrder": 0,
+            "tempo": 60,
+            "videoTransparency": 50,
+            "videoState": "on",
+            "textToSpeechLanguage": None,
         },
     ],
-    'monitors': [],
-    'extensions': [],
-    'meta': {
-        'semver': '3.0.0',
-        'vm': '2.3.0',
-        'agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                 'Chrome/124.0.0.0 Safari/537.36',
+    "monitors": [],
+    "extensions": [],
+    "meta": {
+        "semver": "3.0.0",
+        "vm": "2.3.0",
+        "agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36",
     },
 }
 
 
-def api_iterative_data(fetch_func: Callable[[int, int], list], limit: int, offset: int, max_req_limit: int = 40,
-                       unpack: bool = True) -> list:
+def api_iterative_data(
+    fetch_func: Callable[[int, int], list],
+    limit: int,
+    offset: int,
+    max_req_limit: int = 40,
+    unpack: bool = True,
+) -> list:
     """
     Iteratively gets data by calling fetch_func with a moving offset and a limit.
     Once fetch_func returns None, the retrieval is completed.
@@ -96,8 +113,16 @@ def api_iterative_data(fetch_func: Callable[[int, int], list], limit: int, offse
     return api_data
 
 
-def api_iterative(url: str, *, limit: int, offset: int, max_req_limit: int = 40, add_params: str = "",
-                  _headers: Optional[dict] = None, cookies: Optional[dict] = None):
+def api_iterative(
+    url: str,
+    *,
+    limit: int,
+    offset: int,
+    max_req_limit: int = 40,
+    add_params: str = "",
+    _headers: Optional[dict] = None,
+    cookies: Optional[dict] = None,
+):
     """
     Function for getting data from one of Scratch's iterative JSON API endpoints (like /users/<user>/followers, or /users/<user>/projects)
     """
@@ -116,7 +141,10 @@ def api_iterative(url: str, *, limit: int, offset: int, max_req_limit: int = 40,
         Performs a single API request
         """
         resp = requests.get(
-            f"{url}?limit={lim}&offset={off}{add_params}", headers=_headers, cookies=cookies, timeout=10
+            f"{url}?limit={lim}&offset={off}{add_params}",
+            headers=_headers,
+            cookies=cookies,
+            timeout=10,
         ).json()
 
         if not resp:
@@ -130,11 +158,15 @@ def api_iterative(url: str, *, limit: int, offset: int, max_req_limit: int = 40,
     )
     return api_data
 
-def _get_object(identificator_name, identificator, __class: type[C], NotFoundException, session=None) -> C:
+
+def _get_object(
+    identificator_name, identificator, __class: type[C], NotFoundException, session=None
+) -> C:
     # Internal function: Generalization of the process ran by get_user, get_studio etc.
     # Builds an object of class that is inheriting from BaseSiteComponent
     # # Class must inherit from BaseSiteComponent
     from scratchattach.site import project
+
     try:
         use_class: type = __class
         if __class is project.PartialProject:
@@ -145,12 +177,20 @@ def _get_object(identificator_name, identificator, __class: type[C], NotFoundExc
         if r == "429":
             raise exceptions.Response429(
                 "Your network is blocked or rate-limited by Scratch.\n"
-                "If you're using an online IDE like replit.com, try running the code on your computer.")
+                "If you're using an online IDE like replit.com, try running the code on your computer."
+            )
         if not r:
             # Target is unshared. The cases that this can happen in are hardcoded:
-            if __class is project.PartialProject:  # Case: Target is an unshared project.
-                _object = project.PartialProject(**{identificator_name: identificator,
-                                                 "shared": False, "_session": session})
+            if (
+                __class is project.PartialProject
+            ):  # Case: Target is an unshared project.
+                _object = project.PartialProject(
+                    **{
+                        identificator_name: identificator,
+                        "shared": False,
+                        "_session": session,
+                    }
+                )
                 assert isinstance(_object, __class)
                 return _object
             else:
@@ -162,23 +202,31 @@ def _get_object(identificator_name, identificator, __class: type[C], NotFoundExc
     except Exception as e:
         raise e
 
+
 I = TypeVar("I")
+
+
 @overload
 def webscrape_count(raw: str, text_before: str, text_after: str, cls: type[I]) -> I:
     pass
+
 
 @overload
 def webscrape_count(raw: str, text_before: str, text_after: str) -> int:
     pass
 
-def webscrape_count(raw, text_before, text_after, cls = int):
+
+def webscrape_count(raw, text_before, text_after, cls=int):
     return cls(raw.split(text_before)[1].split(text_after)[0])
 
 
 if TYPE_CHECKING:
     C = TypeVar("C", bound=_base.BaseSiteComponent)
 
-def parse_object_list(raw, /, __class: type[C], session=None, primary_key="id") -> list[C]:
+
+def parse_object_list(
+    raw, /, __class: type[C], session=None, primary_key="id"
+) -> list[C]:
     results = []
     for raw_dict in raw:
         try:
@@ -187,7 +235,12 @@ def parse_object_list(raw, /, __class: type[C], session=None, primary_key="id") 
             _obj._update_from_dict(raw_dict)
             results.append(_obj)
         except Exception as e:
-            print("Warning raised by scratchattach: failed to parse ", raw_dict, "error", e)
+            print(
+                "Warning raised by scratchattach: failed to parse ",
+                raw_dict,
+                "error",
+                e,
+            )
     return results
 
 
@@ -195,15 +248,19 @@ class LockEvent:
     """
     Can be waited on and triggered. Not to be confused with threading.Event, which has to be reset.
     """
+
     _event: ManualResetEvent
     _locks: list[Lock]
     _access_locks: Lock
+
     def __init__(self):
         self._event = ManualResetEvent()
         self._locks = []
         self._access_locks = Lock()
 
-    def wait(self, blocking: bool = True, timeout: Optional[Union[int, float]] = None) -> bool:
+    def wait(
+        self, blocking: bool = True, timeout: Optional[Union[int, float]] = None
+    ) -> bool:
         """
         Wait for the event.
         """
@@ -233,12 +290,13 @@ class LockEvent:
         lock.acquire(timeout=0)
         return lock
 
+
 def get_class_sort_mode(mode: str) -> tuple[str, str]:
     """
     Returns the sort mode for the given mode for classes only
     """
-    ascsort = ''
-    descsort = ''
+    ascsort = ""
+    descsort = ""
 
     mode = mode.lower()
     if mode == "last created":
@@ -261,3 +319,48 @@ def b62_decode(s: str):
         ret = ret * 62 + chars.index(char)
 
     return ret
+
+
+def enumerate_pages(
+    *, offset: int, limit: int, items_per_page: int, start_page_index: int
+) -> Iterable[tuple[int, slice]]:
+    """
+    Converts an offset+limit into an iterable of page indexes and starting index of each item on each page
+
+    Keyword Arguments:
+        offset: the starting item index (usually 0, but not defaulted)
+        limit: the number of items to look for
+        items_per_page: the number of items on a singular page
+        start_page_index: the index associated with the first page. Usually either 0 or 1. Depends on the page you are viewing
+    """
+    if offset < 0:
+        raise ValueError(f"{offset=}, expected offset > 0")
+    if limit < 0:
+        raise ValueError(f"{limit=}, expected limit > 0")
+
+    # There are n items on display per page
+    # So the first page you need to view is start_page_index + offset // items_per_page
+    # (You may have to add one because the first page is idx 1 instead of 0)
+
+    # The final item to view is at idx offset + limit - 1
+    # (You have to -1 because the index starts at 0)
+    # So the page number for this is start_page_index + (offset + limit - 1) // items_per_page
+
+    # But this is a range so we have to add another 1 for the second argument
+    pages = range(
+        start_page_index + offset // items_per_page,
+        1 + start_page_index + (offset + limit - 1) // items_per_page,
+    )
+
+    # The index of the first item on page #i is just (i-1) * items_per_page
+    for i in pages:
+        start_i = (i - start_page_index) * items_per_page
+
+        # we can generate a slice object to index our lists so we can make the offset+limit as accurate as possible
+        page_slice = slice(items_per_page)
+        if start_i == 0:
+            page_slice = slice(offset, items_per_page)
+        if start_i + items_per_page > offset + limit:
+            page_slice = slice(0, offset + limit - start_i)
+
+        yield i, page_slice
