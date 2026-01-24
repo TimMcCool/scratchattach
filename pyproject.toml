@@ -5,37 +5,47 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "scratchattach"
 version = "2.1.13"
-authors = [{name = "TimMcCool"}]
+authors = [{ name = "TimMcCool" }]
 description = "A Scratch API Wrapper"
 requires-python = ">= 3.12"
 dependencies = [
-	"websocket-client",
-	"requests",
-	"bs4",
-	"SimpleWebSocketServer",
-	"typing-extensions",
-	"browser_cookie3",
-	"aiohttp",
-	"rich"
+  "websocket-client",
+  "requests",
+  "bs4",
+  "SimpleWebSocketServer",
+  "typing-extensions",
+  "browser_cookie3",
+  "aiohttp",
+  "rich",
 ]
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-keywords = ["scratch api", "scratchattach", "scratch api python", "scratch python", "scratch for python", "scratch", "scratch cloud", "scratch cloud variables", "scratch bot"]
-classifiers=[
-	"Development Status :: 5 - Production/Stable",
-	"Intended Audience :: Developers",
-	"Programming Language :: Python :: 3",
-	"Operating System :: Unix",
-	"Operating System :: MacOS :: MacOS X",
-	"Operating System :: Microsoft :: Windows",
+keywords = [
+  "scratch api",
+  "scratchattach",
+  "scratch api python",
+  "scratch python",
+  "scratch for python",
+  "scratch",
+  "scratch cloud",
+  "scratch cloud variables",
+  "scratch bot",
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Operating System :: Unix",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
 ]
 
 [project.urls]
 Source = "https://github.com/timmccool/scratchattach"
 Homepage = "https://scratchattach.tim1de.net"
 
-[project.entry-points."console_scripts"]
+[project.scripts]
 scratch = "scratchattach.__main__:main"
 
 [project.optional-dependencies]
@@ -43,10 +53,7 @@ cli = ["rich-pixels"]
 lark = ["lark"]
 
 [tool.setuptools.packages]
-find = {include = ["scratchattach"]}
+find = { include = ["scratchattach"] }
 
 [dependency-groups]
-dev = [
-    "cryptography>=46.0.3",
-    "pytest>=9.0.2",
-]
+dev = ["cryptography>=46.0.3", "pytest>=9.0.2"]
