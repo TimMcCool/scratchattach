@@ -13,3 +13,5 @@ tests/util/local_auth.toml
 .venv
 identifier.sqlite
 obfuscated.sb3
+.pytest_cache
+.ruff_cache

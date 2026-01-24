@@ -52,6 +52,42 @@ scratch = "scratchattach.__main__:main"
 cli = ["rich-pixels"]
 lark = ["lark"]
 
+[tool.ruff]
+line-length = 127
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82", "C901"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
 [tool.setuptools.packages]
 find = { include = ["scratchattach"] }
 
