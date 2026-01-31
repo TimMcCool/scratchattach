@@ -1,12 +1,13 @@
+import warnings
 import httpx
 import re
 import contextlib
 
 from datetime import datetime
 from dataclasses import KW_ONLY, dataclass, field
-from typing_extensions import Any, AsyncContextManager, Optional, Self
+from typing_extensions import Any, AsyncContextManager, Optional, Self, cast
 
-from scratchattach.utils import commons, exceptions
+from scratchattach.utils import commons, exceptions, typed_dicts
 
 
 @dataclass
@@ -19,8 +20,57 @@ class Session:
     xtoken: str
     created_at: datetime
 
+    # the following attributes are set in the `update()` function.
+    has_outstanding_email_confirmation: Optional[bool] = None
+    email: Optional[str] = None
+    is_new_scratcher: Optional[bool] = None
+    is_teacher: Optional[bool] = None
+    is_teacher_invitee: Optional[bool] = None
+    mute_status: Optional[dict | typed_dicts.SessionOffensesDict] = None
+    is_banned: Optional[bool] = None
+
     def __post_init__(self):
         self.rq.headers["X-Token"] = self.xtoken
+        self.rq.cookies.update(
+            {
+                "scratchsessionsid": self.id,
+                "scratchcsrftoken": "a",
+                "scratchlanguage": "en",
+                "accept": "application/json",
+                "Content-Type": "application/json",
+            }
+        )
+
+    def __str__(self) -> str:
+        return f"-L {self.username}"
+
+    async def update(self):
+        # I don't really see the point of abstracting the update url and stuff
+        resp = await self.rq.post("https://scratch.mit.edu/session")
+        data = cast(typed_dicts.SessionDict, resp.json())
+        self.has_outstanding_email_confirmation = data["flags"]["has_outstanding_email_confirmation"]
+
+        self.email = data["user"]["email"]
+
+        self.is_new_scratcher = data["permissions"]["new_scratcher"]
+        self.is_teacher = data["permissions"]["educator"]
+        self.is_teacher_invitee = data["permissions"]["educator_invitee"]
+
+        self.mute_status = data["permissions"]["mute_status"]
+
+        self.username = data["user"]["username"]
+        self.banned = data["user"]["banned"]
+
+        if self.xtoken != data["user"]["token"]:
+            warnings.warn(f"Differing xtoken {data['user']['token']!r}")
+        if self.banned:
+            warnings.warn(
+                f"Warning: The account {self.username} you logged in to is BANNED. Some features may not work properly."
+            )
+        if self.has_outstanding_email_confirmation:
+            warnings.warn(
+                f"Warning: The account {self.username} you logged is not email confirmed. Some features may not work properly."
+            )
 
 
 @contextlib.asynccontextmanager
@@ -41,6 +91,14 @@ async def _build_session(*, id: str, rq: httpx.AsyncClient, username: Optional[s
         pass
 
 
+def _make_rq(kwargs: Optional[dict[str, Any]]) -> httpx.AsyncClient:
+    if kwargs is None:
+        kwargs = {}
+    return httpx.AsyncClient(
+        follow_redirects=True, headers=commons.headers | {"Cookie": "scratchcsrftoken=a;scratchlanguage=en;"}, **kwargs
+    )
+
+
 async def login(
     username: str, password: str, *, client_args: Optional[dict[str, Any]] = None
 ) -> AsyncContextManager[Session, bool | None]:
@@ -48,9 +106,7 @@ async def login(
         client_args = {}
 
     print("TODO: issue_login_warning")
-    rq = httpx.AsyncClient(
-        headers=commons.headers.copy() | {"Cookie": "scratchcsrftoken=a;scratchlanguage=en;"}, **client_args
-    )
+    rq = _make_rq(client_args)
     resp = await rq.post("https://scratch.mit.edu/login/", json={"username": username, "password": password})
     if not (match := re.search('"(.*)"', resp.headers.get("Set-Cookie", ""))):
         raise exceptions.LoginFailure(
@@ -69,10 +125,8 @@ async def login_by_id(
     rq: Optional[httpx.AsyncClient] = None,
     client_args: Optional[dict[str, Any]] = None,
 ) -> AsyncContextManager[Session, bool | None]:
-    if client_args is None:
-        client_args = {}
     if rq is None:
-        rq = httpx.AsyncClient(headers=commons.headers.copy(), **client_args)
+        rq = _make_rq(client_args)
     print("TODO: issue_login_warning")
 
     return _build_session(id=session_id, rq=rq, username=username)

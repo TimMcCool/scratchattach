@@ -11,6 +11,8 @@ async def test_async_login():
         return
     async with await util.async_session() as sess:
         print(sess.user_id)
+        await sess.update()
+        print(repr(sess))
 
 
 if __name__ == "__main__":
