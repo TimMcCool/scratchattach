@@ -17,12 +17,12 @@ class Session:
     rq: httpx.AsyncClient = field(repr=False)
     user_id: int
     username: str
-    xtoken: str
+    xtoken: str = field(repr=False)
     created_at: datetime
 
     # the following attributes are set in the `update()` function.
     has_outstanding_email_confirmation: Optional[bool] = None
-    email: Optional[str] = None
+    email: Optional[str] = field(repr=False, default=None)
     is_new_scratcher: Optional[bool] = None
     is_teacher: Optional[bool] = None
     is_teacher_invitee: Optional[bool] = None
