@@ -1,4 +1,5 @@
 """Session class and login function"""
+
 from __future__ import annotations
 
 import base64
@@ -24,6 +25,7 @@ Type = type
 if TYPE_CHECKING:
     from _typeshed import FileDescriptorOrPath, SupportsRead
     from scratchattach.cloud._base import BaseCloud
+
     T = TypeVar("T", bound=BaseCloud)
 else:
     T = TypeVar("T")
@@ -33,6 +35,7 @@ from typing_extensions import deprecated
 
 from . import activity, classroom, forum, studio, user, project, backpack_asset, alert
 from . import typed_dicts
+
 # noinspection PyProtectedMember
 from ._base import BaseSiteComponent
 from scratchattach.cloud import cloud, _base
@@ -44,6 +47,7 @@ from scratchattach.utils.requests import requests
 from .browser_cookies import Browser, ANY, cookies_from_browser
 
 ratelimit_cache: dict[str, list[float]] = {}
+
 
 def enforce_ratelimit(__type: str, name: str, amount: int = 5, duration: int = 60) -> None:
     cache = ratelimit_cache
@@ -61,7 +65,9 @@ def enforce_ratelimit(__type: str, name: str, amount: int = 5, duration: int = 6
         "Don't spam-create studios or similar, it WILL get you banned."
     )
 
+
 C = TypeVar("C", bound=BaseSiteComponent)
+
 
 @dataclass
 class Session(BaseSiteComponent):
@@ -77,6 +83,7 @@ class Session(BaseSiteComponent):
         mute_status: Information about commenting restrictions of the associated account
         banned: Returns True if the associated account is banned
     """
+
     username: str = field(repr=False, default="")
     _user: Optional[user.User] = field(repr=False, default=None)
 
@@ -113,8 +120,8 @@ class Session(BaseSiteComponent):
             warnings.warn(f"Ignored KeyError: {e}")
 
         ret = Table(
-            f"[link={self.connect_linked_user().url}]{escape(self.username)}[/]",
-                    f"Created: {self.time_created}", expand=True)
+            f"[link={self.connect_linked_user().url}]{escape(self.username)}[/]", f"Created: {self.time_created}", expand=True
+        )
 
         ret.add_row("Email", escape(str(self.email)))
         ret.add_row("Language", escape(str(self.language)))
@@ -158,7 +165,7 @@ class Session(BaseSiteComponent):
 
         data = cast(typed_dicts.SessionDict, data)
 
-        self.xtoken = data['user']['token']
+        self.xtoken = data["user"]["token"]
         self._headers["X-Token"] = self.xtoken
 
         self.has_outstanding_email_confirmation = data["flags"]["has_outstanding_email_confirmation"]
@@ -175,17 +182,19 @@ class Session(BaseSiteComponent):
         self.banned = data["user"]["banned"]
 
         if self.banned:
-            warnings.warn(f"Warning: The account {self.username} you logged in to is BANNED. "
-                          f"Some features may not work properly.")
+            warnings.warn(
+                f"Warning: The account {self.username} you logged in to is BANNED. Some features may not work properly."
+            )
         if self.has_outstanding_email_confirmation:
-            warnings.warn(f"Warning: The account {self.username} you logged is not email confirmed. "
-                          f"Some features may not work properly.")
+            warnings.warn(
+                f"Warning: The account {self.username} you logged is not email confirmed. Some features may not work properly."
+            )
         return True
 
     def _process_session_id(self):
         assert self.id
 
-        data, self.time_created = decode_session_id(self.id)
+        data, self.time_created = commons.decode_session_id(self.id)
 
         self.username = data["username"]
         # if self._user:
@@ -204,7 +213,9 @@ class Session(BaseSiteComponent):
 
     def _assert_ocular_auth(self):
         if not self.ocular_token:
-            raise ValueError(f"No ocular token supplied for {self}! You can add one by using Session.set_ocular_token(YOUR_TOKEN).")
+            raise ValueError(
+                f"No ocular token supplied for {self}! You can add one by using Session.set_ocular_token(YOUR_TOKEN)."
+            )
 
     def set_ocular_token(self, token: str):
         self.ocular_token = token
@@ -241,9 +252,12 @@ class Session(BaseSiteComponent):
         Arguments:
             country (str): The country to relocate to
         """
-        requests.post("https://scratch.mit.edu/accounts/settings/",
-                      data={"country": country},
-                      headers=self._headers, cookies=self._cookies)
+        requests.post(
+            "https://scratch.mit.edu/accounts/settings/",
+            data={"country": country},
+            headers=self._headers,
+            cookies=self._cookies,
+        )
 
     def resend_email(self, password: str):
         """
@@ -252,10 +266,12 @@ class Session(BaseSiteComponent):
         Keyword arguments:
             password (str): Password associated with the session (not stored)
         """
-        requests.post("https://scratch.mit.edu/accounts/email_change/",
-                      data={"email_address": self.get_new_email_address(),
-                            "password": password},
-                      headers=self._headers, cookies=self._cookies)
+        requests.post(
+            "https://scratch.mit.edu/accounts/email_change/",
+            data={"email_address": self.get_new_email_address(), "password": password},
+            headers=self._headers,
+            cookies=self._cookies,
+        )
 
     @property
     @deprecated("Use get_new_email_address instead.")
@@ -277,8 +293,7 @@ class Session(BaseSiteComponent):
         Returns:
             str: The email that this session wants to switch to
         """
-        response = requests.get("https://scratch.mit.edu/accounts/email_change/",
-                                headers=self._headers, cookies=self._cookies)
+        response = requests.get("https://scratch.mit.edu/accounts/email_change/", headers=self._headers, cookies=self._cookies)
 
         soup = BeautifulSoup(response.content, "html.parser")
 
@@ -300,17 +315,16 @@ class Session(BaseSiteComponent):
         """
         Sends a logout request to scratch. (Might not do anything, might log out this account on other ips/sessions.)
         """
-        requests.post("https://scratch.mit.edu/accounts/logout/",
-                      headers=self._headers, cookies=self._cookies)
+        requests.post("https://scratch.mit.edu/accounts/logout/", headers=self._headers, cookies=self._cookies)
 
     @property
     def ocular_headers(self) -> dict[str, str]:
         self._assert_ocular_auth()
         return {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                          "(KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
+            "(KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
             "referer": "https://ocular.jeffalo.net/",
-            "authorization": self.ocular_token
+            "authorization": self.ocular_token,
         }
 
     def get_ocular_status(self) -> typed_dicts.OcularUserDict:
@@ -324,13 +338,11 @@ class Session(BaseSiteComponent):
     def set_ocular_status(self, status: Optional[str] = None, color: Optional[str] = None) -> None:
         self._assert_ocular_auth()
         old = self.get_ocular_status()
-        payload = {"color": color or old["color"],
-                   "status": status or old["status"]}
+        payload = {"color": color or old["color"], "status": status or old["status"]}
 
-        assert requests.put(f"https://my-ocular.jeffalo.net/api/user/{old["name"]}",
-                            json=payload, headers=self.ocular_headers).json() == {
-            "ok": "user updated"
-        }, f"Error occured on setting ocular status. auth/me response: {old}"
+        assert requests.put(
+            f"https://my-ocular.jeffalo.net/api/user/{old['name']}", json=payload, headers=self.ocular_headers
+        ).json() == {"ok": "user updated"}, f"Error occured on setting ocular status. auth/me response: {old}"
 
     def messages(self, *, limit: int = 40, offset: int = 0, date_limit=None, filter_by=None) -> list[activity.Activity]:
         """
@@ -351,7 +363,11 @@ class Session(BaseSiteComponent):
 
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/messages",
-            limit=limit, offset=offset, _headers=self._headers, cookies=self._cookies, add_params=add_params
+            limit=limit,
+            offset=offset,
+            _headers=self._headers,
+            cookies=self._cookies,
+            add_params=add_params,
         )
         return commons.parse_object_list(data, activity.Activity, self)
 
@@ -361,11 +377,15 @@ class Session(BaseSiteComponent):
         """
         return commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/messages/admin",
-            limit=limit, offset=offset, _headers=self._headers, cookies=self._cookies
+            limit=limit,
+            offset=offset,
+            _headers=self._headers,
+            cookies=self._cookies,
         )
 
-    def classroom_alerts(self, _classroom: Optional[classroom.Classroom | int] = None, mode: str = "Last created",
-                         page: Optional[int] = None):
+    def classroom_alerts(
+        self, _classroom: Optional[classroom.Classroom | int] = None, mode: str = "Last created", page: Optional[int] = None
+    ):
         """
         Load and parse admin alerts, optionally for a specific class, using https://scratch.mit.edu/site-api/classrooms/alerts/
 
@@ -377,15 +397,18 @@ class Session(BaseSiteComponent):
             _classroom = _classroom.id
 
         if _classroom is None:
-            _classroom_str = ''
+            _classroom_str = ""
         else:
             _classroom_str = f"{_classroom}/"
 
         ascsort, descsort = get_class_sort_mode(mode)
 
-        data = requests.get(f"https://scratch.mit.edu/site-api/classrooms/alerts/{_classroom_str}",
-                            params={"page": page, "ascsort": ascsort, "descsort": descsort},
-                            headers=self._headers, cookies=self._cookies).json()
+        data = requests.get(
+            f"https://scratch.mit.edu/site-api/classrooms/alerts/{_classroom_str}",
+            params={"page": page, "ascsort": ascsort, "descsort": descsort},
+            headers=self._headers,
+            cookies=self._cookies,
+        ).json()
 
         alerts = [alert.EducatorAlert.from_json(alert_data, self) for alert_data in data]
 
@@ -409,12 +432,14 @@ class Session(BaseSiteComponent):
         Returns:
             int: message count
         """
-        return json.loads(requests.get(
-            f"https://scratch.mit.edu/messages/ajax/get-message-count/",
-            headers=self._headers,
-            cookies=self._cookies,
-            timeout=10,
-        ).text)["msg_count"]
+        return json.loads(
+            requests.get(
+                f"https://scratch.mit.edu/messages/ajax/get-message-count/",
+                headers=self._headers,
+                cookies=self._cookies,
+                timeout=10,
+            ).text
+        )["msg_count"]
 
     # Front-page-related stuff:
 
@@ -430,7 +455,11 @@ class Session(BaseSiteComponent):
             add_params = f"&dateLimit={date_limit}"
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/following/users/activity",
-            limit=limit, offset=offset, _headers=self._headers, cookies=self._cookies, add_params=add_params
+            limit=limit,
+            offset=offset,
+            _headers=self._headers,
+            cookies=self._cookies,
+            add_params=add_params,
         )
         return commons.parse_object_list(data, activity.Activity, self)
 
@@ -448,7 +477,10 @@ class Session(BaseSiteComponent):
         """
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/following/users/loves",
-            limit=limit, offset=offset, _headers=self._headers, cookies=self._cookies
+            limit=limit,
+            offset=offset,
+            _headers=self._headers,
+            cookies=self._cookies,
         )
         return commons.parse_object_list(data, project.Project, self)
 
@@ -464,15 +496,20 @@ class Session(BaseSiteComponent):
         """
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/following/users/projects",
-            limit = limit, offset = offset, _headers = self._headers, cookies = self._cookies
+            limit=limit,
+            offset=offset,
+            _headers=self._headers,
+            cookies=self._cookies,
         )
         ret = commons.parse_object_list(data, project.Project, self)
         if not ret:
-            warnings.warn(f"`shared_by_followed_users` got empty list `[]`. Note that this method is not supported for "
-                          f"accounts made after 2018.")
+            warnings.warn(
+                f"`shared_by_followed_users` got empty list `[]`. Note that this method is not supported for "
+                f"accounts made after 2018."
+            )
         return ret
 
-    def in_followed_studios(self, *, limit=40, offset=0) -> list['project.Project']:
+    def in_followed_studios(self, *, limit=40, offset=0) -> list["project.Project"]:
         """
         Returns the "Projects in studios I'm following" section (frontpage).
         This section is only visible to old accounts (until ~2018)
@@ -484,18 +521,25 @@ class Session(BaseSiteComponent):
         """
         data = commons.api_iterative(
             f"https://api.scratch.mit.edu/users/{self._username}/following/studios/projects",
-            limit = limit, offset = offset, _headers=self._headers, cookies = self._cookies
+            limit=limit,
+            offset=offset,
+            _headers=self._headers,
+            cookies=self._cookies,
         )
         ret = commons.parse_object_list(data, project.Project, self)
         if not ret:
-            warnings.warn(f"`in_followed_studios` got empty list `[]`. Note that this method is not supported for "
-                          f"accounts made after 2018.")
+            warnings.warn(
+                f"`in_followed_studios` got empty list `[]`. Note that this method is not supported for "
+                f"accounts made after 2018."
+            )
         return ret
 
     # -- Project JSON editing capabilities ---
     # These are set to staticmethods right now, but they probably should not be
     def connect_empty_project_pb(self) -> editor.Project:
-        pb = editor.Project.from_json(empty_project_json)  # in the future, ideally just init a new editor.Project, instead of loading an empty one
+        pb = editor.Project.from_json(
+            empty_project_json
+        )  # in the future, ideally just init a new editor.Project, instead of loading an empty one
         pb._session = self
         return pb
 
@@ -522,11 +566,7 @@ class Session(BaseSiteComponent):
             )
             open(f"{fp}{filename}", "wb").write(response.content)
         except Exception:
-            raise (
-                exceptions.FetchError(
-                    "Failed to download asset"
-                )
-            )
+            raise (exceptions.FetchError("Failed to download asset"))
 
     def upload_asset(self, asset_content, *, asset_id=None, file_ext=None):
         data = asset_content if isinstance(asset_content, bytes) else open(asset_content, "rb").read()
@@ -548,8 +588,9 @@ class Session(BaseSiteComponent):
 
     # --- Search ---
 
-    def search_projects(self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40,
-                        offset: int = 0) -> list[project.Project]:
+    def search_projects(
+        self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
+    ) -> list[project.Project]:
         """
         Uses the Scratch search to search projects.
 
@@ -567,12 +608,16 @@ class Session(BaseSiteComponent):
         query = f"&q={query}" if query else ""
 
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/search/projects", limit=limit, offset=offset,
-            add_params=f"&language={language}&mode={mode}{query}")
+            f"https://api.scratch.mit.edu/search/projects",
+            limit=limit,
+            offset=offset,
+            add_params=f"&language={language}&mode={mode}{query}",
+        )
         return commons.parse_object_list(response, project.Project, self)
 
-    def explore_projects(self, *, query: str = "*", mode: str = "trending", language: str = "en", limit: int = 40,
-                         offset: int = 0) -> list[project.Project]:
+    def explore_projects(
+        self, *, query: str = "*", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
+    ) -> list[project.Project]:
         """
         Gets projects from the explore page.
 
@@ -590,31 +635,43 @@ class Session(BaseSiteComponent):
             list<scratchattach.project.Project>: List that contains the explore page projects.
         """
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/explore/projects", limit=limit, offset=offset,
-            add_params=f"&language={language}&mode={mode}&q={query}")
+            f"https://api.scratch.mit.edu/explore/projects",
+            limit=limit,
+            offset=offset,
+            add_params=f"&language={language}&mode={mode}&q={query}",
+        )
         return commons.parse_object_list(response, project.Project, self)
 
-    def search_studios(self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40,
-                       offset: int = 0) -> list[studio.Studio]:
+    def search_studios(
+        self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
+    ) -> list[studio.Studio]:
         query = f"&q={query}" if query else ""
 
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/search/studios", limit=limit, offset=offset,
-            add_params=f"&language={language}&mode={mode}{query}")
+            f"https://api.scratch.mit.edu/search/studios",
+            limit=limit,
+            offset=offset,
+            add_params=f"&language={language}&mode={mode}{query}",
+        )
         return commons.parse_object_list(response, studio.Studio, self)
 
-    def explore_studios(self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40,
-                        offset: int = 0) -> list[studio.Studio]:
+    def explore_studios(
+        self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
+    ) -> list[studio.Studio]:
         query = f"&q={query}" if query else ""
         response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/explore/studios", limit=limit, offset=offset,
-            add_params=f"&language={language}&mode={mode}{query}")
+            f"https://api.scratch.mit.edu/explore/studios",
+            limit=limit,
+            offset=offset,
+            add_params=f"&language={language}&mode={mode}{query}",
+        )
         return commons.parse_object_list(response, studio.Studio, self)
 
     # --- Create project API ---
 
-    def create_project(self, *, title: Optional[str] = None, project_json: dict = empty_project_json,
-                       parent_id=None) -> project.Project:  # not working
+    def create_project(
+        self, *, title: Optional[str] = None, project_json: dict = empty_project_json, parent_id=None
+    ) -> project.Project:  # not working
         """
         Creates a project on the Scratch website.
 
@@ -625,16 +682,17 @@ class Session(BaseSiteComponent):
         enforce_ratelimit("create_scratch_project", "creating Scratch projects")
 
         if title is None:
-            title = f'Untitled-{random.randint(0, 1<<16)}'
+            title = f"Untitled-{random.randint(0, 1 << 16)}"
 
         params = {
-            'is_remix': '0' if parent_id is None else "1",
-            'original_id': parent_id,
-            'title': title,
+            "is_remix": "0" if parent_id is None else "1",
+            "original_id": parent_id,
+            "title": title,
         }
 
-        response = requests.post('https://projects.scratch.mit.edu/', params=params, cookies=self._cookies,
-                                 headers=self._headers, json=project_json).json()
+        response = requests.post(
+            "https://projects.scratch.mit.edu/", params=params, cookies=self._cookies, headers=self._headers, json=project_json
+        ).json()
         return self.connect_project(response["content-name"])
 
     def create_studio(self, *, title: Optional[str] = None, description: Optional[str] = None) -> studio.Studio:
@@ -650,8 +708,7 @@ class Session(BaseSiteComponent):
         if self.new_scratcher:
             raise exceptions.Unauthorized(f"\nNew scratchers (like {self.username}) cannot create studios.")
 
-        response = requests.post("https://scratch.mit.edu/studios/create/",
-                                 cookies=self._cookies, headers=self._headers)
+        response = requests.post("https://scratch.mit.edu/studios/create/", cookies=self._cookies, headers=self._headers)
 
         studio_id = webscrape_count(response.json()["redirect"], "/studios/", "/")
         new_studio = self.connect_studio(studio_id)
@@ -663,7 +720,7 @@ class Session(BaseSiteComponent):
 
         return new_studio
 
-    def create_class(self, title: str, desc: str = '') -> classroom.Classroom:
+    def create_class(self, title: str, desc: str = "") -> classroom.Classroom:
         """
         Create a class on the scratch website
 
@@ -676,17 +733,21 @@ class Session(BaseSiteComponent):
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't create class")
 
-        data = requests.post("https://scratch.mit.edu/classes/create_classroom/",
-                             json={"title": title, "description": desc},
-                             headers=self._headers, cookies=self._cookies).json()
+        data = requests.post(
+            "https://scratch.mit.edu/classes/create_classroom/",
+            json={"title": title, "description": desc},
+            headers=self._headers,
+            cookies=self._cookies,
+        ).json()
 
         class_id = data[0]["id"]
         return self.connect_classroom(class_id)
 
     # --- My stuff page ---
 
-    def mystuff_projects(self, filter_arg: str = "all", *, page: int = 1, sort_by: str = '', descending: bool = True) \
-            -> list[project.Project]:
+    def mystuff_projects(
+        self, filter_arg: str = "all", *, page: int = 1, sort_by: str = "", descending: bool = True
+    ) -> list[project.Project]:
         """
         Gets the projects from the "My stuff" page.
 
@@ -716,26 +777,33 @@ class Session(BaseSiteComponent):
             ).json()
             projects = []
             for target in targets:
-                projects.append(project.Project(
-                    id=target["pk"], _session=self, author_name=self._username,
-                    comments_allowed=None, instructions=None, notes=None,
-                    created=target["fields"]["datetime_created"],
-                    last_modified=target["fields"]["datetime_modified"],
-                    share_date=target["fields"]["datetime_shared"],
-                    thumbnail_url="https:" + target["fields"]["thumbnail_url"],
-                    favorites=target["fields"]["favorite_count"],
-                    loves=target["fields"]["love_count"],
-                    remixes=target["fields"]["remixers_count"],
-                    views=target["fields"]["view_count"],
-                    title=target["fields"]["title"],
-                    comment_count=target["fields"]["commenters_count"]
-                ))
+                projects.append(
+                    project.Project(
+                        id=target["pk"],
+                        _session=self,
+                        author_name=self._username,
+                        comments_allowed=None,
+                        instructions=None,
+                        notes=None,
+                        created=target["fields"]["datetime_created"],
+                        last_modified=target["fields"]["datetime_modified"],
+                        share_date=target["fields"]["datetime_shared"],
+                        thumbnail_url="https:" + target["fields"]["thumbnail_url"],
+                        favorites=target["fields"]["favorite_count"],
+                        loves=target["fields"]["love_count"],
+                        remixes=target["fields"]["remixers_count"],
+                        views=target["fields"]["view_count"],
+                        title=target["fields"]["title"],
+                        comment_count=target["fields"]["commenters_count"],
+                    )
+                )
             return projects
         except Exception:
             raise exceptions.FetchError()
 
-    def mystuff_studios(self, filter_arg: str = "all", *, page: int = 1, sort_by: str = "", descending: bool = True) \
-            -> list[studio.Studio]:
+    def mystuff_studios(
+        self, filter_arg: str = "all", *, page: int = 1, sort_by: str = "", descending: bool = True
+    ) -> list[studio.Studio]:
         if descending:
             ascsort = ""
             descsort = sort_by
@@ -749,24 +817,29 @@ class Session(BaseSiteComponent):
                 params=params,
                 headers=headers,
                 cookies=self._cookies,
-                timeout=10
+                timeout=10,
             ).json()
             studios = []
             for target in targets:
-                studios.append(studio.Studio(
-                    id=target["pk"], _session=self,
-                    title=target["fields"]["title"],
-                    description=None,
-                    host_id=target["fields"]["owner"]["pk"],
-                    host_name=target["fields"]["owner"]["username"],
-                    open_to_all=None, comments_allowed=None,
-                    image_url="https:" + target["fields"]["thumbnail_url"],
-                    created=target["fields"]["datetime_created"],
-                    modified=target["fields"]["datetime_modified"],
-                    follower_count=None, manager_count=None,
-                    curator_count=target["fields"]["curators_count"],
-                    project_count=target["fields"]["projecters_count"]
-                ))
+                studios.append(
+                    studio.Studio(
+                        id=target["pk"],
+                        _session=self,
+                        title=target["fields"]["title"],
+                        description=None,
+                        host_id=target["fields"]["owner"]["pk"],
+                        host_name=target["fields"]["owner"]["username"],
+                        open_to_all=None,
+                        comments_allowed=None,
+                        image_url="https:" + target["fields"]["thumbnail_url"],
+                        created=target["fields"]["datetime_created"],
+                        modified=target["fields"]["datetime_modified"],
+                        follower_count=None,
+                        manager_count=None,
+                        curator_count=target["fields"]["curators_count"],
+                        project_count=target["fields"]["projecters_count"],
+                    )
+                )
             return studios
         except Exception:
             raise exceptions.FetchError()
@@ -779,21 +852,26 @@ class Session(BaseSiteComponent):
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have classes")
         ascsort, descsort = get_class_sort_mode(mode)
 
-        classes_data = requests.get("https://scratch.mit.edu/site-api/classrooms/all/",
-                                    params={"page": page, "ascsort": ascsort, "descsort": descsort},
-                                    headers=self._headers, cookies=self._cookies).json()
+        classes_data = requests.get(
+            "https://scratch.mit.edu/site-api/classrooms/all/",
+            params={"page": page, "ascsort": ascsort, "descsort": descsort},
+            headers=self._headers,
+            cookies=self._cookies,
+        ).json()
         classes = []
         for data in classes_data:
             fields = data["fields"]
             educator_pf = fields["educator_profile"]
-            classes.append(classroom.Classroom(
-                id=data["pk"],
-                title=fields["title"],
-                classtoken=fields["token"],
-                datetime=datetime.datetime.fromisoformat(fields["datetime_created"]),
-                author=user.User(
-                    username=educator_pf["user"]["username"], id=educator_pf["user"]["pk"], _session=self),
-                _session=self))
+            classes.append(
+                classroom.Classroom(
+                    id=data["pk"],
+                    title=fields["title"],
+                    classtoken=fields["token"],
+                    datetime=datetime.datetime.fromisoformat(fields["datetime_created"]),
+                    author=user.User(username=educator_pf["user"]["username"], id=educator_pf["user"]["pk"], _session=self),
+                    _session=self,
+                )
+            )
         return classes
 
     def mystuff_ended_classes(self, mode: str = "Last created", page: Optional[int] = None) -> list[classroom.Classroom]:
@@ -801,21 +879,26 @@ class Session(BaseSiteComponent):
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have (deleted) classes")
         ascsort, descsort = get_class_sort_mode(mode)
 
-        classes_data = requests.get("https://scratch.mit.edu/site-api/classrooms/closed/",
-                                    params={"page": page, "ascsort": ascsort, "descsort": descsort},
-                                    headers=self._headers, cookies=self._cookies).json()
+        classes_data = requests.get(
+            "https://scratch.mit.edu/site-api/classrooms/closed/",
+            params={"page": page, "ascsort": ascsort, "descsort": descsort},
+            headers=self._headers,
+            cookies=self._cookies,
+        ).json()
         classes = []
         for data in classes_data:
             fields = data["fields"]
             educator_pf = fields["educator_profile"]
-            classes.append(classroom.Classroom(
-                id=data["pk"],
-                title=fields["title"],
-                classtoken=fields["token"],
-                datetime=datetime.datetime.fromisoformat(fields["datetime_created"]),
-                author=user.User(
-                    username=educator_pf["user"]["username"], id=educator_pf["user"]["pk"], _session=self),
-                _session=self))
+            classes.append(
+                classroom.Classroom(
+                    id=data["pk"],
+                    title=fields["title"],
+                    classtoken=fields["token"],
+                    datetime=datetime.datetime.fromisoformat(fields["datetime_created"]),
+                    author=user.User(username=educator_pf["user"]["username"], id=educator_pf["user"]["pk"], _session=self),
+                    _session=self,
+                )
+            )
         return classes
 
     def backpack(self, limit: int = 20, offset: int = 0) -> list[backpack_asset.BackpackAsset]:
@@ -826,8 +909,7 @@ class Session(BaseSiteComponent):
             list<backpack_asset.BackpackAsset>: List that contains the backpack items
         """
         data = commons.api_iterative(
-            f"https://backpack.scratch.mit.edu/{self._username}",
-            limit=limit, offset=offset, _headers=self._headers
+            f"https://backpack.scratch.mit.edu/{self._username}", limit=limit, offset=offset, _headers=self._headers
         )
         return commons.parse_object_list(data, backpack_asset.BackpackAsset, self)
 
@@ -845,11 +927,11 @@ class Session(BaseSiteComponent):
         If you are a new Scratcher and have been invited for becoming a Scratcher, this API endpoint will provide
         more info on the invite.
         """
-        return requests.get(f"https://api.scratch.mit.edu/users/{self.username}/invites", headers=self._headers,
-                            cookies=self._cookies).json()
+        return requests.get(
+            f"https://api.scratch.mit.edu/users/{self.username}/invites", headers=self._headers, cookies=self._cookies
+        ).json()
 
     # --- Connect classes inheriting from BaseCloud ---
-
 
     @overload
     def connect_cloud(self, project_id, *, cloud_class: type[T]) -> T:
@@ -858,7 +940,7 @@ class Session(BaseSiteComponent):
 
         Args:
             project_id:
-        
+
         Keyword arguments: CloudClass: The class that the returned object should be of. By default, this class is
         scratchattach.cloud.ScratchCloud.
 
@@ -873,16 +955,16 @@ class Session(BaseSiteComponent):
 
         Args:
             project_id:
-        
+
         Keyword arguments: CloudClass: The class that the returned object should be of. By default, this class is
         scratchattach.cloud.ScratchCloud.
 
         Returns: Type[scratchattach.cloud._base.BaseCloud]: An object representing the cloud of a project. Can be of any
         class inheriting from BaseCloud.
         """
+
     # noinspection PyPep8Naming
-    def connect_cloud(self, project_id, *, cloud_class: Optional[type[_base.BaseCloud]] = None) \
-            -> _base.BaseCloud:
+    def connect_cloud(self, project_id, *, cloud_class: Optional[type[_base.BaseCloud]] = None) -> _base.BaseCloud:
         cloud_class = cloud_class or cloud.ScratchCloud
         return cloud_class(project_id=project_id, _session=self)
 
@@ -893,21 +975,22 @@ class Session(BaseSiteComponent):
         """
         return cloud.ScratchCloud(project_id=project_id, _session=self)
 
-    def connect_tw_cloud(self, project_id, *, purpose="", contact="",
-                         cloud_host="wss://clouddata.turbowarp.org") -> cloud.TwCloud:
+    def connect_tw_cloud(
+        self, project_id, *, purpose="", contact="", cloud_host="wss://clouddata.turbowarp.org"
+    ) -> cloud.TwCloud:
         """
         Returns:
             scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
         """
-        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host,
-                             _session=self)
+        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host, _session=self)
 
     # --- Connect classes inheriting from BaseSiteComponent ---
 
     # noinspection PyPep8Naming
     # Class is camelcase here
-    def _make_linked_object(self, identificator_name, identificator, __class: type[C],
-                            NotFoundException: type[Exception]) -> C:
+    def _make_linked_object(
+        self, identificator_name, identificator, __class: type[C], NotFoundException: type[Exception]
+    ) -> C:
         """
         The Session class doesn't save the login in a ._session attribute, but IS the login ITSELF.
 
@@ -946,7 +1029,8 @@ class Session(BaseSiteComponent):
             comment = you.post_comment("scratchattach", commentee_id=int(user_id))
         except exceptions.CommentPostFailure:
             raise exceptions.BadRequest(
-                "After posting a comment, you need to wait 10 seconds before you can connect users by id again.")
+                "After posting a comment, you need to wait 10 seconds before you can connect users by id again."
+            )
         except exceptions.BadRequest:
             raise exceptions.UserNotFound("Invalid user id")
         except Exception as e:
@@ -979,18 +1063,17 @@ class Session(BaseSiteComponent):
             scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
         """
         # noinspection PyDeprecation
-        return self._make_linked_object("username", self.find_username_from_id(user_id), user.User,
-                                        exceptions.UserNotFound)
+        return self._make_linked_object("username", self.find_username_from_id(user_id), user.User, exceptions.UserNotFound)
 
     def connect_project(self, project_id) -> project.Project:
         """
-        Gets a project using this session, connects the session to the Project object to allow authenticated actions
-sess
-        Args:
-            project_id (int): ID of the requested project
+                Gets a project using this session, connects the session to the Project object to allow authenticated actions
+        sess
+                Args:
+                    project_id (int): ID of the requested project
 
-        Returns:
-            scratchattach.project.Project: An object that represents the requested project and allows you to perform actions on the project (like project.love)
+                Returns:
+                    scratchattach.project.Project: An object that represents the requested project and allows you to perform actions on the project (like project.love)
         """
         return self._make_linked_object("id", int(project_id), project.Project, exceptions.ProjectNotFound)
 
@@ -1028,8 +1111,7 @@ sess
         Returns:
             scratchattach.classroom.Classroom: An object representing the requested classroom
         """
-        return self._make_linked_object("classtoken", int(class_token), classroom.Classroom,
-                                        exceptions.ClassroomNotFound)
+        return self._make_linked_object("classtoken", int(class_token), classroom.Classroom, exceptions.ClassroomNotFound)
 
     def connect_topic(self, topic_id) -> forum.ForumTopic:
         """
@@ -1045,7 +1127,6 @@ sess
         return self._make_linked_object("id", int(topic_id), forum.ForumTopic, exceptions.ForumContentNotFound)
 
     def connect_topic_list(self, category_id, *, page=1):
-
         """
         Gets the topics from a forum category. Data web-scraped from Scratch's forums UI.
         Data is up-to-date.
@@ -1061,28 +1142,29 @@ sess
         """
 
         try:
-            response = requests.get(f"https://scratch.mit.edu/discuss/{category_id}/?page={page}",
-                                    headers=self._headers, cookies=self._cookies)
-            soup = BeautifulSoup(response.content, 'html.parser')
+            response = requests.get(
+                f"https://scratch.mit.edu/discuss/{category_id}/?page={page}", headers=self._headers, cookies=self._cookies
+            )
+            soup = BeautifulSoup(response.content, "html.parser")
         except Exception as e:
             raise exceptions.FetchError(str(e))
 
         try:
-            category_name = soup.find('h4').find("span").get_text()
+            category_name = soup.find("h4").find("span").get_text()
         except Exception:
             raise exceptions.BadRequest("Invalid category id")
 
         try:
-            topics = soup.find_all('tr')
+            topics = soup.find_all("tr")
             topics.pop(0)
             return_topics = []
 
             for topic in topics:
-                title_link = topic.find('a')
+                title_link = topic.find("a")
                 title = title_link.text.strip()
-                topic_id = title_link['href'].split('/')[-2]
+                topic_id = title_link["href"].split("/")[-2]
 
-                columns = topic.find_all('td')
+                columns = topic.find_all("td")
                 columns = [column.text for column in columns]
                 if len(columns) == 1:
                     # This is a sticky topic -> Skip it
@@ -1091,9 +1173,16 @@ sess
                 last_updated = columns[3].split(" ")[0] + " " + columns[3].split(" ")[1]
 
                 return_topics.append(
-                    forum.ForumTopic(_session=self, id=int(topic_id), title=title, category_name=category_name,
-                                     last_updated=last_updated, reply_count=int(columns[1]),
-                                     view_count=int(columns[2])))
+                    forum.ForumTopic(
+                        _session=self,
+                        id=int(topic_id),
+                        title=title,
+                        category_name=category_name,
+                        last_updated=last_updated,
+                        reply_count=int(columns[1]),
+                        view_count=int(columns[2]),
+                    )
+                )
             return return_topics
         except Exception as e:
             raise exceptions.ScrapeError(str(e))
@@ -1108,8 +1197,7 @@ sess
 
     def connect_message_events(self, *, update_interval=2) -> message_events.MessageEvents:
         # shortcut for connect_linked_user().message_events()
-        return message_events.MessageEvents(user.User(username=self.username, _session=self),
-                                            update_interval=update_interval)
+        return message_events.MessageEvents(user.User(username=self.username, _session=self), update_interval=update_interval)
 
     def connect_filterbot(self, *, log_deletions=True) -> filterbot.Filterbot:
         return filterbot.Filterbot(user.User(username=self.username, _session=self), log_deletions=log_deletions)
@@ -1123,40 +1211,6 @@ sess
 
     def get_cookies(self) -> dict[str, str]:
         return self._cookies
-
-
-# ------ #
-
-def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetime]:
-    """
-    Extract the JSON data from the main part of a session ID string
-    Session id is in the format:
-    <p1: long base64 string>:<p2: short base64 string>:<p3: medium base64 string>
-
-    p1 contains a base64 JSON string (if it starts with `.`, then it is zlib compressed)
-    p2 is a base 62 encoded timestamp
-    p3 might be a `synchronous signature` for the first 2 parts (might be useless for us)
-
-    The dict has these attributes:
-    - username
-    - _auth_user_id
-    - testcookie
-    - _auth_user_backend
-    - token
-    - login-ip
-    - _language
-    - django_timezone
-    - _auth_user_hash
-    """
-    p1, p2, _ = session_id.split(':')
-    p1_bytes = base64.urlsafe_b64decode(p1 + "==")
-    if p1.startswith('".'):
-        p1_bytes = zlib.decompress(p1_bytes)
-
-    return (
-        json.loads(p1_bytes),
-        datetime.datetime.fromtimestamp(commons.b62_decode(p2))
-    )
 
 
 # ------ #
@@ -1188,7 +1242,7 @@ def issue_login_warning() -> None:
         "then make sure to EITHER instead load them from environment variables or files OR remember to remove them before "
         "you share your code with anyone else. If you want to remove this warning, "
         "use `warnings.filterwarnings('ignore', category=scratchattach.LoginDataWarning)`",
-        exceptions.LoginDataWarning
+        exceptions.LoginDataWarning,
     )
 
 
@@ -1250,8 +1304,10 @@ def login(username, password, *, timeout=10) -> Session:
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     with requests.no_error_handling():
         request = requests.post(
-            "https://scratch.mit.edu/login/", json={"username": username, "password": password}, headers=_headers,
-            timeout=timeout
+            "https://scratch.mit.edu/login/",
+            json={"username": username, "password": password},
+            headers=_headers,
+            timeout=timeout,
         )
 
     try:
@@ -1260,7 +1316,8 @@ def login(username, password, *, timeout=10) -> Session:
         session_id = str(result.group())
     except Exception:
         raise exceptions.LoginFailure(
-            "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in")
+            "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in"
+        )
 
     # Create session object:
     with suppress_login_warning():
@@ -1277,15 +1334,17 @@ def login_by_session_string(session_string: str) -> Session:
     try:
         assert session_data.get("id")
         with suppress_login_warning():
-            return login_by_id(session_data["id"], username=session_data.get("username"),
-                           password=session_data.get("password"))
+            return login_by_id(
+                session_data["id"], username=session_data.get("username"), password=session_data.get("password")
+            )
     except Exception:
         pass
     try:
         assert session_data.get("session_id")
         with suppress_login_warning():
-            return login_by_id(session_data["session_id"], username=session_data.get("username"),
-                           password=session_data.get("password"))
+            return login_by_id(
+                session_data["session_id"], username=session_data.get("username"), password=session_data.get("password")
+            )
     except Exception:
         pass
     try:

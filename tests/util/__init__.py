@@ -1,21 +1,25 @@
 # utility methods for testing
 # includes special handlers for authentication etc.
+from typing_extensions import AsyncContextManager
 import warnings
 
 from typing import Optional
 
 from .keyhandler import get_auth
+import scratchattach.async_api as asa
 from scratchattach import login, Session as _Session, LoginDataWarning
 
-warnings.filterwarnings('ignore', category=LoginDataWarning)
+warnings.filterwarnings("ignore", category=LoginDataWarning)
 
 _session: Optional[_Session] = None
+
 
 def credentials_available() -> bool:
     auth = get_auth()
     if not auth:
         return False
     return auth.get("auth") is not None
+
 
 def session() -> _Session:
     global _session
@@ -29,7 +33,18 @@ def session() -> _Session:
 
     return _session
 
+
+async def async_session() -> AsyncContextManager[asa.Session, bool | None]:
+    auth = get_auth().get("auth")
+    pw = None if auth is None else auth.get("scratchattachv2")
+    if pw is None:
+        raise RuntimeError("Not enough data for login.")
+    return await asa.login("ScratchAttachV2", pw)
+
+
 _teacher_session: Optional[_Session] = None
+
+
 def teacher_session() -> Optional[_Session]:
     global _teacher_session
 
@@ -42,4 +57,3 @@ def teacher_session() -> Optional[_Session]:
         _teacher_session = login(data["username"], data["password"])
 
     return _teacher_session
-

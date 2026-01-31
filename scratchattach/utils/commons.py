@@ -1,8 +1,13 @@
 """v2 ready: Common functions used by various internal modules"""
+
 from __future__ import annotations
 
 import string
+import base64
+import json
+import zlib
 
+from datetime import datetime
 from typing import Optional, Final, Any, TypeVar, Callable, TYPE_CHECKING, Union, overload
 from threading import Event as ManualResetEvent
 from threading import Lock
@@ -11,64 +16,65 @@ from . import exceptions
 from .requests import requests
 
 from scratchattach.site import _base
+from scratchattach.utils import typed_dicts
 
 
 headers: Final = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
+    "(KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
     "x-csrftoken": "a",
     "x-requested-with": "XMLHttpRequest",
     "referer": "https://scratch.mit.edu",
 }
 empty_project_json: Final = {
-    'targets': [
+    "targets": [
         {
-            'isStage': True,
-            'name': 'Stage',
-            'variables': {
-                '`jEk@4|i[#Fk?(8x)AV.-my variable': [
-                    'my variable',
+            "isStage": True,
+            "name": "Stage",
+            "variables": {
+                "`jEk@4|i[#Fk?(8x)AV.-my variable": [
+                    "my variable",
                     0,
                 ],
             },
-            'lists': {},
-            'broadcasts': {},
-            'blocks': {},
-            'comments': {},
-            'currentCostume': 0,
-            'costumes': [
+            "lists": {},
+            "broadcasts": {},
+            "blocks": {},
+            "comments": {},
+            "currentCostume": 0,
+            "costumes": [
                 {
-                    'name': '',
-                    'bitmapResolution': 1,
-                    'dataFormat': 'svg',
-                    'assetId': '14e46ec3e2ba471c2adfe8f119052307',
-                    'md5ext': '14e46ec3e2ba471c2adfe8f119052307.svg',
-                    'rotationCenterX': 0,
-                    'rotationCenterY': 0,
+                    "name": "",
+                    "bitmapResolution": 1,
+                    "dataFormat": "svg",
+                    "assetId": "14e46ec3e2ba471c2adfe8f119052307",
+                    "md5ext": "14e46ec3e2ba471c2adfe8f119052307.svg",
+                    "rotationCenterX": 0,
+                    "rotationCenterY": 0,
                 },
             ],
-            'sounds': [],
-            'volume': 100,
-            'layerOrder': 0,
-            'tempo': 60,
-            'videoTransparency': 50,
-            'videoState': 'on',
-            'textToSpeechLanguage': None,
+            "sounds": [],
+            "volume": 100,
+            "layerOrder": 0,
+            "tempo": 60,
+            "videoTransparency": 50,
+            "videoState": "on",
+            "textToSpeechLanguage": None,
         },
     ],
-    'monitors': [],
-    'extensions': [],
-    'meta': {
-        'semver': '3.0.0',
-        'vm': '2.3.0',
-        'agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                 'Chrome/124.0.0.0 Safari/537.36',
+    "monitors": [],
+    "extensions": [],
+    "meta": {
+        "semver": "3.0.0",
+        "vm": "2.3.0",
+        "agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     },
 }
 
 
-def api_iterative_data(fetch_func: Callable[[int, int], list], limit: int, offset: int, max_req_limit: int = 40,
-                       unpack: bool = True) -> list:
+def api_iterative_data(
+    fetch_func: Callable[[int, int], list], limit: int, offset: int, max_req_limit: int = 40, unpack: bool = True
+) -> list:
     """
     Iteratively gets data by calling fetch_func with a moving offset and a limit.
     Once fetch_func returns None, the retrieval is completed.
@@ -96,8 +102,16 @@ def api_iterative_data(fetch_func: Callable[[int, int], list], limit: int, offse
     return api_data
 
 
-def api_iterative(url: str, *, limit: int, offset: int, max_req_limit: int = 40, add_params: str = "",
-                  _headers: Optional[dict] = None, cookies: Optional[dict] = None):
+def api_iterative(
+    url: str,
+    *,
+    limit: int,
+    offset: int,
+    max_req_limit: int = 40,
+    add_params: str = "",
+    _headers: Optional[dict] = None,
+    cookies: Optional[dict] = None,
+):
     """
     Function for getting data from one of Scratch's iterative JSON API endpoints (like /users/<user>/followers, or /users/<user>/projects)
     """
@@ -125,16 +139,16 @@ def api_iterative(url: str, *, limit: int, offset: int, max_req_limit: int = 40,
             raise exceptions.BadRequest("The passed arguments are invalid")
         return resp
 
-    api_data = api_iterative_data(
-        fetch, limit, offset, max_req_limit=max_req_limit, unpack=True
-    )
+    api_data = api_iterative_data(fetch, limit, offset, max_req_limit=max_req_limit, unpack=True)
     return api_data
+
 
 def _get_object(identificator_name, identificator, __class: type[C], NotFoundException, session=None) -> C:
     # Internal function: Generalization of the process ran by get_user, get_studio etc.
     # Builds an object of class that is inheriting from BaseSiteComponent
     # # Class must inherit from BaseSiteComponent
     from scratchattach.site import project
+
     try:
         use_class: type = __class
         if __class is project.PartialProject:
@@ -145,12 +159,12 @@ def _get_object(identificator_name, identificator, __class: type[C], NotFoundExc
         if r == "429":
             raise exceptions.Response429(
                 "Your network is blocked or rate-limited by Scratch.\n"
-                "If you're using an online IDE like replit.com, try running the code on your computer.")
+                "If you're using an online IDE like replit.com, try running the code on your computer."
+            )
         if not r:
             # Target is unshared. The cases that this can happen in are hardcoded:
             if __class is project.PartialProject:  # Case: Target is an unshared project.
-                _object = project.PartialProject(**{identificator_name: identificator,
-                                                 "shared": False, "_session": session})
+                _object = project.PartialProject(**{identificator_name: identificator, "shared": False, "_session": session})
                 assert isinstance(_object, __class)
                 return _object
             else:
@@ -162,21 +176,27 @@ def _get_object(identificator_name, identificator, __class: type[C], NotFoundExc
     except Exception as e:
         raise e
 
+
 I = TypeVar("I")
+
+
 @overload
 def webscrape_count(raw: str, text_before: str, text_after: str, cls: type[I]) -> I:
     pass
+
 
 @overload
 def webscrape_count(raw: str, text_before: str, text_after: str) -> int:
     pass
 
-def webscrape_count(raw, text_before, text_after, cls = int):
+
+def webscrape_count(raw, text_before, text_after, cls=int):
     return cls(raw.split(text_before)[1].split(text_after)[0])
 
 
 if TYPE_CHECKING:
     C = TypeVar("C", bound=_base.BaseSiteComponent)
+
 
 def parse_object_list(raw, /, __class: type[C], session=None, primary_key="id") -> list[C]:
     results = []
@@ -195,9 +215,11 @@ class LockEvent:
     """
     Can be waited on and triggered. Not to be confused with threading.Event, which has to be reset.
     """
+
     _event: ManualResetEvent
     _locks: list[Lock]
     _access_locks: Lock
+
     def __init__(self):
         self._event = ManualResetEvent()
         self._locks = []
@@ -233,12 +255,13 @@ class LockEvent:
         lock.acquire(timeout=0)
         return lock
 
+
 def get_class_sort_mode(mode: str) -> tuple[str, str]:
     """
     Returns the sort mode for the given mode for classes only
     """
-    ascsort = ''
-    descsort = ''
+    ascsort = ""
+    descsort = ""
 
     mode = mode.lower()
     if mode == "last created":
@@ -261,3 +284,32 @@ def b62_decode(s: str):
         ret = ret * 62 + chars.index(char)
 
     return ret
+
+
+def decode_session_id(session_id: str) -> tuple[typed_dicts.SessionIDDict, datetime]:
+    """
+    Extract the JSON data from the main part of a session ID string
+    Session id is in the format:
+    <p1: long base64 string>:<p2: short base64 string>:<p3: medium base64 string>
+
+    p1 contains a base64 JSON string (if it starts with `.`, then it is zlib compressed)
+    p2 is a base 62 encoded timestamp
+    p3 might be a `synchronous signature` for the first 2 parts (might be useless for us)
+
+    The dict has these attributes:
+    - username
+    - _auth_user_id
+    - testcookie
+    - _auth_user_backend
+    - token
+    - login-ip
+    - _language
+    - django_timezone
+    - _auth_user_hash
+    """
+    p1, p2, _ = session_id.split(":")
+    p1_bytes = base64.urlsafe_b64decode(p1 + "==")
+    if p1.startswith('".'):
+        p1_bytes = zlib.decompress(p1_bytes)
+
+    return (json.loads(p1_bytes), datetime.fromtimestamp(b62_decode(p2)))
