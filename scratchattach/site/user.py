@@ -553,28 +553,11 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         Returns:
             list<projects.projects.Project>: The user's loved projects
         """
-        # We need to use beautifulsoup webscraping so we cant use the api_iterative function
-        if offset < 0:
-            raise exceptions.BadRequest("offset parameter must be >= 0")
-        if limit < 0:
-            raise exceptions.BadRequest("limit parameter must be >= 0")
-
-        # There are 40 projects on display per page
-        # So the first page you need to view is 1 + offset // 40
-        # (You have to add one because the first page is idx 1 instead of 0)
-
-        # The final project to view is at idx offset + limit - 1
-        # (You have to -1 because the index starts at 0)
-        # So the page number for this is 1 + (offset + limit - 1) // 40
-
-        # But this is a range so we have to add another 1 for the second argument
-        pages = range(1 + offset // 40, 2 + (offset + limit - 1) // 40)
         _projects = []
 
-        for page in pages:
-            # The index of the first project on page #n is just (n-1) * 40
-            first_idx = (page - 1) * 40
-
+        for page, page_slice in commons.enumerate_pages(
+            offset=offset, limit=limit, items_per_page=40, start_page_index=1
+        ):
             with requests.no_error_handling():
                 page_content = requests.get(
                     f"https://scratch.mit.edu/projects/all/{self.username}/loves/"
@@ -584,21 +567,16 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
 
             soup = BeautifulSoup(page_content, "html.parser")
 
-            # We need to check if we are out of bounds
-            # If we are, we can jump out early
-            # This is detectable if Scratch gives you a '404'
+            # Out of bounds is checkable with 404. Can let you exit early.
+            # Check for specific <h1> so projects called `404` don't break the implementation
+            # TODO: make a test case which checks this edge-case
 
-            # We can't just detect if the 404 text is within the whole of the page content
-            # because it would break if someone made a project with that name
-
-            # This page only uses <h1> tags for the 404 text, so we can just use a soup for those
             h1_tag = soup.find("h1")
             if h1_tag is not None:
-                # Just to confirm that it's a 404, in case I am wrong. It can't hurt
                 if "Whoops! Our server is Scratch'ing its head" in h1_tag.text:
                     break
 
-            # Each project element is a list item with the class name 'project thumb item' so we can just use that
+            # Each project element is a <li> with the class name 'project thumb item'
             for i, project_element in enumerate(
                 soup.find_all("li", {"class": "project thumb item"})
             ):
@@ -606,8 +584,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                 # The current project idx = first_idx + i
                 # We want to start at {offset} and end at {offset + limit}
 
-                # So the offset <= current project idx <= offset + limit
-                if offset <= first_idx + i <= offset + limit:
+                if i in range(*page_slice.indices(40)):
                     # Each of these elements provides:
                     # A project id
                     # A thumbnail link (no need to webscrape this)
@@ -619,9 +596,8 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                     # 1st contains <img> tag
                     # 2nd contains project title
                     # 3rd links to the author & contains their username
+                    # NOTE: this can also include a 4th element if the user is a scratch member
 
-                    # This function is pretty handy!
-                    # I'll use it for an id from a string like: /projects/1070616180/
                     first_anchor = project_anchors[0]
                     second_anchor = project_anchors[1]
                     third_anchor = project_anchors[2]
@@ -634,8 +610,6 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                     title = second_anchor.contents[0]
                     author = third_anchor.contents[0]
 
-                    # Instantiating a project with the properties that we know
-                    # This may cause issues (see below)
                     _project = project.Project(
                         id=project_id,
                         _session=self._session,
