@@ -1,4 +1,3 @@
-import scratchattach.async_api as sa
 import asyncio
 import util
 import warnings
@@ -11,7 +10,7 @@ async def test_async_login():
         warnings.warn("Skipped test_activity because there were no credentials available.")
         return
     async with await util.async_session() as sess:
-        ...
+        print(sess.user_id)
 
 
 if __name__ == "__main__":
