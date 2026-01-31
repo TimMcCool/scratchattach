@@ -14,6 +14,9 @@ def test_classroom():
     names = room.student_names(offset=2, limit=62)
     print(len(names))
     print(names)
+    room = sa.get_classroom("200150")
+    studio_ids = room.class_studio_ids()
+    print(studio_ids)
 
 
 if __name__ == "__main__":

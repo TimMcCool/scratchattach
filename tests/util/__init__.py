@@ -1,21 +1,23 @@
 # utility methods for testing
 # includes special handlers for authentication etc.
 import warnings
-
 from typing import Optional
 
 from .keyhandler import get_auth
 from scratchattach import login, Session as _Session, LoginDataWarning
 
-warnings.filterwarnings('ignore', category=LoginDataWarning)
+
+warnings.filterwarnings("ignore", category=LoginDataWarning)
 
 _session: Optional[_Session] = None
+
 
 def credentials_available() -> bool:
     auth = get_auth()
     if not auth:
         return False
     return auth.get("auth") is not None
+
 
 def session() -> _Session:
     global _session
@@ -29,7 +31,10 @@ def session() -> _Session:
 
     return _session
 
+
 _teacher_session: Optional[_Session] = None
+
+
 def teacher_session() -> Optional[_Session]:
     global _teacher_session
 
@@ -42,4 +47,3 @@ def teacher_session() -> Optional[_Session]:
         _teacher_session = login(data["username"], data["password"])
 
     return _teacher_session
-

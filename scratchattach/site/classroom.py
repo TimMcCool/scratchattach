@@ -42,9 +42,7 @@ class Classroom(BaseSiteComponent):
         if self.id:
             self.update_api = f"https://api.scratch.mit.edu/classrooms/{self.id}"
         elif self.classtoken:
-            self.update_api = (
-                f"https://api.scratch.mit.edu/classtoken/{self.classtoken}"
-            )
+            self.update_api = f"https://api.scratch.mit.edu/classtoken/{self.classtoken}"
         else:
             raise KeyError(f"No class id or token provided! {self.__dict__ = }")
 
@@ -80,9 +78,7 @@ class Classroom(BaseSiteComponent):
             headings = soup.find_all("h1")
             for heading in headings:
                 if heading.text == "Whoops! Our server is Scratch'ing its head":
-                    raise exceptions.ClassroomNotFound(
-                        f"Classroom id {self.id} is not closed and cannot be found."
-                    )
+                    raise exceptions.ClassroomNotFound(f"Classroom id {self.id} is not closed and cannot be found.")
 
             # id, title, description, status, date_start (iso format), educator/username
 
@@ -96,9 +92,7 @@ class Classroom(BaseSiteComponent):
             sfx = "',\n    userId: "
             for script in soup.find_all("script"):
                 if pfx in script.text:
-                    educator_username = commons.webscrape_count(
-                        script.text, pfx, sfx, str
-                    )
+                    educator_username = commons.webscrape_count(script.text, pfx, sfx, str)
 
             ret: typed_dicts.ClassroomDict = {
                 "id": self.id,
@@ -123,9 +117,7 @@ class Classroom(BaseSiteComponent):
         if "date_start" in data:
             self.datetime = datetime.fromisoformat(data["date_start"])
         if "username" in data["educator"]:
-            self.author = user.User(
-                username=data["educator"]["username"], _session=self._session
-            )
+            self.author = user.User(username=data["educator"]["username"], _session=self._session)
             self.author.supply_data_dict(data["educator"])
         if "date_end" in data:
             self.is_closed = bool(data["date_end"])
@@ -134,9 +126,7 @@ class Classroom(BaseSiteComponent):
     def student_count(self) -> int:
         # student count
         with requests.no_error_handling():
-            text = requests.get(
-                f"https://scratch.mit.edu/classes/{self.id}/", headers=self._headers
-            ).text
+            text = requests.get(f"https://scratch.mit.edu/classes/{self.id}/", headers=self._headers).text
         return commons.webscrape_count(text, "Students (", ")")
 
     def student_names(self, *, offset=0, limit=60) -> list[str]:
@@ -154,9 +144,7 @@ class Classroom(BaseSiteComponent):
             if self.is_closed:
                 ret = []
                 with requests.no_error_handling():
-                    response = requests.get(
-                        f"https://scratch.mit.edu/classes/{self.id}/"
-                    )
+                    response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
                 soup = BeautifulSoup(response.text, "html.parser")
                 found = set("")
 
@@ -184,15 +172,11 @@ class Classroom(BaseSiteComponent):
                     f"https://scratch.mit.edu/classes/{self.id}/students/?page={page}",
                     headers=self._headers,
                 ).text
-            textlist = [
-                i.split('/">')[0] for i in text.split('        <a href="/users/')[1:]
-            ]
+            textlist = [i.split('/">')[0] for i in text.split('        <a href="/users/')[1:]]
             return textlist
 
         ret: list[str] = []
-        for page, page_slice in commons.enumerate_pages(
-            offset=offset, limit=limit, items_per_page=60, start_page_index=1
-        ):
+        for page, page_slice in commons.enumerate_pages(offset=offset, limit=limit, items_per_page=60, start_page_index=1):
             ret += get_page(page)[page_slice]
 
         return ret
@@ -200,52 +184,46 @@ class Classroom(BaseSiteComponent):
     def class_studio_count(self) -> int:
         # studio count
         with requests.no_error_handling():
-            text = requests.get(
-                f"https://scratch.mit.edu/classes/{self.id}/", headers=self._headers
-            ).text
+            text = requests.get(f"https://scratch.mit.edu/classes/{self.id}/", headers=self._headers).text
         return commons.webscrape_count(text, "Class Studios (", ")")
 
-    def class_studio_ids(self, *, page: int = 1) -> list[int]:
+    def class_studio_ids(self) -> list[int]:
         """
         Returns the class studio on the class.
-
-        Keyword Arguments:
-            page: The page of the students that should be returned.
 
         Returns:
             list<int>: The id of the class studios
         """
-        if self.is_closed:
-            ret = []
+        ret: list[int] = []
+
+        # if the class is closed, you can only view the classes on the class page. You cannot use pagination.
+        with requests.no_error_handling():
             response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
-            soup = BeautifulSoup(response.text, "html.parser")
+        soup = BeautifulSoup(response.text, "html.parser")
 
-            for result in soup.css.select(
-                "ul.scroll-content .gallery a[href]:not([class])"
-            ):
-                value = result["href"]
-                if not isinstance(value, str):
-                    value = value[0]
-                ret.append(commons.webscrape_count(value, "/studios/", "/"))
+        for result in soup.css.select("ul.scroll-content .gallery a[href]:not([class])"):
+            value = result["href"]
+            if not isinstance(value, str):
+                value = value[0]
+            ret.append(commons.webscrape_count(value, "/studios/", "/"))
 
-            # for scrollable in soup.find_all("ul", {"class": "scroll-content"}):
-            #     for item in scrollable.contents:
-            #         if not isinstance(item, bs4.NavigableString):
-            #             if "gallery" in item.attrs["class"]:
-            #                 anchor = item.find("a")
-            #                 if "href" in anchor.attrs:
-            #                     ret.append(commons.webscrape_count(anchor.attrs["href"], "/studios/", "/"))
-            return ret
+        # for scrollable in soup.find_all("ul", {"class": "scroll-content"}):
+        #     for item in scrollable.contents:
+        #         if not isinstance(item, bs4.NavigableString):
+        #             if "gallery" in item.attrs["class"]:
+        #                 anchor = item.find("a")
+        #                 if "href" in anchor.attrs:
+        #                     ret.append(commons.webscrape_count(anchor.attrs["href"], "/studios/", "/"))
+        return ret
 
-        text = requests.get(
-            f"https://scratch.mit.edu/classes/{self.id}/studios/?page={page}",
-            headers=self._headers,
-        ).text
-        textlist = [
-            int(i.split('/">')[0])
-            for i in text.split('<span class="title">\n    <a href="/studios/')[1:]
-        ]
-        return textlist
+        # this endpoint only supports up to 10 classes, which is less than the class profile page. It doesn't provide a page param.
+        # text = requests.get(
+        #     f"https://scratch.mit.edu/classes/{self.id}/studios/",
+        #     headers=self._headers,
+        # ).text
+        # textlist = [int(i.split('/">')[0]) for i in text.split('<span class="title">\n    <a href="/studios/')[1:]]
+        # return textlist
+        #
 
     def _check_session(self) -> None:
         if self._session is None:
@@ -277,9 +255,7 @@ class Classroom(BaseSiteComponent):
                 # Success!
                 return
             else:
-                warnings.warn(
-                    f"{self._session} may not be authenticated to edit {self}"
-                )
+                warnings.warn(f"{self._session} may not be authenticated to edit {self}")
 
         except Exception as e:
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
@@ -300,9 +276,7 @@ class Classroom(BaseSiteComponent):
                 # Success!
                 return
             else:
-                warnings.warn(
-                    f"{self._session} may not be authenticated to edit {self}"
-                )
+                warnings.warn(f"{self._session} may not be authenticated to edit {self}")
 
         except Exception as e:
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
@@ -323,9 +297,7 @@ class Classroom(BaseSiteComponent):
                 # Success!
                 return
             else:
-                warnings.warn(
-                    f"{self._session} may not be authenticated to edit {self}"
-                )
+                warnings.warn(f"{self._session} may not be authenticated to edit {self}")
 
         except Exception as e:
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
@@ -414,9 +386,7 @@ class Classroom(BaseSiteComponent):
         if "reg_link" in data:
             return data["reg_link"]
         else:
-            raise exceptions.Unauthorized(
-                f"{self._session} is not authorised to generate a signup link of {self}"
-            )
+            raise exceptions.Unauthorized(f"{self._session} is not authorised to generate a signup link of {self}")
 
     def public_activity(self, *, limit=20):
         """
@@ -426,9 +396,7 @@ class Classroom(BaseSiteComponent):
         if limit > 20:
             warnings.warn("The limit is set to more than 20. There may be an error")
         soup = BeautifulSoup(
-            requests.get(
-                f"https://scratch.mit.edu/site-api/classrooms/activity/public/{self.id}/?limit={limit}"
-            ).text,
+            requests.get(f"https://scratch.mit.edu/site-api/classrooms/activity/public/{self.id}/?limit={limit}").text,
             "html.parser",
         )
 
@@ -472,9 +440,7 @@ class Classroom(BaseSiteComponent):
         _activity: list[activity.Activity] = []
         for activity_json in data:
             _activity.append(activity.Activity(_session=self._session))
-            _activity[-1]._update_from_json(
-                activity_json
-            )  # NOT the same as _update_from_dict
+            _activity[-1]._update_from_json(activity_json)  # NOT the same as _update_from_dict
 
         return _activity
 
@@ -526,9 +492,7 @@ def get_classroom_from_token(class_token) -> Classroom:
         "warnings.filterwarnings('ignore', category=GetAuthenticationWarning).",
         exceptions.ClassroomAuthenticationWarning,
     )
-    return commons._get_object(
-        "classtoken", class_token, Classroom, exceptions.ClassroomNotFound
-    )
+    return commons._get_object("classtoken", class_token, Classroom, exceptions.ClassroomNotFound)
 
 
 def register_by_token(
