@@ -86,7 +86,7 @@ exclude = [
 select = ["E9", "F63", "F7", "F82", "C901"]
 
 [tool.ruff.lint.mccabe]
-max-complexity = 10
+# max-complexity = 10
 
 [tool.setuptools.packages]
 find = { include = ["scratchattach"] }
