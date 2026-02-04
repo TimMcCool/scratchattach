@@ -88,8 +88,8 @@ select = ["E9", "F63", "F7", "F82"] # , "C901"]  # uncomment to re-enable mccabe
 [tool.ruff.lint.mccabe]
 # max-complexity = 10
 
-[tool.setuptools.packages]
-find = { include = ["scratchattach"] }
+[tool.setuptools.packages.find]
+where = ["scratchattach"]
 
 [dependency-groups]
 dev = ["cryptography>=46.0.3", "pytest>=9.0.2"]
