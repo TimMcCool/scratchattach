@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scratchattach"
-version = "3.0.0b0"
+version = "3.0.0b1"
 authors = [{ name = "TimMcCool" }]
 description = "A Scratch API Wrapper"
 requires-python = ">= 3.12"
