@@ -5,10 +5,10 @@ import argparse
 import secrets
 
 try:
-    from .keyhandler import FERNET
+    from .keyhandler import FERNET, mask_all
     from .vercelauth import vercel_auth
 except ImportError as excp:
-    from keyhandler import FERNET
+    from keyhandler import FERNET, mask_all
     from vercelauth import vercel_auth
 
 
@@ -32,6 +32,8 @@ def main():
             ...
         if vercelauth := command.add_parser("vercel", help="Output the vercel auth data."):
             ...
+        if addmask := command.add_parser("addmask", help="Mask all secrets."):
+            ...
 
     args = parser.parse_args(namespace=Args())
 
@@ -54,6 +56,8 @@ def main():
                 "\n".join(vercel_auth())
             )
 
+        case "addmask":
+            mask_all()
 
 if __name__ == "__main__":
     main()

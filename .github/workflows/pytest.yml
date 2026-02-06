@@ -22,6 +22,13 @@ jobs:
       - uses: astral-sh/setup-uv@v7
       - name: install deps
         run: uv sync
+      - name: mask secrets
+        env:
+          FERNET_KEY: ${{ secrets.FERNET_KEY }}
+        run: |
+          cd tests
+          python -m util addmask
+          cd ..
       - name: Test with pytest
         env:
           FERNET_KEY: ${{ secrets.FERNET_KEY }}
