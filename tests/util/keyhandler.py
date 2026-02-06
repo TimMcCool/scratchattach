@@ -4,8 +4,11 @@ import tomllib
 from pathlib import Path
 from typing import Any, Optional, TypeVar
 
+from dotenv import load_dotenv
 from cryptography.fernet import Fernet
 from base64 import urlsafe_b64encode
+
+load_dotenv()
 
 
 def str_2_key(gen: str) -> bytes:
@@ -61,6 +64,7 @@ _local_auth_fp = __fp__ / "local_auth.toml"
 
 _cached_auth: Optional[dict[str, Any]] = None
 
+
 def get_auth() -> dict[str, Any]:
     try:
         _auth = _decrypt_dict(tomllib.load(_auth_fp.open("rb")))
@@ -70,5 +74,5 @@ def get_auth() -> dict[str, Any]:
     _local_auth = tomllib.load(_local_auth_fp.open("rb")) if _local_auth_fp.exists() else {}
 
     _cached_auth = _auth | _local_auth
-    
+
     return _cached_auth
