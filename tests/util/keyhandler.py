@@ -74,4 +74,4 @@ def get_auth() -> dict[str, Any]:
     return _cached_auth
 
 def mask_secret(secret: str):
-    print(f"::add-mask::{secret}")
+    warnings.warn(f"::add-mask::{secret}")
