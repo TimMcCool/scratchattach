@@ -446,22 +446,24 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self._send_packet_list(packet_list, max_retries=max_retries)
         self.last_var_set = time.time()
 
-    def _ensure_recorder_running(self, *, recorder_initial_values: dict[str, Any]) -> cloud_recorder.CloudRecorder:
+    def _ensure_recorder_running(self, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> cloud_recorder.CloudRecorder:
         if self.recorder is None:
+            project_id = self.project_id
+            if recorder_initial_values is None and project_id is not None:
+                recorder_initial_values = _get_cloud_var_initial_data_or_none(project_id)
+            recorder_initial_values = recorder_initial_values or {}
             self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
             self.recorder.start()
-            start_time = time.time()
-            self.recorder.has_data.wait(5)
+            self.recorder.has_data.wait(1)
         return self.recorder
-
 
     def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None):
         var = "☁ "+var.removeprefix("☁ ")
-        recorder = self._ensure_recorder_running(recorder_initial_values=recorder_initial_values or {})
+        recorder = self._ensure_recorder_running(recorder_initial_values=recorder_initial_values)
         return recorder.get_var(var)
 
     def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None):
-        recorder = self._ensure_recorder_running(recorder_initial_values=recorder_initial_values or {})
+        recorder = self._ensure_recorder_running(recorder_initial_values=recorder_initial_values)
         return recorder.get_all_vars()
 
     def create_event_stream(self):
