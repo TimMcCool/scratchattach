@@ -1,4 +1,8 @@
+import warnings
 from util import mask_secret
+
+def print(msg: str):
+    warnings.warn(msg)
 
 def test_mask():
     mask_secret("Test Mask 123")
