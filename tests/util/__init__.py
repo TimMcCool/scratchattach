@@ -5,7 +5,7 @@ import warnings
 from typing import Optional
 from datetime import datetime
 
-from .keyhandler import get_auth
+from .keyhandler import get_auth, mask_secret
 from scratchattach import login, Session as _Session, LoginDataWarning
 
 warnings.filterwarnings('ignore', category=LoginDataWarning)

@@ -72,3 +72,6 @@ def get_auth() -> dict[str, Any]:
     _cached_auth = _auth | _local_auth
     
     return _cached_auth
+
+def mask_secret(secret: str):
+    print(f"::add-mask::{secret}")
