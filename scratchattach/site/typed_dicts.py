@@ -72,12 +72,23 @@ class OcularUserDict(TypedDict):
 class UserHistoryDict(TypedDict):
     joined: str
 
+UserProfileImagesDict = TypedDict(
+    "UserProfileImagesDict",
+    {
+        "90x90": str,
+        "60x60": str,
+        "55x55": str,
+        "50x50": str,
+        "32x32": str
+    }
+)
+
 class UserProfileDict(TypedDict):
     id: int
     status: str
     bio: str
     country: str
-    images: dict[str, str]
+    images: UserProfileImagesDict
     membership_label: NotRequired[int]
     membership_avatar_badge: NotRequired[int]
 
@@ -141,6 +152,50 @@ class StudioRoleDict(TypedDict):
     curator: bool
     invited: bool
     following: bool
+
+ProjectImagesDict = TypedDict(
+    "ProjectImagesDict",
+    {
+        "282x218": str,
+        "216x163": str,
+        "200x200": str,
+        "144x108": str,
+        "135x102": str,
+        "100x80": str
+    }
+)
+
+class ProjectHistoryDict(TypedDict):
+    created: str
+    modified: str
+    shared: str
+
+class ProjectStatsDict(TypedDict):
+    views: int
+    loves: int
+    favorites: int
+    remixes: int
+
+class ProjectRemixDict(TypedDict):
+    parent: Optional[int]
+    root: Optional[int]
+
+class ProjectDict(TypedDict):
+    id: int
+    title: str
+    description: str
+    instructions: str
+    visibility: str
+    public: bool
+    comments_allowed: bool
+    is_published: bool
+    author: UserDict
+    image: str
+    images: ProjectImagesDict
+    history: ProjectHistoryDict
+    stats: ProjectStatsDict
+    remix: ProjectRemixDict
+    project_token: str
 
 class PlaceholderProjectDataMetadataDict(TypedDict):
     title: str
