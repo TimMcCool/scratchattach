@@ -29,6 +29,7 @@ class CloudRecorder(CloudEvents):
         return self.cloud_values
 
     def on_set(self, activity):
+        # print(f"{activity=}")
         if not self.has_data.is_set():
             self.has_data.set()
         self.cloud_values[activity.var] = activity.value

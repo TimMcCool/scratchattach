@@ -175,16 +175,21 @@ class WebSocketEventStream(EventStream):
         if non_blocking:
             self.source_cloud.websocket.settimeout(0)
             try:
+                # print("Receiving...")
                 received = self.source_cloud.websocket.recv().splitlines()
+                # print(f"{received=}")
                 self.packets_left.extend(received)
             except Exception:
                 pass
             return
         self.source_cloud.websocket.settimeout(None)
+        # print("Receiving...")
         received = self.source_cloud.websocket.recv().splitlines()
+        # print(f"{received=}")
         self.packets_left.extend(received)
     
     def read(self, amount: int = -1) -> Iterator[dict[str, Any]]:
+        # print("Reading...")
         i = 0
         with self.reading:
             try:
@@ -325,6 +330,8 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self._send_packet(packet)
 
     def connect(self):
+        if self.websocket:
+            self.websocket.close()
         self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
         self.websocket.connect(
             self.cloud_host,
@@ -447,15 +454,17 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self.last_var_set = time.time()
 
     def _ensure_recorder_running(self, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> cloud_recorder.CloudRecorder:
-        if self.recorder is None:
+        recorder = self.recorder
+        if recorder is None:
             project_id = self.project_id
             if recorder_initial_values is None and project_id is not None:
                 recorder_initial_values = _get_cloud_var_initial_data_or_none(project_id)
             recorder_initial_values = recorder_initial_values or {}
-            self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
-            self.recorder.start()
-            self.recorder.has_data.wait(1)
-        return self.recorder
+            self.recorder = recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
+            recorder.start()
+            # print("Started recorder.")
+            recorder.has_data.wait(1)
+        return recorder
 
     def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None):
         var = "☁ "+var.removeprefix("☁ ")

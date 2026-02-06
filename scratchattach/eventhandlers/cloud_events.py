@@ -42,18 +42,19 @@ class CloudEvents(BaseEventHandler):
                 while True:
                     # print("Checking for more events")
                     for data in self.source_stream.read():
+                        # print(f"{data=}")
                         # print(f"Got event {data}")
                         self.subsequent_reconnects = 0
                         try:
                             _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session, cloud=self.cloud)
-                            if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
-                                # print(f"Skipped as {_a.timestamp} < {self.startup_time + 500}")
-                                continue
+                            # if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
+                            #     # print(f"Skipped as {_a.timestamp} < {self.startup_time + 500}")
+                            #     continue
                             data["variable_name"] = data["name"]
                             data["name"] = data["variable_name"].replace("☁ ", "")
                             _a._update_from_dict(data)
                             # print(f"sending event {_a}")
-                            self.call_event("on_"+_a.type, [_a])
+                            self.call_event(f"on_{_a.type}", [_a])
                         except Exception as e:
                             print(f"Cloud events _updated ignored: {e} {traceback.format_exc()}")
                             pass

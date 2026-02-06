@@ -39,11 +39,13 @@ class BaseEventHandler(ABC):
     
     def call_event(self, event_name, args : list = []):
         try:
+            # print(f"Calling for {event_name}...")
             if event_name in self._threaded_events:
                 for func in self._threaded_events[event_name]:
                     Thread(target=func, args=args).start()
             if event_name in self._events:
                 for func in self._events[event_name]:
+                    # print(f"Called {func}.")
                     func(*args)
         except Exception as e:
             if self.ignore_exceptions:
