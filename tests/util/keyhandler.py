@@ -74,8 +74,6 @@ def get_auth() -> dict[str, Any]:
     return _cached_auth
 
 def mask_all():
-    mask_secret("Test mask")
-    return
     queue = [get_auth()]
     while queue:
         d = queue.pop()

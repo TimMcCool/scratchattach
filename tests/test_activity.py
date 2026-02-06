@@ -6,7 +6,6 @@ import util
 
 
 def test_activity():
-    warnings.warn("Test mask")
     if not util.credentials_available():
         warnings.warn(
             "Skipped test_activity because there were no credentials available."
