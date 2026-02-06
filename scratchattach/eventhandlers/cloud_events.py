@@ -8,7 +8,6 @@ from ._base import BaseEventHandler
 from scratchattach.utils import exceptions
 from scratchattach.site import cloud_activity
 import time
-import json
 from collections.abc import Iterator
 
 class CloudEvents(BaseEventHandler):
@@ -33,13 +32,14 @@ class CloudEvents(BaseEventHandler):
         
         self.call_event("on_ready")
 
-        if self.running is False:
+        if not self.running:
             return
         
         # TODO: refactor this method. It works, but is hard to read
-        while True:
+        while self.running:
             try:
-                while True:
+                while self.running:
+                    self.source_stream.timeout = 1
                     # print("Checking for more events")
                     for data in self.source_stream.read():
                         # print(f"{data=}")
@@ -89,7 +89,7 @@ class ManualCloudLogEvents:
             for _a in data[::-1]:
                 if _a.timestamp <= self.last_timestamp:
                     continue
-                self.last_timestamp = _a.timestamp
+                self.last_timestamp = int(_a.timestamp)
                 yield ("on_"+_a.type, [_a])
         except Exception:
             self.subsequent_failed_log_fetches += 1
