@@ -92,6 +92,7 @@ class CloudLogActivityDict(TypedDict):
     user: str
     verb: str
     name: str
+    variable_name: NotRequired[str]
     value: Union[str, float, int]
     timestamp: int
     cloud: _base.AnyCloud
@@ -99,6 +100,7 @@ class CloudLogActivityDict(TypedDict):
 class CloudActivityDict(TypedDict):
     method: str
     name: str
+    variable_name: NotRequired[str]
     value: Union[str, float, int]
     project_id: int
     cloud: _base.AnyCloud

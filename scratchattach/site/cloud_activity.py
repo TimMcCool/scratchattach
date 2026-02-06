@@ -35,6 +35,7 @@ class CloudActivity(BaseSiteComponent[Union[typed_dicts.CloudActivityDict, typed
     username: str = field(kw_only=True, default="")
     var: str = field(kw_only=True, default="")
     name: str = field(kw_only=True, default="")
+    actual_var: str = field(kw_only=True, default="")
     type: str = field(kw_only=True, default="set")
     timestamp: float = field(kw_only=True, default=0.0)
     value: Union[float, int, str] = field(kw_only=True, default="0.0")
@@ -69,6 +70,7 @@ class CloudActivity(BaseSiteComponent[Union[typed_dicts.CloudActivityDict, typed
         self.name = data["name"]
         self.var = data["name"]
         self.value = data["value"]
+        self.actual_var = data.get("variable_name") or self.var
         if is_cloud_log_activity(data):
             self.user = data["user"]
             self.username = data["user"]

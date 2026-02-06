@@ -463,7 +463,8 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             self.recorder = recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
             recorder.start()
             # print("Started recorder.")
-            recorder.has_data.wait(1)
+            recorder.received_data.wait(timeout = 1)
+            time.sleep(0.01)
         return recorder
 
     def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None):
