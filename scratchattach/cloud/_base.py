@@ -446,7 +446,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self._send_packet_list(packet_list, max_retries=max_retries)
         self.last_var_set = time.time()
 
-    def _assert_recorder_running(self, *, recorder_initial_values: dict[str, Any]) -> cloud_recorder.CloudRecorder:
+    def _ensure_recorder_running(self, *, recorder_initial_values: dict[str, Any]) -> cloud_recorder.CloudRecorder:
         if self.recorder is None:
             self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
             self.recorder.start()
@@ -458,11 +458,11 @@ class BaseCloud(AnyCloud[Union[str, int]]):
 
     def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None):
         var = "☁ "+var.removeprefix("☁ ")
-        recorder = self._assert_recorder_running(recorder_initial_values=recorder_initial_values or {})
+        recorder = self._ensure_recorder_running(recorder_initial_values=recorder_initial_values or {})
         return recorder.get_var(var)
 
     def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None):
-        recorder = self._assert_recorder_running(recorder_initial_values=recorder_initial_values or {})
+        recorder = self._ensure_recorder_running(recorder_initial_values=recorder_initial_values or {})
         return recorder.get_all_vars()
 
     def create_event_stream(self):
@@ -481,6 +481,7 @@ class LogCloud(BaseCloud, metaclass=LogCloudMeta):
     @abstractmethod
     def logs(self, *, filter_by_var_named: Optional[str] = None, limit: int = 100, offset: int = 0) -> list[cloud_activity.CloudActivity]:
         pass
+
 
 def _get_cloud_var_initial_data(project_id: Union[str, int]) -> dict[str, Any]:
     from scratchattach.site import project
@@ -504,3 +505,9 @@ def _get_cloud_var_initial_data(project_id: Union[str, int]) -> dict[str, Any]:
                     continue
                 data[key] = variable[1]
     return data
+
+def _get_cloud_var_initial_data_or_none(project_id: Union[str, int]) -> Optional[dict[str, Any]]:
+    try:
+        return _get_cloud_var_initial_data(project_id)
+    except Exception:
+        return None
