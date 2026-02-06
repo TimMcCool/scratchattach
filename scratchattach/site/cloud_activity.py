@@ -15,31 +15,22 @@ from . import typed_dicts, session
 class CloudActivity(BaseSiteComponent[Union[typed_dicts.CloudActivityDict, typed_dicts.CloudLogActivityDict]]):
     """
     Represents a cloud activity (a cloud variable set / creation / deletion).
-
-    Attributes:
-
-    :.username: The user who caused the cloud event (the user who added / set / deleted the cloud variable)
-
-    :.var: The name of the cloud variable that was updated (specified without the cloud emoji)
-
-    :.name: The name of the cloud variable that was updated (specified without the cloud emoji)
-
-    :.type: The activity type
-
-    :.timestamp: Then timestamp of when the action was performed
-
-    :.value: If the cloud variable was set, then this attribute provides the value the cloud variable was set to
-    
-    :.cloud: The cloud (as object inheriting from scratchattach.Cloud.BaseCloud) that the cloud activity corresponds to
     """
     username: str = field(kw_only=True, default="")
+    "The user who caused the cloud event (the user who added / set / deleted the cloud variable)"
     var: str = field(kw_only=True, default="")
+    "The name of the cloud variable that was updated (specified without the cloud emoji)"
     name: str = field(kw_only=True, default="")
+    "The name of the cloud variable that was updated (specified without the cloud emoji)"
     actual_var: str = field(kw_only=True, default="")
     type: str = field(kw_only=True, default="set")
+    "The activity type"
     timestamp: float = field(kw_only=True, default=0.0)
+    "Then timestamp of when the action was performed"
     value: Union[float, int, str] = field(kw_only=True, default="0.0")
+    "If the cloud variable was set, then this attribute provides the value the cloud variable was set to"
     cloud: _base.AnyCloud = field(kw_only=True, default_factory=lambda : _base.DummyCloud())
+    "The cloud (as object inheriting from scratchattach.Cloud.BaseCloud) that the cloud activity corresponds to"
     _session: Optional[session.Session] = field(kw_only=True, default=None)
 
     def __init__(self, **entries):

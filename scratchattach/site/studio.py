@@ -21,50 +21,21 @@ from scratchattach.utils.requests import requests
 class Studio(BaseSiteComponent):
     """
     Represents a Scratch studio.
-
-    Attributes:
-
-    :.id:
-
-    :.title:
-
-    :.description:
-
-    :.host_id: The user id of the studio host
-
-    :.open_to_all: Whether everyone is allowed to add projects
-
-    :.comments_allowed:
-
-    :.image_url:
-
-    :.created:
-
-    :.modified:
-
-    :.follower_count:
-
-    :.manager_count:
-
-    :.project_count:
-
-    :.update(): Updates the attributes
-
     """
-    id: int = 0
     title: Optional[str] = None
     description: Optional[str] = None
     host_id: Optional[int] = None
+    "The user id of the studio host"
     follower_count: Optional[int] = None
     manager_count: Optional[int] = None
     project_count: Optional[int] = None
     image_url: Optional[str] = None
     open_to_all: Optional[bool] = None
+    "Whether everyone is allowed to add projects"
     comments_allowed: Optional[bool] = None
     created: Optional[str] = None
     modified: Optional[str] = None
     _session: Optional[session.Session] = None
-
 
     def __post_init__(self):
         # Info on how the .update method has to fetch the data:

@@ -231,56 +231,40 @@ class BaseCloud(AnyCloud[Union[str, int]]):
     Base class for a project's cloud variables. Represents a cloud.
 
     When inheriting from this class, the __init__ function of the inherited class:
-    - must first call the constructor of the super class: super().__init__()
+    - must first call the initializer of the super class: super().__init__()
     - must then set some attributes
-
-    Attributes that must be specified in the __init__ function of a class inheriting from this one:
-        project_id: Project id of the cloud variables
-
-        cloud_host: URL of the websocket server ("wss://..." or "ws://...")
-
-    Attributes that can, but don't have to be specified in the __init__ function:
-
-        _session: Either None or a scratchattach.site.session.Session object. Defaults to None.
-
-        ws_shortterm_ratelimit: The wait time between cloud variable sets. Defaults to 0.1
-
-        ws_longterm_ratelimit: The amount of cloud variable set that can be performed long-term without ever getting ratelimited
-
-        allow_non_numeric: Whether non-numeric cloud variable values are allowed. Defaults to False
-
-        length_limit: Length limit for cloud variable values. Defaults to 100000
-
-        username: The username to send during handshake. Defaults to "scratchattach"
-
-        header: The header to send. Defaults to None
-
-        cookie: The cookie to send. Defaults to None
-
-        origin: The origin to send. Defaults to None
-
-        print_connect_messages: Whether to print a message on every connect to the cloud server. Defaults to False.
     """
 
     _PACKET_FAILURE_SLEEPDURATIONS = (0.1, 0.2, 1.5) 
 
     project_id: Optional[Union[str, int]]
+    "Project id of the cloud variables"
     cloud_host: str
+    "URL of the websocket server (\"wss://...\" or \"ws://...\")"
     ws_shortterm_ratelimit: float
+    "The wait time between cloud variable sets. Defaults to 0.1"
     ws_longterm_ratelimit: float
+    "The amount of cloud variable set that can be performed long-term without ever getting ratelimited"
     allow_non_numeric: bool
+    "Whether non-numeric cloud variable values are allowed. Defaults to False"
     length_limit: int
+    "Length limit for cloud variable values. Defaults to 100000"
     username: str
+    "The username to send during handshake. Defaults to \"scratchattach\""
     header: Optional[dict]
+    "The header to send. Defaults to None"
     cookie: Optional[dict]
+    "The cookie to send. Defaults to None"
     origin: Optional[str]
+    "The origin to send. Defaults to None"
     print_connect_message: bool
+    "Whether to print a message on every connect to the cloud server. Defaults to False."
     ws_timeout: Optional[int]
     websocket: websocket.WebSocket
     event_stream: Optional[EventStream] = None
-    
     recorder: Optional[cloud_recorder.CloudRecorder]
-    
+    _session: Optional[session.Session]
+    "Either None or a scratchattach.site.session.Session object. Defaults to None."
     first_var_set: float
     last_var_set: float
     var_sets_since_first: int
