@@ -22,6 +22,7 @@ class Studio(BaseSiteComponent):
     """
     Represents a Scratch studio.
     """
+    id: int
     title: Optional[str] = None
     description: Optional[str] = None
     host_id: Optional[int] = None
