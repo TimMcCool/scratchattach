@@ -3,6 +3,7 @@
 import warnings
 
 from typing import Optional
+from datetime import datetime
 
 from .keyhandler import get_auth
 from scratchattach import login, Session as _Session, LoginDataWarning
@@ -42,4 +43,7 @@ def teacher_session() -> Optional[_Session]:
         _teacher_session = login(data["username"], data["password"])
 
     return _teacher_session
+
+def allow_before(d: datetime) -> bool:
+    return datetime.now() < d
 
