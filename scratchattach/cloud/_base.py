@@ -481,3 +481,26 @@ class LogCloud(BaseCloud, metaclass=LogCloudMeta):
     @abstractmethod
     def logs(self, *, filter_by_var_named: Optional[str] = None, limit: int = 100, offset: int = 0) -> list[cloud_activity.CloudActivity]:
         pass
+
+def _get_cloud_var_initial_data(project_id: Union[str, int]) -> dict[str, Any]:
+    from scratchattach.site import project
+    data: dict[str, Any] = {}
+    if isinstance((j := project.get_project(project_id).raw_json()), dict) and isinstance(targets := j.get("targets"), list):
+        for target in targets:
+            if not isinstance(target, dict):
+                continue
+            variables = target.get("variables")
+            if not isinstance(variables, dict):
+                continue
+            for _, variable in variables.items():
+                if not isinstance(variable, list):
+                    continue
+                if len(variable) < 3:
+                    continue
+                if not variable[2]:
+                    continue
+                key = variable[0]
+                if not isinstance(key, str):
+                    continue
+                data[key] = variable[1]
+    return data
