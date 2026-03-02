@@ -6,7 +6,7 @@ from util import session, credentials_available
 def test_user():
     if not credentials_available():
         warnings.warn(
-            "Skipped test_studio because there were no credentials available."
+            "Skipped test_user because there were no credentials available."
         )
         return
     sess = session()
