@@ -501,7 +501,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         Returns:
             boolean: Whether the user is followed by the user currently logged in.
         """
-        self._assert_permission()
+        self._assert_auth()
         with requests.no_error_handling():
             resp = requests.get(
                 f"https://scratch.mit.edu/users/{self.username}/",
