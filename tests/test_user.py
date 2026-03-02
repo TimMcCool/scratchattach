@@ -106,6 +106,11 @@ def test_user():
     assert status_data["status"] == "Sample status"
     assert status_data["color"] == "#855cd6"
 
+    uukelele = sess.connect_user("uukelele") # could use anyone ScratchAttachV2 is following right now but i think its cool that its following my account - uukelele, 2026
+    assert uukelele.is_followed_by_me()
+    # and someone he is not following
+    assert not griffpatch.is_followed_by_me()
+
 
 if __name__ == "__main__":
     test_user()
