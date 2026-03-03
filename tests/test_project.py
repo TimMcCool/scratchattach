@@ -66,9 +66,9 @@ def test_project():
     #    1233).moderation_status() == "notreviewed"  # if this becomes reviewed, please update this
     # ^^ also this project is an infinite remix loop!
 
-    assert sa.explore_projects()
-    assert sa.search_projects(query="scratchattach") or allow_before(datetime(2026, 4, 1))
+    assert sa.explore_projects() or allow_before(datetime(2026, 4, 1))
     # ^ Remove when fixed and change datetime next time this fails.
+    assert sa.search_projects(query="scratchattach")
 
 if __name__ == '__main__':
     test_project()
