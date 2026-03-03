@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = '2.1.15b0'
+VERSION = ((os.getenv("GITHUB_REF_TYPE") == "tag" and os.getenv("GITHUB_REF_NAME")) or '2.1.15').removeprefix("v").removeprefix("V")
 DESCRIPTION = 'A Scratch API Wrapper'
 with open('README.md', encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()

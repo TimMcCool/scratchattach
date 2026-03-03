@@ -52,6 +52,9 @@ jobs:
         pytest tests/
     - run: pip install -U wheel build
     - name: Build a binary wheel and a source tarball
+      env:
+        GITHUB_REF_TYPE: ${{ github.ref_type }}
+        GITHUB_REF_NAME: ${{ github.ref_name }}
       run: python -m build
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
