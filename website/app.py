@@ -49,7 +49,8 @@ def community_projects():
             community_projects_cache = [
                 {"project_id":p.id, "title":p.title, "author":p.author_name, "thumbnail_url":f"https://uploads.scratch.mit.edu/get_image/project/{p.id}_480x360.png"} for p in projects
             ]
-        cache.set("community_projects", {"value": community_projects_cache, "data_id": secrets.token_urlsafe(32)}, {"ttl": 300, "tags": ["website"]})
+        community_projects_cache_data = {"value": community_projects_cache, "data_id": secrets.token_urlsafe(32)}
+        cache.set("community_projects", community_projects_cache_data, {"ttl": 300, "tags": ["website"]})
     response = jsonify(random.choices(community_projects_cache, k=5))
     response.headers.add("Fetched-Data-Id", community_projects_cache_data and community_projects_cache_data.get("data_id"))
     return response
