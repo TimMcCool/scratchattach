@@ -5,6 +5,7 @@ It is NOT part of the scratchattach Python library and won't be downloaded when 
 
 import time
 import random
+import secrets
 from flask import Flask, render_template, send_from_directory, jsonify
 from vercel.cache import RuntimeCache
 import scratchattach as sa
@@ -48,5 +49,7 @@ def community_projects():
             community_projects_cache = [
                 {"project_id":p.id, "title":p.title, "author":p.author_name, "thumbnail_url":f"https://uploads.scratch.mit.edu/get_image/project/{p.id}_480x360.png"} for p in projects
             ]
-        cache.set("community_projects", {"value": community_projects_cache}, {"ttl": 300, "tags": ["website"]})
-    return jsonify(random.choices(community_projects_cache, k=5))
+        cache.set("community_projects", {"value": community_projects_cache, "data_id": secrets.token_urlsafe(32)}, {"ttl": 300, "tags": ["website"]})
+    response = jsonify(random.choices(community_projects_cache, k=5))
+    response.headers.add("Fetched-Data-Id", community_projects_cache_data and community_projects_cache_data.get("data_id"))
+    return response
