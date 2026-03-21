@@ -26,7 +26,7 @@ class CloudEvents(BaseEventHandler):
         """
         A process that listens for cloud activity and executes events on cloud activity
         """
-        
+
         self.call_event("on_ready")
 
         if not self.running:
@@ -47,11 +47,11 @@ class CloudEvents(BaseEventHandler):
                         except Exception as e:
                             pass
             except Exception:
-                print("CloudEvents: Disconnected. Reconnecting ...", time.time())
+                # print("CloudEvents: Disconnected. Reconnecting ...", time.time())
                 time.sleep(0.1) # cooldown
 
-            print("CloudEvents: Reconnected.", time.time())
-            self.call_event("on_reconnect", [])
+                # print("CloudEvents: Reconnected.", time.time())
+                self.call_event("on_reconnect", [])
 
 class ManualCloudLogEvents:
     """
