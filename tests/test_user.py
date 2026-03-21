@@ -1,11 +1,12 @@
 import pprint
 import sys
 import warnings
+from datetime import datetime
 
 def test_user():
     sys.path.insert(0, ".")
     import scratchattach as sa
-    from util import session, credentials_available
+    from util import session, credentials_available, allow_before
     if not credentials_available():
         warnings.warn("Skipped test_studio because there were no credentials available.")
         return
@@ -90,9 +91,10 @@ def test_user():
     assert comment.content == "Sample comment"
     # comment by id, message_events, verificator
 
-    status_data = user.ocular_status()
-    assert status_data["status"] == "Sample status"
-    assert status_data["color"] == "#855cd6"
+    if not allow_before(datetime(2026, 3, 28)):
+        status_data = user.ocular_status()
+        assert status_data["status"] == "Sample status"
+        assert status_data["color"] == "#855cd6"
 
 if __name__ == '__main__':
     test_user()

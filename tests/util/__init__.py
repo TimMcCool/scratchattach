@@ -45,4 +45,9 @@ def teacher_session() -> Optional[_Session]:
     return _teacher_session
 
 def allow_before(d: datetime) -> bool:
+    """
+    Used with the `or` operator.
+    If an assertion would be false, put the `allow_before` after the condition.
+    If a test incorrectly errors, put the `allow_before` before the condition.
+    """
     return datetime.now() < d
