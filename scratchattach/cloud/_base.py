@@ -359,6 +359,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         except Exception:
             pass
         if self.event_stream:
+            self.event_stream.close()
             self.event_stream = None
 
     def _assert_valid_value(self, value):
