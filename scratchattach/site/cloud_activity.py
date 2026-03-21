@@ -7,7 +7,8 @@ import warnings
 
 from scratchattach.cloud import _base
 from scratchattach.utils import exceptions
-from scratchattach.site import project, user
+from scratchattach.site import user
+from scratchattach.site import project as project_module
 from ._base import BaseSiteComponent
 from . import typed_dicts, session
 
@@ -33,17 +34,17 @@ class CloudActivity(BaseSiteComponent[Union[typed_dicts.CloudActivityDict, typed
     "The cloud (as object inheriting from scratchattach.Cloud.BaseCloud) that the cloud activity corresponds to"
     _session: Optional[session.Session] = field(kw_only=True, default=None)
 
-    def __init__(self, **entries):
-        # Set attributes every CloudActivity object needs to have:
-        self._session = None
-        self.cloud = None
-        self.user = None
-        self.username = None
-        self.type = None
-        self.timestamp = time.time()
+    # def __init__(self, **entries):
+    #     # Set attributes every CloudActivity object needs to have:
+    #     self._session = None
+    #     self.cloud = None
+    #     self.user = None
+    #     self.username = None
+    #     self.type = None
+    #     self.timestamp = time.time()
 
-        # Update attributes from entries dict:
-        self.__dict__.update(entries)
+    #     # Update attributes from entries dict:
+    #     self.__dict__.update(entries)
 
     def update(self):
         warnings.warn("CloudActivity objects can't be updated", exceptions.InvalidUpdateWarning)
@@ -73,11 +74,14 @@ class CloudActivity(BaseSiteComponent[Union[typed_dicts.CloudActivityDict, typed
             self.cloud = data["cloud"]
         return True
 
+    def a(self, **k):
+        pass
+
     def load_log_data(self):
         if self.cloud is None:
             print("Warning: There aren't cloud logs available for this cloud, therefore the user and exact timestamp can't be loaded")
         else:
-            if hasattr(self.cloud, "logs"):
+            if isinstance(self.cloud, _base.LogCloud):
                 logs = self.cloud.logs(filter_by_var_named=self.var, limit=100)
                 matching = list(filter(lambda x: x.value == self.value and x.timestamp <= self.timestamp, logs))
                 if matching == []:
@@ -99,12 +103,12 @@ class CloudActivity(BaseSiteComponent[Union[typed_dicts.CloudActivityDict, typed
             return None
         return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
 
-    def project(self) -> Optional[project.Project]:
+    def project(self) -> Optional[project_module.Project]:
         """
         Returns the project where the cloud activity was performed as scratchattach.project.Project object
         """
-        def make_linked(cloud: _base.BaseCloud) -> project.Project:
-            return self._make_linked_object("id", cloud.project_id, project.Project, exceptions.ProjectNotFound)
+        def make_linked(cloud: _base.BaseCloud) -> project_module.Project:
+            return self._make_linked_object("id", cloud.project_id, project_module.Project, exceptions.ProjectNotFound)
         if self.cloud is None:
             return None
         cloud = self.cloud

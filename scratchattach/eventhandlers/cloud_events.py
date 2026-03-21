@@ -1,5 +1,8 @@
 """CloudEvents class"""
+
 from __future__ import annotations
+from scratchattach.site.typed_dicts import CloudActivityDict
+from typing import cast
 
 import traceback
 
@@ -10,10 +13,14 @@ from scratchattach.site import cloud_activity
 import time
 from collections.abc import Iterator
 
+
 class CloudEvents(BaseEventHandler):
     """
     Class that calls events when on cloud updates that are received through a websocket connection.
     """
+
+    source_stream: _base.EventStream
+
     def __init__(self, cloud: _base.AnyCloud):
         super().__init__()
         self.cloud = cloud
@@ -29,12 +36,12 @@ class CloudEvents(BaseEventHandler):
         """
         A process that listens for cloud activity and executes events on cloud activity
         """
-        
+
         self.call_event("on_ready")
 
         if not self.running:
             return
-        
+
         # TODO: refactor this method. It works, but is hard to read
         while self.running:
             try:
@@ -46,13 +53,20 @@ class CloudEvents(BaseEventHandler):
                         # print(f"Got event {data}")
                         self.subsequent_reconnects = 0
                         try:
-                            _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session, cloud=self.cloud)
+                            _a = cloud_activity.CloudActivity(
+                                timestamp=time.time() * 1000,
+                                _session=self._session,
+                                cloud=self.cloud,
+                            )
                             # if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
                             #     # print(f"Skipped as {_a.timestamp} < {self.startup_time + 500}")
                             #     continue
-                            data["variable_name"] = data["name"]
-                            data["name"] = data["variable_name"].replace("☁ ", "")
-                            _a._update_from_dict(data)
+                            cloud_activity_dict = cast(CloudActivityDict, data)
+                            cloud_activity_dict["variable_name"] = cloud_activity_dict["name"]
+                            cloud_activity_dict["name"] = cloud_activity_dict[
+                                "variable_name"
+                            ].replace("☁ ", "")
+                            _a._update_from_dict(cloud_activity_dict)
                             # print(f"sending event {_a}")
                             self.call_event(f"on_{_a.type}", [_a])
                         except Exception as e:
@@ -60,19 +74,23 @@ class CloudEvents(BaseEventHandler):
                             pass
             except Exception:
                 self.subsequent_reconnects += 1
-                time.sleep(0.1) # cooldown
+                time.sleep(0.1)  # cooldown
 
                 if self.subsequent_reconnects >= 5:
-                    print(f"Warning: {self.subsequent_reconnects} subsequent cloud disconnects. Cloud may be down, causing CloudEvents to not call events.")
+                    print(
+                        f"Warning: {self.subsequent_reconnects} subsequent cloud disconnects. Cloud may be down, causing CloudEvents to not call events."
+                    )
                 self.call_event("on_reconnect", [])
 
+
 class ManualCloudLogEvents:
-    """
-    Class that calls events on cloud updates that are received from a clouddata log.
-    """
+    """Class that calls events on cloud updates that are received from a clouddata log."""
+
     def __init__(self, cloud: _base.LogCloud):
         if not isinstance(cloud, _base.LogCloud):
-            raise ValueError("Cloud log events can't be used with a cloud that has no logs available")
+            raise ValueError(
+                "Cloud log events can't be used with a cloud that has no logs available"
+            )
         self.cloud = cloud
         self.source_cloud = cloud
         self._session = cloud._session
@@ -80,9 +98,7 @@ class ManualCloudLogEvents:
         self.subsequent_failed_log_fetches = 0
 
     def update(self) -> Iterator[tuple[str, list[cloud_activity.CloudActivity]]]:
-        """
-        Update once and yield all packets
-        """
+        """Update once and yield all packets"""
         try:
             data = self.source_cloud.logs(limit=25)
             self.subsequent_failed_log_fetches = 0
@@ -90,20 +106,24 @@ class ManualCloudLogEvents:
                 if _a.timestamp <= self.last_timestamp:
                     continue
                 self.last_timestamp = int(_a.timestamp)
-                yield ("on_"+_a.type, [_a])
+                yield ("on_" + _a.type, [_a])
         except Exception:
             self.subsequent_failed_log_fetches += 1
             if self.subsequent_failed_log_fetches == 20:
-                print("Warning: 20 subsequent clouddata log fetches failed. Scrach's cloud logs may be down, causing CloudLogEvents to not call events.")
-        
+                print(
+                    "Warning: 20 subsequent clouddata log fetches failed. Scrach's cloud logs may be down, causing CloudLogEvents to not call events."
+                )
+
+
 class CloudLogEvents(BaseEventHandler):
-    """
-    Class that calls events on cloud updates that are received from a clouddata log.
-    """
+    """Class that calls events on cloud updates that are received from a clouddata log."""
+
     def __init__(self, cloud: _base.LogCloud, *, update_interval=0.1):
         super().__init__()
         if not isinstance(cloud, _base.LogCloud):
-            raise ValueError("Cloud log events can't be used with a cloud that has no logs available")
+            raise ValueError(
+                "Cloud log events can't be used with a cloud that has no logs available"
+            )
         self.cloud = cloud
         self.source_cloud = cloud
         self.update_interval = update_interval

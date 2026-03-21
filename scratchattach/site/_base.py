@@ -1,4 +1,5 @@
 from __future__ import annotations
+from scratchattach.site.session import Session
 
 from abc import ABC, abstractmethod
 from typing import TypeVar, Optional, Self, Union, Any, Generic
@@ -12,6 +13,8 @@ from . import session
 
 D = TypeVar("D")
 C = TypeVar("C", bound="BaseSiteComponent")
+
+
 class BaseSiteComponent(ABC, Generic[D]):
     _session: Optional[session.Session]
     update_api: str
@@ -27,11 +30,7 @@ class BaseSiteComponent(ABC, Generic[D]):
         """
         Updates the attributes of the object by performing an API response. Returns True if the update was successful.
         """
-        response = self.update_function(
-            self.update_api,
-            headers=self._headers,
-            cookies=self._cookies, timeout=10
-        )
+        response = self.update_function(self.update_api, headers=self._headers, cookies=self._cookies, timeout=10)  # ty:ignore[invalid-argument-type]
         # Check for 429 error:
         # Note, this is a bit naïve
         if "429" in str(response):
@@ -46,7 +45,7 @@ class BaseSiteComponent(ABC, Generic[D]):
             return False
 
         return self._update_from_dict(response)
-    
+
     def updated(self) -> Self:
         self.update()
         return self
@@ -57,10 +56,12 @@ class BaseSiteComponent(ABC, Generic[D]):
         Parses the API response that is fetched in the update-method. Class specific, must be overridden in classes inheriting from this one.
         """
 
-    def _assert_auth(self):
+    def _assert_auth(self) -> Session:
         if self._session is None:
             raise exceptions.Unauthenticated(
-                "You need to use session.connect_xyz (NOT get_xyz) in order to perform this operation.")
+                "You need to use session.connect_xyz (NOT get_xyz) in order to perform this operation."
+            )
+        return self._session
 
     def _make_linked_object(self, identificator_id, identificator, Class: type[C], NotFoundException) -> C:
         """
@@ -68,7 +69,7 @@ class BaseSiteComponent(ABC, Generic[D]):
         Class must inherit from BaseSiteComponent
         """
         return commons._get_object(identificator_id, identificator, Class, NotFoundException, self._session)
-    
+
     def supply_data_dict(self, data: D) -> bool:
         return self._update_from_dict(data)
 
@@ -76,7 +77,7 @@ class BaseSiteComponent(ABC, Generic[D]):
     """
     Internal function run on update. Function is a method of the 'requests' module/class
     """
-    
+
     def _make_request(
         self,
         method: Union[m_requests.HTTPMethod, str],
@@ -86,7 +87,7 @@ class BaseSiteComponent(ABC, Generic[D]):
         headers: Optional[dict[str, str]] = None,
         params: Optional[dict[str, str]] = None,
         data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[Any] = None
+        json: Optional[Any] = None,
     ) -> optional_async.CARequest:
         if self.oa_http_session is None:
             raise ValueError("This BaseSiteComponent has no oa_http_session.")

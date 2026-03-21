@@ -137,6 +137,7 @@ class CloudRequests(CloudEvents):
     executer_thread: Optional[Thread]
     responder_thread: Optional[Thread]
     extra_executor_threads: list[Thread]
+    cloud: _base.AnyCloud
 
     def __init__(
         self,
@@ -268,19 +269,19 @@ class CloudRequests(CloudEvents):
         self.current_var += 1
         if self.current_var == len(self.used_cloud_vars):
             self.current_var = 0
-        time.sleep(self.cloud.ws_shortterm_ratelimit)
+        time.sleep(getattr(self.cloud, "ws_shortterm_ratelimit", 0.1))
 
     def _respond(self, request_id, response, *, validation=2222):
         """
         Sends back the request response to the Scratch project
         """
-        if (self.cloud.last_var_set + 8 < time.time() # if the cloud connection has been idle for too long, a reconnect is necessary to make sure the first package will not be lost
+        if (getattr(self.cloud, "last_var_set", time.time()) + 8 < time.time() # if the cloud connection has been idle for too long, a reconnect is necessary to make sure the first package will not be lost
             ) or self.no_packet_loss:
             self.cloud.reconnect()
 
         memory = ResponseMemory(rid=request_id, packets={})#{"rid":request_id}
         remaining_response = str(response)
-        length_limit = self.cloud.length_limit - (len(str(request_id))+6) # the subtrahend is the worst-case length of the "."+numbers after the "."
+        length_limit = getattr(self.cloud, "length_limit", 256) - (len(str(request_id))+6) # the subtrahend is the worst-case length of the "."+numbers after the "."
         
         i = 0
         while not remaining_response == "":
@@ -457,11 +458,12 @@ class CloudRequests(CloudEvents):
         Called when the underlying cloud events reconnect. Makes sure that no requests are missed in this case.
         """
         try:
-            extradata = self.cloud.logs(limit=35)[::-1] # Reverse result so oldest activity is first
-            for activity in extradata:
-                if activity.timestamp < self.startup_time:
-                    continue
-                self.on_set(activity) # Read in the fetched activity
+            if isinstance(self.cloud, _base.LogCloud):
+                extradata = self.cloud.logs(limit=35)[::-1] # Reverse result so oldest activity is first
+                for activity in extradata:
+                    if activity.timestamp < self.startup_time:
+                        continue
+                    self.on_set(activity) # Read in the fetched activity
         except Exception:
             pass
     
@@ -511,7 +513,7 @@ class CloudRequests(CloudEvents):
         else:
             time.sleep(0.07)
 
-    def stop(self, wait_extra_threads: bool = True):
+    def stop(self, wait_extra_threads: bool = True):  # ty:ignore[invalid-method-override]
         """
         Stops the request handler and all associated threads forever. Lets running response sending processes finish.
         """
@@ -543,6 +545,10 @@ class CloudRequests(CloudEvents):
 
     def credit_check(self):
         try:
+            if not isinstance(self.cloud, _base.BaseCloud):
+                raise TypeError
+            if self.cloud.project_id is None:
+                raise ValueError
             p = project.Project(id=self.cloud.project_id)
             if not p.update(): # can't get project, probably because it's unshared (no authentication is used for getting it)
                 print("If you use cloud requests or cloud storages, please credit TimMcCool!")
