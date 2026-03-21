@@ -1,5 +1,4 @@
 from __future__ import annotations
-from scratchattach.site.session import Session
 
 from abc import ABC, abstractmethod
 from typing import TypeVar, Optional, Self, Union, Any, Generic
@@ -56,7 +55,7 @@ class BaseSiteComponent(ABC, Generic[D]):
         Parses the API response that is fetched in the update-method. Class specific, must be overridden in classes inheriting from this one.
         """
 
-    def _assert_auth(self) -> Session:
+    def _assert_auth(self) -> session.Session:
         if self._session is None:
             raise exceptions.Unauthenticated(
                 "You need to use session.connect_xyz (NOT get_xyz) in order to perform this operation."
