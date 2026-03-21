@@ -62,9 +62,9 @@ class CloudEvents(BaseEventHandler):
                 self.subsequent_reconnects += 1
                 time.sleep(0.1) # cooldown
 
-            if self.subsequent_reconnects >= 5:
-                print(f"Warning: {self.subsequent_reconnects} subsequent cloud disconnects. Cloud may be down, causing CloudEvents to not call events.")
-            self.call_event("on_reconnect", [])
+                if self.subsequent_reconnects >= 5:
+                    print(f"Warning: {self.subsequent_reconnects} subsequent cloud disconnects. Cloud may be down, causing CloudEvents to not call events.")
+                self.call_event("on_reconnect", [])
 
 class ManualCloudLogEvents:
     """
