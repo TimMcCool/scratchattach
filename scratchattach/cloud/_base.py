@@ -39,6 +39,7 @@ class EventStream(SupportsRead[Iterator[dict[str, Any]]], SupportsClose):
     """
     Allows you to stream events
     """
+    timeout: Optional[Union[float, int]] = None
 
 class AnyCloud(ABC, Generic[T]):
     """
@@ -129,38 +130,57 @@ class WebSocketEventStream(EventStream):
             warnings.warn("Initial cloud connection attempt failed, retrying...", exceptions.UnexpectedWebsocketEventWarning)
         self.packets_left = []
 
-    def receive_new(self, non_blocking: bool = False):
+    def receive_new(self, non_blocking: bool = False, timeout: Optional[float] = 0):
+        timeout = None if timeout is None else max(timeout, 0)
+        timeout_value = self.timeout if timeout is None else timeout
         if non_blocking:
-            self.source_cloud.websocket.settimeout(0)
-            try:
-                received = self.source_cloud.websocket.recv().splitlines()
-                self.packets_left.extend(received)
-            except Exception:
-                pass
+            timeout_value = 0
+        if self.source_cloud.websocket.gettimeout() != timeout_value:
+            self.source_cloud.websocket.settimeout(timeout_value)
+        # print("Receiving...")
+        try:
+            received = self.source_cloud.websocket.recv().splitlines()
+        except websocket.WebSocketTimeoutException:
             return
-        self.source_cloud.websocket.settimeout(None)
-        received = self.source_cloud.websocket.recv().splitlines()
+        # print(f"{received=}")
         self.packets_left.extend(received)
-    
+
     def read(self, amount: int = -1) -> Iterator[dict[str, Any]]:
+        # print("Reading...")
         i = 0
+        recv_once = amount == -1
+        recv_at_least = max(amount, 0)
+        start_time = time.time()
+        if self.timeout is not None:
+            has_timeout = True
+            timeout_end = start_time + self.timeout
+        else:
+            has_timeout = False
+            timeout_end = 0.0
+        done = False
+        # print("Getting data...")
         with self.reading:
-            try:
-                self.receive_new(amount != -1)
-                while (self.packets_left and amount == -1) or (amount != -1 and i < amount):
-                    if not self.packets_left and amount != -1:
-                        self.receive_new()
-                    yield json.loads(self.packets_left.pop(0))
-                    i += 1
-            except Exception:
-                self.source_cloud.reconnect()
-                self.receive_new(amount != -1)
-                while (self.packets_left and amount == -1) or (amount != -1 and i < amount):
-                    if not self.packets_left and amount != -1:
-                        self.receive_new()
-                    yield json.loads(self.packets_left.pop(0))
-                    i += 1
+            # print("Getting data...", end_time is None, end_time > time.time(), end_time is None or end_time > time.time())
+            while not done:
+                # print("Getting data...")
+                try:
+                    self.receive_new(not recv_once, timeout = timeout_end - time.time() if has_timeout else None)
+                    while ((not has_timeout or time.time() < timeout_end)
+                        and ((recv_once and self.packets_left) or (not recv_once and i < recv_at_least))):
+                        if not self.packets_left and not recv_once:
+                            self.receive_new(timeout = timeout_end - time.time() if has_timeout else None)
+                        if not self.packets_left:
+                            continue
+                        yield json.loads(self.packets_left.pop(0))
+                        i += 1
+                    done = True
+                except Exception:
+                    # traceback.print_exc()
+                    self.source_cloud.reconnect()
     
+    def __del__(self):
+        self.close()
+        
     def close(self) -> None:
         self.source_cloud.disconnect()
 
@@ -305,6 +325,10 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self._send_packet(packet)
 
     def connect(self):
+        if self.websocket:
+            self.websocket.close()
+        if self.event_stream:
+            self.event_stream = None
         self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
         self.websocket.connect(
             self.cloud_host,
@@ -329,6 +353,8 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             self.websocket.close()
         except Exception:
             pass
+        if self.event_stream:
+            self.event_stream = None
 
     def _assert_valid_value(self, value):
         if not (value in [True, False, float('inf'), -float('inf')]):
@@ -445,6 +471,9 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             raise ValueError("Cloud already has an event stream.")
         self.event_stream = WebSocketEventStream(self)
         return self.event_stream
+    
+    def __del__(self):
+        self.disconnect()
 
 class LogCloudMeta(ABCMeta):
     def __instancecheck__(cls, instance) -> bool:

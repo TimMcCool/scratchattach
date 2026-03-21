@@ -29,11 +29,12 @@ class CloudEvents(BaseEventHandler):
         
         self.call_event("on_ready")
 
-        if self.running is False:
+        if not self.running:
             return
-        while True:
+        while self.running:
             try:
-                while True:
+                while self.running:
+                    self.source_stream.timeout = 1
                     for data in self.source_stream.read():
                         try:
                             _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session, cloud=self.cloud)
