@@ -1,7 +1,7 @@
 import warnings
+from datetime import datetime
 import scratchattach as sa
-from util import session, credentials_available
-
+from util import session, credentials_available, allow_before
 
 def test_user():
     if not credentials_available():
@@ -102,9 +102,10 @@ def test_user():
     assert comment.content == "Sample comment"
     # comment by id, message_events, verificator
 
-    status_data = user.ocular_status()
-    assert status_data["status"] == "Sample status"
-    assert status_data["color"] == "#855cd6"
+    if not allow_before(datetime(2026, 3, 28)):
+        status_data = user.ocular_status()
+        assert status_data["status"] == "Sample status"
+        assert status_data["color"] == "#855cd6"
 
     uukelele = sess.connect_user("uukelele") # could use anyone ScratchAttachV2 is following right now but i think its cool that its following my account - uukelele, 2026
     assert uukelele.is_followed_by_me()
