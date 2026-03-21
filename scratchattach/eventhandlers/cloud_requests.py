@@ -134,6 +134,9 @@ class CloudRequests(CloudEvents):
     responded_request_ids: list[str]
     packet_memory: list[ResponseMemory]
     _packets_to_resend: list[str]
+    executer_thread: Optional[Thread]
+    responder_thread: Optional[Thread]
+    extra_executor_threads: list[Thread]
 
     def __init__(
         self,
@@ -172,6 +175,8 @@ class CloudRequests(CloudEvents):
         self.responder_thread = Thread(target=self._responder)
         self.executer_thread.start()
         self.responder_thread.start()
+        
+        self.extra_executor_threads = []
 
         self.current_var = 0 # ID of the last set FROM_HOST_ variable (when a response is sent back to Scratch, these are set cyclically)
         self.credit_check()
@@ -387,7 +392,9 @@ class CloudRequests(CloudEvents):
             self.call_event("on_request", [received_request])
             if received_request.request.thread:
                 self.executed_requests[request_id] = received_request
-                Thread(target=received_request.request, args=[received_request]).start() # Execute the request function directly in a thread
+                thread = Thread(target=received_request.request, args=[received_request])
+                self.extra_executor_threads.append(thread)
+                thread.start() # Execute the request function directly in a thread
             else:
                 self.received_requests.append(received_request)
                 self.executer_event.set() # Activate the ._executer process so that it handles the received request
@@ -504,16 +511,26 @@ class CloudRequests(CloudEvents):
         else:
             time.sleep(0.07)
 
-    def stop(self):
+    def stop(self, wait_extra_threads: bool = True):
         """
         Stops the request handler and all associated threads forever. Lets running response sending processes finish.
         """
         # Override the .stop function from BaseEventHandler to make sure the ._executer and ._responder threads are also terminated
         super().stop()
-        self.executer_thread = None
-        self.responder_thread = None
         self.executer_event.set()
         self.responder_event.set()
+        e_thread = self.executer_thread
+        r_thread = self.responder_thread
+        self.executer_thread = None
+        self.responder_thread = None
+        if e_thread:
+            e_thread.join()
+        if r_thread:
+            r_thread.join()
+        if not wait_extra_threads:
+            return
+        for thread in self.extra_executor_threads:
+            thread.join()
     
     def hard_stop(self):
         """
@@ -540,5 +557,5 @@ class CloudRequests(CloudEvents):
 
     def run(self):
         # Was changed to .start(), but .run() is kept for backwards compatibility
-        print("Warning: requests.run() was changed to requests.start() in v2.0. .run() will be removed in a future version")
+        warnings.warn("requests.run() was changed to requests.start() in v2.0. .run() will be removed in a future version", DeprecationWarning)
         self.start()

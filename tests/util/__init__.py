@@ -4,9 +4,11 @@ from typing_extensions import AsyncContextManager
 import warnings
 
 from typing import Optional
+from datetime import datetime
 
-from .keyhandler import get_auth
 import scratchattach.async_api as asa
+from .keyhandler import get_auth, mask_secret
+
 from scratchattach import login, Session as _Session, LoginDataWarning
 
 warnings.filterwarnings("ignore", category=LoginDataWarning)
@@ -57,3 +59,12 @@ def teacher_session() -> Optional[_Session]:
         _teacher_session = login(data["username"], data["password"])
 
     return _teacher_session
+
+def allow_before(d: datetime) -> bool:
+    """
+    Used with the `or` operator.
+    If an assertion would be false, put the `allow_before` after the condition.
+    If a test incorrectly errors, put the `allow_before` before the condition.
+    """
+    return datetime.now() < d
+

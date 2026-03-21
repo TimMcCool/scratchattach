@@ -8,7 +8,6 @@ from ._base import BaseEventHandler
 from scratchattach.utils import exceptions
 from scratchattach.site import cloud_activity
 import time
-import json
 from collections.abc import Iterator
 
 class CloudEvents(BaseEventHandler):
@@ -33,27 +32,29 @@ class CloudEvents(BaseEventHandler):
         
         self.call_event("on_ready")
 
-        if self.running is False:
+        if not self.running:
             return
         
         # TODO: refactor this method. It works, but is hard to read
-        while True:
+        while self.running:
             try:
-                while True:
+                while self.running:
+                    self.source_stream.timeout = 1
                     # print("Checking for more events")
                     for data in self.source_stream.read():
+                        # print(f"{data=}")
                         # print(f"Got event {data}")
                         self.subsequent_reconnects = 0
                         try:
                             _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session, cloud=self.cloud)
-                            if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
-                                # print(f"Skipped as {_a.timestamp} < {self.startup_time + 500}")
-                                continue
+                            # if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
+                            #     # print(f"Skipped as {_a.timestamp} < {self.startup_time + 500}")
+                            #     continue
                             data["variable_name"] = data["name"]
                             data["name"] = data["variable_name"].replace("☁ ", "")
                             _a._update_from_dict(data)
                             # print(f"sending event {_a}")
-                            self.call_event("on_"+_a.type, [_a])
+                            self.call_event(f"on_{_a.type}", [_a])
                         except Exception as e:
                             print(f"Cloud events _updated ignored: {e} {traceback.format_exc()}")
                             pass
@@ -61,9 +62,9 @@ class CloudEvents(BaseEventHandler):
                 self.subsequent_reconnects += 1
                 time.sleep(0.1) # cooldown
 
-            if self.subsequent_reconnects >= 5:
-                print(f"Warning: {self.subsequent_reconnects} subsequent cloud disconnects. Cloud may be down, causing CloudEvents to not call events.")
-            self.call_event("on_reconnect", [])
+                if self.subsequent_reconnects >= 5:
+                    print(f"Warning: {self.subsequent_reconnects} subsequent cloud disconnects. Cloud may be down, causing CloudEvents to not call events.")
+                self.call_event("on_reconnect", [])
 
 class ManualCloudLogEvents:
     """
@@ -88,7 +89,7 @@ class ManualCloudLogEvents:
             for _a in data[::-1]:
                 if _a.timestamp <= self.last_timestamp:
                     continue
-                self.last_timestamp = _a.timestamp
+                self.last_timestamp = int(_a.timestamp)
                 yield ("on_"+_a.type, [_a])
         except Exception:
             self.subsequent_failed_log_fetches += 1

@@ -76,3 +76,17 @@ def get_auth() -> dict[str, Any]:
     _cached_auth = _auth | _local_auth
 
     return _cached_auth
+
+def mask_all():
+    queue = [get_auth()]
+    while queue:
+        d = queue.pop()
+        if isinstance(d, dict):
+            queue.extend(d.values())
+        elif isinstance(d, list):
+            queue.extend(d)
+        else:
+            mask_secret(str(d))
+
+def mask_secret(secret: str):
+    print(f"Adding mask...\n::add-mask::{secret}\nAdded mask.")

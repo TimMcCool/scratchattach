@@ -494,6 +494,29 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                 return followed
         return followed
 
+    def is_followed_by_me(self):
+        """
+        You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
+        
+        Returns:
+            boolean: Whether the user is followed by the user currently logged in.
+        """
+        self._assert_auth()
+        with requests.no_error_handling():
+            resp = requests.get(
+                f"https://scratch.mit.edu/users/{self.username}/",
+                headers=self._headers,
+                cookies=self._cookies,
+            )
+        soup = BeautifulSoup(resp.text, "html.parser")
+        follow_btn = soup.select_one("div.follow-button")
+        if not follow_btn:
+            print("Warning: follow button not found in page.")
+            return False # defualt to not followed
+        data_control = follow_btn.get("data-control")
+        return data_control == 'unfollow' # True if unfollow, False if not
+        
+
     def project_count(self):
         with requests.no_error_handling():
             text = requests.get(

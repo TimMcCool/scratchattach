@@ -21,4 +21,6 @@ jobs:
       # ruff detects config from pyproject.toml
       run: uvx ruff check .
     - name: PyPI publish with uv
-      run: uv publish
+      run: |
+        uv build
+        uv publish
