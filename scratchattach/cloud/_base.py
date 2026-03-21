@@ -173,19 +173,13 @@ class WebSocketEventStream(EventStream):
             warnings.warn("Initial cloud connection attempt failed, retrying...", exceptions.UnexpectedWebsocketEventWarning)
         self.packets_left = []
 
-    def receive_new(self, non_blocking: bool = False, timeout: float = 0):
+    def receive_new(self, non_blocking: bool = False, timeout: Optional[float] = 0):
+        timeout = None if timeout is None else max(timeout, 0)
+        timeout_value = self.timeout if timeout is None else timeout
         if non_blocking:
-            self.source_cloud.websocket.settimeout(0)
-            try:
-                # print("Receiving...")
-                received = self.source_cloud.websocket.recv().splitlines()
-                # print(f"{received=}")
-                self.packets_left.extend(received)
-            except Exception:
-                pass
-            return
-        timeout = max(timeout, 0)
-        self.source_cloud.websocket.settimeout(None if self.timeout is None else timeout)
+            timeout_value = 0
+        if self.source_cloud.websocket.gettimeout() != timeout_value:
+            self.source_cloud.websocket.settimeout(timeout_value)
         # print("Receiving...")
         try:
             received = self.source_cloud.websocket.recv().splitlines()
@@ -193,15 +187,19 @@ class WebSocketEventStream(EventStream):
             return
         # print(f"{received=}")
         self.packets_left.extend(received)
-    
+
     def read(self, amount: int = -1) -> Iterator[dict[str, Any]]:
         # print("Reading...")
         i = 0
+        recv_once = amount == -1
+        recv_at_least = max(amount, 0)
         start_time = time.time()
         if self.timeout is not None:
-            end_time = start_time + self.timeout
+            has_timeout = True
+            timeout_end = start_time + self.timeout
         else:
-            end_time = None
+            has_timeout = False
+            timeout_end = 0.0
         done = False
         # print("Getting data...")
         with self.reading:
@@ -209,10 +207,13 @@ class WebSocketEventStream(EventStream):
             while not done:
                 # print("Getting data...")
                 try:
-                    self.receive_new(amount != -1, timeout = end_time - time.time() if end_time else 0)
-                    while (end_time is None or end_time > time.time()) and ((self.packets_left and amount == -1) or (amount != -1 and i < amount)):
-                        if not self.packets_left and amount != -1:
-                            self.receive_new(timeout = end_time - time.time() if end_time else 0)
+                    self.receive_new(not recv_once, timeout = timeout_end - time.time() if has_timeout else None)
+                    while ((not has_timeout or time.time() < timeout_end)
+                        and ((recv_once and self.packets_left) or (not recv_once and i < recv_at_least))):
+                        if not self.packets_left and not recv_once:
+                            self.receive_new(timeout = timeout_end - time.time() if has_timeout else None)
+                        if not self.packets_left:
+                            continue
                         yield json.loads(self.packets_left.pop(0))
                         i += 1
                     done = True
