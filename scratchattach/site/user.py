@@ -655,7 +655,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                         first_anchor.attrs["href"], "/projects/", "/"
                     )
                     title = second_anchor.text
-                    author = third_anchor.text
+                    author = third_anchor.contents[0]
 
                     # Instantiating a project with the properties that we know
                     # This may cause issues (see below)
