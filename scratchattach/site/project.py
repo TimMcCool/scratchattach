@@ -62,8 +62,12 @@ class PartialProject(BaseSiteComponent):
     "The project's favorite count"
     remix_count: int = field(kw_only=True, default=0)
     "The number of remixes"
+    remixes: int = field(kw_only=True, default=0)
+    "Alias for remix_count, accepted for compatibility with `Session.mystuff_projects`"
     views: int = field(kw_only=True, default=0)
     "The view count"
+    comment_count: int = field(kw_only=True, default=0)
+    "The number of comments"
     project_token: Optional[str] = field(kw_only=True, default=None)
     "The project token (required to access the project json)"
     _moderation_status: Optional[str] = field(kw_only=True, default=None)
