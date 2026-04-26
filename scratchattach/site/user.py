@@ -654,7 +654,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                     project_id = commons.webscrape_count(
                         first_anchor.attrs["href"], "/projects/", "/"
                     )
-                    title = second_anchor.contents[0]
+                    title = second_anchor.text
                     author = third_anchor.contents[0]
 
                     # Instantiating a project with the properties that we know
