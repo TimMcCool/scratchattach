@@ -51,8 +51,8 @@ class Classroom(BaseSiteComponent):
             self._headers = commons.headers
             self._cookies = {}
         else:
-            self._headers = self._session._headers
-            self._cookies = self._session._cookies
+            self._headers = self._session.get_headers()
+            self._cookies = self._session.get_cookies()
 
         # Headers for operations that require accept and Content-Type fields:
         self._json_headers = {**self._headers,
@@ -98,7 +98,7 @@ class Classroom(BaseSiteComponent):
                 "educator": {},
                 "status": status,
                 "is_closed": True
-                }
+            }
 
             if educator_username:
                 ret["educator"]["username"] = educator_username
