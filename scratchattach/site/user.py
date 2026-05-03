@@ -57,11 +57,8 @@ class _OcularStatus(TypedDict):
 
 
 class Verificator:
-
     def __init__(self, user: User, project_id: int):
-        self.project = user._make_linked_object(
-            "id", project_id, project.Project, exceptions.ProjectNotFound
-        )
+        self.project = user._make_linked_object("id", project_id, project.Project, exceptions.ProjectNotFound)
         self.projecturl = self.project.url
         self.code = "".join(random.choices(string.ascii_letters + string.digits, k=8))
         self.username = user.username
@@ -70,11 +67,9 @@ class Verificator:
         return bool(
             list(
                 filter(
-                    lambda x: x.author_name == self.username
-                    and (
-                        x.content == self.code
-                        or x.content.startswith(self.code)
-                        or x.content.endswith(self.code)
+                    lambda x: (
+                        x.author_name == self.username
+                        and (x.content == self.code or x.content.startswith(self.code) or x.content.endswith(self.code))
                     ),
                     self.project.comments(),
                 )
@@ -116,9 +111,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     scratchteam: bool = field(kw_only=True, repr=False, default=False)
     is_member: bool = field(kw_only=True, repr=False, default=False)
     has_ears: bool = field(kw_only=True, repr=False, default=False)
-    _classroom: tuple[bool, Optional[classroom.Classroom]] = field(
-        init=False, default=(False, None)
-    )
+    _classroom: tuple[bool, Optional[classroom.Classroom]] = field(init=False, default=(False, None))
     _headers: dict[str, str] = field(init=False, default_factory=headers.copy)
     _cookies: dict[str, str] = field(init=False, default_factory=dict)
     _json_headers: dict[str, str] = field(init=False, default_factory=dict)
@@ -185,9 +178,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     def _assert_permission(self):
         self._assert_auth()
         if self._session.username != self.username:
-            raise exceptions.Unauthorized(
-                "You need to be authenticated as the profile owner to do this."
-            )
+            raise exceptions.Unauthorized("You need to be authenticated as the profile owner to do this.")
 
     @property
     def url(self):
@@ -221,9 +212,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         info.add_row("Joined", escape(self.join_date))
         info.add_row("Country", escape(self.country))
         info.add_row("Messages", str(self.message_count()))
-        info.add_row(
-            "Class", str(_classroom.title if _classroom is not None else "None")
-        )
+        info.add_row("Class", str(_classroom.title if _classroom is not None else "None"))
 
         desc = Table("Profile", ocular, box=box.SIMPLE)
         desc.add_row("About me", escape(self.about_me))
@@ -274,9 +263,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                 href = str(a.get("href"))
                 if re.match(r"/classes/\d*/", href):
                     class_name = a.text.strip()[len("Student of: ") :]
-                    is_closed = bool(
-                        re.search(r"\n *\(ended\)", class_name)
-                    )  # as this has a \n, we can be sure
+                    is_closed = bool(re.search(r"\n *\(ended\)", class_name))  # as this has a \n, we can be sure
                     if is_closed:
                         class_name = re.sub(r"\n *\(ended\)", "", class_name).strip()
 
@@ -284,11 +271,14 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                     break
 
             if class_name:
-                self._classroom = True, classroom.Classroom(
-                    _session=self._session,
-                    id=class_id or 0,
-                    title=class_name,
-                    is_closed=is_closed,
+                self._classroom = (
+                    True,
+                    classroom.Classroom(
+                        _session=self._session,
+                        id=class_id or 0,
+                        title=class_name,
+                        is_closed=is_closed,
+                    ),
                 )
             else:
                 self._classroom = True, None
@@ -301,9 +291,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             boolean : True if the user exists, False if the user is deleted, None if an error occured
         """
         with requests.no_error_handling():
-            status_code = requests.get(
-                f"https://scratch.mit.edu/users/{self.username}/"
-            ).status_code
+            status_code = requests.get(f"https://scratch.mit.edu/users/{self.username}/").status_code
             if status_code == 200:
                 return True
             elif status_code == 404:
@@ -320,9 +308,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         """
         try:
             with requests.no_error_handling():
-                res = requests.get(
-                    f"https://scratch.mit.edu/users/{self.username}/"
-                ).text
+                res = requests.get(f"https://scratch.mit.edu/users/{self.username}/").text
                 group = res[res.rindex('<span class="group">') :][:70]
                 return "new scratcher" in group.lower()
 
@@ -333,7 +319,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     def message_count(self):
         return json.loads(
             requests.get(
-                f"https://api.scratch.mit.edu/users/{self.username}/messages/count/?cachebust={random.randint(0,10000)}",
+                f"https://api.scratch.mit.edu/users/{self.username}/messages/count/?cachebust={random.randint(0, 10000)}",
                 headers={
                     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.3c6 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
                 },
@@ -346,16 +332,13 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             dict: Gets info on the user's featured project and featured label (like "Featured project", "My favorite things", etc.)
         """
         try:
-            response = requests.get(
-                f"https://scratch.mit.edu/site-api/users/all/{self.username}/"
-            ).json()
+            response = requests.get(f"https://scratch.mit.edu/site-api/users/all/{self.username}/").json()
             return {
                 "label": response["featured_project_label_name"],
                 "project": dict(
                     id=str(response["featured_project_data"]["id"]),
                     author=response["featured_project_data"]["creator"],
-                    thumbnail_url="https://"
-                    + response["featured_project_data"]["thumbnail_url"][2:],
+                    thumbnail_url="https://" + response["featured_project_data"]["thumbnail_url"][2:],
                     title=response["featured_project_data"]["title"],
                 ),
             }
@@ -385,11 +368,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         # api response contains all-time followers, including deleted and unfollowed
         unfollowers = []
         for offset in range(0, follower_count, 40):
-            unfollowers.extend(
-                user
-                for user in self.followers(offset=offset, limit=40)
-                if user.username not in usernames
-            )
+            unfollowers.extend(user for user in self.followers(offset=offset, limit=40) if user.username not in usernames)
 
         return unfollowers
 
@@ -497,7 +476,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     def is_followed_by_me(self):
         """
         You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_user`
-        
+
         Returns:
             boolean: Whether the user is followed by the user currently logged in.
         """
@@ -512,10 +491,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         follow_btn = soup.select_one("div.follow-button")
         if not follow_btn:
             print("Warning: follow button not found in page.")
-            return False # defualt to not followed
+            return False  # defualt to not followed
         data_control = follow_btn.get("data-control")
-        return data_control == 'unfollow' # True if unfollow, False if not
-        
+        return data_control == "unfollow"  # True if unfollow, False if not
 
     def project_count(self):
         with requests.no_error_handling():
@@ -569,9 +547,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             p["author"] = {"username": self.username}
         return commons.parse_object_list(_projects, project.Project, self._session)
 
-    def loves(
-        self, *, limit=40, offset=0, get_full_project: bool = False
-    ) -> list[project.Project]:
+    def loves(self, *, limit=40, offset=0, get_full_project: bool = False) -> list[project.Project]:
         """
         Returns:
             list<projects.projects.Project>: The user's loved projects
@@ -600,8 +576,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
 
             with requests.no_error_handling():
                 page_content = requests.get(
-                    f"https://scratch.mit.edu/projects/all/{self.username}/loves/"
-                    f"?page={page}",
+                    f"https://scratch.mit.edu/projects/all/{self.username}/loves/?page={page}",
                     headers=self._headers,
                 ).content
 
@@ -622,9 +597,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                     break
 
             # Each project element is a list item with the class name 'project thumb item' so we can just use that
-            for i, project_element in enumerate(
-                soup.find_all("li", {"class": "project thumb item"})
-            ):
+            for i, project_element in enumerate(soup.find_all("li", {"class": "project thumb item"})):
                 # Remember we only want certain projects:
                 # The current project idx = first_idx + i
                 # We want to start at {offset} and end at {offset + limit}
@@ -651,9 +624,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                     assert isinstance(first_anchor, Tag)
                     assert isinstance(second_anchor, Tag)
                     assert isinstance(third_anchor, Tag)
-                    project_id = commons.webscrape_count(
-                        first_anchor.attrs["href"], "/projects/", "/"
-                    )
+                    project_id = commons.webscrape_count(first_anchor.attrs["href"], "/projects/", "/")
                     title = second_anchor.text
                     author = third_anchor.contents[0]
 
@@ -873,14 +844,8 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         try:
             data = {
                 "id": text.split('<div id="comments-')[1].split('" class="comment')[0],
-                "author": {
-                    "username": text.split('" data-comment-user="')[1].split(
-                        '"><img class'
-                    )[0]
-                },
-                "content": text.split('<div class="content">')[1]
-                .split("</div>")[0]
-                .strip(),
+                "author": {"username": text.split('" data-comment-user="')[1].split('"><img class')[0]},
+                "content": text.split('<div class="content">')[1].split("</div>")[0].strip(),
                 "reply_count": 0,
                 "cached_replies": [],
             }
@@ -903,21 +868,13 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                     )
                 ) from e
             elif '<script id="error-data" type="application/json">' in text:
-                raw_error_data = text.split(
-                    '<script id="error-data" type="application/json">'
-                )[1].split("</script>")[0]
+                raw_error_data = text.split('<script id="error-data" type="application/json">')[1].split("</script>")[0]
                 error_data = json.loads(raw_error_data)
                 expires = error_data["mute_status"]["muteExpiresAt"]
                 expires = datetime.fromtimestamp(expires, timezone.utc)
-                raise (
-                    exceptions.CommentPostFailure(
-                        f"You have been muted. Mute expires on {expires}"
-                    )
-                ) from e
+                raise (exceptions.CommentPostFailure(f"You have been muted. Mute expires on {expires}")) from e
             else:
-                raise (
-                    exceptions.FetchError(f"Couldn't parse API response: {r.text!r}")
-                ) from e
+                raise (exceptions.FetchError(f"Couldn't parse API response: {r.text!r}")) from e
 
     def reply_comment(self, content, *, parent_id, commentee_id=""):
         """
@@ -935,9 +892,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             :param parent_id: ID of the comment you want to reply to
             :param commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
         """
-        return self.post_comment(
-            content, parent_id=parent_id, commentee_id=commentee_id
-        )
+        return self.post_comment(content, parent_id=parent_id, commentee_id=commentee_id)
 
     def activity(self, *, limit=1000):
         """
@@ -946,9 +901,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         """
         with requests.no_error_handling():
             soup = BeautifulSoup(
-                requests.get(
-                    f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}"
-                ).text,
+                requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text,
                 "html.parser",
             )
 
@@ -968,9 +921,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             str: The raw user activity HTML data
         """
         with requests.no_error_handling():
-            return requests.get(
-                f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}"
-            ).text
+            return requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text
 
     def follow(self):
         """
@@ -1025,30 +976,36 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             data=json.dumps({"id": str(comment_id)}),
         )
 
-    def comments(self, *, page=1, limit=None) -> list[comment.Comment]:
+    def comments(self, *, page=1) -> list[comment.Comment] | None:
         """
         Returns the comments posted on the user's profile (with replies).
 
         Keyword Arguments:
             page: The page of the comments that should be returned.
-            limit: Max. amount of returned comments.
 
         Returns:
             list<scratchattach.comment.Comment>: A list containing the requested comments as Comment objects.
         """
-        URL = f"https://scratch.mit.edu/site-api/comments/user/{self.username}/?page={page}"
-        DATA = []
+        data = []
 
         with requests.no_error_handling():
-            page_contents = requests.get(URL).content
+            resp = requests.get(f"https://scratch.mit.edu/site-api/comments/user/{self.username}/?page={page}")
 
-        soup = BeautifulSoup(page_contents, "html.parser")
+        if resp.status_code == 404:
+            # Profile comments seem to end at page 67, and afterwards give 404.
+            # Usually when page > 67. It is possible to have empty pages before
+            # page 67, but still have pages with content afterwards. Hence we want
+            # to differentiate between empty pages with a page that actually marks
+            # a definite end
+            #
+            # A way to reasonably reliably detect the end of the comments is by keeping track
+            # of how many blank pages you have seen, and breaking if you e.g. have 3 in a row:
+            # https://github.com/TimMcCool/scratchattach/issues/582#issuecomment-4318675630
+            return None
+
+        soup = BeautifulSoup(resp.content, "html.parser")
 
         _comments = soup.find_all("li", {"class": "top-level-reply"})
-
-        if len(_comments) == 0:
-            return []
-
         for entity in _comments:
             comment_id = entity.find("div", {"class": "comment"})["data-comment-id"]
             user = entity.find("a", {"id": "comment-user"})["data-comment-user"]
@@ -1068,16 +1025,10 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             )
             _comment._update_from_dict(main_comment)
 
-            ALL_REPLIES = []
+            reply_objs = []
             replies = entity.find_all("li", {"class": "reply"})
-            if len(replies) > 0:
-                hasReplies = True
-            else:
-                hasReplies = False
             for reply in replies:
-                r_comment_id = reply.find("div", {"class": "comment"})[
-                    "data-comment-id"
-                ]
+                r_comment_id = reply.find("div", {"class": "comment"})["data-comment-id"]
                 r_user = reply.find("a", {"id": "comment-user"})["data-comment-user"]
                 r_content = (
                     str(reply.find("div", {"class": "content"}).text)
@@ -1101,13 +1052,13 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                     cached_parent_comment=_comment,
                 )
                 _r_comment._update_from_dict(reply_data)
-                ALL_REPLIES.append(_r_comment)
+                reply_objs.append(_r_comment)
 
-            _comment.reply_count = len(ALL_REPLIES)
-            _comment.cached_replies = list(ALL_REPLIES)
+            _comment.reply_count = len(reply_objs)
+            _comment.cached_replies = list(reply_objs)
 
-            DATA.append(_comment)
-        return DATA
+            data.append(_comment)
+        return data
 
     def comment_by_id(self, comment_id) -> comment.Comment:
         """
@@ -1154,9 +1105,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             dict: A dict containing the user's stats. If the stats aren't available, all values will be -1.
         """
         try:
-            stats = requests.get(
-                f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
-            ).json()["statistics"]
+            stats = requests.get(f"https://scratchdb.lefty.one/v3/user/info/{self.username}").json()["statistics"]
             stats.pop("ranks")
         except Exception:
             stats = {
@@ -1169,9 +1118,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             }
         return stats
 
-    @deprecated(
-        "Warning: ScratchDB is down indefinitely, therefore this method is deprecated."
-    )
+    @deprecated("Warning: ScratchDB is down indefinitely, therefore this method is deprecated.")
     def ranks(self):
         """
         Gets information about the user's ranks. Fetched from ScratchDB.
@@ -1183,9 +1130,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             dict: A dict containing the user's ranks. If the ranks aren't available, all values will be -1.
         """
         try:
-            return requests.get(
-                f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
-            ).json()["statistics"]["ranks"]
+            return requests.get(f"https://scratchdb.lefty.one/v3/user/info/{self.username}").json()["statistics"]["ranks"]
         except Exception:
             return {
                 "country": {
@@ -1211,9 +1156,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         Returns:
             dict
         """
-        return requests.get(
-            f"https://my-ocular.jeffalo.net/api/user/{self.username}"
-        ).json()
+        return requests.get(f"https://my-ocular.jeffalo.net/api/user/{self.username}").json()
 
     def verify_identity(self, *, verification_project_id=395330233):
         """
