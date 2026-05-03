@@ -227,8 +227,11 @@ class PartialProject(BaseSiteComponent):
         Returns:
             boolean: Returns whether the project is currently shared
         """
-        p = get_project(self.id)
-        return isinstance(p, Project)
+        try:
+            p = get_project(self.id)
+            return isinstance(p, Project)
+        except exceptions.ProjectNotFound:
+            return False
 
     def raw_json_or_empty(self) -> dict[str, Any]:
         return empty_project_json
