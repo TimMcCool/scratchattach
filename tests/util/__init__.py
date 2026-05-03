@@ -8,15 +8,17 @@ from datetime import datetime
 from .keyhandler import get_auth, mask_secret
 from scratchattach import login, Session as _Session, LoginDataWarning
 
-warnings.filterwarnings('ignore', category=LoginDataWarning)
+warnings.filterwarnings("ignore", category=LoginDataWarning)
 
 _session: Optional[_Session] = None
+
 
 def credentials_available() -> bool:
     auth = get_auth()
     if not auth:
         return False
     return auth.get("auth") is not None
+
 
 def session() -> _Session:
     global _session
@@ -30,7 +32,10 @@ def session() -> _Session:
 
     return _session
 
+
 _teacher_session: Optional[_Session] = None
+
+
 def teacher_session() -> Optional[_Session]:
     global _teacher_session
 
@@ -44,6 +49,7 @@ def teacher_session() -> Optional[_Session]:
 
     return _teacher_session
 
+
 def allow_before(d: datetime) -> bool:
     """
     Used with the `or` operator.
@@ -51,4 +57,3 @@ def allow_before(d: datetime) -> bool:
     If a test incorrectly errors, put the `allow_before` before the condition.
     """
     return datetime.now() < d
-

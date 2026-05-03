@@ -7,6 +7,10 @@ from typing import Any, Optional, TypeVar
 from cryptography.fernet import Fernet
 from base64 import urlsafe_b64encode
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 def str_2_key(gen: str) -> bytes:
     if not gen:
@@ -61,6 +65,7 @@ _local_auth_fp = __fp__ / "local_auth.toml"
 
 _cached_auth: Optional[dict[str, Any]] = None
 
+
 def get_auth() -> dict[str, Any]:
     try:
         _auth = _decrypt_dict(tomllib.load(_auth_fp.open("rb")))
@@ -70,8 +75,9 @@ def get_auth() -> dict[str, Any]:
     _local_auth = tomllib.load(_local_auth_fp.open("rb")) if _local_auth_fp.exists() else {}
 
     _cached_auth = _auth | _local_auth
-    
+
     return _cached_auth
+
 
 def mask_all():
     queue = [get_auth()]
@@ -83,6 +89,7 @@ def mask_all():
             queue.extend(d)
         else:
             mask_secret(str(d))
+
 
 def mask_secret(secret: str):
     print(f"Adding mask...\n::add-mask::{secret}\nAdded mask.")

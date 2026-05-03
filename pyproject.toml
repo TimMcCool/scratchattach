@@ -98,4 +98,8 @@ where = ["."]
 include = ["scratchattach*"]
 
 [dependency-groups]
-dev = ["cryptography>=46.0.3", "pytest>=9.0.2"]
+dev = [
+    "cryptography>=46.0.3",
+    "pytest>=9.0.2",
+    "python-dotenv>=1.2.2",
+]
