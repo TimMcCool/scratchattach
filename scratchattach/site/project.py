@@ -44,6 +44,8 @@ class PartialProject(BaseSiteComponent):
     "The username of the author"
     comments_allowed: bool = field(kw_only=True, default=False)
     "whether comments are enabled"
+    comment_count: int = 0
+    """The number of comments on the project (this may be unreliable)"""
     instructions: str = field(kw_only=True, default="")
     notes: str = field(kw_only=True, default="")
     "The 'Notes and Credits' section"
