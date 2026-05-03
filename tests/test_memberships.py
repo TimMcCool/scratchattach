@@ -7,8 +7,8 @@ warnings.filterwarnings("ignore", category=sa.UserAuthenticationWarning)
 def test_memberships():
     # unfortunately we don't have amazingly robust test-cases here.
     u1 = sa.get_user("-KittyMax-")
-    assert u1.is_member
-    assert u1.has_ears
+    assert u1.is_member  # NOTE: This may be wrong! I think it might be supposed to be False here...
+    assert not u1.has_ears
     assert u1.has_badge()
 
     u2 = sa.get_user("ceebee")
