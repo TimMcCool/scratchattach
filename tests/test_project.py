@@ -6,18 +6,32 @@ from datetime import datetime
 
 def test_project():
     if not credentials_available():
-        warnings.warn(
-            "Skipped test_project because there were no credentials available."
-        )
+        warnings.warn("Skipped test_project because there were no credentials available.")
         return
     sess = session()
 
-    project = sess.connect_project(104)
+    # project = sess.connect_project(104)
     # tree = project.remix_tree_pretty()
     # assert len(tree) > 1000 # there is a lot of chars. Just assert that sth is generated
 
-    project = sess.connect_project(1209355136)
+    # unshared project
+    project = sess.connect_project(1315253799)
+    assert project
+    assert project.title == "Unshared with comments"
+    assert project.author_name == "ScratchAttachV2"
+    assert project.embed_url == "https://scratch.mit.edu/projects/1315253799/embed"
+    assert not project.is_shared()
+    assert project.author().id == 147905216
+    comment = project.comments()[0]
+    assert comment.author_name == "faretek"
+    assert comment.content == "Second sample comment"
+    assert comment.id == 544358507
+    reply = comment.replies()[0]
+    assert reply.content == "sample reply"
+    assert reply.commentee_id == 143593913
+    assert reply.author_name == "ScratchAttachV2"
 
+    project = sess.connect_project(1209355136)
     assert project
     assert project.title == "Sample project #1"
     assert project.author_name == "ScratchAttachV2"

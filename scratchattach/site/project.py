@@ -490,6 +490,8 @@ class Project(PartialProject):
             limit=limit,
             offset=offset,
             add_params=f"&cachebust={random.randint(0, 9999)}",
+            _headers=self._headers,
+            cookies=self._cookies,
         )
         for i in response:
             i["source"] = "project"
@@ -502,6 +504,8 @@ class Project(PartialProject):
             limit=limit,
             offset=offset,
             add_params=f"&cachebust={random.randint(0, 9999)}",
+            _headers=self._headers,
+            cookies=self._cookies,
         )
         for x in response:
             x["parent_id"] = comment_id

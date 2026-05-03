@@ -52,7 +52,7 @@ def test_studio():
     # invite/promote/remove curators transfer ownership / leave / add project / remove proj
 
     host = studio.host()
-    assert host.name in ("faretek1", "ScratchAttachV2")
+    assert host.name == "ScratchAttachV2"
 
     # set fields, desc, title, open projects, close projects, turn on/off/toggle commenting
     assert studio.activity()[0].type == sa.ActivityTypes.addprojecttostudio
