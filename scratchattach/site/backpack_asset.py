@@ -5,12 +5,18 @@ import time
 import logging
 import warnings
 
+from dataclasses import dataclass
+from typing import Any, TYPE_CHECKING
+
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions
 from scratchattach.utils.requests import requests
 
+if TYPE_CHECKING:
+    from scratchattach import session
 
 
+@dataclass
 class BackpackAsset(BaseSiteComponent):
     """
     Represents an asset from the backpack.
@@ -28,57 +34,43 @@ class BackpackAsset(BaseSiteComponent):
     :.filename: Filename of the file containing the content of the backpack asset
 
     :.thumbnail_url: Link that leads to the asset's thumbnail (the image shown in the backpack UI)
-    
+
     :.download_url: Link that leads to a file containing the content of the backpack asset
     """
 
-    def __init__(self, **entries):
-        # Set attributes every BackpackAsset object needs to have:
-        self._session = None
+    id: str
+    _session: session.Session | None = None
+    type: str | None = None
+    mime: str | None = None
+    name: str | None = None
+    filename: str | None = None
+    thumbnail_url: str | None = None
+    download_url: str | None = None
 
-        # Update attributes from entries dict:
-        self.__dict__.update(entries)
+    def __repr__(self) -> str:
+        return f"BackpackAsset({self.filename})"
 
     def update(self):
         warnings.warn("Warning: BackpackAsset objects can't be updated")
         return False  # Objects of this type cannot be updated
 
-    
-    def _update_from_dict(self, data) -> bool:
-        try:
-            self.id = data["id"]
-        except Exception:
-            pass
-        try:
-            self.type = data["type"]
-        except Exception:
-            pass
-        try:
-            self.mime = data["mime"]
-        except Exception:
-            pass
-        try:
-            self.name = data["name"]
-        except Exception:
-            pass
-        try:
-            self.filename = data["body"]
-        except Exception:
-            pass
-        try:
+    def _update_from_dict(self, data: dict[str, str]) -> bool:
+        self.id = data.get("id", self.id)
+        self.type = data.get("type", self.type)
+        self.mime = data.get("mime", self.mime)
+        self.name = data.get("name", self.name)
+        self.filename = data.get("body", self.filename)
+        if "thumbnail" in data:
             self.thumbnail_url = "https://backpack.scratch.mit.edu/" + data["thumbnail"]
-        except Exception:
-            pass
-        try:
+        if "body" in data:
             self.download_url = "https://backpack.scratch.mit.edu/" + data["body"]
-        except Exception:
-            pass
         return True
 
     @property
     def _data_bytes(self) -> bytes:
         try:
-            return requests.get(self.download_url).content
+            with requests.no_error_handling():
+                return requests.get(self.download_url).content
         except Exception as e:
             raise exceptions.FetchError(f"Failed to download asset: {e}")
 
@@ -98,7 +90,7 @@ class BackpackAsset(BaseSiteComponent):
             # It's either a zip
             return self._data_bytes
 
-    def download(self, *, fp: str = ''):
+    def download(self, *, fp: str = ""):
         """
         Downloads the asset content to the given directory. The given filename is equal to the value saved in the .filename attribute.
 

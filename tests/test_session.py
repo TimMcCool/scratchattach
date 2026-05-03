@@ -4,7 +4,7 @@ import util
 
 def test_session():
     if not util.credentials_available():
-        warnings.warn("Skipped test_auth because there were no credentials available.")
+        warnings.warn("Skipped test_session because there were no credentials available.")
         return
     sess = util.session()
     shared, unshared, studios = sess.mystuff_counts()
