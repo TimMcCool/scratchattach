@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import bs4
 import datetime
 import hashlib
 import json
@@ -744,6 +745,34 @@ class Session(BaseSiteComponent):
         return self.connect_classroom(class_id)
 
     # --- My stuff page ---
+
+    def mystuff_counts(self) -> tuple[int, int, int]:
+        """
+        Gets the number of shared projects, unshared projects, and studios as listed on the mystuff page,
+        and returns them in that order.
+
+        Example usage:
+        shared, unshared, studios = sess.mystuff_counts()
+        print(f"You have {shared} shared projects, {unshared} unshared projects, and are in {studios} studios")
+        """
+        # TODO: classrooms?
+        with requests.no_error_handling():
+            resp = requests.get("https://scratch.mit.edu/mystuff/", headers=self._headers, cookies=self._cookies)
+        soup = bs4.BeautifulSoup(resp.text, "html.parser")
+
+        shared_elem = soup.select_one("span[data-content='shared-count']")
+        unshared_elem = soup.select_one("span[data-content='unshared-count']")
+        gallery_elem = soup.select_one("span[data-content='gallery-count']")
+
+        assert shared_elem is not None
+        assert unshared_elem is not None
+        assert gallery_elem is not None
+
+        shared: str = shared_elem.text.strip()
+        unshared: str = unshared_elem.text.strip()
+        gallery: str = gallery_elem.text.strip()
+
+        return int(shared), int(unshared), int(gallery)
 
     def mystuff_projects(
         self, filter_arg: str = "all", *, page: int = 1, sort_by: str = "", descending: bool = True
