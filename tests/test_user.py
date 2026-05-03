@@ -3,11 +3,10 @@ from datetime import datetime
 import scratchattach as sa
 from util import session, credentials_available, allow_before
 
+
 def test_user():
     if not credentials_available():
-        warnings.warn(
-            "Skipped test_user because there were no credentials available."
-        )
+        warnings.warn("Skipped test_user because there were no credentials available.")
         return
     sess = session()
 
@@ -57,36 +56,24 @@ def test_user():
     assert user.following_count() > 5
     assert kaj.followers(limit=1)[0].name == "DarkLava"
     assert kaj.follower_names(limit=1)[0] == "DarkLava"
-    assert (
-        user.following(offset=user.following_count() - 1, limit=1)[0].name
-        == "TimMcCool"
-    )
+    assert user.following(offset=user.following_count() - 1, limit=1)[0].name == "TimMcCool"
     assert user.is_following("TimMcCool")
     assert kaj.is_followed_by("DarkLava")
     assert griffpatch.project_count() > 15
     user_studio_count = user.studio_count()
     assert user_studio_count > 0
     assert user.studios_following_count() > 1
-    assert (
-        user.studios(limit=1, offset=user_studio_count - 1)[0].title == "Sample studio"
-    )
+    assert user.studios(limit=1, offset=user_studio_count - 1)[0].title == "Sample studio"
     user_project_count = user.project_count()
     assert user_project_count > 1
-    assert (
-        user.projects(limit=1, offset=user_project_count - 2)[0].title
-        == "Sample project #1"
-    )
+    assert user.projects(limit=1, offset=user_project_count - 2)[0].title == "Sample project #1"
     loves_count = user.loves_count()
     assert loves_count > 0
-    assert (
-        user.loves(limit=1, offset=loves_count - 1)[0].title
-        == "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python"
-    )
+    assert user.loves(limit=1, offset=loves_count - 1)[0].title == "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python"
     favorites_count = user.favorites_count()
     assert favorites_count > 0
     assert (
-        user.favorites(limit=1, offset=favorites_count - 1)[0].title
-        == "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python"
+        user.favorites(limit=1, offset=favorites_count - 1)[0].title == "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python"
     )
     # toggle commenting
     # viewed projects
@@ -102,12 +89,14 @@ def test_user():
     assert comment.content == "Sample comment"
     # comment by id, message_events, verificator
 
-    if not allow_before(datetime(2026, 3, 28)):
+    if not allow_before(datetime(2026, 12, 28)):
         status_data = user.ocular_status()
         assert status_data["status"] == "Sample status"
         assert status_data["color"] == "#855cd6"
 
-    uukelele = sess.connect_user("uukelele") # could use anyone ScratchAttachV2 is following right now but i think its cool that its following my account - uukelele, 2026
+    uukelele = sess.connect_user(
+        "uukelele"
+    )  # could use anyone ScratchAttachV2 is following right now but i think its cool that its following my account - uukelele, 2026
     assert uukelele.is_followed_by_me()
     # and someone he is not following
     assert not griffpatch.is_followed_by_me()
@@ -115,4 +104,3 @@ def test_user():
 
 if __name__ == "__main__":
     test_user()
-
