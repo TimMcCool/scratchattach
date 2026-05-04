@@ -86,6 +86,9 @@ class Activity(BaseSiteComponent):
     def __str__(self):
         return "-A " + " ".join(self.parts)
 
+    def _parts_simple(self, verb: str, obj: str):
+        return [str(self.actor_username), verb, obj]
+
     @property
     def parts(self):
         """
@@ -94,29 +97,26 @@ class Activity(BaseSiteComponent):
         """
         match self.type:
             case ActivityTypes.loveproject:
-                return [f"{self.actor_username}", "loved", f"-P {self.title!r} ({self.project_id})"]
+                return self._parts_simple("loved", f"-P {self.title!r} ({self.project_id})")
             case ActivityTypes.favoriteproject:
-                return [f"{self.actor_username}", "favorited", f"-P {self.project_title!r} ({self.project_id})"]
+                return self._parts_simple("favorited", f"-P {self.project_title!r} ({self.project_id})")
             case ActivityTypes.becomecurator:
-                return [f"{self.actor_username}", "now curating", f"-S {self.title!r} ({self.gallery_id})"]
+                return self._parts_simple("now curating", f"-S {self.title!r} ({self.gallery_id})")
             case ActivityTypes.followuser:
-                return [f"{self.actor_username}", "followed", f"-U {self.followed_username}"]
+                return self._parts_simple("followed", f"-U {self.followed_username}")
             case ActivityTypes.followstudio:
-                return [f"{self.actor_username}", "followed", f"-S {self.title!r} ({self.gallery_id})"]
+                return self._parts_simple("followed", f"-S {self.title!r} ({self.gallery_id})")
             case ActivityTypes.shareproject:
-                return [
-                    f"{self.actor_username}",
+                return self._parts_simple(
                     "reshared" if self.is_reshare else "shared",
                     f"-P {self.title!r} ({self.project_id})",
-                ]
+                )
             case ActivityTypes.remixproject:
-                return [
-                    f"{self.actor_username}",
-                    "remixed",
-                    f"-P {self.parent_title!r} ({self.parent_id}) as -P {self.title!r} ({self.project_id})",
-                ]
+                return self._parts_simple(
+                    "remixed", f"-P {self.parent_title!r} ({self.parent_id}) as -P {self.title!r} ({self.project_id})"
+                )
             case ActivityTypes.becomeownerstudio:
-                return [f"{self.actor_username}", "became owner of", f"-S {self.gallery_title!r} ({self.gallery_id})"]
+                return self._parts_simple("became owner of", f"-S {self.gallery_title!r} ({self.gallery_id})")
 
             case ActivityTypes.addcomment:
                 ret = [self.actor_username, "commented on"]
@@ -143,28 +143,28 @@ class Activity(BaseSiteComponent):
                 return ret
 
             case ActivityTypes.curatorinvite:
-                return [f"{self.actor_username}", "invited you to curate", f"-S {self.title!r} ({self.gallery_id})"]
+                return self._parts_simple("invited you to curate", f"-S {self.title!r} ({self.gallery_id})")
 
             case ActivityTypes.userjoin:
                 # This is also the first message you get - 'Welcome to Scratch'
-                return [f"{self.actor_username}", "joined Scratch"]
+                return [str(self.actor_username), "joined Scratch"]
 
             case ActivityTypes.studioactivity:
                 # the actor username should be systemuser
-                return [f"{self.actor_username}", "Studio activity", "", f"-S {self.title!r} ({self.gallery_id})"]
+                return [str(self.actor_username), "Studio activity", "", f"-S {self.title!r} ({self.gallery_id})"]
 
             case ActivityTypes.forumpost:
-                return [f"{self.actor_username}", "posted in", f"-F {self.topic_title} ({self.topic_id})"]
+                return self._parts_simple("posted in", f"-F {self.topic_title} ({self.topic_id})")
 
             case ActivityTypes.updatestudio:
-                return [f"{self.actor_username}", "updated", f"-S {self.gallery_title} ({self.gallery_id})"]
+                return self._parts_simple("updated", f"-S {self.gallery_title} ({self.gallery_id})")
 
             case ActivityTypes.createstudio:
-                return [f"{self.actor_username}", "created", f"-S {self.gallery_title} ({self.gallery_id})"]
+                return self._parts_simple("created", f"-S {self.gallery_title} ({self.gallery_id})")
 
             case ActivityTypes.promotetomanager:
                 return [
-                    f"{self.actor_username}",
+                    str(self.actor_username),
                     "promoted",
                     f"-U {self.recipient_username}",
                     "in",
@@ -172,7 +172,7 @@ class Activity(BaseSiteComponent):
                 ]
 
             case ActivityTypes.updateprofile:
-                return [f"{self.actor_username}", "updated their profile.", f"Changed fields: {self.changed_fields}"]
+                return [str(self.actor_username), "updated their profile.", f"Changed fields: {self.changed_fields}"]
 
             case ActivityTypes.removeprojectfromstudio:
                 return [
