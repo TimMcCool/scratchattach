@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import requests as _requests
+
 from .message_events import MessageEvents
 import time
 from collections import deque
@@ -158,59 +160,73 @@ class Filterbot(MessageEvents):
         self.add_filter(HardFilter("[genalpha_nonsene_filter) 'rizzler'", contains="rizzler"))
         self.add_filter(HardFilter("(genalpha_nonsene_filter) 'fanum tax'", contains="fanum tax"))
 
-    def on_message(self, message: activity.Activity):
-        if message.type != activity.ActivityTypes.addcomment:
-            return
-        source_id = None
+    def _apply_filters(self, message: activity.Activity, source_id: int | str | None) -> tuple[bool, str]:
+        """
+        Applies the filterbot filters and returns whether the message violates the filters, and why
+        returns tuple of whether to delete, and the reason
+        """
+        assert message.type == activity.ActivityTypes.addcomment
+
         content = message.comment_fragment
-        if message.comment_type == 0:  # project comment
-            source_id = message.comment_obj_id
-            if self.user._session.connect_project(message.comment_obj_id).author_name != self.user.username:
-                return  # no permission to delete comments that aren't on our own project
-        elif message.comment_type == 1:  # profile comment
-            source_id = message.comment_obj_title
-            if source_id != self.user.username:
-                return  # no permission to delete messages that are not on our profile
-        elif message.comment_type == 2:  # studio comment
-            return  # studio comments aren't handled
-        else:
-            return
-        delete = False
-        reason = ""
 
         # Apply hard filters
         for hard_filter in self.hard_filters:
             if hard_filter.apply(content, message.actor_username, source_id):
-                delete = True
-                reason = f"hard filter: {hard_filter.filter_name}"
-                break
+                return True, f"hard filter: {hard_filter.filter_name}"
 
         # Apply spam filters
-        if not delete:
-            for spam_filter in self.spam_filters:
-                if spam_filter.apply(content, message.actor_username, source_id):
-                    delete = True
-                    reason = f"spam filter: {spam_filter.filter_name}"
-                    break
+        for spam_filter in self.spam_filters:
+            if spam_filter.apply(content, message.actor_username, source_id):
+                return True, f"spam filter: {spam_filter.filter_name}"
 
         # Apply soft filters
-        if not delete:
-            score = 0
-            violated_filters = []
-            for soft_filter in self.soft_filters:
-                if soft_filter.apply(content, message.actor_username, source_id):
-                    score += soft_filter.score
-                    violated_filters.append(soft_filter.filter_name)
-            if score >= 1:
-                delete = True
-                reason = f"too many soft filters: {violated_filters}"
+        score = 0
+        violated_filters = []
+        for soft_filter in self.soft_filters:
+            if soft_filter.apply(content, message.actor_username, source_id):
+                score += soft_filter.score
+                violated_filters.append(soft_filter.filter_name)
+
+        if score >= 1:
+            return True, f"too many soft filters: {violated_filters}"
+
+        return False, ""
+
+    def _determine_source_and_deletable(self, message: activity.Activity) -> tuple[int | str | None, bool]:
+        if message.comment_type == 0:  # project comment
+            project_id = message.comment_obj_id
+            if self.user._session.connect_project(message.comment_obj_id).author_name == self.user.username:
+                return project_id, True  # only permission to delete comments that are on our own project
+
+        elif message.comment_type == 1:  # profile comment
+            if message.comment_obj_title == self.user.username:
+                return message.comment_obj_title, True  # no permission to delete messages that are not on our profile
+        # elif message.comment_type == 2:  # studio comment
+        # studio comments aren't handled
+        return None, False
+
+    def _print_if_logging(self, *args, **kwargs):
+        if self.log_deletions:
+            print(*args, **kwargs)
+
+    def on_message(self, message: activity.Activity):
+        if message.type != activity.ActivityTypes.addcomment:
+            return
+
+        source_id, deletable = self._determine_source_and_deletable(message)
+        if not deletable:
+            return
+
+        content = message.comment_fragment
+        delete, reason = self._apply_filters(message, source_id)
+
         if delete:
-            if self.log_deletions:
-                print(f"DETECTED: #{message.comment_id} violates {reason}")
+            self._print_if_logging(f"DETECTED: #{message.comment_id} violates {reason}")
             try:
-                resp = message.target().delete()
-                if self.log_deletions:
-                    print(
+                if target := message.target_comment():
+                    resp = target.delete()
+                    assert isinstance(resp, _requests.Response)
+                    self._print_if_logging(
                         f"DELETED: #{message.comment_id} by {message.actor_username!r}: '{content}' with message {resp.content!r} & headers {resp.headers!r}"
                     )
             except Exception as e:
