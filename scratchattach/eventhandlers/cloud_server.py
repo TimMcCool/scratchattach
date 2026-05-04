@@ -12,6 +12,118 @@ import traceback
 
 
 class TwCloudSocket(WebSocket):
+    server: TwCloudServer
+
+    def handle_set(self, data: dict):
+        # cloud variable set received
+        # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
+        if self.server.whitelisted_projects is not None:
+            if data["project_id"] not in self.server.whitelisted_projects:
+                self.close(4002)
+                if self.server.log_var_sets:
+                    print(
+                        self.address[0] + ":" + str(self.address[1]),
+                        "tried to set a var on non-whitelisted project and was disconnected, project:",
+                        data["project_id"],
+                        "user:",
+                        data["user"],
+                    )
+                return
+        # check if value is valid
+        if not self.server._check_value(data["value"]):
+            if self.server.log_var_sets:
+                print(self.address[0] + ":" + str(self.address[1]), "sent an invalid var value")
+            return
+        # perform cloud var and forward to other players
+        if self.server.log_var_sets:
+            print(
+                self.address[0] + ":" + str(self.address[1]),
+                f"set {data['name']} to {data['value']}, project:",
+                str(data["project_id"]),
+                "user:",
+                data["user"],
+            )
+        self.server.set_var(data["project_id"], data["name"], data["value"], user=data["user"], skip_forward=self)
+        send_to_clients = {
+            "method": "set",
+            "user": data["user"],
+            "project_id": data["project_id"],
+            "name": data["name"],
+            "value": data["value"],
+            "timestamp": round(time.time() * 1000),
+            "server": "scratchattach/2.0.0",
+        }
+        # raise event
+        _a = cloud_activity.CloudActivity(timestamp=time.time() * 1000)
+        data["name"] = data["name"].replace("☁ ", "")
+        _a._update_from_dict(send_to_clients)
+        self.server.call_event("on_set", [_a, self])
+
+    def handle_handshake(self, data: dict):
+        # check if handshake is valid
+        if not "user" in data:
+            print(self.address[0] + ":" + str(self.address[1]), "tried to handshake without providing a username")
+            self.close(4002)
+            return
+        if not "project_id" in data:
+            print(self.address[0] + ":" + str(self.address[1]), "tried to handshake without providing a project_id")
+            self.close(4002)
+            return
+        # check if project_id is in username is allowed
+        if self.server.allow_nonscratch_names is False:
+            if not User(username=data["user"]).does_exist():
+                print(
+                    self.address[0] + ":" + str(self.address[1]),
+                    "tried to handshake using a username not existing on Scratch, project:",
+                    data["project_id"],
+                    "user:",
+                    data["user"],
+                )
+                self.close(4002)
+                return
+        # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
+        if self.server.whitelisted_projects is not None:
+            if str(data["project_id"]) not in self.server.whitelisted_projects:
+                self.close(4002)
+                print(
+                    self.address[0] + ":" + str(self.address[1]),
+                    "tried to handshake on a non-whitelisted project:",
+                    data["project_id"],
+                    "user:",
+                    data["user"],
+                )
+                return
+        # register handshake in users list (save username and project_id)
+        print(
+            self.address[0] + ":" + str(self.address[1]),
+            "handshaked, project:",
+            data["project_id"],
+            "user:",
+            data["user"],
+        )
+        self.server.tw_clients[self.address]["username"] = data["user"]
+        self.server.tw_clients[self.address]["project_id"] = data["project_id"]
+        # send current cloud variable values to the user who handshaked
+        self.sendMessage(
+            "\n".join(
+                [
+                    json.dumps(
+                        {
+                            "method": "set",
+                            "project_id": data["project_id"],
+                            "name": "☁ " + varname,
+                            "value": self.server.tw_variables[str(data["project_id"])][varname],
+                            "server": "scratchattach/2.0.0",
+                        }
+                    )
+                    for varname in self.server.get_project_vars(str(data["project_id"]))
+                ]
+            )
+        )
+        self.sendMessage("This server uses @TimMcCool's scratchattach 2.0.0")
+        # raise event
+        self.server.call_event("on_handshake", [data["user"], data["project_id"], self])
+
     def handleMessage(self):
         if not self.server.running:
             return
@@ -23,116 +135,9 @@ class TwCloudSocket(WebSocket):
             print(data)
 
             if data["method"] == "set":
-                # cloud variable set received
-                # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
-                if self.server.whitelisted_projects is not None:
-                    if data["project_id"] not in self.server.whitelisted_projects:
-                        self.close(4002)
-                        if self.server.log_var_sets:
-                            print(
-                                self.address[0] + ":" + str(self.address[1]),
-                                "tried to set a var on non-whitelisted project and was disconnected, project:",
-                                data["project_id"],
-                                "user:",
-                                data["user"],
-                            )
-                        return
-                # check if value is valid
-                if not self.server._check_value(data["value"]):
-                    if self.server.log_var_sets:
-                        print(self.address[0] + ":" + str(self.address[1]), "sent an invalid var value")
-                    return
-                # perform cloud var and forward to other players
-                if self.server.log_var_sets:
-                    print(
-                        self.address[0] + ":" + str(self.address[1]),
-                        f"set {data['name']} to {data['value']}, project:",
-                        str(data["project_id"]),
-                        "user:",
-                        data["user"],
-                    )
-                self.server.set_var(data["project_id"], data["name"], data["value"], user=data["user"], skip_forward=self)
-                send_to_clients = {
-                    "method": "set",
-                    "user": data["user"],
-                    "project_id": data["project_id"],
-                    "name": data["name"],
-                    "value": data["value"],
-                    "timestamp": round(time.time() * 1000),
-                    "server": "scratchattach/2.0.0",
-                }
-                # raise event
-                _a = cloud_activity.CloudActivity(timestamp=time.time() * 1000)
-                data["name"] = data["name"].replace("☁ ", "")
-                _a._update_from_dict(send_to_clients)
-                self.server.call_event("on_set", [_a, self])
-
+                self.handle_set(data)
             elif data["method"] == "handshake":
-                data = json.loads(self.data)
-                # check if handshake is valid
-                if not "user" in data:
-                    print(self.address[0] + ":" + str(self.address[1]), "tried to handshake without providing a username")
-                    self.close(4002)
-                    return
-                if not "project_id" in data:
-                    print(self.address[0] + ":" + str(self.address[1]), "tried to handshake without providing a project_id")
-                    self.close(4002)
-                    return
-                # check if project_id is in username is allowed
-                if self.server.allow_nonscratch_names is False:
-                    if not User(username=data["user"]).does_exist():
-                        print(
-                            self.address[0] + ":" + str(self.address[1]),
-                            "tried to handshake using a username not existing on Scratch, project:",
-                            data["project_id"],
-                            "user:",
-                            data["user"],
-                        )
-                        self.close(4002)
-                        return
-                # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
-                if self.server.whitelisted_projects is not None:
-                    if str(data["project_id"]) not in self.server.whitelisted_projects:
-                        self.close(4002)
-                        print(
-                            self.address[0] + ":" + str(self.address[1]),
-                            "tried to handshake on a non-whitelisted project:",
-                            data["project_id"],
-                            "user:",
-                            data["user"],
-                        )
-                        return
-                # register handshake in users list (save username and project_id)
-                print(
-                    self.address[0] + ":" + str(self.address[1]),
-                    "handshaked, project:",
-                    data["project_id"],
-                    "user:",
-                    data["user"],
-                )
-                self.server.tw_clients[self.address]["username"] = data["user"]
-                self.server.tw_clients[self.address]["project_id"] = data["project_id"]
-                # send current cloud variable values to the user who handshaked
-                self.sendMessage(
-                    "\n".join(
-                        [
-                            json.dumps(
-                                {
-                                    "method": "set",
-                                    "project_id": data["project_id"],
-                                    "name": "☁ " + varname,
-                                    "value": self.server.tw_variables[str(data["project_id"])][varname],
-                                    "server": "scratchattach/2.0.0",
-                                }
-                            )
-                            for varname in self.server.get_project_vars(str(data["project_id"]))
-                        ]
-                    )
-                )
-                self.sendMessage("This server uses @TimMcCool's scratchattach 2.0.0")
-                # raise event
-                self.server.call_event("on_handshake", [data["user"], data["project_id"], self])
-
+                self.handle_handshake(data)
             else:
                 print(
                     "Error:",
