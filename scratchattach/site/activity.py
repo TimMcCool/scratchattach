@@ -258,106 +258,75 @@ class Activity(BaseSiteComponent):
         """
         activity_type = data["type"]
 
-        _time = data["datetime_created"] if "datetime_created" in data else None
+        _time = data.get("datetime_created")
 
         if "actor" in data:
-            username = data["actor"]["username"]
-        elif "actor_username" in data:
-            username = data["actor_username"]
+            self.username = data["actor"]["username"]
         else:
-            username = None
+            self.username = data.get("actor_username")
 
+        self.recipient_username = None
         if recipient := data.get("recipient"):
-            recipient_username = recipient["username"]
-        elif recipient_username := data.get("recipient_username"):
-            pass
+            self.recipient_username = recipient["username"]
+        elif ru := data.get("recipient_username"):
+            self.recipient_username = ru
         elif project_creator := data.get("project_creator"):
-            recipient_username = project_creator["username"]
-        else:
-            recipient_username = None
+            self.recipient_username = project_creator["username"]
 
-        default_case = False
         # Even if `activity_type` is an invalid value; it will default to 'user performed an action'
-        self.actor_username = username
-        self.username = username
+        self.actor_username = self.username
         self.raw = data
         self.datetime_created = _time
-        if activity_type == 0:
-            self.type = ActivityTypes.followuser
-            self.followed_username = data["followed_username"]
 
-        elif activity_type == 1:
-            self.type = ActivityTypes.followstudio
-            self.gallery_id = data["gallery"]
+        # NOTE: some type values are treated the same here
+        # this is by design. the scratch HTML does this using a switch statement
+        self.type = {
+            0: ActivityTypes.followuser,
+            1: ActivityTypes.followstudio,
+            2: ActivityTypes.loveproject,
+            3: ActivityTypes.favoriteproject,
+            7: ActivityTypes.addprojecttostudio,
+            8: ActivityTypes.shareproject,
+            9: ActivityTypes.shareproject,
+            10: ActivityTypes.shareproject,
+            11: ActivityTypes.remixproject,
+            # type 12 does not exist in the HTML. That's why it was removed, not merged with type 13.
+            13: ActivityTypes.createstudio,
+            15: ActivityTypes.updatestudio,
+            16: ActivityTypes.removeprojectfromstudio,
+            17: ActivityTypes.removeprojectfromstudio,
+            18: ActivityTypes.removeprojectfromstudio,
+            19: ActivityTypes.removeprojectfromstudio,
+            20: ActivityTypes.promotetomanager,
+            21: ActivityTypes.promotetomanager,
+            22: ActivityTypes.promotetomanager,
+            23: ActivityTypes.updateprofile,
+            24: ActivityTypes.updateprofile,
+            25: ActivityTypes.updateprofile,
+            26: ActivityTypes.addcomment,
+            27: ActivityTypes.addcomment,
+            None: ActivityTypes.performaction,  # this one is just to satisfy type checkers
+        }.get(activity_type, ActivityTypes.performaction)
 
-        elif activity_type == 2:
-            self.type = ActivityTypes.loveproject
-            self.project_id = data["project"]
-            self.recipient_username = recipient_username
-
-        elif activity_type == 3:
-            self.type = ActivityTypes.favoriteproject
-            self.project_id = data["project"]
-            self.recipient_username = recipient_username
-
-        elif activity_type == 7:
-            self.type = ActivityTypes.addprojecttostudio
-            self.project_id = data["project"]
-            self.gallery_id = data["gallery"]
-            self.recipient_username = recipient_username
-
-        elif activity_type in (8, 9, 10):
-            self.type = ActivityTypes.shareproject
-            self.is_reshare = data["is_reshare"]
-            self.project_id = data["project"]
-            self.recipient_username = recipient_username
-
-        elif activity_type == 11:
-            self.type = ActivityTypes.remixproject
-            self.parent_id = data["parent"]
+        self.followed_username = data.get("followed_username", self.followed_username)
+        self.gallery_id = data.get("gallery", self.gallery_id)
+        self.project_id = data.get("project", self.project_id)
+        self.is_reshare = data.get("is_reshare", self.is_reshare)
+        self.comment_fragment = data.get("comment_fragment", self.comment_fragment)
+        self.comment_type = data.get("comment_type", self.comment_type)
+        self.comment_obj_id = data.get("comment_obj_id", self.comment_obj_id)
+        self.comment_obj_title = data.get("comment_obj_title", self.comment_obj_title)
+        self.comment_id = data.get("comment_id", self.comment_id)
+        self.parent_id = data.get("parent", self.parent_id)
+        if self.parent_id:
+            # activity_type 11
             warnings.warn(
                 f"This may be incorrectly implemented.\n"
                 f"Raw data: {data}\n"
                 f"Please raise an issue on gh: https://github.com/TimMcCool/scratchattach/issues"
             )
-            self.recipient_username = recipient_username
-
-        # type 12 does not exist in the HTML. That's why it was removed, not merged with type 13.
-
-        elif activity_type == 13:
-            self.type = ActivityTypes.createstudio
-            self.gallery_id = data["gallery"]
-
-        elif activity_type == 15:
-            self.type = ActivityTypes.updatestudio
-            self.gallery_id = data["gallery"]
-
-        elif activity_type in (16, 17, 18, 19):
-            self.type = ActivityTypes.removeprojectfromstudio
-            self.gallery_id = data["gallery"]
-            self.project_id = data["project"]
-
-        elif activity_type in (20, 21, 22):
-            self.type = ActivityTypes.promotetomanager
-            self.recipient_username = recipient_username
-            self.gallery_id = data["gallery"]
-
-        elif activity_type in (23, 24, 25):
-            self.type = ActivityTypes.updateprofile
+        if self.type == ActivityTypes.updateprofile:
             self.changed_fields = data.get("changed_fields", {})
-
-        elif activity_type in (26, 27):
-            # Comment in either project, user, or studio
-            self.type = ActivityTypes.addcomment
-            self.comment_fragment = data["comment_fragment"]
-            self.comment_type = data["comment_type"]
-            self.comment_obj_id = data["comment_obj_id"]
-            self.comment_obj_title = data["comment_obj_title"]
-            self.comment_id = data["comment_id"]
-
-        else:
-            # This is coded in the scratch HTML, haven't found an example of it though
-            self.type = ActivityTypes.performaction
 
     def _update_from_html(self, data: Tag):
 
