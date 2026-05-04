@@ -101,7 +101,7 @@ def test_user():
         "uukelele"
     )  # could use anyone ScratchAttachV2 is following right now but i think its cool that its following my account - uukelele, 2026
     assert uukelele.is_followed_by_me()
-    # and someone he is not following
+    # and someone scratchattachv2 is not following
     assert not griffpatch.is_followed_by_me()
 
 
