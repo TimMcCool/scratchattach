@@ -94,83 +94,41 @@ class PartialProject(BaseSiteComponent):
         self._json_headers["Content-Type"] = "application/json"
 
     def _update_from_dict(self, data: ProjectDict):
-        try:
-            self.id = int(data["id"])
-        except KeyError:
-            pass
-        try:
-            self.url = f"https://scratch.mit.edu/projects/{self.id}"
-        except KeyError:
-            pass
-        try:
-            self.author_name = data["author"]["username"]
-        except KeyError:
-            pass
-        try:
-            self.author_name = data["username"]  # type: ignore[typeddict-item]
-        except KeyError:
-            pass
-        try:
-            self.comments_allowed = data["comments_allowed"]
-        except KeyError:
-            pass
-        try:
-            self.instructions = data["instructions"]
-        except KeyError:
-            pass
-        try:
-            self.notes = data["description"]
-        except KeyError:
-            pass
-        try:
-            self.created = data["history"]["created"]
-        except KeyError:
-            pass
-        try:
-            self.last_modified = data["history"]["modified"]
-        except KeyError:
-            pass
-        try:
-            self.share_date = data["history"]["shared"]
-        except KeyError:
-            pass
-        try:
-            self.thumbnail_url = data["image"]
-        except KeyError:
-            pass
-        try:
-            self.remix_parent = data["remix"]["parent"]
-            self.remix_root = data["remix"]["root"]
-        except KeyError:
-            self.remix_parent = None
-            self.remix_root = None
-        try:
-            self.favorites = data["stats"]["favorites"]
-        except KeyError:
-            pass
-        try:
-            self.loves = data["stats"]["loves"]
-        except KeyError:
-            pass
-        try:
-            self.remix_count = data["stats"]["remixes"]
-        except KeyError:
-            pass
-        try:
-            self.views = data["stats"]["views"]
-        except KeyError:
-            pass
-        try:
-            self.title = data["title"]
-        except KeyError:
-            pass
-        try:
-            self.project_token = data["project_token"]
-        except KeyError:
-            self.project_token = None
-        if "code" in data:  # Project is unshared -> return false
-            return False
-        return True
+        self.id = int(data.get("id", self.id))
+        self.url = f"https://scratch.mit.edu/projects/{self.id}"
+        if author := data.get("author"):
+            self.author_name = author.get("username", self.author_name)
+        self.author_name = data.get("username", self.author_name)
+        self.comments_allowed = data.get("comments_allowed", self.comments_allowed)
+        self.instructions = data.get("instructions", self.instructions)
+        self.notes = data.get("description", self.notes)
+
+        if history := data.get("history"):
+            self.created = history.get("created", self.created)
+            self.last_modified = history.get("modified", self.last_modified)
+            self.share_date = history.get("shared", self.share_date)
+
+        self.thumbnail_url = data.get("image", self.thumbnail_url)
+
+        # NOTE: if we have no value, then we set it to None instead of empty string.
+        # TODO: consider changing this behavior
+        remix_data = data.get("remix", {})
+        self.remix_parent = remix_data.get("parent")
+        self.remix_root = remix_data.get("root")
+
+        if stats := data.get("stats"):
+            self.favorites = stats.get("favorites", self.favorites)
+            self.loves = stats.get("loves", self.loves)
+            self.remix_count = stats.get("remixes", self.remix_count)
+            self.views = stats.get("views", self.views)
+
+        self.title = data.get("title", self.title)
+        self.project_token = data.get("project_token", None)
+
+        # the typed dict here isn't perfect:
+        # code as in {"code": "not found"}
+        # if the project is unshared, then we get that error code
+        return "code" not in data
 
     def __rich__(self):
         from rich.panel import Panel
