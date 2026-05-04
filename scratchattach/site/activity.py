@@ -1,4 +1,5 @@
 """Activity and CloudActivity class"""
+
 from __future__ import annotations
 
 import html
@@ -10,9 +11,10 @@ from enum import Enum
 
 from bs4 import Tag
 
-from . import user, project, studio, session, forum
+from . import user, project, studio, session, forum, comment
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions
+
 
 class ActivityTypes(Enum):
     loveproject = "loveproject"
@@ -36,11 +38,13 @@ class ActivityTypes(Enum):
     addprojecttostudio = "addprojecttostudio"
     performaction = "performaction"
 
+
 @dataclass
 class Activity(BaseSiteComponent):
     """
     Represents a Scratch activity (message or other user page activity)
     """
+
     _session: Optional[session.Session] = None
     raw: Any = None
 
@@ -64,7 +68,7 @@ class Activity(BaseSiteComponent):
     parent_id: Optional[int] = None
 
     comment_type: Optional[int] = None
-    comment_obj_id = None
+    comment_obj_id: Optional[int] = None
     comment_obj_title: Optional[str] = None
     comment_id: Optional[int] = None
     comment_fragment: Optional[str] = None
@@ -80,7 +84,7 @@ class Activity(BaseSiteComponent):
         return f"Activity({repr(self.raw)})"
 
     def __str__(self):
-        return '-A ' + ' '.join(self.parts)
+        return "-A " + " ".join(self.parts)
 
     @property
     def parts(self):
@@ -100,11 +104,17 @@ class Activity(BaseSiteComponent):
             case ActivityTypes.followstudio:
                 return [f"{self.actor_username}", "followed", f"-S {self.title!r} ({self.gallery_id})"]
             case ActivityTypes.shareproject:
-                return [f"{self.actor_username}", "reshared" if self.is_reshare else "shared",
-                        f"-P {self.title!r} ({self.project_id})"]
+                return [
+                    f"{self.actor_username}",
+                    "reshared" if self.is_reshare else "shared",
+                    f"-P {self.title!r} ({self.project_id})",
+                ]
             case ActivityTypes.remixproject:
-                return [f"{self.actor_username}", "remixed",
-                        f"-P {self.parent_title!r} ({self.parent_id}) as -P {self.title!r} ({self.project_id})"]
+                return [
+                    f"{self.actor_username}",
+                    "remixed",
+                    f"-P {self.parent_title!r} ({self.parent_id}) as -P {self.title!r} ({self.project_id})",
+                ]
             case ActivityTypes.becomeownerstudio:
                 return [f"{self.actor_username}", "became owner of", f"-S {self.gallery_title!r} ({self.gallery_id})"]
 
@@ -141,7 +151,7 @@ class Activity(BaseSiteComponent):
 
             case ActivityTypes.studioactivity:
                 # the actor username should be systemuser
-                return [f"{self.actor_username}", 'Studio activity', '', f"-S {self.title!r} ({self.gallery_id})"]
+                return [f"{self.actor_username}", "Studio activity", "", f"-S {self.title!r} ({self.gallery_id})"]
 
             case ActivityTypes.forumpost:
                 return [f"{self.actor_username}", "posted in", f"-F {self.topic_title} ({self.topic_id})"]
@@ -153,19 +163,34 @@ class Activity(BaseSiteComponent):
                 return [f"{self.actor_username}", "created", f"-S {self.gallery_title} ({self.gallery_id})"]
 
             case ActivityTypes.promotetomanager:
-                return [f"{self.actor_username}", "promoted", f"-U {self.recipient_username}", "in",
-                        f"-S {self.gallery_title} ({self.gallery_id})"]
+                return [
+                    f"{self.actor_username}",
+                    "promoted",
+                    f"-U {self.recipient_username}",
+                    "in",
+                    f"-S {self.gallery_title} ({self.gallery_id})",
+                ]
 
             case ActivityTypes.updateprofile:
                 return [f"{self.actor_username}", "updated their profile.", f"Changed fields: {self.changed_fields}"]
 
             case ActivityTypes.removeprojectfromstudio:
-                return [f"{self.actor_username}", "removed", f"-P {self.project_title} ({self.project_id})", "from",
-                        f"-S {self.gallery_title} ({self.gallery_id})"]
+                return [
+                    f"{self.actor_username}",
+                    "removed",
+                    f"-P {self.project_title} ({self.project_id})",
+                    "from",
+                    f"-S {self.gallery_title} ({self.gallery_id})",
+                ]
 
             case ActivityTypes.addprojecttostudio:
-                return [f"{self.actor_username}", "added", f"-P {self.project_title} ({self.project_id})", "to",
-                        f"-S {self.gallery_title} ({self.gallery_id})"]
+                return [
+                    f"{self.actor_username}",
+                    "added",
+                    f"-P {self.project_title} ({self.project_id})",
+                    "to",
+                    f"-S {self.gallery_title} ({self.gallery_id})",
+                ]
 
             case ActivityTypes.performaction:
                 return [f"{self.actor_username}", "performed an action"]
@@ -174,7 +199,8 @@ class Activity(BaseSiteComponent):
                 raise NotImplementedError(
                     f"Activity type {self.type!r} is not implemented!\n"
                     f"{self.raw=}\n"
-                    f"Raise an issue on github: https://github.com/TimMcCool/scratchattach/issues")
+                    f"Raise an issue on github: https://github.com/TimMcCool/scratchattach/issues"
+                )
 
     def update(self):
         print("Warning: Activity objects can't be updated")
@@ -218,7 +244,10 @@ class Activity(BaseSiteComponent):
         self.time = data.get("time", self.time)
 
         _type = data.get("type", self.type)
-        if _type:
+        if _type == "becomehoststudio":
+            self.type = ActivityTypes.becomeownerstudio
+        elif _type:
+            # TODO: do not rely on indexing the enum! I think this is bad practice
             self.type = ActivityTypes[_type]
 
         return True
@@ -286,9 +315,11 @@ class Activity(BaseSiteComponent):
         elif activity_type == 11:
             self.type = ActivityTypes.remixproject
             self.parent_id = data["parent"]
-            warnings.warn(f"This may be incorrectly implemented.\n"
-                          f"Raw data: {data}\n"
-                          f"Please raise an issue on gh: https://github.com/TimMcCool/scratchattach/issues")
+            warnings.warn(
+                f"This may be incorrectly implemented.\n"
+                f"Raw data: {data}\n"
+                f"Please raise an issue on gh: https://github.com/TimMcCool/scratchattach/issues"
+            )
             self.recipient_username = recipient_username
 
         # type 12 does not exist in the HTML. That's why it was removed, not merged with type 13.
@@ -328,26 +359,25 @@ class Activity(BaseSiteComponent):
             # This is coded in the scratch HTML, haven't found an example of it though
             self.type = ActivityTypes.performaction
 
-
     def _update_from_html(self, data: Tag):
 
         self.raw = data
 
-        _time = data.find('div').find('span').find_next().find_next().text.strip()
+        _time = data.find("div").find("span").find_next().find_next().text.strip()
 
-        if '\xa0' in _time:
-            while '\xa0' in _time:
-                _time = _time.replace('\xa0', ' ')
+        if "\xa0" in _time:
+            while "\xa0" in _time:
+                _time = _time.replace("\xa0", " ")
 
         self.datetime_created = _time
-        self.actor_username = data.find('div').find('span').text
+        self.actor_username = data.find("div").find("span").text
 
-        self.target_name = data.find('div').find('span').find_next().text
-        self.target_link = data.find('div').find('span').find_next()["href"]
+        self.target_name = data.find("div").find("span").find_next().text
+        self.target_link = data.find("div").find("span").find_next()["href"]
         # note that target_id can also be a username, so it isn't exclusively an int
-        self.target_id = data.find('div').find('span').find_next()["href"].split("/")[-2]
+        self.target_id = data.find("div").find("span").find_next()["href"].split("/")[-2]
 
-        _type = data.find('div').find_all('span')[0].next_sibling.strip()
+        _type = data.find("div").find_all("span")[0].next_sibling.strip()
         if _type == "loved":
             self.type = ActivityTypes.loveproject
 
@@ -374,53 +404,98 @@ class Activity(BaseSiteComponent):
         """
         return self._make_linked_object("username", self.actor_username, user.User, exceptions.UserNotFound)
 
+    def target_project(self) -> Optional[project.Project]:
+        if self.target_id:
+            return self._make_linked_object("id", self.target_id, project.Project, exceptions.ProjectNotFound)
+        if self.project_id:
+            return self._make_linked_object("id", self.project_id, project.Project, exceptions.ProjectNotFound)
+        return None
+
+    def target_studio(self) -> Optional[studio.Studio]:
+        if self.target_id:
+            return self._make_linked_object("id", self.target_id, studio.Studio, exceptions.StudioNotFound)
+        if self.gallery_id:
+            return self._make_linked_object("id", self.gallery_id, studio.Studio, exceptions.StudioNotFound)
+        return None
+
+    def target_user(self) -> Optional[user.User]:
+        if self.username:
+            return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
+        if self.target_name:
+            return self._make_linked_object("username", self.target_name, user.User, exceptions.UserNotFound)
+        if self.followed_username:
+            return self._make_linked_object("username", self.followed_username, user.User, exceptions.UserNotFound)
+        if self.recipient_username:
+            return self._make_linked_object("username", self.recipient_username, user.User, exceptions.UserNotFound)
+        return None
+
+    def target_comment(self) -> Optional[comment.Comment]:
+        # TODO: make use of self.target_project/target_user/target_studio here.
+        # Also why is there no use of studio here??? This needs to be tested
+        if self.comment_type == 0:
+            print("coi", self.comment_obj_id, type(self.comment_obj_id))
+            if self.comment_obj_id is None:
+                return None
+
+            # we need author name, but it has not been saved in this object
+            if self._session is not None:
+                _proj = self._session.connect_project(self.comment_obj_id)
+            else:
+                _proj = project.Project(id=self.comment_obj_id)
+
+            return _proj.comment_by_id(self.comment_id)
+
+        elif self.comment_type == 1:
+            return user.User(username=self.comment_obj_title, _session=self._session).comment_by_id(self.comment_id)
+        elif self.comment_type == 2:
+            return user.User(id=self.comment_obj_id, _session=self._session).comment_by_id(self.comment_id)
+        else:
+            return None
+
     def target(self):
         """
         Returns the activity's target (depending on the activity, this is either a User, Project, Studio or Comment object).
         May also return None if the activity type is unknown.
         """
+        if self.type is None:
+            return None
+
         _type = self.type.value
+        if self.type in (
+            ActivityTypes.addprojecttostudio,
+            ActivityTypes.favoriteproject,
+            ActivityTypes.loveproject,
+            ActivityTypes.remixproject,
+            ActivityTypes.removeprojectfromstudio,
+            ActivityTypes.shareproject,
+        ):  # target is a project
+            return self.target_project()
 
-        if "project" in _type:  # target is a project
-            if self.target_id:
-                return self._make_linked_object("id", self.target_id, project.Project, exceptions.ProjectNotFound)
-            if self.project_id:
-                return self._make_linked_object("id", self.project_id, project.Project, exceptions.ProjectNotFound)
-
-        if _type == "becomecurator" or _type == "followstudio":  # target is a studio
-            if self.target_id:
-                return self._make_linked_object("id", self.target_id, studio.Studio, exceptions.StudioNotFound)
-            if self.gallery_id:
-                return self._make_linked_object("id", self.gallery_id, studio.Studio, exceptions.StudioNotFound)
+        if self.type in (ActivityTypes.becomecurator, ActivityTypes.followstudio):  # target is a studio
+            if ret := self.target_studio():
+                return ret
             # NOTE: the "becomecurator" type is ambigous - if it is inside the studio activity tab, the target is the user who joined
-            if self.username:
-                return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
+            return self.target_user()
 
-        if _type == "followuser" or "curator" in _type:  # target is a user
-            if self.target_name:
-                return self._make_linked_object("username", self.target_name, user.User, exceptions.UserNotFound)
-            if self.followed_username:
-                return self._make_linked_object("username", self.followed_username, user.User, exceptions.UserNotFound)
+        if (
+            self.type
+            in (
+                ActivityTypes.followuser,
+                ActivityTypes.curatorinvite,
+            )
+            or self.recipient_username
+        ):  # target is a user
+            # NOTE: the recipient_username field always indicates the target is a user
+            return self.target_user()
 
-        if self.recipient_username:  # the recipient_username field always indicates the target is a user
-            return self._make_linked_object("username", self.recipient_username, user.User, exceptions.UserNotFound)
+        if self.type == ActivityTypes.addcomment:  # target is a comment
+            if ret := self.target_comment():
+                return ret
 
-        if _type == "addcomment":  # target is a comment
-            if self.comment_type == 0:
-                # we need author name, but it has not been saved in this object
-                _proj = self._session.connect_project(self.comment_obj_id)
-                _c = _proj.comment_by_id(self.comment_id)
-
-            elif self.comment_type == 1:
-                _c = user.User(username=self.comment_obj_title, _session=self._session).comment_by_id(self.comment_id)
-            elif self.comment_type == 2:
-                _c = user.User(id=self.comment_obj_id, _session=self._session).comment_by_id(self.comment_id)
-            else:
-                raise ValueError(f"{self.comment_type} is an invalid comment type")
-
-            return _c
+            raise ValueError(f"Either {self.comment_type} is an invalid comment type, or the linked target could not be found")
 
         if _type == "forumpost":
+            # FIXME: why is the id here constant?!??
             return forum.ForumTopic(id=603418, _session=self._session, title=self.title)
 
         return None
