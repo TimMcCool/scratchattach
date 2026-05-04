@@ -63,6 +63,9 @@ def test_user():
     user_studio_count = user.studio_count()
     assert user_studio_count > 0
     assert user.studios_following_count() > 1
+    studios_following = user.studios_following()
+    assert studios_following[-1].title == "Sample studio"
+    assert studios_following[-1].id == 50809872
     assert user.studios(limit=1, offset=user_studio_count - 1)[0].title == "Sample studio"
     user_project_count = user.project_count()
     assert user_project_count > 1

@@ -532,6 +532,35 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             studios.append(_studio)
         return studios
 
+    def studios_following(self) -> list[studio.Studio]:
+        with requests.no_error_handling():
+            resp = requests.get(
+                f"https://scratch.mit.edu/users/{self.username}/studios_following/",
+                headers=self._headers,
+            )
+        soup = BeautifulSoup(resp.text, "html.parser")
+        grid = soup.select_one(".media-grid")
+        assert grid is not None
+
+        studios: list[studio.Studio] = []
+        for studio_elem in grid.select("li.gallery.thumb.item"):
+            title_span = studio_elem.select_one("span.title")
+            assert title_span is not None
+            anchor = title_span.find("a")
+            assert anchor is not None
+
+            href = str(anchor["href"])
+            sid = int(href.split("/")[-2])
+            title: str = anchor.text
+
+            if "\n" in title:
+                # we do this instead of title.strip because it *could* be possible for
+                # a studio title to have spaces around it. But I am not 100% sure
+                title = title.split("\n")[0]
+
+            studios.append(studio.Studio(id=sid, title=title, _session=self._session))
+        return studios
+
     def projects(self, *, limit=40, offset=0) -> list[project.Project]:
         """
         Returns:
