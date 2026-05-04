@@ -3,6 +3,7 @@ Handles data like current session for 'sessionable' commands.
 Holds objects that should be available for the whole CLI system
 Also provides wrappers for some SQL info.
 """
+
 import argparse
 from dataclasses import dataclass, field
 
@@ -54,9 +55,8 @@ class _Ctx:
 
     @property
     def current_group_name(self):
-        return db.cursor \
-            .execute("SELECT * FROM CURRENT WHERE GROUP_NAME IS NOT NULL") \
-            .fetchone()[0]
+        # FIXME: raises error when there are no groups
+        return db.cursor.execute("SELECT * FROM CURRENT WHERE GROUP_NAME IS NOT NULL").fetchone()[0]
 
     @current_group_name.setter
     def current_group_name(self, value: str):
@@ -75,14 +75,12 @@ class _Ctx:
 
     @staticmethod
     def db_users_in_group(name: str) -> list[str]:
-        return [i for (i,) in db.cursor.execute(
-            "SELECT USERNAME FROM GROUP_USERS WHERE GROUP_NAME = ?", (name,)).fetchall()]
+        return [i for (i,) in db.cursor.execute("SELECT USERNAME FROM GROUP_USERS WHERE GROUP_NAME = ?", (name,)).fetchall()]
 
     def db_remove_from_group(self, group_name: str, username: str):
         if username in self.db_users_in_group(group_name):
             db.conn.execute("BEGIN")
-            db.cursor.execute("DELETE FROM GROUP_USERS "
-                              "WHERE USERNAME = ? AND GROUP_NAME = ?", (username, group_name))
+            db.cursor.execute("DELETE FROM GROUP_USERS WHERE USERNAME = ? AND GROUP_NAME = ?", (username, group_name))
             db.conn.commit()
 
     @staticmethod
@@ -96,8 +94,7 @@ class _Ctx:
         if username in self.db_users_in_group(group_name) or not self.db_session_exists(username):
             return
         db.conn.execute("BEGIN")
-        db.cursor.execute("INSERT INTO GROUP_USERS (GROUP_NAME, USERNAME) "
-                          "VALUES (?, ?)", (group_name, username))
+        db.cursor.execute("INSERT INTO GROUP_USERS (GROUP_NAME, USERNAME) VALUES (?, ?)", (group_name, username))
         db.conn.commit()
 
     @staticmethod
@@ -113,11 +110,21 @@ class _Ctx:
     def db_group_copy(group_name: str, copy_name: str):
         db.conn.execute("BEGIN")
         # copy group metadata
-        db.cursor.execute("INSERT INTO GROUPS (NAME, DESCRIPTION) "
-                          "SELECT ?, DESCRIPTION FROM GROUPS WHERE NAME = ?", (copy_name, group_name,))
+        db.cursor.execute(
+            "INSERT INTO GROUPS (NAME, DESCRIPTION) SELECT ?, DESCRIPTION FROM GROUPS WHERE NAME = ?",
+            (
+                copy_name,
+                group_name,
+            ),
+        )
         # copy sessions
-        db.cursor.execute("INSERT INTO GROUP_USERS (GROUP_NAME, USERNAME)  "
-                          "SELECT ?, USERNAME FROM GROUP_USERS WHERE GROUP_NAME = ?", (copy_name, group_name,))
+        db.cursor.execute(
+            "INSERT INTO GROUP_USERS (GROUP_NAME, USERNAME)  SELECT ?, USERNAME FROM GROUP_USERS WHERE GROUP_NAME = ?",
+            (
+                copy_name,
+                group_name,
+            ),
+        )
 
         db.conn.commit()
 

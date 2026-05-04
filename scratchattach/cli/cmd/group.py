@@ -4,6 +4,7 @@ from scratchattach.cli.context import console, ctx
 from rich.markup import escape
 from rich.table import Table
 
+
 def _list():
     table = Table(title="All groups")
     table.add_column("Name")
@@ -15,20 +16,22 @@ def _list():
         db.cursor.execute("SELECT USERNAME FROM GROUP_USERS WHERE GROUP_NAME=?", (name,))
         usernames = db.cursor.fetchall()
 
-        table.add_row(escape(name), escape(description),
-                      '\n'.join(f"{i}. {u}" for i, (u,) in enumerate(usernames)))
+        table.add_row(escape(name), escape(description), "\n".join(f"{i}. {u}" for i, (u,) in enumerate(usernames)))
 
     console.print(table)
+
 
 def add(group_name: str):
     accounts = input("Add accounts (split by space): ").split()
     for account in accounts:
         ctx.db_add_to_group(group_name, account)
 
+
 def remove(group_name: str):
     accounts = input("Remove accounts (split by space): ").split()
     for account in accounts:
         ctx.db_remove_from_group(group_name, account)
+
 
 def new():
     console.rule(f"New group {escape(ctx.args.group_name)}")
@@ -36,19 +39,18 @@ def new():
         raise ValueError(f"Group {escape(ctx.args.group_name)} already exists")
 
     db.conn.execute("BEGIN")
-    db.cursor.execute("INSERT INTO GROUPS (NAME, DESCRIPTION) "
-                      "VALUES (?, ?)", (ctx.args.group_name, input("Description: ")))
+    db.cursor.execute("INSERT INTO GROUPS (NAME, DESCRIPTION) VALUES (?, ?)", (ctx.args.group_name, input("Description: ")))
     db.conn.commit()
     add(ctx.args.group_name)
 
     _group(ctx.args.group_name)
 
+
 def _group(group_name: str):
     """
     Display information about a group
     """
-    db.cursor.execute(
-        "SELECT NAME, DESCRIPTION FROM GROUPS WHERE NAME = ?", (group_name,))
+    db.cursor.execute("SELECT NAME, DESCRIPTION FROM GROUPS WHERE NAME = ?", (group_name,))
     result = db.cursor.fetchone()
     if result is None:
         print("No group selected!!")
@@ -61,12 +63,12 @@ def _group(group_name: str):
 
     table = Table(title=escape(group_name))
     table.add_column(escape(name))
-    table.add_column('Usernames')
+    table.add_column("Usernames")
 
-    table.add_row(escape(description),
-                  '\n'.join(f"{i}. {u}" for i, u in enumerate(usernames)))
+    table.add_row(escape(description), "\n".join(f"{i}. {u}" for i, u in enumerate(usernames)))
 
     console.print(table)
+
 
 def switch():
     console.rule(f"Switching to {escape(ctx.args.group_name)}")
@@ -75,6 +77,7 @@ def switch():
 
     ctx.current_group_name = ctx.args.group_name
     _group(ctx.current_group_name)
+
 
 def delete(group_name: str):
     print(f"Deleting {group_name}")
@@ -85,6 +88,7 @@ def delete(group_name: str):
 
     ctx.db_group_delete(group_name)
 
+
 def copy(group_name: str, new_name: str):
     print(f"Copying {group_name} as {new_name}")
     if not ctx.db_group_exists(group_name):
@@ -92,9 +96,21 @@ def copy(group_name: str, new_name: str):
 
     ctx.db_group_copy(group_name, new_name)
 
+
 def rename(group_name: str, new_name: str):
     copy(group_name, new_name)
     delete(group_name)
+
+
+def delete_cmd():
+    if input("Are you sure? (y/N): ").lower() != "y":
+        return
+    delete(ctx.current_group_name)
+    new_current = ctx.db_first_group_name
+    print(f"Switching to {new_current}")
+    ctx.current_group_name = new_current
+    _group(new_current)
+
 
 def group():
     match ctx.args.group_command:
@@ -109,14 +125,7 @@ def group():
         case "remove":
             remove(ctx.current_group_name)
         case "delete":
-            if input("Are you sure? (y/N): ").lower() != "y":
-                return
-            delete(ctx.current_group_name)
-            new_current = ctx.db_first_group_name
-            print(f"Switching to {new_current}")
-            ctx.current_group_name = new_current
-            _group(new_current)
-
+            delete_cmd()
         case "copy":
             copy(ctx.current_group_name, ctx.args.group_name)
         case "rename":

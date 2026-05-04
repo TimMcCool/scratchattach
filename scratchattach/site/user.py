@@ -191,7 +191,10 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         from rich.markup import escape
 
         featured_data = self.featured_data() or {}
-        ocular_data = self.ocular_status()
+
+        ocular_data = {}
+        # FIXME: ocular is down right now, so this is disabled
+        # ocular_data = self.ocular_status()
         ocular = "No ocular status"
 
         if status := ocular_data.get("status"):
