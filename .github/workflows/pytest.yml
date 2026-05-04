@@ -38,4 +38,5 @@ jobs:
         env:
           FERNET_KEY: ${{ secrets.FERNET_KEY }}
         run: |
-          uv run -m pytest tests/
+          cd tests
+          uv run -m pytest

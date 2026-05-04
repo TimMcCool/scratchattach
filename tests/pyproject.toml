@@ -1,0 +1,21 @@
+[project]
+name = "util"
+version = "0.1.0"
+description = "Test helpers for the scratchattach testing suite"
+readme = "README.md"
+authors = [{ name = "TimMcCool" }]
+requires-python = ">=3.12.12"
+dependencies = [
+  "cryptography>=47.0.0",
+  "pytest>=9.0.3",
+  "python-dotenv>=1.2.2",
+  "ruff>=0.15.12",
+  "scratchattach",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.10,<0.11.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+scratchattach = { path = "../" }
