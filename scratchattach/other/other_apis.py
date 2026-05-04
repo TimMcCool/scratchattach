@@ -620,6 +620,7 @@ def text2speech(
 
     with requests.no_error_handling():
         resp = requests.get(
-            f"https://synthesis-service.scratch.mit.edu/synth?locale={lang.tts_locale}&gender={voice.gender}&text={text}"
+            f"https://synthesis-service.scratch.mit.edu/synth",
+            params={"locale": lang.tts_locale, "gender": voice.gender, "text": text},
         )
     return resp.content, voice.playback_rate
