@@ -1,12 +1,25 @@
 """FilterBot class"""
+
 from __future__ import annotations
+
 from .message_events import MessageEvents
 import time
 from collections import deque
+from scratchattach.site import activity
+
 
 class HardFilter:
-    
-    def __init__(self, filter_name="UntitledFilter", *, equals=None, contains=None, author_name=None, project_id=None, profile=None, case_sensitive=False):
+    def __init__(
+        self,
+        filter_name="UntitledFilter",
+        *,
+        equals=None,
+        contains=None,
+        author_name=None,
+        project_id=None,
+        profile=None,
+        case_sensitive=False,
+    ):
         self.equals = equals
         self.contains = contains
         self.author_name = author_name
@@ -14,7 +27,7 @@ class HardFilter:
         self.profile = profile
         self.case_sensitive = case_sensitive
         self.filter_name = filter_name
-    
+
     def apply(self, content, author_name, source_id):
         text_to_check = content if self.case_sensitive else content.lower()
         if self.equals is not None:
@@ -27,19 +40,59 @@ class HardFilter:
                 return True
         if self.author_name is not None and self.author_name == author_name:
             return True
-        if (self.project_id is not None and self.project_id == source_id) or \
-           (self.profile is not None and self.profile == source_id):
+        if (self.project_id is not None and self.project_id == source_id) or (
+            self.profile is not None and self.profile == source_id
+        ):
             return True
         return False
 
+
 class SoftFilter(HardFilter):
-    def __init__(self, score:float, filter_name="UntitledFilter", *, equals=None, contains=None, author_name=None, project_id=None, profile=None, case_sensitive=False):
+    def __init__(
+        self,
+        score: float,
+        filter_name="UntitledFilter",
+        *,
+        equals=None,
+        contains=None,
+        author_name=None,
+        project_id=None,
+        profile=None,
+        case_sensitive=False,
+    ):
         self.score = score
-        super().__init__(filter_name, equals=equals, contains=contains, author_name=author_name, project_id=project_id, profile=profile, case_sensitive=case_sensitive)
+        super().__init__(
+            filter_name,
+            equals=equals,
+            contains=contains,
+            author_name=author_name,
+            project_id=project_id,
+            profile=profile,
+            case_sensitive=case_sensitive,
+        )
+
 
 class SpamFilter(HardFilter):
-    def __init__(self, filter_name="UntitledFilter", *, equals=None, contains=None, author_name=None, project_id=None, profile=None, case_sensitive=False):
-        super().__init__(filter_name, equals=equals, contains=contains, author_name=author_name, project_id=project_id, profile=profile, case_sensitive=case_sensitive)
+    def __init__(
+        self,
+        filter_name="UntitledFilter",
+        *,
+        equals=None,
+        contains=None,
+        author_name=None,
+        project_id=None,
+        profile=None,
+        case_sensitive=False,
+    ):
+        super().__init__(
+            filter_name,
+            equals=equals,
+            contains=contains,
+            author_name=author_name,
+            project_id=project_id,
+            profile=profile,
+            case_sensitive=case_sensitive,
+        )
         self.memory = deque()
         self.retention_period = 300
 
@@ -47,7 +100,7 @@ class SpamFilter(HardFilter):
         if not super().apply(content, author_name, source_id):
             return False
         current_time = time.time()
-        
+
         # Prune old entries from memory
         while self.memory and self.memory[-1]["time"] < current_time - self.retention_period:
             self.memory.pop()
@@ -62,8 +115,8 @@ class SpamFilter(HardFilter):
         self.memory.appendleft({"content": content, "time": current_time})
         return False
 
-class Filterbot(MessageEvents):
 
+class Filterbot(MessageEvents):
     # The Filterbot class is built upon MessageEvents, similar to how CloudEvents is built upon CloudEvents
 
     def __init__(self, user, *, log_deletions=True):
@@ -105,21 +158,21 @@ class Filterbot(MessageEvents):
         self.add_filter(HardFilter("[genalpha_nonsene_filter) 'rizzler'", contains="rizzler"))
         self.add_filter(HardFilter("(genalpha_nonsene_filter) 'fanum tax'", contains="fanum tax"))
 
-    def on_message(self, message):
-        if message.type != "addcomment":
+    def on_message(self, message: activity.Activity):
+        if message.type != activity.ActivityTypes.addcomment:
             return
         source_id = None
         content = message.comment_fragment
-        if message.comment_type == 0: # project comment
+        if message.comment_type == 0:  # project comment
             source_id = message.comment_obj_id
             if self.user._session.connect_project(message.comment_obj_id).author_name != self.user.username:
-                return # no permission to delete comments that aren't on our own project
-        elif message.comment_type == 1: # profile comment
+                return  # no permission to delete comments that aren't on our own project
+        elif message.comment_type == 1:  # profile comment
             source_id = message.comment_obj_title
             if source_id != self.user.username:
-                return # no permission to delete messages that are not on our profile
-        elif message.comment_type == 2: # studio comment
-            return # studio comments aren't handled
+                return  # no permission to delete messages that are not on our profile
+        elif message.comment_type == 2:  # studio comment
+            return  # studio comments aren't handled
         else:
             return
         delete = False
@@ -157,7 +210,9 @@ class Filterbot(MessageEvents):
             try:
                 resp = message.target().delete()
                 if self.log_deletions:
-                    print(f"DELETED: #{message.comment_id} by {message.actor_username!r}: '{content}' with message {resp.content!r} & headers {resp.headers!r}")
+                    print(
+                        f"DELETED: #{message.comment_id} by {message.actor_username!r}: '{content}' with message {resp.content!r} & headers {resp.headers!r}"
+                    )
             except Exception as e:
                 if self.log_deletions:
                     print(f"DELETION FAILED: #{message.comment_id} by {message.actor_username!r}: '{content}'; exception: {e}")
