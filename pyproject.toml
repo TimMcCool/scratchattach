@@ -88,14 +88,20 @@ select = [
   "F63",
   "F7",
   "F82",
-] # , "C901"]  # uncomment to re-enable mccabe complexity - see https://github.com/TimMcCool/scratchattach/issues/566
+  "C901",
+] # uncomment to re-enable mccabe complexity - see https://github.com/TimMcCool/scratchattach/issues/566
 
 [tool.ruff.lint.mccabe]
-# max-complexity = 10
+max-complexity = 10
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["scratchattach*"]
 
 [dependency-groups]
-dev = ["cryptography>=46.0.3", "pytest>=9.0.2", "python-dotenv>=1.2.2"]
+dev = [
+  "cryptography>=46.0.3",
+  "pytest>=9.0.2",
+  "python-dotenv>=1.2.2",
+  "ruff>=0.15.12",
+]
