@@ -92,7 +92,7 @@ select = [
 ] # uncomment to re-enable mccabe complexity - see https://github.com/TimMcCool/scratchattach/issues/566
 
 [tool.ruff.lint.mccabe]
-max-complexity = 10
+max-complexity = 1
 
 [tool.setuptools.packages.find]
 where = ["."]
