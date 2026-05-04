@@ -30,6 +30,8 @@ jobs:
           uv pip install -e ..
           uv run -m util addmask
           cd ..
+      - name: Lint with ruff
+        run: uv run -m ruff check
       - name: Test with pytest
         env:
           FERNET_KEY: ${{ secrets.FERNET_KEY }}
