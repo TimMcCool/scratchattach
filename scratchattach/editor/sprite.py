@@ -7,27 +7,46 @@ from typing import Optional, Any, BinaryIO
 from zipfile import ZipFile
 from typing import Iterable, TYPE_CHECKING
 from . import base, project, vlb, asset, comment, prim, block, commons, build_defaulting
+
 if TYPE_CHECKING:
     from . import asset
+
 
 class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
     _local_globals: list[base.NamedIDComponent]
     asset_data: list[asset.AssetFile]
-    def __init__(self, is_stage: bool = False, name: str = '', _current_costume: int = 1, _layer_order: Optional[int] = None,
-                 _volume: int = 100,
-                 _broadcasts: Optional[list[vlb.Broadcast]] = None,
-                 _variables: Optional[list[vlb.Variable]] = None, _lists: Optional[list[vlb.List]] = None,
-                 _costumes: Optional[list[asset.Costume]] = None, _sounds: Optional[list[asset.Sound]] = None,
-                 _comments: Optional[list[comment.Comment]] = None, _prims: Optional[dict[str, prim.Prim]] = None,
-                 _blocks: Optional[dict[str, block.Block]] = None,
-                 # Stage only:
-                 _tempo: int | float = 60, _video_state: str = "off", _video_transparency: int | float = 50,
-                 _text_to_speech_language: str = "en", _visible: bool = True,
-                 # Sprite only:
-                 _x: int | float = 0, _y: int | float = 0, _size: int | float = 100, _direction: int | float = 90,
-                 _draggable: bool = False, _rotation_style: str = "all around",
 
-                 *, _project: Optional[project.Project] = None):
+    def __init__(  # noqa: C901
+        self,
+        is_stage: bool = False,
+        name: str = "",
+        _current_costume: int = 1,
+        _layer_order: Optional[int] = None,
+        _volume: int = 100,
+        _broadcasts: Optional[list[vlb.Broadcast]] = None,
+        _variables: Optional[list[vlb.Variable]] = None,
+        _lists: Optional[list[vlb.List]] = None,
+        _costumes: Optional[list[asset.Costume]] = None,
+        _sounds: Optional[list[asset.Sound]] = None,
+        _comments: Optional[list[comment.Comment]] = None,
+        _prims: Optional[dict[str, prim.Prim]] = None,
+        _blocks: Optional[dict[str, block.Block]] = None,
+        # Stage only:
+        _tempo: int | float = 60,
+        _video_state: str = "off",
+        _video_transparency: int | float = 50,
+        _text_to_speech_language: str = "en",
+        _visible: bool = True,
+        # Sprite only:
+        _x: int | float = 0,
+        _y: int | float = 0,
+        _size: int | float = 100,
+        _direction: int | float = 90,
+        _draggable: bool = False,
+        _rotation_style: str = "all around",
+        *,
+        _project: Optional[project.Project] = None,
+    ):
         """
         Represents a sprite or the stage (known internally as a Target)
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Targets
@@ -296,13 +315,32 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
             _draggable = data.get("draggable", False)
             _rotation_style = data.get("rotationStyle", "all-around")
 
-        return Sprite(_is_stage, _name, _current_costume, _layer_order, _volume, _broadcasts, _variables, _lists,
-                      _costumes,
-                      _sounds, _comments, _prims, _blocks,
-
-                      _tempo, _video_state, _video_transparency, _text_to_speech_language,
-                      _visible, _x, _y, _size, _direction, _draggable, _rotation_style
-                      )
+        return Sprite(
+            _is_stage,
+            _name,
+            _current_costume,
+            _layer_order,
+            _volume,
+            _broadcasts,
+            _variables,
+            _lists,
+            _costumes,
+            _sounds,
+            _comments,
+            _prims,
+            _blocks,
+            _tempo,
+            _video_state,
+            _video_transparency,
+            _text_to_speech_language,
+            _visible,
+            _x,
+            _y,
+            _size,
+            _direction,
+            _draggable,
+            _rotation_style,
+        )
 
     def to_json(self) -> dict:
         _json = {
@@ -311,41 +349,43 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
             "currentCostume": self.current_costume,
             "volume": self.volume,
             "layerOrder": self.layer_order,
-
             "variables": {_variable.id: _variable.to_json() for _variable in self.variables},
             "lists": {_list.id: _list.to_json() for _list in self.lists},
             "broadcasts": {_broadcast.id: _broadcast.to_json() for _broadcast in self.broadcasts},
-
             "blocks": {_block_id: _block.to_json() for _block_id, _block in (self.blocks | self.prims).items()},
             "comments": {_comment.id: _comment.to_json() for _comment in self.comments},
-
             "costumes": [_costume.to_json() for _costume in self.costumes],
-            "sounds": [_sound.to_json() for _sound in self.sounds]
+            "sounds": [_sound.to_json() for _sound in self.sounds],
         }
 
         if self.is_stage:
-            _json.update({
-                "tempo": self.tempo,
-                "videoTransparency": self.video_transparency,
-                "videoState": self.video_state,
-                "textToSpeechLanguage": self.text_to_speech_language
-            })
+            _json.update(
+                {
+                    "tempo": self.tempo,
+                    "videoTransparency": self.video_transparency,
+                    "videoState": self.video_state,
+                    "textToSpeechLanguage": self.text_to_speech_language,
+                }
+            )
         else:
-            _json.update({
-                "visible": self.visible,
-
-                "x": self.x, "y": self.y,
-                "size": self.size,
-                "direction": self.direction,
-
-                "draggable": self.draggable,
-                "rotationStyle": self.rotation_style
-            })
+            _json.update(
+                {
+                    "visible": self.visible,
+                    "x": self.x,
+                    "y": self.y,
+                    "size": self.size,
+                    "direction": self.direction,
+                    "draggable": self.draggable,
+                    "rotationStyle": self.rotation_style,
+                }
+            )
 
         return _json
 
     # Finding/getting from list/dict attributes
-    def find_asset(self, value: str, by: str = "name", multiple: bool = False, a_type: Optional[type]=None) -> None | asset.Asset | asset.Sound | asset.Costume | list[asset.Asset | asset.Sound | asset.Costume]:
+    def find_asset(
+        self, value: str, by: str = "name", multiple: bool = False, a_type: Optional[type] = None
+    ) -> None | asset.Asset | asset.Sound | asset.Costume | list[asset.Asset | asset.Sound | asset.Costume]:
         if a_type is None:
             a_type = asset.Asset
 
@@ -425,8 +465,9 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
             return _ret
         return None
 
-    def find_broadcast(self, value: str, by: str = "name", multiple: bool = False) -> None | vlb.Broadcast | list[
-        vlb.Broadcast]:
+    def find_broadcast(
+        self, value: str, by: str = "name", multiple: bool = False
+    ) -> None | vlb.Broadcast | list[vlb.Broadcast]:
         _ret = []
         by = by.lower()
         for _broadcast in self.broadcasts + self._local_globals:
@@ -454,13 +495,11 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
             return _ret
         return None
 
-    def find_vlb(self, value: str, by: str = "name",
-                 multiple: bool = False) -> vlb.Variable | vlb.List | vlb.Broadcast | list[
-        vlb.Variable | vlb.List | vlb.Broadcast]:
+    def find_vlb(
+        self, value: str, by: str = "name", multiple: bool = False
+    ) -> vlb.Variable | vlb.List | vlb.Broadcast | list[vlb.Variable | vlb.List | vlb.Broadcast]:
         if multiple:
-            return self.find_variable(value, by, True) + \
-                self.find_list(value, by, True) + \
-                self.find_broadcast(value, by, True)
+            return self.find_variable(value, by, True) + self.find_list(value, by, True) + self.find_broadcast(value, by, True)
         else:
             _ret = self.find_variable(value, by)
             if _ret is not None:
@@ -470,8 +509,9 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
                 return _ret
             return self.find_broadcast(value, by)
 
-    def find_block(self, value: str | Any, by: str, multiple: bool = False) -> None | block.Block | prim.Prim | list[
-        block.Block | prim.Prim]:
+    def find_block(  # noqa: C901
+        self, value: str | Any, by: str, multiple: bool = False
+    ) -> None | block.Block | prim.Prim | list[block.Block | prim.Prim]:
         _ret = []
         by = by.lower()
         for _block_id, _block in (self.blocks | self.prims).items():
@@ -545,8 +585,9 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
             ret += list(iterator)
 
         return ret
+
     @staticmethod
-    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None):
+    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None):  # noqa: C901
         _dir_for_name = None
 
         if _name is None:
@@ -565,8 +606,8 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
 
         if _name is None and _dir_for_name is not None:
             # Remove any directory names and the file extension
-            _name = _dir_for_name.split('/')[-1]
-            _name = '.'.join(_name.split('.')[:-1])
+            _name = _dir_for_name.split("/")[-1]
+            _name = ".".join(_name.split(".")[:-1])
 
         asset_data = []
         with data:
@@ -580,17 +621,15 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
 
                     # Also load assets
                     if load_assets:
-
                         for filename in archive.namelist():
                             if filename != "sprite.json":
-                                md5_hash = filename.split('.')[0]
+                                md5_hash = filename.split(".")[0]
 
-                                asset_data.append(
-                                    asset.AssetFile(filename, archive.read(filename), md5_hash)
-                                )
+                                asset_data.append(asset.AssetFile(filename, archive.read(filename), md5_hash))
                     else:
                         warnings.warn(
-                            "Loading sb3 without loading assets. When exporting the project, there may be errors due to assets not being uploaded to the Scratch website")
+                            "Loading sb3 without loading assets. When exporting the project, there may be errors due to assets not being uploaded to the Scratch website"
+                        )
 
             return _name, asset_data, json_str
 

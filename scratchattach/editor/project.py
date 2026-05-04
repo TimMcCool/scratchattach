@@ -18,9 +18,18 @@ class Project(base.JSONExtractable):
     """
     A Project (body). Represents the editor contents of a scratch project
     """
-    def __init__(self, _name: Optional[str] = None, _meta: Optional[meta.Meta] = None, _extensions: Iterable[extension.Extension] = (),
-                 _monitors: Iterable[monitor.Monitor] = (), _sprites: Iterable[sprite.Sprite] = (), *,
-                 _asset_data: Optional[list[asset.AssetFile]] = None, _session: Optional[session.Session] = None):
+
+    def __init__(
+        self,
+        _name: Optional[str] = None,
+        _meta: Optional[meta.Meta] = None,
+        _extensions: Iterable[extension.Extension] = (),
+        _monitors: Iterable[monitor.Monitor] = (),
+        _sprites: Iterable[sprite.Sprite] = (),
+        *,
+        _asset_data: Optional[list[asset.AssetFile]] = None,
+        _session: Optional[session.Session] = None,
+    ):
         # Defaulting for list parameters
         if _meta is None:
             _meta = meta.Meta()
@@ -66,7 +75,7 @@ class Project(base.JSONExtractable):
         if self.name is not None:
             _ret += f"name={self.name}, "
         _ret += f"meta={self.meta}"
-        _ret += '>'
+        _ret += ">"
         return _ret
 
     @property
@@ -143,7 +152,7 @@ class Project(base.JSONExtractable):
         return Project(None, _meta, _extensions, _monitors, _sprites)
 
     @staticmethod
-    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None):
+    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None):  # noqa: C901
         """
         Load project JSON and assets from an .sb3 file/bytes/file path
         :return: Project name, asset data, json string
@@ -166,8 +175,8 @@ class Project(base.JSONExtractable):
 
         if _name is None and _dir_for_name is not None:
             # Remove any directory names and the file extension
-            _name = _dir_for_name.split('/')[-1]
-            _name = '.'.join(_name.split('.')[:-1])
+            _name = _dir_for_name.split("/")[-1]
+            _name = ".".join(_name.split(".")[:-1])
 
         asset_data = []
         with data:
@@ -183,15 +192,14 @@ class Project(base.JSONExtractable):
                     if load_assets:
                         for filename in archive.namelist():
                             if filename != "project.json":
-                                md5_hash = filename.split('.')[0]
+                                md5_hash = filename.split(".")[0]
 
-                                asset_data.append(
-                                    asset.AssetFile(filename, archive.read(filename), md5_hash)
-                                )
+                                asset_data.append(asset.AssetFile(filename, archive.read(filename), md5_hash))
 
                     else:
                         warnings.warn(
-                            "Loading sb3 without loading assets. When exporting the project, there may be errors due to assets not being uploaded to the Scratch website")
+                            "Loading sb3 without loading assets. When exporting the project, there may be errors due to assets not being uploaded to the Scratch website"
+                        )
 
             return _name, asset_data, json_str
 
@@ -224,9 +232,9 @@ class Project(base.JSONExtractable):
         # _proj.name = _name
         # return _proj
 
-    def find_vlb(self, value: str | None, by: str = "name",
-                 multiple: bool = False) -> Optional[vlb.Variable | vlb.List | vlb.Broadcast | list[
-        vlb.Variable | vlb.List | vlb.Broadcast]]:
+    def find_vlb(
+        self, value: str | None, by: str = "name", multiple: bool = False
+    ) -> Optional[vlb.Variable | vlb.List | vlb.Broadcast | list[vlb.Variable | vlb.List | vlb.Broadcast]]:
 
         _ret: list[vlb.Variable | vlb.List | vlb.Broadcast] = []
         for _sprite in self.sprites:
@@ -242,8 +250,7 @@ class Project(base.JSONExtractable):
 
         return None
 
-    def find_sprite(self, value: str | None, by: str = "name",
-                 multiple: bool = False) -> sprite.Sprite | list[sprite.Sprite]:
+    def find_sprite(self, value: str | None, by: str = "name", multiple: bool = False) -> sprite.Sprite | list[sprite.Sprite]:
         _ret = []
         for _sprite in self.sprites:
             if by == "name":
@@ -276,7 +283,7 @@ class Project(base.JSONExtractable):
                 json.dump(data, json_file)
 
         if auto_open:
-            os.system(f"explorer.exe \"{fp}\"")
+            os.system(f'explorer.exe "{fp}"')
 
     def add_monitor(self, _monitor: monitor.Monitor) -> monitor.Monitor:
         """
@@ -287,7 +294,7 @@ class Project(base.JSONExtractable):
         self.monitors.append(_monitor)
         return _monitor
 
-    def obfuscate(self, *, goto_origin: bool=True) -> None:
+    def obfuscate(self, *, goto_origin: bool = True) -> None:  # noqa: C901
         """
         Randomly set all the variable names etc. Do not upload this project to the scratch website, as it is
         against the community guidelines.
@@ -296,7 +303,7 @@ class Project(base.JSONExtractable):
         chars = string.ascii_letters + string.digits + string.punctuation
 
         def b10_to_cbase(b10: int | float):
-            ret = ''
+            ret = ""
             new_base = len(chars)
             while b10 >= 1:
                 ret = chars[int(b10 % new_base)] + ret
@@ -372,7 +379,6 @@ class Project(base.JSONExtractable):
                     arg_name = _block.fields["VALUE"].value
                     assert isinstance(arg_name, str)
                     _block.fields["VALUE"].value = arg_get(arg_name)
-
 
                 # print(argument_mappings)
 

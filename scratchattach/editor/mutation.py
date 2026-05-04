@@ -38,7 +38,7 @@ class ArgumentType(base.Base):
         if self.proc_str == "%b":
             return "false"
         elif self.proc_str == "%s":
-            return ''
+            return ""
         else:
             return None
 
@@ -48,19 +48,16 @@ class ArgSettings(base.Base):
     """
     Contains whether the ids, names, and defaults of arguments in a mutation are None or not - i.e. the configuration of the arguments
     """
+
     ids: bool
     names: bool
     defaults: bool
 
     def __int__(self):
-        return (int(self.ids) +
-                int(self.names) +
-                int(self.defaults))
+        return int(self.ids) + int(self.names) + int(self.defaults)
 
     def __eq__(self, other):
-        return (self.ids == other.ids and
-                self.names == other.names and
-                self.defaults == other.defaults)
+        return self.ids == other.ids and self.names == other.names and self.defaults == other.defaults
 
     def __gt__(self, other):
         return int(self) > int(other)
@@ -72,7 +69,7 @@ class ArgSettings(base.Base):
 @dataclass
 class Argument(base.MutationSubComponent):
     name: str
-    default: str = ''
+    default: str = ""
     _type: Optional[ArgumentType] = None
 
     _id: str = None
@@ -91,8 +88,9 @@ class Argument(base.MutationSubComponent):
     def type(self) -> Optional[ArgumentType]:
         if not self._type:
             if not self.mutation:
-                raise ValueError(f"Cannot infer 'type' of {self} when there is no mutation attached. "
-                                 f"Consider providing a type manually.")
+                raise ValueError(
+                    f"Cannot infer 'type' of {self} when there is no mutation attached. Consider providing a type manually."
+                )
 
             i = 0
             goal = self.index
@@ -130,22 +128,22 @@ def parse_proc_code(_proc_code: str) -> Optional[list[str | ArgumentType]]:
 
     if _proc_code is None:
         return None
-    token = ''
+    token = ""
     tokens = []
 
-    last_char = ''
+    last_char = ""
     for char in _proc_code:
-        if last_char == '%':
+        if last_char == "%":
             if char in "sb":
                 # If we've hit an %s or %b
                 token = token[:-1]
                 # Clip the % sign off the token
 
-                if token.endswith(' '):
+                if token.endswith(" "):
                     # A space is required before params, but this should not be part of the parsed output
                     token = token[:-1]
 
-                if token != '':
+                if token != "":
                     # Make sure not to append an empty token
                     tokens.append(token)
 
@@ -156,16 +154,17 @@ def parse_proc_code(_proc_code: str) -> Optional[list[str | ArgumentType]]:
                 elif token == "%s":
                     tokens.append(ArgTypes.NUMBER_OR_TEXT.value.dcopy())
 
-                token = ''
+                token = ""
                 continue
 
         token += char
         last_char = char
 
-    if token != '':
+    if token != "":
         tokens.append(token)
 
     return tokens
+
 
 def construct_proccode(*components: ArgumentType | ArgTypes | Argument | str) -> str:
     """
@@ -194,16 +193,24 @@ def construct_proccode(*components: ArgumentType | ArgTypes | Argument | str) ->
         else:
             raise TypeError(f"Unsupported component type: {type(comp)}")
 
-        result += ' '
+        result += " "
 
     return result
 
 
 class Mutation(base.BlockSubComponent):
-    def __init__(self, _tag_name: str = "mutation", _children: Optional[list] = None, _proc_code: Optional[str] = None,
-                 _is_warp: Optional[bool] = None, _arguments: Optional[list[Argument]] = None, _has_next: Optional[bool] = None,
-                 _argument_settings: Optional[ArgSettings] = None, *,
-                 _block: Optional[block.Block] = None):
+    def __init__(
+        self,
+        _tag_name: str = "mutation",
+        _children: Optional[list] = None,
+        _proc_code: Optional[str] = None,
+        _is_warp: Optional[bool] = None,
+        _arguments: Optional[list[Argument]] = None,
+        _has_next: Optional[bool] = None,
+        _argument_settings: Optional[ArgSettings] = None,
+        *,
+        _block: Optional[block.Block] = None,
+    ):
         """
         Mutation for Control:stop block and procedures
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Mutations
@@ -215,9 +222,7 @@ class Mutation(base.BlockSubComponent):
         if _argument_settings is None:
             if _arguments:
                 _argument_settings = ArgSettings(
-                    _arguments[0]._id is None,
-                    _arguments[0].name is None,
-                    _arguments[0].default is None
+                    _arguments[0]._id is None, _arguments[0].name is None, _arguments[0].default is None
                 )
             else:
                 _argument_settings = ArgSettings(False, False, False)
@@ -263,9 +268,11 @@ class Mutation(base.BlockSubComponent):
 
     @property
     def argument_settings(self) -> ArgSettings:
-        return ArgSettings(bool(commons.safe_get(self.argument_ids, 0)),
-                           bool(commons.safe_get(self.argument_names, 0)),
-                           bool(commons.safe_get(self.argument_defaults, 0)))
+        return ArgSettings(
+            bool(commons.safe_get(self.argument_ids, 0)),
+            bool(commons.safe_get(self.argument_names, 0)),
+            bool(commons.safe_get(self.argument_defaults, 0)),
+        )
 
     @property
     def parsed_proc_code(self) -> list[str | ArgumentType] | None:
@@ -275,7 +282,7 @@ class Mutation(base.BlockSubComponent):
         return parse_proc_code(self.proc_code)
 
     @staticmethod
-    def from_json(data: dict) -> Mutation:
+    def from_json(data: dict) -> Mutation:  # noqa: C901
         assert isinstance(data, dict)
 
         _tag_name = data.get("tagName", "mutation")
@@ -302,9 +309,9 @@ class Mutation(base.BlockSubComponent):
         if _argument_defaults is not None:
             assert isinstance(_argument_defaults, str)
             _argument_defaults = json.loads(_argument_defaults)
-        _argument_settings = ArgSettings(_argument_ids is not None,
-                                         _argument_names is not None,
-                                         _argument_defaults is not None)
+        _argument_settings = ArgSettings(
+            _argument_ids is not None, _argument_names is not None, _argument_defaults is not None
+        )
 
         # control_stop attrs
         _has_next = data.get("hasnext")
@@ -337,15 +344,17 @@ class Mutation(base.BlockSubComponent):
             "tagName": self.tag_name,
             "children": self.children,
         }
-        commons.noneless_update(_json, {
-            "proccode": self.proc_code,
-            "warp": commons.dumps_ifnn(self.is_warp),
-            "argumentids": commons.dumps_ifnn(self.argument_ids),
-            "argumentnames": commons.dumps_ifnn(self.argument_names),
-            "argumentdefaults": commons.dumps_ifnn(self.argument_defaults),
-
-            "hasNext": commons.dumps_ifnn(self.has_next)
-        })
+        commons.noneless_update(
+            _json,
+            {
+                "proccode": self.proc_code,
+                "warp": commons.dumps_ifnn(self.is_warp),
+                "argumentids": commons.dumps_ifnn(self.argument_ids),
+                "argumentnames": commons.dumps_ifnn(self.argument_names),
+                "argumentdefaults": commons.dumps_ifnn(self.argument_defaults),
+                "hasNext": commons.dumps_ifnn(self.has_next),
+            },
+        )
 
         return _json
 
@@ -370,12 +379,10 @@ class Mutation(base.BlockSubComponent):
                 # We can still work out argument defaults from parsing the proc code
                 if self.arguments[0].default is None:
                     _parsed = self.parsed_proc_code
-                    _arg_phs: Iterable[ArgumentType] = filter(lambda tkn: isinstance(tkn, ArgumentType),
-                                                              _parsed)
+                    _arg_phs: Iterable[ArgumentType] = filter(lambda tkn: isinstance(tkn, ArgumentType), _parsed)
                     for i, _arg_ph in enumerate(_arg_phs):
                         self.arguments[i].default = _arg_ph.default
 
             for _argument in self.arguments:
                 _argument.mutation = self
                 _argument.link_using_mutation()
-                
