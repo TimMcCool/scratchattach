@@ -873,6 +873,32 @@ class Session(BaseSiteComponent):
         except Exception:
             raise exceptions.FetchError()
 
+    def mystuff_classes_counts(self) -> tuple[int, int]:
+        """
+        Returns the number of open and ended classes owned by a teacher session.
+        If this is not a teacher session, (0, 0) is returned.
+        """
+        with requests.no_error_handling():
+            resp = requests.get("https://scratch.mit.edu/educators/classes/")
+
+        if resp.status_code == 403:
+            return 0, 0  # non-teacher account
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        sidebar = soup.find("div", {"id": "sidebar", "class": "tabs-index"})
+        if not sidebar:
+            return 0, 0
+
+        count_elem = sidebar.find("span", {"data-content": "classroom-count"})
+        ended_elem = sidebar.find("span", {"data-content": "closed-count"})
+        if not count_elem or not ended_elem:
+            return 0, 0
+
+        count = str(count_elem.text).strip()
+        ended_count = str(ended_elem.text).strip()
+
+        return int(count), int(ended_count)
+
     def mystuff_classes(self, mode: str = "Last created", page: Optional[int] = None) -> list[classroom.Classroom]:
         if not self.is_teacher:
             self.update()
