@@ -12,13 +12,27 @@ class Block(base.SpriteSubComponent):
     """
     Represents a block in the scratch editor, as a subcomponent of a sprite.
     """
-    _id: Optional[str] = None
-    def __init__(self, _opcode: str, _shadow: bool = False, _top_level: Optional[bool] = None,
-                 _mutation: Optional[mutation.Mutation] = None, _fields: Optional[dict[str, field.Field]] = None,
-                 _inputs: Optional[dict[str, inputs.Input]] = None, x: int = 0, y: int = 0, pos: Optional[tuple[int, int]] = None,
 
-                 _next: Optional[Block] = None, _parent: Optional[Block] = None,
-                 *, _next_id: Optional[str] = None, _parent_id: Optional[str] = None, _sprite: commons.SpriteInput = build_defaulting.SPRITE_DEFAULT):
+    _id: Optional[str] = None
+
+    def __init__(
+        self,
+        _opcode: str,
+        _shadow: bool = False,
+        _top_level: Optional[bool] = None,
+        _mutation: Optional[mutation.Mutation] = None,
+        _fields: Optional[dict[str, field.Field]] = None,
+        _inputs: Optional[dict[str, inputs.Input]] = None,
+        x: int = 0,
+        y: int = 0,
+        pos: Optional[tuple[int, int]] = None,
+        _next: Optional[Block] = None,
+        _parent: Optional[Block] = None,
+        *,
+        _next_id: Optional[str] = None,
+        _parent_id: Optional[str] = None,
+        _sprite: commons.SpriteInput = build_defaulting.SPRITE_DEFAULT,
+    ):
         # Defaulting for args
         if _fields is None:
             _fields = {}
@@ -166,7 +180,7 @@ class Block(base.SpriteSubComponent):
         # Let's just automatically assign ourselves an id
         self.sprite.add_block(self)
         return self._id
-    
+
     @id.setter
     def id(self, value: str) -> None:
         self._id = value
@@ -229,7 +243,7 @@ class Block(base.SpriteSubComponent):
         Recursive getter method to get all previous blocks in the blockchain (until hitting a top-level block)
         """
         # TODO: check if this hits the recursion limit
-        if self.parent is None: # TODO: use is_top_level?
+        if self.parent is None:  # TODO: use is_top_level?
             return [self]
 
         return [self] + self.parent.previous_chain
@@ -289,7 +303,7 @@ class Block(base.SpriteSubComponent):
         """
         Works out what category of block this is as a string, using the opcode. Does not perform validation
         """
-        return self.opcode.split('_')[0]
+        return self.opcode.split("_")[0]
 
     @property
     def is_input(self):
@@ -333,7 +347,7 @@ class Block(base.SpriteSubComponent):
         return None
 
     @property
-    def turbowarp_block_opcode(self):
+    def turbowarp_block_opcode(self):  # noqa: C901
         """
         :return: The 'opcode' if this is a turbowarp block: e.g.
         - log
@@ -349,13 +363,13 @@ class Block(base.SpriteSubComponent):
             if self.mutation:
                 if self.mutation.proc_code:
                     # \u200B is a zero-width space
-                    if self.mutation.proc_code == "\u200B\u200Bbreakpoint\u200B\u200B":
+                    if self.mutation.proc_code == "\u200b\u200bbreakpoint\u200b\u200b":
                         return "breakpoint"
-                    elif self.mutation.proc_code == "\u200B\u200Blog\u200B\u200B %s":
+                    elif self.mutation.proc_code == "\u200b\u200blog\u200b\u200b %s":
                         return "log"
-                    elif self.mutation.proc_code == "\u200B\u200Berror\u200B\u200B %s":
+                    elif self.mutation.proc_code == "\u200b\u200berror\u200b\u200b %s":
                         return "error"
-                    elif self.mutation.proc_code == "\u200B\u200Bwarn\u200B\u200B %s":
+                    elif self.mutation.proc_code == "\u200b\u200bwarn\u200b\u200b %s":
                         return "warn"
 
         elif self.opcode == "argument_reporter_boolean":
@@ -414,8 +428,9 @@ class Block(base.SpriteSubComponent):
         else:
             _mutation = None
 
-        return Block(_opcode, _shadow, _top_level, _mutation, _fields, _inputs, _x, _y, _next_id=_next_id,
-                     _parent_id=_parent_id)
+        return Block(
+            _opcode, _shadow, _top_level, _mutation, _fields, _inputs, _x, _y, _next_id=_next_id, _parent_id=_parent_id
+        )
 
     def to_json(self) -> dict:
         """
@@ -434,24 +449,28 @@ class Block(base.SpriteSubComponent):
         }
         _comment = self.comment
         if _comment:
-            commons.noneless_update(_json, {
-                "comment": _comment.id
-            })
+            commons.noneless_update(_json, {"comment": _comment.id})
 
         if self.is_top_level:
-            commons.noneless_update(_json, {
-                "x": self.x,
-                "y": self.y,
-            })
+            commons.noneless_update(
+                _json,
+                {
+                    "x": self.x,
+                    "y": self.y,
+                },
+            )
 
         if self.mutation is not None:
-            commons.noneless_update(_json, {
-                "mutation": self.mutation.to_json(),
-            })
+            commons.noneless_update(
+                _json,
+                {
+                    "mutation": self.mutation.to_json(),
+                },
+            )
 
         return _json
 
-    def link_using_sprite(self, link_subs: bool = True):
+    def link_using_sprite(self, link_subs: bool = True):  # noqa: C901
         """
         Link this block to various other blocks once the sprite has been assigned
         """
@@ -483,20 +502,18 @@ class Block(base.SpriteSubComponent):
 
                     if _type == field.Types.VARIABLE:
                         # Create a new variable
-                        new_value = vlb.Variable(commons.gen_id(),
-                                                 _field.value)
+                        new_value = vlb.Variable(commons.gen_id(), _field.value)
                     elif _type == field.Types.LIST:
                         # Create a list
-                        new_value = vlb.List(commons.gen_id(),
-                                             _field.value)
+                        new_value = vlb.List(commons.gen_id(), _field.value)
                     elif _type == field.Types.BROADCAST:
                         # Create a broadcast
-                        new_value = vlb.Broadcast(commons.gen_id(),
-                                                  _field.value)
+                        new_value = vlb.Broadcast(commons.gen_id(), _field.value)
                     else:
                         # Something probably went wrong
                         warnings.warn(
-                            f"Could not find {_field.id!r} in {self.sprite}. Can't create a new {_type} so we gave a warning")
+                            f"Could not find {_field.id!r} in {self.sprite}. Can't create a new {_type} so we gave a warning"
+                        )
 
                     if new_value is not None:
                         self.sprite.add_local_global(new_value)
@@ -540,9 +557,7 @@ class Block(base.SpriteSubComponent):
         return attaching_block
 
     def duplicate_chain(self) -> Block:
-        return self.bottom_level_block.attach_chain(
-            *map(Block.dcopy, self.attached_chain)
-        )
+        return self.bottom_level_block.attach_chain(*map(Block.dcopy, self.attached_chain))
 
     def slot_above(self, new: Block) -> Block:
         """
