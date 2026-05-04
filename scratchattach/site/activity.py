@@ -89,61 +89,57 @@ class Activity(BaseSiteComponent):
     def _parts_simple(self, verb: str, obj: str):
         return [str(self.actor_username), verb, obj]
 
+    def _parts_comment(self) -> list[str]:
+        ret = [str(self.actor_username), "commented on"]
+
+        if self.comment_type not in (0, 1, 2):
+            raise ValueError(f"Unknown comment type: {self.comment_type}")
+        ret.append(
+            {
+                0: f"-P {self.comment_obj_title!r} ({self.comment_obj_id}",
+                1: f"-U {self.comment_obj_title}",
+                2: f"-S {self.comment_obj_title!r} ({self.comment_obj_id}",
+            }[self.comment_type]
+        )
+        ret[-1] += f"#{self.comment_id})"
+
+        ret.append(str(html.unescape(str(self.comment_fragment))))
+
+        return ret
+
     @property
     def parts(self):
         """
         Return format: [actor username] + N * [action, object]
         :return: A list of parts of the message. Join the parts to get a readable version, which is done with str(activity)
         """
+        SIMPLE_SOLNS = {
+            ActivityTypes.loveproject: ("loved", f"-P {self.title!r} ({self.project_id})"),
+            ActivityTypes.favoriteproject: ("favorited", f"-P {self.project_title!r} ({self.project_id})"),
+            ActivityTypes.becomecurator: ("now curating", f"-S {self.title!r} ({self.gallery_id})"),
+            ActivityTypes.followuser: ("followed", f"-U {self.followed_username}"),
+            ActivityTypes.followstudio: ("followed", f"-S {self.title!r} ({self.gallery_id})"),
+            ActivityTypes.shareproject: (
+                "reshared" if self.is_reshare else "shared",
+                f"-P {self.title!r} ({self.project_id})",
+            ),
+            ActivityTypes.remixproject: (
+                "remixed",
+                f"-P {self.parent_title!r} ({self.parent_id}) as -P {self.title!r} ({self.project_id})",
+            ),
+            ActivityTypes.becomeownerstudio: ("became owner of", f"-S {self.gallery_title!r} ({self.gallery_id})"),
+            ActivityTypes.curatorinvite: ("invited you to curate", f"-S {self.title!r} ({self.gallery_id})"),
+            ActivityTypes.forumpost: ("posted in", f"-F {self.topic_title} ({self.topic_id})"),
+            ActivityTypes.updatestudio: ("updated", f"-S {self.gallery_title} ({self.gallery_id})"),
+            ActivityTypes.createstudio: ("created", f"-S {self.gallery_title} ({self.gallery_id})"),
+            None: (),  # to satisfy type checker; () is falsy
+        }
+        if args := SIMPLE_SOLNS.get(self.type):
+            return self._parts_simple(*args)
+
         match self.type:
-            case ActivityTypes.loveproject:
-                return self._parts_simple("loved", f"-P {self.title!r} ({self.project_id})")
-            case ActivityTypes.favoriteproject:
-                return self._parts_simple("favorited", f"-P {self.project_title!r} ({self.project_id})")
-            case ActivityTypes.becomecurator:
-                return self._parts_simple("now curating", f"-S {self.title!r} ({self.gallery_id})")
-            case ActivityTypes.followuser:
-                return self._parts_simple("followed", f"-U {self.followed_username}")
-            case ActivityTypes.followstudio:
-                return self._parts_simple("followed", f"-S {self.title!r} ({self.gallery_id})")
-            case ActivityTypes.shareproject:
-                return self._parts_simple(
-                    "reshared" if self.is_reshare else "shared",
-                    f"-P {self.title!r} ({self.project_id})",
-                )
-            case ActivityTypes.remixproject:
-                return self._parts_simple(
-                    "remixed", f"-P {self.parent_title!r} ({self.parent_id}) as -P {self.title!r} ({self.project_id})"
-                )
-            case ActivityTypes.becomeownerstudio:
-                return self._parts_simple("became owner of", f"-S {self.gallery_title!r} ({self.gallery_id})")
-
             case ActivityTypes.addcomment:
-                ret = [self.actor_username, "commented on"]
-
-                match self.comment_type:
-                    case 0:
-                        # project
-                        ret.append(f"-P {self.comment_obj_title!r} ({self.comment_obj_id}")
-                    case 1:
-                        # user
-                        ret.append(f"-U {self.comment_obj_title}")
-
-                    case 2:
-                        # studio
-                        ret.append(f"-S {self.comment_obj_title!r} ({self.comment_obj_id}")
-
-                    case _:
-                        raise ValueError(f"Unknown comment type: {self.comment_type}")
-
-                ret[-1] += f"#{self.comment_id})"
-
-                ret.append(f"{html.unescape(self.comment_fragment)}")
-
-                return ret
-
-            case ActivityTypes.curatorinvite:
-                return self._parts_simple("invited you to curate", f"-S {self.title!r} ({self.gallery_id})")
+                return self._parts_comment()
 
             case ActivityTypes.userjoin:
                 # This is also the first message you get - 'Welcome to Scratch'
@@ -152,15 +148,6 @@ class Activity(BaseSiteComponent):
             case ActivityTypes.studioactivity:
                 # the actor username should be systemuser
                 return [str(self.actor_username), "Studio activity", "", f"-S {self.title!r} ({self.gallery_id})"]
-
-            case ActivityTypes.forumpost:
-                return self._parts_simple("posted in", f"-F {self.topic_title} ({self.topic_id})")
-
-            case ActivityTypes.updatestudio:
-                return self._parts_simple("updated", f"-S {self.gallery_title} ({self.gallery_id})")
-
-            case ActivityTypes.createstudio:
-                return self._parts_simple("created", f"-S {self.gallery_title} ({self.gallery_id})")
 
             case ActivityTypes.promotetomanager:
                 return [
@@ -402,7 +389,6 @@ class Activity(BaseSiteComponent):
         # TODO: make use of self.target_project/target_user/target_studio here.
         # Also why is there no use of studio here??? This needs to be tested
         if self.comment_type == 0:
-            print("coi", self.comment_obj_id, type(self.comment_obj_id))
             if self.comment_obj_id is None:
                 return None
 
