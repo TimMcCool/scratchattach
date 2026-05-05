@@ -75,9 +75,8 @@ def test_user():
     assert user.loves(limit=1, offset=loves_count - 1)[0].title == "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python"
     favorites_count = user.favorites_count()
     assert favorites_count > 0
-    assert (
-        user.favorites(limit=1, offset=favorites_count - 1)[0].title == "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python"
-    )
+    assert user.favorites(limit=1, offset=favorites_count - 1)[0].title == "Unshared with comments"
+
     # toggle commenting
     # viewed projects
     # set pfp, bio, wiwo, set featured, forum_signature
