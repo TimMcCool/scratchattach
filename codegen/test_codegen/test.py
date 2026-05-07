@@ -1,11 +1,50 @@
-from typing import Iterable, TypeVar
+from typing import Iterable, TypeVar, ParamSpec, Generic, Any, TYPE_CHECKING, Optional, cast
+from collections.abc import Callable
 
 import time
 
 IS_ASYNC = True
 if IS_ASYNC:
-    from typing import Awaitable
+    from collections.abc import Awaitable
     import asyncio
+else:
+    import threading
+    from dataclasses import dataclass
+
+
+P = ParamSpec("P")
+O = TypeVar("O")
+
+if "IS_ASYNC":
+    if TYPE_CHECKING:
+        import threading
+        from dataclasses import dataclass
+
+        @dataclass
+        class Task(Generic[O]):
+            out: Optional[threading.Thread]
+            thread: Optional[threading.Thread]
+
+
+if "IS_ASYNC":
+
+    def create_task(function: Callable[P, O], *args: P.args, **kwargs: P.kwargs) -> O:
+        return function(*args, **kwargs)
+else:
+
+    @dataclass
+    class Task(Generic[O]):  # type: ignore[no-redef]
+        out: Optional[O]
+        thread: Optional[threading.Thread]
+
+    def create_task(function: Callable[P, O], *args: P.args, **kwargs: P.kwargs) -> Task[O]:  # type: ignore[misc]
+        task: Task[O] = Task(None, None)  # type: ignore[arg-type]
+
+        def wrapper(*args, **kwargs):
+            task.out = function(*args, **kwargs)
+
+        task.thread = threading.Thread(target=wrapper, args=args, kwargs=kwargs)
+        return task
 
 
 def sleep_prim_sync(delay: int | float):
@@ -19,12 +58,23 @@ async def sleep_prim(delay: int | float):
 T = TypeVar("T")
 
 
-def gather_prim_sync(*values: T) -> list[T]:
-    return list(values)
+def gather_prim_sync(*tasks: Task[T]) -> list[T]:
+    values: list[T] = []
+    threads: list[threading.Thread] = []
+    for task in tasks:
+        if task.thread:
+            task.thread.start()
+
+    for task in tasks:
+        if task.thread:
+            task.thread.join()
+        values.append(cast(T, task.out))
+
+    return values
 
 
-async def gather_prim(*coros_or_futures: Awaitable[T]) -> list[T]:
-    return await asyncio.gather(*coros_or_futures)
+async def gather_prim(*tasks: Awaitable[T]) -> list[T]:
+    return await asyncio.gather(*tasks)
 
 
 async def fetch_user_data(user_id: int, delay: int) -> dict:
@@ -41,9 +91,9 @@ async def main():
     print("--- Fetching data concurrently ---")
 
     coroutines = [
-        fetch_user_data(user_id=1, delay=2),
-        fetch_user_data(user_id=2, delay=3),
-        fetch_user_data(user_id=3, delay=1),
+        create_task(fetch_user_data, user_id=1, delay=2),
+        create_task(fetch_user_data, user_id=2, delay=3),
+        create_task(fetch_user_data, user_id=3, delay=1),
     ]
 
     results = await gather_prim(*coroutines)
