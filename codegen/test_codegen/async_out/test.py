@@ -10,14 +10,6 @@ else:
     from dataclasses import dataclass
 P = ParamSpec('P')
 O = TypeVar('O')
-if TYPE_CHECKING:
-    import threading
-    from dataclasses import dataclass
-
-    @dataclass
-    class Task(Generic[O]):
-        out: Optional[threading.Thread]
-        thread: Optional[threading.Thread]
 
 def create_task(function: Callable[P, O], *args: P.args, **kwargs: P.kwargs) -> O:
     return function(*args, **kwargs)

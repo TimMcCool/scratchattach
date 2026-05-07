@@ -11,6 +11,11 @@ if TYPE_CHECKING:
     from _typeshed import StrPath
 
 
+PRE_CODEGEN_NAME = "IS_PRE_CODEGEN"
+STATICALLY_ASYNC_NAME = "IS_ASYNC"
+DYNAMICALLY_ASYNC_NAME = "IS_ASYNC"
+
+
 class CodegenConfig(TypedDict):
     sync_target_directory: str
     async_target_directory: str
@@ -28,9 +33,15 @@ class AsyncCodegenNodeTransformer(ast.NodeTransformer):
     def _is_statically_async_literal(self, node: ast.AST) -> bool:
         return isinstance(node, ast.Constant) and node.value == STATICALLY_ASYNC_NAME
 
+    def _is_pre_codegen_literal(self, node: ast.AST) -> bool:
+        return isinstance(node, ast.Constant) and node.value == PRE_CODEGEN_NAME
+
     def _match_static_condition(self, test: ast.AST) -> bool | None:
         if self._is_statically_async_literal(test):
             return True
+
+        if self._is_pre_codegen_literal(test):
+            return False
 
         if (
             isinstance(test, ast.UnaryOp)
@@ -38,6 +49,13 @@ class AsyncCodegenNodeTransformer(ast.NodeTransformer):
             and self._is_statically_async_literal(test.operand)
         ):
             return False
+
+        if (
+            isinstance(test, ast.UnaryOp)
+            and isinstance(test.op, ast.Not)
+            and self._is_pre_codegen_literal(test.operand)
+        ):
+            return True
 
         return None
 
@@ -48,10 +66,6 @@ class AsyncCodegenNodeTransformer(ast.NodeTransformer):
             return node.body if condition_value else node.orelse
 
         return node
-
-
-STATICALLY_ASYNC_NAME = "IS_ASYNC"
-DYNAMICALLY_ASYNC_NAME = "IS_ASYNC"
 
 
 class SyncCodegenNodeTransformer(ast.NodeTransformer):
@@ -98,16 +112,29 @@ class SyncCodegenNodeTransformer(ast.NodeTransformer):
     def _is_statically_async_literal(self, node: ast.AST) -> bool:
         return isinstance(node, ast.Constant) and node.value == STATICALLY_ASYNC_NAME
 
+    def _is_pre_codegen_literal(self, node: ast.AST) -> bool:
+        return isinstance(node, ast.Constant) and node.value == PRE_CODEGEN_NAME
+
     def _match_static_condition(self, test: ast.AST) -> bool | None:
         if self._is_statically_async_literal(test):
-            return True
+            return False
+
+        if self._is_pre_codegen_literal(test):
+            return False
 
         if (
             isinstance(test, ast.UnaryOp)
             and isinstance(test.op, ast.Not)
             and self._is_statically_async_literal(test.operand)
         ):
-            return False
+            return True
+
+        if (
+            isinstance(test, ast.UnaryOp)
+            and isinstance(test.op, ast.Not)
+            and self._is_pre_codegen_literal(test.operand)
+        ):
+            return True
 
         return None
 
@@ -115,7 +142,7 @@ class SyncCodegenNodeTransformer(ast.NodeTransformer):
         self.generic_visit(node)
 
         if (condition_value := self._match_static_condition(node.test)) is not None:
-            return node.body if not condition_value else node.orelse
+            return node.body if condition_value else node.orelse
 
         return node
 

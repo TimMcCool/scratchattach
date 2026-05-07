@@ -14,10 +14,10 @@ O = TypeVar('O')
 @dataclass
 class Task(Generic[O]):
     out: Optional[O]
-    thread: Optional[threading.Thread]
+    thread: threading.Thread
 
 def create_task(function: Callable[P, O], *args: P.args, **kwargs: P.kwargs) -> Task[O]:
-    task: Task[O] = Task(None, None)
+    task: Task[O] = Task(None, cast(threading.Thread, None))
 
     def wrapper(*args, **kwargs):
         task.out = function(*args, **kwargs)
@@ -30,13 +30,10 @@ T = TypeVar('T')
 
 def gather_prim(*tasks: Task[T]) -> list[T]:
     values: list[T] = []
-    threads: list[threading.Thread] = []
     for task in tasks:
-        if task.thread:
-            task.thread.start()
+        task.thread.start()
     for task in tasks:
-        if task.thread:
-            task.thread.join()
+        task.thread.join()
         values.append(cast(T, task.out))
     return values
 

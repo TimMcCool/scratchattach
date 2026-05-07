@@ -15,15 +15,15 @@ else:
 P = ParamSpec("P")
 O = TypeVar("O")
 
-if "IS_ASYNC":
+if "IS_PRE_CODEGEN":
     if TYPE_CHECKING:
         import threading
         from dataclasses import dataclass
 
         @dataclass
         class Task(Generic[O]):
-            out: Optional[threading.Thread]
-            thread: Optional[threading.Thread]
+            out: Optional[O]
+            thread: threading.Thread
 
 
 if "IS_ASYNC":
@@ -35,10 +35,10 @@ else:
     @dataclass
     class Task(Generic[O]):  # type: ignore[no-redef]
         out: Optional[O]
-        thread: Optional[threading.Thread]
+        thread: threading.Thread
 
     def create_task(function: Callable[P, O], *args: P.args, **kwargs: P.kwargs) -> Task[O]:  # type: ignore[misc]
-        task: Task[O] = Task(None, None)  # type: ignore[arg-type]
+        task: Task[O] = Task(None, cast(threading.Thread, None))  # type: ignore[arg-type]
 
         def wrapper(*args, **kwargs):
             task.out = function(*args, **kwargs)
@@ -60,14 +60,11 @@ T = TypeVar("T")
 
 def gather_prim_sync(*tasks: Task[T]) -> list[T]:
     values: list[T] = []
-    threads: list[threading.Thread] = []
     for task in tasks:
-        if task.thread:
-            task.thread.start()
+        task.thread.start()
 
     for task in tasks:
-        if task.thread:
-            task.thread.join()
+        task.thread.join()
         values.append(cast(T, task.out))
 
     return values
