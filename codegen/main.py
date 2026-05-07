@@ -6,6 +6,7 @@ from typing import Any, TypedDict, cast, Optional, TYPE_CHECKING
 import ast
 from pathlib import Path
 import json
+import subprocess
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
@@ -198,6 +199,19 @@ def codegen_for_whole_directory(directory: "StrPath"):
         (sync_code, async_code) = (ast.unparse(sync_ast), ast.unparse(async_ast))
         (sync_target_directory / path.name).write_text(sync_code)
         (async_target_directory / path.name).write_text(async_code)
+    subprocess.run(
+        [
+            "python",
+            "-m",
+            "ruff",
+            "format",
+            str(sync_target_directory.resolve()),
+            str(async_target_directory.resolve()),
+        ],
+        capture_output=True,
+        text=True,
+    )
+
     os.chdir(prev_cwd)
 
 
