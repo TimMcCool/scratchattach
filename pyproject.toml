@@ -17,6 +17,7 @@ dependencies = [
   "browser_cookie3",
   "aiohttp",
   "rich",
+  "httpx>=0.28.1",
 ]
 readme = "README.md"
 license = "MIT"
