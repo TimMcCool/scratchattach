@@ -17,6 +17,7 @@ dependencies = [
   "browser_cookie3",
   "aiohttp",
   "rich",
+  "httpx>=0.28.1",
 ]
 readme = "README.md"
 license = "MIT"
@@ -96,6 +97,11 @@ max-complexity = 10
 
 [tool.uv]
 config-settings = { editable_mode = "compat" }
+
+[tool.uv.workspace]
+members = [
+    "codegen",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
