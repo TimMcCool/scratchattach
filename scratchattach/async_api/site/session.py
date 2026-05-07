@@ -27,6 +27,22 @@ class Session:
     _login_ip: Optional[str] = None
     _created_at: Optional[datetime.datetime] = None
 
+    _is_banned: Optional[bool] = None
+    _should_vpn: Optional[bool] = None
+    _joined_at: Optional[datetime.datetime] = None
+    _email: Optional[str] = None
+    # not datetime.date as that could be misleading as there is no 'day' field
+    _birthyear: Optional[int] = None
+    _birthmonth: Optional[int] = None
+    _gender: Optional[str] = None
+    _state: Optional[str] = None
+
+    # TODO: it would be ideal to actually parse these into their own dataclasses
+    # _flags: Optional[types.SessionFlagsDict] = None
+    # _permissions: Optional[types.SessionPermissionsDict] = None
+
+    # TODO: membership booleans
+
     def __repr__(self) -> str:
         return "-L async session"
 
@@ -51,11 +67,24 @@ class Session:
         resp = await self.client.get("https://scratch.mit.edu/session/")
         resp.raise_for_status()
 
-        data = resp.json()
-        if "user" not in data:
+        data: types.SessionDict = resp.json()
+        user = data.get("user")
+        if user is None:
             raise err.AuthenticationError("Could not retrieve the associated user for the session. Is your session id valid?")
 
-        print(f"Session.update, {data=}")
+        self._user_id = user["id"]
+        self._is_banned = user["banned"]
+        self._should_vpn = user["should_vpn"]
+        self._username = user["username"]
+        self._xtoken = user["token"]
+        # skipping thumbnailurl as it can be inferred from userid
+        # TODO: consider making functions to convert thumbnail urls to ids
+        self._joined_at = datetime.datetime.fromisoformat(user["dateJoined"])
+        self._email = user["email"]
+        self._birthyear = user["birthYear"]
+        self._birthmonth = user["birthMonth"]
+        self._gender = user["gender"]
+        self._state = user["state"]
 
 
 def _make_default_client() -> httpx.AsyncClient:

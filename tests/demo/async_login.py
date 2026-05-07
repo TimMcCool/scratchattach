@@ -10,6 +10,7 @@ load_dotenv()
 async def main():
     # resp = await sa.login(os.environ["SADEMOU"] + "hello", os.environ["SADEMOP"])
     sess = await sa.login_by_id(os.environ["SADEMOID"])
+    __import__("pprint").pprint(sess.__dict__)
 
 
 if __name__ == "__main__":
