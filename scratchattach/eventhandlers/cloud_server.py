@@ -131,18 +131,30 @@ class TwCloudSocket(WebSocket):
             if self.server.check_for_ip_ban(self):
                 return
 
-            data = json.loads(self.data)
+            try:
+                data = json.loads(self.data)
+            except json.decoder.JSONDecodeError:
+                print(f"Warning! Client {self.address[0] + ":" + str(self.address[1])} sent invalid JSON to the server. ",
+                      "The client may be unsafe, please stay alert."
+                     )
             print(data)
 
-            if data["method"] == "set":
-                self.handle_set(data)
-            elif data["method"] == "handshake":
-                self.handle_handshake(data)
-            else:
+            try:
+                if data["method"] == "set":
+                    self.handle_set(data)
+                elif data["method"] == "handshake":
+                    self.handle_handshake(data)
+                else:
+                    print(
+                        "Error:",
+                        self.address[0] + ":" + str(self.address[1]),
+                        "sent a message without providing a valid method (set, handshake)",
+                    )
+            except KeyError:
                 print(
-                    "Error:",
-                    self.address[0] + ":" + str(self.address[1]),
-                    "sent a message without providing a valid method (set, handshake)",
+                        "Error:",
+                        self.address[0] + ":" + str(self.address[1]),
+                        "sent a message without providing a valid method (set, handshake)",
                 )
 
         except Exception as e:
@@ -344,7 +356,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         self.running = True
 
     def stop(self, wait_call_threads: bool = True):
-        BaseEventHandler.stop(self, wait_call_threads)
+        BaseEventHandler.stop(self, wait_call_threads) # wait_call_threads does not exist in BaseEventHandler.stop
         self.close()
 
 
