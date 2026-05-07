@@ -137,9 +137,17 @@ class TwCloudSocket(WebSocket):
                 print(f"Warning! Client {self.address[0] + ":" + str(self.address[1])} sent invalid JSON to the server. ",
                       "The client may be unsafe, please stay alert."
                      )
-            print(data)
+                return
 
-            try:
+            print(f"Data recieved: {data}")
+            if data == {}:
+                print(
+                    "Error:",
+                    self.address[0] + ":" + str(self.address[1]),
+                    "sent a blank JSON message. If this seems suspicious, ban the IP.",
+                )
+                return
+            if 'method' in data:
                 if data["method"] == "set":
                     self.handle_set(data)
                 elif data["method"] == "handshake":
@@ -149,16 +157,18 @@ class TwCloudSocket(WebSocket):
                         "Error:",
                         self.address[0] + ":" + str(self.address[1]),
                         "sent a message without providing a valid method (set, handshake)",
+                        f"but provided method {list(data.values())[0]} instead.",
                     )
-            except KeyError:
+            else:
                 print(
-                        "Error:",
-                        self.address[0] + ":" + str(self.address[1]),
-                        "sent a message without providing a valid method (set, handshake)",
+                    "Error:",
+                    self.address[0] + ":" + str(self.address[1]),
+                    "sent a message without providing a valid 'method' key,",
+                    f"but provided key {list(data.keys())[0]} instead.",
                 )
 
         except Exception as e:
-            print("Internal error in handleMessage:", e, traceback.format_exc())
+            print("Internal error in handleMessage:", e, "\n", traceback.format_exc())
 
     def handleConnected(self):
         if not self.server.running:
