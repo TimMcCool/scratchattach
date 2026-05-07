@@ -9,8 +9,7 @@ load_dotenv()
 
 async def main():
     # resp = await sa.login(os.environ["SADEMOU"] + "hello", os.environ["SADEMOP"])
-    resp = await sa.login_by_id(os.environ["SADEMOID"])
-    print(resp)
+    sess = await sa.login_by_id(os.environ["SADEMOID"])
 
 
 if __name__ == "__main__":
