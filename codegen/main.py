@@ -25,6 +25,34 @@ class AsyncCodegenNodeTransformer(ast.NodeTransformer):
 
         return node
 
+    def _is_statically_async_literal(self, node: ast.AST) -> bool:
+        return isinstance(node, ast.Constant) and node.value == STATICALLY_ASYNC_NAME
+
+    def _match_static_condition(self, test: ast.AST) -> bool | None:
+        if self._is_statically_async_literal(test):
+            return True
+
+        if (
+            isinstance(test, ast.UnaryOp)
+            and isinstance(test.op, ast.Not)
+            and self._is_statically_async_literal(test.operand)
+        ):
+            return False
+
+        return None
+
+    def visit_If(self, node: ast.If) -> Any:
+        self.generic_visit(node)
+
+        if (condition_value := self._match_static_condition(node.test)) is not None:
+            return node.body if condition_value else node.orelse
+
+        return node
+
+
+STATICALLY_ASYNC_NAME = "IS_ASYNC"
+DYNAMICALLY_ASYNC_NAME = "IS_ASYNC"
+
 
 class SyncCodegenNodeTransformer(ast.NodeTransformer):
     def visit_Assign(self, node: ast.Assign) -> Any:
@@ -32,7 +60,7 @@ class SyncCodegenNodeTransformer(ast.NodeTransformer):
 
         if node.targets:
             first_target = node.targets[0]
-            if isinstance(first_target, ast.Name) and first_target.id == "IS_ASYNC":
+            if isinstance(first_target, ast.Name) and first_target.id == DYNAMICALLY_ASYNC_NAME:
                 node.value = ast.Constant(value=False, kind=None)
 
         return node
@@ -66,6 +94,30 @@ class SyncCodegenNodeTransformer(ast.NodeTransformer):
         new_node = ast.FunctionDef(**{field: getattr(node, field) for field in node._fields})
 
         return ast.copy_location(new_node, node)
+
+    def _is_statically_async_literal(self, node: ast.AST) -> bool:
+        return isinstance(node, ast.Constant) and node.value == STATICALLY_ASYNC_NAME
+
+    def _match_static_condition(self, test: ast.AST) -> bool | None:
+        if self._is_statically_async_literal(test):
+            return True
+
+        if (
+            isinstance(test, ast.UnaryOp)
+            and isinstance(test.op, ast.Not)
+            and self._is_statically_async_literal(test.operand)
+        ):
+            return False
+
+        return None
+
+    def visit_If(self, node: ast.If) -> Any:
+        self.generic_visit(node)
+
+        if (condition_value := self._match_static_condition(node.test)) is not None:
+            return node.body if not condition_value else node.orelse
+
+        return node
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
         self.generic_visit(node)
