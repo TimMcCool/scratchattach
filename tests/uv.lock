@@ -882,7 +882,7 @@ wheels = [
 [[package]]
 name = "scratchattach"
 version = "3.0.0b3"
-source = { directory = "../" }
+source = { editable = "../" }
 dependencies = [
     { name = "aiohttp" },
     { name = "browser-cookie3" },
@@ -975,7 +975,7 @@ requires-dist = [
     { name = "pytest", specifier = ">=9.0.3" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "ruff", specifier = ">=0.15.12" },
-    { name = "scratchattach", directory = "../" },
+    { name = "scratchattach", editable = "../" },
 ]
 
 [[package]]

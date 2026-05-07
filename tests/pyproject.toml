@@ -17,5 +17,8 @@ dependencies = [
 requires = ["uv_build>=0.10.10,<0.11.0"]
 build-backend = "uv_build"
 
+[tool.uv]
+config-settings = { editable_mode = "compat" }
+
 [tool.uv.sources]
-scratchattach = { path = "../" }
+scratchattach = { path = "../", editable = true }

@@ -15,7 +15,7 @@ import warnings
 import zlib
 
 from dataclasses import dataclass, field
-from typing import Optional, TypeVar, TYPE_CHECKING, overload, Any, Union, cast
+from typing import Literal, Optional, TypeVar, TYPE_CHECKING, overload, Any, Union, cast
 from contextlib import contextmanager
 from threading import local
 
@@ -317,6 +317,36 @@ class Session(BaseSiteComponent):
         Sends a logout request to scratch. (Might not do anything, might log out this account on other ips/sessions.)
         """
         requests.post("https://scratch.mit.edu/accounts/logout/", headers=self._headers, cookies=self._cookies)
+
+    def set_featured_data(self, project_id: Optional[int] | Literal[""], project_label: Optional[int] | Literal[""] = None):
+        """
+        Sends a request to change your featured project area.
+
+        Positional arguments:
+            project_id: None -> don't change; empty string -> set to latest project (this is what most accounts have); int -> set the featured project to the one with the corresponding ID. If you do not own that project, an error is raised.
+            project_lavel: None -> don't change; empty string -> "Featured project"; 0 -> "Featured Tutorial"; 1 -> "Work in progress"; 2 -> "Remix this!"; 3 -> "My favorite things"; 4 -> "Why I scratch"
+
+        Returns:
+            list<scratch.activity.Activity>: List that contains all messages as Activity objects.
+
+        """
+        # TODO: consider using an enum here for project label and match that with user.get_featured_data
+        payload: dict[str, int | str] = {}
+        if project_label is not None:
+            payload["featured_project_label"] = str(project_label)
+        if project_id is not None:
+            payload["featured_project"] = project_id
+
+        data = requests.put(
+            f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
+            json=payload,
+            headers=self._headers,
+            cookies=self._cookies,
+        ).json()
+        if errors := data.get("errors"):
+            raise Exception(f"Backend responded with error: {errors[0] if len(errors) == 1 else errors}")
+
+        return data
 
     @property
     def ocular_headers(self) -> dict[str, str]:

@@ -94,6 +94,9 @@ select = [
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
+[tool.uv]
+config-settings = { editable_mode = "compat" }
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["scratchattach*"]
