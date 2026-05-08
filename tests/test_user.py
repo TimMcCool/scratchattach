@@ -73,7 +73,7 @@ def test_user():
     assert loves_count > 0
     assert (user.loves(limit=1, offset=loves_count - 1)[0].title ==
             "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python")
-    favorites_count = user.favorites_count()
+    favorites_count = user.favorites_count() + 1 # "Unshared with comments"
     assert favorites_count > 0
     assert (user.favorites(limit=1, offset=favorites_count - 1)[0].title ==
             "⚙️ scratchattach 2.0 ⚙️ Scratch API Wrapper for Python")

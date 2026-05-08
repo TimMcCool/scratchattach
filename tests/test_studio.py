@@ -18,7 +18,7 @@ def test_studio():
 
     assert studio.title == "Sample studio"
     assert studio.description == "Sample text"
-    assert studio.host_id == 58743127
+    assert studio.host_id == 147905216
     assert studio.open_to_all is False
     assert studio.comments_allowed is False
     assert studio.image_url == 'https://cdn2.scratch.mit.edu/get_image/gallery/50809872_170x100.png'
