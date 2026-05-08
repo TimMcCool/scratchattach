@@ -1495,5 +1495,6 @@ def login_from_browser(browser: Browser = ANY):
     """
     cookies = cookies_from_browser(browser)
     if "scratchsessionsid" in cookies:
-        return login_by_id(cookies["scratchsessionsid"])
+        with suppress_login_warning():
+            return login_by_id(cookies["scratchsessionsid"])
     raise ValueError("Not enough data to log in.")
