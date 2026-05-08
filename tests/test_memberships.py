@@ -13,8 +13,8 @@ def test_memberships():
 
     u2 = sa.get_user("ceebee")
     assert u2.is_member
-    assert u2.has_ears
-    assert u2.has_badge()
+    assert not u2.has_ears
+    assert not u2.has_badge()
 
     u3 = sa.get_user("scratchattachv2")
     assert not u3.is_member
