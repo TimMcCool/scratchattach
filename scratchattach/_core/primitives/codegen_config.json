@@ -1,0 +1,8 @@
+{
+    "sync_target_directory": "../../sync_api/primitives",
+    "async_target_directory": "../../async_api/primitives",
+    "exclude": [
+        "./__init__.py"
+    ],
+    "include_directories": []
+}

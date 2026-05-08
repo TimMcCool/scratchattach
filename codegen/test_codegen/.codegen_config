@@ -1,4 +1,0 @@
-{
-    "sync_target_directory": "./sync_out",
-    "async_target_directory": "./async_out"
-}

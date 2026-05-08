@@ -1,5 +1,6 @@
 # i am really unsure on how this should be implemented
 from __future__ import annotations
+import contextlib
 import os
 from copy import deepcopy
 from typing import Any, TypedDict, cast, Optional, TYPE_CHECKING
@@ -20,6 +21,8 @@ DYNAMICALLY_ASYNC_NAME = "IS_ASYNC"
 class CodegenConfig(TypedDict):
     sync_target_directory: str
     async_target_directory: str
+    exclude: list[str]
+    include_directories: list[str]
 
 
 class AsyncCodegenNodeTransformer(ast.NodeTransformer):
@@ -171,12 +174,12 @@ def codegen_for_file(file: Path) -> tuple[ast.AST, ast.AST]:
 
 def codegen_for_whole_directory(directory: "StrPath"):
     directory = Path(directory).resolve()
-    prev_cwd = os.getcwd()
-    os.chdir(directory)
     items = {path.name: path for path in directory.iterdir()}
     codegen_config: CodegenConfig
     try:
-        codegen_config = cast("CodegenConfig", json.loads(items.pop(".codegen_config").read_text()))
+        codegen_config = cast(
+            "CodegenConfig", json.loads(items.pop("codegen_config.json").read_text())
+        )
     except KeyError:
         codegen_config = CodegenConfig(
             sync_target_directory=str(
@@ -185,15 +188,21 @@ def codegen_for_whole_directory(directory: "StrPath"):
             async_target_directory=str(
                 directory.with_stem(f"{directory.stem}_async"),
             ),
+            exclude=[],
+            include_directories=[],
         )
-    sync_target_directory = Path(codegen_config["sync_target_directory"])
-    async_target_directory = Path(codegen_config["async_target_directory"])
+    sync_target_directory = directory / codegen_config["sync_target_directory"]
+    async_target_directory = directory / codegen_config["async_target_directory"]
     sync_target_directory.mkdir(parents=True, exist_ok=True)
     async_target_directory.mkdir(parents=True, exist_ok=True)
+    exclusions = {(directory / exclusion).resolve() for exclusion in codegen_config["exclude"]}
     for path in items.values():
+        path = path.resolve()
         if path.suffix.lower() != ".py":
             continue
         if not path.is_file():
+            continue
+        if path in exclusions:
             continue
         (sync_ast, async_ast) = codegen_for_file(path)
         (sync_code, async_code) = (ast.unparse(sync_ast), ast.unparse(async_ast))
@@ -211,8 +220,8 @@ def codegen_for_whole_directory(directory: "StrPath"):
         capture_output=True,
         text=True,
     )
-
-    os.chdir(prev_cwd)
+    for included_dir in codegen_config["include_directories"]:
+        codegen_for_whole_directory(directory / included_dir)
 
 
 def main(): ...
