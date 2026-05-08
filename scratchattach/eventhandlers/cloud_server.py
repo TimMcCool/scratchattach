@@ -250,7 +250,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         ):
             client.sendMessage("You have been banned from this server")
             client.close(4002)
-            print(client.address[0] + ":" + str(client.address[1]), "(IP-banned) was disconnected")
+            print(client.address[0] + ":" + str(client.address[1]), "(IP-banned) was forced disconnected")
             return True
         return False
 
