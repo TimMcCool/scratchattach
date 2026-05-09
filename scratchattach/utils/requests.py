@@ -7,16 +7,41 @@ from contextlib import contextmanager
 from typing_extensions import override
 from requests import Session as HTTPSession
 from requests import Response
+from requests.cookies import RequestsCookieJar
 
 from . import exceptions
 
+
+class DummyCookieJar(RequestsCookieJar):
+    def set_cookie(self, *args, **kwargs):
+        pass
+
+    def update(self, *args, **kwargs):
+        pass
+
+    def copy(self):
+        return DummyCookieJar()
+
+    def __setitem__(self, name, value):
+        pass
+
+    def set(self, *args, **kwargs):
+        pass
+
+
 proxies: Optional[MutableMapping[str, str]] = None
+
 
 class Requests(HTTPSession):
     """
     Centralized HTTP request handler (for better error handling and proxies)
     """
+
     error_handling: bool = True
+
+    def __init__(self):
+        super().__init__()
+        self.cookies = DummyCookieJar()
 
     def check_response(self, r: Response):
         if r.status_code == 403 or r.status_code == 401:
@@ -25,7 +50,7 @@ class Requests(HTTPSession):
             raise exceptions.APIError("Internal Scratch server error")
         if r.status_code == 429:
             raise exceptions.Response429("You are being rate-limited (or blocked) by Scratch")
-        if r.json() == {"code":"BadRequest","message":""}:
+        if r.json() == {"code": "BadRequest", "message": ""}:
             raise exceptions.BadRequest("Make sure all provided arguments are valid")
 
     @override
@@ -71,7 +96,7 @@ class Requests(HTTPSession):
         if self.error_handling:
             self.check_response(r)
         return r
-    
+
     @contextmanager
     def no_error_handling(self) -> Iterator[None]:
         val_before = self.error_handling
@@ -80,7 +105,7 @@ class Requests(HTTPSession):
             yield
         finally:
             self.error_handling = val_before
-    
+
     @contextmanager
     def yes_error_handling(self) -> Iterator[None]:
         val_before = self.error_handling
@@ -89,5 +114,6 @@ class Requests(HTTPSession):
             yield
         finally:
             self.error_handling = val_before
+
 
 requests = Requests()
