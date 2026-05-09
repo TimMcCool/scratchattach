@@ -193,7 +193,7 @@ class PartialProject(BaseSiteComponent):
         except exceptions.ProjectNotFound:
             return False
 
-    def raw_json_or_empty(self) -> dict[str, Any]
+    def raw_json_or_empty(self) -> dict[str, Any]:
         return empty_project_json
 
     def create_remix(self, *, title=None, project_json=None) -> Project:  # not working
