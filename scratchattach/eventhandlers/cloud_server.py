@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
-from threading import Thread
+from threading import Thread # unused threading.Thread? not changing, just noting -Boss_1s
 from scratchattach.utils import exceptions
 import json
 import time
