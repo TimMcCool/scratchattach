@@ -186,12 +186,14 @@ class PartialProject(BaseSiteComponent):
             boolean: Returns whether the project is currently shared
         """
         try:
-            p = get_project(self.id)
-            return isinstance(p, Project)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=exceptions.ProjectAuthenticationWarning)
+                p = get_project(self.id)
+                return isinstance(p, Project)
         except exceptions.ProjectNotFound:
             return False
 
-    def raw_json_or_empty(self) -> dict[str, Any]:
+    def raw_json_or_empty(self) -> dict[str, Any]
         return empty_project_json
 
     def create_remix(self, *, title=None, project_json=None) -> Project:  # not working
