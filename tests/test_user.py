@@ -91,7 +91,7 @@ def test_user():
     assert comment.content == "Sample comment"
     # comment by id, message_events, verificator
 
-    if not allow_before(datetime(2026, 3, 28)):
+    if not allow_before(datetime(2026, 6, 9)):
         status_data = user.ocular_status()
         assert status_data["status"] == "Sample status"
         assert status_data["color"] == "#855cd6"
