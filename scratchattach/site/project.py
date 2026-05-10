@@ -9,7 +9,7 @@ import time
 import warnings
 import zipfile
 from io import BytesIO
-from typing import Callable, Union
+from typing import Callable, Union, cast
 
 from dataclasses import dataclass, field
 from typing import Any, Optional
@@ -185,13 +185,11 @@ class PartialProject(BaseSiteComponent):
         Returns:
             boolean: Returns whether the project is currently shared
         """
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", category=exceptions.ProjectAuthenticationWarning)
-                p = get_project(self.id)
-                return isinstance(p, Project)
-        except exceptions.ProjectNotFound:
+        response = requests.get(f"https://api.scratch.mit.edu/projects/{self.id}")
+        if response.status_code == 404:
             return False
+        response_json = cast(ProjectDict, response.json())
+        return response_json["is_published"]
 
     def raw_json_or_empty(self) -> dict[str, Any]:
         return empty_project_json
