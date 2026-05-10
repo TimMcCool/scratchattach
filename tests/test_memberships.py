@@ -11,7 +11,7 @@ def test_memberships():
     assert not u1.has_ears
     assert u1.has_badge()
 
-    u2 = sa.get_user("ceebee")
+    u2 = sa.get_user("scratchteam")
     assert u2.is_member
     assert u2.has_ears
     assert u2.has_badge()
