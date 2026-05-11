@@ -909,7 +909,7 @@ class Session(BaseSiteComponent):
         If this is not a teacher session, NotATeacherError is raised
         """
         with requests.no_error_handling():
-            resp = requests.get("https://scratch.mit.edu/educators/classes/")
+            resp = requests.get("https://scratch.mit.edu/educators/classes/", headers=self._headers, cookies=self._cookies)
 
         if resp.status_code == 403:
             raise exceptions.NotATeacherError("Response 403 when getting educators/classes")
