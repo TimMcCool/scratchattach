@@ -75,7 +75,7 @@ jobs:
         with:
           ref: 'website'
 
-      - uses: nexterias/actions-vercel@v1
+      - uses: nexterias/actions-vercel@v2
         id: vercel
         with:
           token: ${{ env.vercel_token }}
