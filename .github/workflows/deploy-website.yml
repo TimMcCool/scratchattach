@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout main branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Deploy website directory to website branch
         uses: peaceiris/actions-gh-pages@v4
