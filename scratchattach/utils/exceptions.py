@@ -1,16 +1,17 @@
 # Authentication / Authorization:
 from __future__ import annotations
 
+
 class Unauthenticated(Exception):
     """
     Raised when a method that requires a login / session is called on an object that wasn't created with a session.
 
     If you create Project, Studio, or User objects using :meth:`scratchattach.get_project`, :meth:`scratchattach.get_studio`, or :meth:`scratchattach.get_user`, they cannot be used for actions that require authentication. Instead, use the following methods to ensure the objects are connected to an authenticated session:
-    
+
     - :meth:`scratchattach.Session.connect_project`
-    
+
     - :meth:`scratchattach.Session.connect_user`
-    
+
     - :meth:`scratchattach.Session.connect_studio`
 
     This also applies to cloud variables, forum topics, and forum posts.
@@ -30,8 +31,8 @@ class Unauthorized(Exception):
 
     def __init__(self, message=""):
         self.message = (
-            f"The user corresponding to the connected login / session is not allowed to perform this action. "
-            f"{message}")
+            f"The user corresponding to the connected login / session is not allowed to perform this action. {message}"
+        )
         super().__init__(self.message)
 
 
@@ -43,7 +44,15 @@ class XTokenError(Exception):
     """
 
 
+class NotATeacherError(Exception):
+    """
+    Raised when the user attempts to do an action which is only associated with teacher accounts, and the
+    session is not a teacher session.
+    """
+
+
 # Not found errors:
+
 
 class UserNotFound(Exception):
     """
@@ -55,6 +64,7 @@ class ProjectNotFound(Exception):
     """
     Raised when a non-existent project is requested.
     """
+
 
 class ClassroomNotFound(Exception):
     """
@@ -90,7 +100,9 @@ class InvalidTTSGender(Exception):
     Raised when an invalid TTS gender is provided.
     """
 
+
 # API errors:
+
 
 class LoginFailure(Exception):
     """
@@ -111,10 +123,12 @@ class BadRequest(Exception):
     Raised when the Scratch API responds with a "Bad Request" error message. This can have various reasons. Make sure all provided arguments are valid.
     """
 
+
 class RateLimitedError(Exception):
     """
     Indicates a ratelimit enforced by scratchattach
     """
+
 
 class Response429(Exception):
     """
@@ -140,14 +154,13 @@ class ScrapeError(Exception):
     """
 
 
-
 # Cloud / encoding errors:
+
 
 class CloudConnectionError(Exception):
     """
     Raised when connecting to Scratch's cloud server fails. This can have various reasons.
     """
-
 
 
 class InvalidCloudValue(Exception):
@@ -156,15 +169,14 @@ class InvalidCloudValue(Exception):
     """
 
 
-
 class InvalidDecodeInput(Exception):
     """
     Raised when the built-in decoder :meth:`scratchattach.encoder.Encoding.decode` receives an invalid input.
     """
 
 
-
 # Cloud Requests errors:
+
 
 class RequestNotFound(Exception):
     """
@@ -172,8 +184,8 @@ class RequestNotFound(Exception):
     """
 
 
-
 # Websocket server errors:
+
 
 class WebsocketServerError(Exception):
     """
@@ -181,8 +193,8 @@ class WebsocketServerError(Exception):
     """
 
 
-
 # Editor errors:
+
 
 class UnclosedJSONError(Exception):
     """
@@ -225,51 +237,61 @@ class BadScript(Exception):
     Raised when the block script cannot allow for the operation
     """
 
+
 # Warnings
+
 
 class LoginDataWarning(UserWarning):
     """
     Warns you not to accidentally share your login data.
     """
 
+
 class InvalidUpdateWarning(UserWarning):
     """
     Warns you that something cannot be updated.
     """
-    
+
+
 class GetAuthenticationWarning(UserWarning):
     """
     All authentication warnings.
     """
-    
+
+
 class UserAuthenticationWarning(GetAuthenticationWarning):
     """
     Warns you to use session.connect_user instead of user.get_user
     for actions that require authentication.
     """
 
+
 class ProjectAuthenticationWarning(GetAuthenticationWarning):
     """
-    Warns you to use session.connect_project instead of project.get_project 
+    Warns you to use session.connect_project instead of project.get_project
     for actions that require authentication.
     """
+
 
 class StudioAuthenticationWarning(GetAuthenticationWarning):
     """
-    Warns you to use session.connect_studio instead of studio.get_studio 
+    Warns you to use session.connect_studio instead of studio.get_studio
     for actions that require authentication.
     """
+
 
 class ClassroomAuthenticationWarning(GetAuthenticationWarning):
     """
-    Warns you to use session.connect_classroom or session.connect_classroom_from_token instead of classroom.get_classroom 
+    Warns you to use session.connect_classroom or session.connect_classroom_from_token instead of classroom.get_classroom
     for actions that require authentication.
     """
 
+
 class CloudAuthenticationWarning(GetAuthenticationWarning):
     """
-    Warns you about usage of 
+    Warns you about usage of
     """
+
 
 class UnexpectedWebsocketEventWarning(RuntimeWarning):
     """

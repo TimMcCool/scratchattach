@@ -906,13 +906,13 @@ class Session(BaseSiteComponent):
     def mystuff_classes_counts(self) -> tuple[int, int]:
         """
         Returns the number of open and ended classes owned by a teacher session.
-        If this is not a teacher session, (0, 0) is returned.
+        If this is not a teacher session, NotATeacherError is raised
         """
         with requests.no_error_handling():
             resp = requests.get("https://scratch.mit.edu/educators/classes/")
 
         if resp.status_code == 403:
-            return 0, 0  # non-teacher account
+            raise exceptions.NotATeacherError("Response 403 when getting educators/classes")
 
         soup = BeautifulSoup(resp.text, "html.parser")
         sidebar = soup.find("div", {"id": "sidebar", "class": "tabs-index"})

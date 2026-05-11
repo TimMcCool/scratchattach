@@ -247,6 +247,12 @@ wheels = [
 name = "codegen"
 version = "0.1.0"
 source = { virtual = "codegen" }
+dependencies = [
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "ruff" }]
 
 [[package]]
 name = "frozenlist"
