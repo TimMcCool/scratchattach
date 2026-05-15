@@ -1,17 +1,12 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import TypeAlias, TypeVar, Protocol, runtime_checkable, Any
+from typing import TypeAlias, TypeVar, Protocol, runtime_checkable, Any, BinaryIO
 from collections.abc import Iterable
 
 _CT_co = TypeVar("_CT_co", covariant=True)
 
 _KT_co = TypeVar("_KT_co", covariant=True)
 _VT_co = TypeVar("_VT_co", covariant=True)
-
-
-@runtime_checkable
-class SupportsReadAll(Protocol[_CT_co]):
-    def read(self) -> _CT_co: ...
 
 
 @runtime_checkable
@@ -23,21 +18,7 @@ _ParamsValue: TypeAlias = (
     str | int | float | Iterable[str | int | float]
 )
 
-
-@runtime_checkable
-class HTTPFile(Protocol):
-    def get_content(self) -> bytes: ...
-
-
-@dataclass
-class BufferHTTPFile(HTTPFile):
-    buffer: SupportsReadAll[bytes]
-
-    def get_content(self) -> bytes:
-        return self.buffer.read()
-
-
-_FilesValue: TypeAlias = HTTPFile | bytes
+_FilesValue: TypeAlias = BinaryIO | bytes
 
 _JsonEmptySentinel = object()
 

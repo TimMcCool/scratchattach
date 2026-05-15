@@ -1,7 +1,7 @@
 from __future__ import annotations
 from types import TracebackType
 from collections.abc import Iterable
-from typing import Optional, Self, cast, Any, Sequence, SupportsInt
+from typing import Optional, Self, cast, Any, Sequence, SupportsInt, BinaryIO
 
 from scratchattach._shared import http as shared_http
 
@@ -56,7 +56,9 @@ if "IS_ASYNC":
 
         async def __aenter__(self) -> _HTTPResponse:
             http_response = _HTTPResponse()
-            http_response._async_response = await self._aiohttp_response_context_manager.__aenter__()
+            http_response._async_response = (
+                await self._aiohttp_response_context_manager.__aenter__()
+            )
             return http_response
 
         async def __aexit__(
@@ -86,7 +88,6 @@ if "IS_ASYNC":
 
         def __init__(self):
             self._cookies = {}
-            self._http_session = aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar())
 
         def __enter__(self) -> None:
             raise TypeError("Use async with instead")
@@ -101,6 +102,7 @@ if "IS_ASYNC":
             pass  # pragma: no cover
 
         async def __aenter__(self) -> Self:
+            self._http_session = aiohttp.ClientSession(cookie_jar=aiohttp.DummyCookieJar())
             await self._http_session.__aenter__()
             return self
 
@@ -112,59 +114,55 @@ if "IS_ASYNC":
         ):
             await self._http_session.__aexit__(exc_type, exc_val, exc_tb)
 
-        @staticmethod
-        def _get_kwargs(options: HTTPOptions) -> aiohttp.client._RequestOptions:
+        def _get_kwargs(self, options: HTTPOptions) -> aiohttp.client._RequestOptions:
             kwargs: aiohttp.client._RequestOptions = {}
             if options.params is not None:
                 params = options.params
-                if isinstance(params, shared_http.SupportsItems) and not (
-                    isinstance(params, Iterable) and isinstance(next(iter(params)), tuple)
-                ):
+                if isinstance(params, shared_http.SupportsItems):
                     params = params.items()
                 if not isinstance(params, str) and isinstance(params, Iterable):
-                    new_params: dict[str, Sequence[str | SupportsInt] | SupportsInt] = {}
+                    new_params: list[tuple[str, str | SupportsInt]] = []
                     for key, value in cast(
                         Iterable[tuple[str, Iterable[str | SupportsInt] | SupportsInt]], params
                     ):
                         if not isinstance(value, str) and isinstance(value, Iterable):
-                            value = cast(list[str | SupportsInt], list(value))
-                        new_params[key] = value
+                            for item in value:
+                                new_params.append((key, cast(str | SupportsInt, item)))
+                        else:
+                            new_params.append((key, cast(str | SupportsInt, value)))
                     params = new_params  # type: ignore[assignment]
                 kwargs["params"] = params  # type: ignore[typeddict-item]
+            if options.content is not None and options.data is not None:
+                raise ValueError("Cannot specify both \"content\" and \"data\"")
+            if options.content is not None and options.files is not None:
+                raise ValueError("Cannot specify both \"content\" and \"files\"")
             if options.content is not None:
                 kwargs["data"] = options.content
-            if options.data is not None:
-                data = options.data
-                if isinstance(data, shared_http.SupportsItems) and not (
-                    isinstance(data, Iterable) and isinstance(next(iter(data)), tuple)
-                ):
-                    data = data.items()
-                kwargs["data"] = dict(cast(Iterable[tuple[str, Any]], data))
-            if options.files is not None:
+            if options.data is not None or options.files is not None:
                 form_data = aiohttp.FormData()
-                files = options.files
-                if isinstance(files, shared_http.SupportsItems) and not (
-                    isinstance(files, Iterable) and isinstance(next(iter(files)), tuple)
-                ):
-                    files = files.items()
-                for file in cast(Iterable[tuple[str, shared_http.HTTPFile | bytes]], files):
-                    file_data = file[1]
-                    if isinstance(file_data, shared_http.HTTPFile):
-                        file_data = file_data.get_content()
-                    form_data.add_field(file[0], file_data, filename=file[0])
+                if options.data is not None:
+                    data = options.data
+                    if isinstance(data, shared_http.SupportsItems):
+                        data = data.items()
+                    for key, value in cast(Iterable[tuple[str, Any]], data):
+                        form_data.add_field(key, str(value))
+                if options.files is not None:
+                    files = options.files
+                    if isinstance(files, shared_http.SupportsItems):
+                        files = files.items()
+                    for key, file_data in cast(Iterable[tuple[str, BinaryIO | bytes]], files):
+                        form_data.add_field(key, file_data, filename=key)
                 kwargs["data"] = form_data
+            merged_cookies = self._cookies.copy()
             if options.cookies is not None:
                 cookies = options.cookies
-                if isinstance(cookies, shared_http.SupportsItems) and not (
-                    isinstance(cookies, Iterable) and isinstance(next(iter(cookies)), tuple)
-                ):
+                if isinstance(cookies, shared_http.SupportsItems):
                     cookies = cookies.items()
-                kwargs["cookies"] = dict(cast(Iterable[tuple[str, str]], cookies))
+                merged_cookies.update(dict(cast(Iterable[tuple[str, str]], cookies)))
+            kwargs["cookies"] = merged_cookies
             if options.headers is not None:
                 headers = options.headers
-                if isinstance(headers, shared_http.SupportsItems) and not (
-                    isinstance(headers, Iterable) and isinstance(next(iter(headers)), tuple)
-                ):
+                if isinstance(headers, shared_http.SupportsItems):
                     headers = headers.items()
                 kwargs["headers"] = dict(cast(Iterable[tuple[str, str]], headers))
             if options.json is not shared_http._JsonEmptySentinel:
@@ -174,6 +172,18 @@ if "IS_ASYNC":
         def get(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
             kwargs = self._get_kwargs(options)
             return _WrappedHTTPResponse(self._http_session.get(url, **kwargs))
+
+        def post(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
+            kwargs = self._get_kwargs(options)
+            return _WrappedHTTPResponse(self._http_session.post(url, **kwargs))
+
+        def put(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
+            kwargs = self._get_kwargs(options)
+            return _WrappedHTTPResponse(self._http_session.put(url, **kwargs))
+
+        def delete(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
+            kwargs = self._get_kwargs(options)
+            return _WrappedHTTPResponse(self._http_session.delete(url, **kwargs))
 else:
 
     class _HTTPResponse:  # type: ignore[no-redef]
@@ -234,7 +244,71 @@ else:
         def __init__(self):
             self._cookies = {}
             self._http_session = requests.Session()
-            self._http_session.cookie_jar = DummyCookieJar()
+            self._http_session.cookies = DummyCookieJar()
 
-        def get(self, url: str, options: HTTPOptions) -> _HTTPResponse:
-            raise NotImplementedError
+        def _get_kwargs(self, options: HTTPOptions) -> dict[str, Any]:
+            kwargs: dict[str, Any] = {}
+
+            if options.params is not None:
+                params = options.params
+                if isinstance(params, shared_http.SupportsItems):
+                    params = params.items()
+                if not isinstance(params, str) and isinstance(params, Iterable):
+                    new_params: list[tuple[str, str | SupportsInt]] = []
+                    for key, value in cast(
+                        Iterable[tuple[str, Iterable[str | SupportsInt] | SupportsInt]], params
+                    ):
+                        if not isinstance(value, str) and isinstance(value, Iterable):
+                            for item in value:
+                                new_params.append((key, cast(str | SupportsInt, item)))
+                        else:
+                            new_params.append((key, cast(str | SupportsInt, value)))
+                    params = new_params  # type: ignore[assignment]
+                kwargs["params"] = params
+            if options.content is not None and options.data is not None:
+                raise ValueError("Cannot specify both \"content\" and \"data\"")
+            if options.content is not None and options.files is not None:
+                raise ValueError("Cannot specify both \"content\" and \"files\"")
+            if options.content is not None:
+                kwargs["data"] = options.content
+            if options.data is not None:
+                data = options.data
+                if isinstance(data, shared_http.SupportsItems):
+                    data = data.items()
+                kwargs["data"] = list(cast(Iterable[tuple[str, Any]], data))
+            if options.files is not None:
+                files = options.files
+                if isinstance(files, shared_http.SupportsItems):
+                    files = files.items()
+                kwargs["files"] = list(cast(Iterable[tuple[str, BinaryIO | bytes]], files))
+            merged_cookies = self._cookies.copy()
+            if options.cookies is not None:
+                cookies = options.cookies
+                if isinstance(cookies, shared_http.SupportsItems):
+                    cookies = cookies.items()
+                merged_cookies.update(dict(cast(Iterable[tuple[str, str]], cookies)))
+            kwargs["cookies"] = merged_cookies
+            if options.headers is not None:
+                headers = options.headers
+                if isinstance(headers, shared_http.SupportsItems):
+                    headers = headers.items()
+                kwargs["headers"] = dict(cast(Iterable[tuple[str, str]], headers))
+            if options.json is not shared_http._JsonEmptySentinel:
+                kwargs["json"] = options.json
+            return kwargs
+
+        def get(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
+            kwargs = self._get_kwargs(options)
+            return _WrappedHTTPResponse(self._http_session.get(url, **kwargs))  # type: ignore[arg-type]
+
+        def post(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
+            kwargs = self._get_kwargs(options)
+            return _WrappedHTTPResponse(self._http_session.post(url, **kwargs))  # type: ignore[arg-type]
+
+        def put(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
+            kwargs = self._get_kwargs(options)
+            return _WrappedHTTPResponse(self._http_session.put(url, **kwargs))  # type: ignore[arg-type]
+
+        def delete(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
+            kwargs = self._get_kwargs(options)
+            return _WrappedHTTPResponse(self._http_session.delete(url, **kwargs))  # type: ignore[arg-type]
