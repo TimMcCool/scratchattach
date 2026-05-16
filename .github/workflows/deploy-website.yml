@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout main branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Deploy website directory to website branch
         uses: peaceiris/actions-gh-pages@v4
@@ -35,7 +35,7 @@ jobs:
           commit_message: ${{ github.event.head_commit.message }}
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -71,11 +71,11 @@ jobs:
         shell: bash
 
       - name: Checkout website branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: 'website'
 
-      - uses: nexterias/actions-vercel@v1
+      - uses: nexterias/actions-vercel@v2
         id: vercel
         with:
           token: ${{ env.vercel_token }}
