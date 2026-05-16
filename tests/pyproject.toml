@@ -6,15 +6,15 @@ readme = "README.md"
 authors = [{ name = "TimMcCool" }]
 requires-python = ">=3.12.12"
 dependencies = [
-  "cryptography>=47.0.0",
+  "cryptography>=48.0.0",
   "pytest>=9.0.3",
   "python-dotenv>=1.2.2",
-  "ruff>=0.15.12",
+  "ruff>=0.15.13",
   "scratchattach",
 ]
 
 [build-system]
-requires = ["uv_build>=0.10.10,<0.11.0"]
+requires = ["uv_build>=0.11.14,<0.12.0"]
 build-backend = "uv_build"
 
 [tool.uv]

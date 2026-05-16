@@ -253,12 +253,13 @@ class Session(BaseSiteComponent):
         Arguments:
             country (str): The country to relocate to
         """
-        requests.post(
-            "https://scratch.mit.edu/accounts/settings/",
-            data={"country": country},
-            headers=self._headers,
-            cookies=self._cookies,
-        )
+        with requests.no_error_handling():
+            requests.post(   
+                "https://scratch.mit.edu/accounts/settings/",
+                data={"country": country},
+                headers=self._headers,
+                cookies=self._cookies,
+            )
 
     def resend_email(self, password: str):
         """
