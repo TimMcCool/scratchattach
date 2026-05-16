@@ -14,6 +14,6 @@ updates:
     schedule:
       interval: "daily"
   - package-ecosystem: "uv" # See documentation for possible values
-    directory: "/" # Location of package manifests
+    directories: ["/", "/tests/"] # Location of package manifests
     schedule:
       interval: "daily"
