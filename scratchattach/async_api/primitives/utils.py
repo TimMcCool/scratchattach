@@ -1,5 +1,4 @@
 from __future__ import annotations
-import _asyncio
 from collections.abc import Callable
 from typing import Union, ParamSpec, TypeVar, Generic, Any, cast, Optional, overload, Literal
 import time

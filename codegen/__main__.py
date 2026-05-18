@@ -1,5 +1,5 @@
-# i am really unsure on how this should be implemented
 from __future__ import annotations
+import argparse
 import contextlib
 import os
 from copy import deepcopy
@@ -224,7 +224,15 @@ def codegen_for_whole_directory(directory: "StrPath"):
         codegen_for_whole_directory(directory / included_dir)
 
 
-def main(): ...
+class CodegenArgumentNamespace(argparse.Namespace):
+    targets: list[Path]
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("targets", nargs="*", type=Path)
+    parsed = parser.parse_args(namespace=CodegenArgumentNamespace())
+    for target in parsed.targets:
+        codegen_for_whole_directory(target)
 
 
 if __name__ == "__main__":

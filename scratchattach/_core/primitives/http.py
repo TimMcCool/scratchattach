@@ -117,11 +117,11 @@ if "IS_ASYNC":
         def _get_kwargs(self, options: HTTPOptions) -> aiohttp.client._RequestOptions:
             kwargs: aiohttp.client._RequestOptions = {}
             if options.params is not None:
-                params = options.params
+                params: Any = options.params
                 if isinstance(params, shared_http.SupportsItems):
                     params = params.items()
                 if not isinstance(params, str) and isinstance(params, Iterable):
-                    new_params: list[tuple[str, str | SupportsInt]] = []
+                    new_params: Any = []
                     for key, value in cast(
                         Iterable[tuple[str, Iterable[str | SupportsInt] | SupportsInt]], params
                     ):
@@ -130,7 +130,7 @@ if "IS_ASYNC":
                                 new_params.append((key, cast(str | SupportsInt, item)))
                         else:
                             new_params.append((key, cast(str | SupportsInt, value)))
-                    params = new_params  # type: ignore[assignment]
+                    params = new_params
                 kwargs["params"] = params  # type: ignore[typeddict-item]
             if options.content is not None and options.data is not None:
                 raise ValueError("Cannot specify both \"content\" and \"data\"")
@@ -250,11 +250,11 @@ else:
             kwargs: dict[str, Any] = {}
 
             if options.params is not None:
-                params = options.params
+                params: Any = options.params
                 if isinstance(params, shared_http.SupportsItems):
                     params = params.items()
                 if not isinstance(params, str) and isinstance(params, Iterable):
-                    new_params: list[tuple[str, str | SupportsInt]] = []
+                    new_params: Any = []
                     for key, value in cast(
                         Iterable[tuple[str, Iterable[str | SupportsInt] | SupportsInt]], params
                     ):
@@ -263,7 +263,7 @@ else:
                                 new_params.append((key, cast(str | SupportsInt, item)))
                         else:
                             new_params.append((key, cast(str | SupportsInt, value)))
-                    params = new_params  # type: ignore[assignment]
+                    params =  new_params
                 kwargs["params"] = params
             if options.content is not None and options.data is not None:
                 raise ValueError("Cannot specify both \"content\" and \"data\"")
