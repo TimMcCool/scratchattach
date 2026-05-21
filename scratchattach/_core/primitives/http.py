@@ -7,11 +7,12 @@ from scratchattach._shared import http as shared_http
 
 if "IS_PRE_CODEGEN":
     import contextlib
+    from typing import LiteralString
     import aiohttp
     import requests
     from requests import cookies as requests_cookies
-    def PREV_LINE_COMMENT(msg: str):
-        pass
+
+    def PREV_LINE_COMMENT(msg: LiteralString) -> None: ...
 else:
     if "IS_ASYNC":
         import contextlib
