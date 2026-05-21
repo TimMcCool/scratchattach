@@ -1,17 +1,20 @@
 """CloudEvents class"""
+
 from __future__ import annotations
 
 from scratchattach.cloud import _base
 from ._base import BaseEventHandler
 from scratchattach.site import cloud_activity
 import time
-import json
+import traceback
 from collections.abc import Iterator
+
 
 class CloudEvents(BaseEventHandler):
     """
     Class that calls events when on cloud updates that are received through a websocket connection.
     """
+
     def __init__(self, cloud: _base.AnyCloud):
         super().__init__()
         self.cloud = cloud
@@ -37,34 +40,48 @@ class CloudEvents(BaseEventHandler):
                     self.source_stream.timeout = 1
                     for data in self.source_stream.read():
                         try:
-                            _a = cloud_activity.CloudActivity(timestamp=time.time()*1000, _session=self._session, cloud=self.cloud)
-                            if _a.timestamp < self.startup_time + 500: # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
+                            _a = cloud_activity.CloudActivity(
+                                timestamp=time.time() * 1000,
+                                _session=self._session,
+                                cloud=self.cloud,
+                            )
+                            if (
+                                _a.timestamp < self.startup_time + 500
+                            ):  # catch the on_connect message sent by TurboWarp's (and sometimes Scratch's) cloud server
+                                # print(f"Skipped as {_a.timestamp} < {self.startup_time + 500}")
                                 continue
                             data["variable_name"] = data["name"]
                             data["name"] = data["variable_name"].replace("☁ ", "")
                             _a._update_from_dict(data)
-                            self.call_event("on_"+_a.type, [_a])
+                            # print(f"sending event {_a}")
+                            self.call_event("on_" + _a.type, [_a])
                         except Exception as e:
                             pass
             except Exception:
                 # print("CloudEvents: Disconnected. Reconnecting ...", time.time())
-                time.sleep(0.1) # cooldown
+                traceback.print_exc()  # always print blanketed exceptions!!
+                self.subsequent_reconnects += 1
+                time.sleep(0.1)  # cooldown
 
                 # print("CloudEvents: Reconnected.", time.time())
                 self.call_event("on_reconnect", [])
+
 
 class ManualCloudLogEvents:
     """
     Class that calls events on cloud updates that are received from a clouddata log.
     """
+
     def __init__(self, cloud: _base.LogCloud):
         if not isinstance(cloud, _base.LogCloud):
-            raise ValueError("Cloud log events can't be used with a cloud that has no logs available")
+            raise ValueError(
+                "Cloud log events can't be used with a cloud that has no logs available"
+            )
         self.cloud = cloud
         self.source_cloud = cloud
         self._session = cloud._session
         self.last_timestamp = 0
-    
+
     def update(self) -> Iterator[tuple[str, list[cloud_activity.CloudActivity]]]:
         """
         Update once and yield all packets
@@ -75,19 +92,22 @@ class ManualCloudLogEvents:
                 if _a.timestamp <= self.last_timestamp:
                     continue
                 self.last_timestamp = _a.timestamp
-                yield ("on_"+_a.type, [_a])
+                yield ("on_" + _a.type, [_a])
         except Exception:
             pass
-        
+
 
 class CloudLogEvents(BaseEventHandler):
     """
     Class that calls events on cloud updates that are received from a clouddata log.
     """
+
     def __init__(self, cloud: _base.LogCloud, *, update_interval=0.1):
         super().__init__()
         if not isinstance(cloud, _base.LogCloud):
-            raise ValueError("Cloud log events can't be used with a cloud that has no logs available")
+            raise ValueError(
+                "Cloud log events can't be used with a cloud that has no logs available"
+            )
         self.cloud = cloud
         self.source_cloud = cloud
         self.update_interval = update_interval
