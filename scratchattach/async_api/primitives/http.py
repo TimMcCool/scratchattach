@@ -1,6 +1,6 @@
 from __future__ import annotations
 from types import TracebackType
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import Optional, Self, cast, Any, Sequence, SupportsInt, BinaryIO
 from scratchattach._shared import http as shared_http
 import contextlib
@@ -73,22 +73,56 @@ class _HTTPSession:
     ):
         await self._http_session.__aexit__(exc_type, exc_val, exc_tb)
 
+    @staticmethod
+    def _get_params_kwarg(
+        params: Any,
+    ) -> (
+        None
+        | str
+        | Mapping[str, Sequence[str | SupportsInt] | SupportsInt]
+        | Sequence[tuple[str, Sequence[str | SupportsInt] | SupportsInt]]
+    ):
+        if isinstance(params, shared_http.SupportsItems):
+            params = params.items()
+        if not isinstance(params, str) and isinstance(params, Iterable):
+            new_params: Any = []
+            for key, value in cast(Iterable[tuple[str, Iterable[str | SupportsInt] | SupportsInt]], params):
+                if not isinstance(value, str) and isinstance(value, Iterable):
+                    for item in value:
+                        new_params.append((key, cast(str | SupportsInt, item)))
+                else:
+                    new_params.append((key, cast(str | SupportsInt, value)))
+            params = new_params
+        return params
+
+    @staticmethod
+    def _get_data_and_files_kwargs(
+        data: Iterable[tuple[str, Any]] | shared_http.SupportsItems[str, Any] | None,
+        files: Iterable[tuple[str, BinaryIO | bytes]] | shared_http.SupportsItems[str, BinaryIO | bytes] | None,
+    ) -> aiohttp.FormData:
+        form_data = aiohttp.FormData()
+        if data is not None:
+            if isinstance(data, shared_http.SupportsItems):
+                data = cast(Any, data.items())
+            for key, value in cast(Iterable[tuple[str, Any]], data):
+                form_data.add_field(key, str(value))
+        if files is not None:
+            if isinstance(files, shared_http.SupportsItems):
+                files = cast(Any, files.items())
+            for key, file_data in cast(Iterable[tuple[str, BinaryIO | bytes]], files):
+                form_data.add_field(key, file_data, filename=key)
+        return form_data
+
+    @staticmethod
+    def _get_headers_kwarg(headers: Iterable[tuple[str, str]] | shared_http.SupportsItems[str, str]) -> dict[str, str]:
+        if isinstance(headers, shared_http.SupportsItems):
+            headers = cast(Any, headers.items())
+        return dict(cast(Iterable[tuple[str, str]], headers))
+
     def _get_kwargs(self, options: HTTPOptions) -> aiohttp.client._RequestOptions:
         kwargs: aiohttp.client._RequestOptions = {}
         if options.params is not None:
-            params: Any = options.params
-            if isinstance(params, shared_http.SupportsItems):
-                params = params.items()
-            if not isinstance(params, str) and isinstance(params, Iterable):
-                new_params: Any = []
-                for key, value in cast(Iterable[tuple[str, Iterable[str | SupportsInt] | SupportsInt]], params):
-                    if not isinstance(value, str) and isinstance(value, Iterable):
-                        for item in value:
-                            new_params.append((key, cast(str | SupportsInt, item)))
-                    else:
-                        new_params.append((key, cast(str | SupportsInt, value)))
-                params = new_params
-            kwargs["params"] = params
+            kwargs["params"] = self._get_params_kwarg(options.params)
         if options.content is not None and options.data is not None:
             raise ValueError('Cannot specify both "content" and "data"')
         if options.content is not None and options.files is not None:
@@ -96,20 +130,7 @@ class _HTTPSession:
         if options.content is not None:
             kwargs["data"] = options.content
         if options.data is not None or options.files is not None:
-            form_data = aiohttp.FormData()
-            if options.data is not None:
-                data = options.data
-                if isinstance(data, shared_http.SupportsItems):
-                    data = data.items()
-                for key, value in cast(Iterable[tuple[str, Any]], data):
-                    form_data.add_field(key, str(value))
-            if options.files is not None:
-                files = options.files
-                if isinstance(files, shared_http.SupportsItems):
-                    files = files.items()
-                for key, file_data in cast(Iterable[tuple[str, BinaryIO | bytes]], files):
-                    form_data.add_field(key, file_data, filename=key)
-            kwargs["data"] = form_data
+            kwargs["data"] = self._get_data_and_files_kwargs(options.data, options.files)
         merged_cookies = self._cookies.copy()
         if options.cookies is not None:
             cookies = options.cookies
@@ -118,10 +139,11 @@ class _HTTPSession:
             merged_cookies.update(dict(cast(Iterable[tuple[str, str]], cookies)))
         kwargs["cookies"] = merged_cookies
         if options.headers is not None:
-            headers = options.headers
-            if isinstance(headers, shared_http.SupportsItems):
-                headers = headers.items()
-            kwargs["headers"] = dict(cast(Iterable[tuple[str, str]], headers))
+            kwargs["headers"] = self._get_headers_kwarg(options.headers)
+        if options.json is not shared_http._JsonEmptySentinel and (
+            options.content is not None or options.data is not None or options.files is not None
+        ):
+            raise ValueError('Cannot specify "json" alongside "content", "data", or "files"')
         if options.json is not shared_http._JsonEmptySentinel:
             kwargs["json"] = options.json
         return kwargs
