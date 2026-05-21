@@ -119,7 +119,7 @@ class _HTTPSession:
             headers = cast(Any, headers.items())
         return dict(cast(Iterable[tuple[str, str]], headers))
 
-    def _get_kwargs(self, options: HTTPOptions) -> aiohttp.client._RequestOptions:
+    def _get_kwargs(self, options: HTTPOptions) -> aiohttp.client._RequestOptions:  # noqa: C901
         kwargs: aiohttp.client._RequestOptions = {}
         if options.params is not None:
             kwargs["params"] = self._get_params_kwarg(options.params)

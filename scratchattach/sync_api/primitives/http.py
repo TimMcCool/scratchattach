@@ -114,7 +114,7 @@ class _HTTPSession:
             headers = cast(Any, headers.items())
         return dict(cast(Iterable[tuple[str, str]], headers))
 
-    def _get_kwargs(self, options: HTTPOptions) -> dict[str, Any]:
+    def _get_kwargs(self, options: HTTPOptions) -> dict[str, Any]:  # noqa: C901
         kwargs: dict[str, Any] = {}
         if options.params is not None:
             kwargs["params"] = self._get_params_kwarg(options.params)

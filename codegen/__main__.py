@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 import argparse
 import contextlib
 import os
@@ -16,6 +17,13 @@ if TYPE_CHECKING:
 PRE_CODEGEN_NAME = "IS_PRE_CODEGEN"
 STATICALLY_ASYNC_NAME = "IS_ASYNC"
 DYNAMICALLY_ASYNC_NAME = "IS_ASYNC"
+
+COMMENT_IDENTIFIER = "COMMENT"
+PREVIOUS_LINE_COMMENT_IDENTIFIER = "PREV_LINE_COMMENT"
+# IYUTIYADSW: IF_YOU_USE_THIS_INDENTIFIER_YOU_ARE_DOING_SOMETHING_WRONG
+NEW_COMMENT_IDENTIFIER = "COMMENT_IYUTIYADSW"
+NEW_PREVIOUS_LINE_COMMENT_IDENTIFIER = "PREV_LINE_COMMENT_IYUTIYADSW"
+REPL_PATTERN_STR = f"(?:{NEW_COMMENT_IDENTIFIER}|(?:[\r\n \t]*{NEW_PREVIOUS_LINE_COMMENT_IDENTIFIER}))\\(('(?:[^\\\"]|\\\\.)*\\\\'\"')\\)"
 
 
 class CodegenConfig(TypedDict):
@@ -68,6 +76,25 @@ class AsyncCodegenNodeTransformer(ast.NodeTransformer):
 
         if (condition_value := self._match_static_condition(node.test)) is not None:
             return node.body if condition_value else node.orelse
+
+        return node
+
+    def visit_Call(self, node: ast.Call) -> Any:
+        self.generic_visit(node)
+
+        func = node.func
+        if (
+            isinstance(func, ast.Name)
+            and len(node.args) == 1
+            and isinstance(node.args[0], ast.Constant)
+            and isinstance(node.args[0].value, str)
+        ):
+            if func.id == COMMENT_IDENTIFIER:
+                func.id = NEW_COMMENT_IDENTIFIER
+                node.args[0].value += "'\""
+            elif func.id == PREVIOUS_LINE_COMMENT_IDENTIFIER:
+                func.id = NEW_PREVIOUS_LINE_COMMENT_IDENTIFIER
+                node.args[0].value += "'\""
 
         return node
 
@@ -158,6 +185,25 @@ class SyncCodegenNodeTransformer(ast.NodeTransformer):
 
         return node
 
+    def visit_Call(self, node: ast.Call) -> Any:
+        self.generic_visit(node)
+
+        func = node.func
+        if (
+            isinstance(func, ast.Name)
+            and len(node.args) == 1
+            and isinstance(node.args[0], ast.Constant)
+            and isinstance(node.args[0].value, str)
+        ):
+            if func.id == COMMENT_IDENTIFIER:
+                func.id = NEW_COMMENT_IDENTIFIER
+                node.args[0].value += "'\""
+            elif func.id == PREVIOUS_LINE_COMMENT_IDENTIFIER:
+                func.id = NEW_PREVIOUS_LINE_COMMENT_IDENTIFIER
+                node.args[0].value += "'\""
+
+        return node
+
 
 def codegen_for_ast(ast: ast.AST) -> tuple[ast.AST, ast.AST]:
     ast_2 = deepcopy(ast)
@@ -165,6 +211,10 @@ def codegen_for_ast(ast: ast.AST) -> tuple[ast.AST, ast.AST]:
         SyncCodegenNodeTransformer().generic_visit(ast),
         AsyncCodegenNodeTransformer().generic_visit(ast_2),
     )
+
+
+def add_comments(code: str) -> str:
+    return re.sub(REPL_PATTERN_STR, lambda m: f"# {ast.literal_eval(m.group(1))[:-2]}", code)
 
 
 def codegen_for_file(file: Path) -> tuple[ast.AST, ast.AST]:
@@ -205,7 +255,10 @@ def codegen_for_whole_directory(directory: "StrPath"):
         if path in exclusions:
             continue
         (sync_ast, async_ast) = codegen_for_file(path)
-        (sync_code, async_code) = (ast.unparse(sync_ast), ast.unparse(async_ast))
+        (sync_code, async_code) = (
+            add_comments(ast.unparse(sync_ast)),
+            add_comments(ast.unparse(async_ast)),
+        )
         (sync_target_directory / path.name).write_text(sync_code)
         (async_target_directory / path.name).write_text(async_code)
     subprocess.run(
@@ -226,6 +279,7 @@ def codegen_for_whole_directory(directory: "StrPath"):
 
 class CodegenArgumentNamespace(argparse.Namespace):
     targets: list[Path]
+
 
 def main():
     parser = argparse.ArgumentParser()
