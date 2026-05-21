@@ -1,13 +1,13 @@
 from __future__ import annotations
-
-from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
+from collections import defaultdict
 from threading import Thread
-from scratchattach.utils import exceptions
 import json
 import time
+from scratchattach.utils import exceptions
 from scratchattach.site import cloud_activity
 from scratchattach.site.user import User
 from ._base import BaseEventHandler
+from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 
 class TwCloudSocket(WebSocket):
 
@@ -126,8 +126,11 @@ def init_cloud_server(hostname='127.0.0.1', port=8080, *, thread=True, length_li
     class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         def __init__(self, hostname, *, port, websocketclass):
             super().__init__(hostname, port=port, websocketclass=websocketclass)
+            self._thread = None
             self.running = False
-            self._events = {} # saves event functions called on cloud updates
+            self._call_threads = []
+            self._events = defaultdict(list) # saves event functions called on cloud updates
+            self._threaded_events = defaultdict(list)
 
             self.tw_clients = {} # saves connected clients
             self.tw_variables = {}  # holds cloud variable states
