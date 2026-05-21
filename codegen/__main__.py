@@ -4,11 +4,12 @@ import argparse
 import contextlib
 import os
 from copy import deepcopy
-from typing import Any, TypedDict, cast, Optional, TYPE_CHECKING
+from typing import Any, TypedDict, cast, Optional, TYPE_CHECKING, Sequence
 import ast
 from pathlib import Path
 import json
 import subprocess
+import libcst
 
 if TYPE_CHECKING:
     from _typeshed import StrPath
@@ -20,10 +21,6 @@ DYNAMICALLY_ASYNC_NAME = "IS_ASYNC"
 
 COMMENT_IDENTIFIER = "COMMENT"
 PREVIOUS_LINE_COMMENT_IDENTIFIER = "PREV_LINE_COMMENT"
-# IYUTIYADSW: IF_YOU_USE_THIS_INDENTIFIER_YOU_ARE_DOING_SOMETHING_WRONG
-NEW_COMMENT_IDENTIFIER = "COMMENT_IYUTIYADSW"
-NEW_PREVIOUS_LINE_COMMENT_IDENTIFIER = "PREV_LINE_COMMENT_IYUTIYADSW"
-REPL_PATTERN_STR = f"(?:{NEW_COMMENT_IDENTIFIER}|(?:[\r\n \t]*{NEW_PREVIOUS_LINE_COMMENT_IDENTIFIER}))\\(('(?:[^\\\"]|\\\\.)*\\\\'\"')\\)"
 
 
 class CodegenConfig(TypedDict):
@@ -76,25 +73,6 @@ class AsyncCodegenNodeTransformer(ast.NodeTransformer):
 
         if (condition_value := self._match_static_condition(node.test)) is not None:
             return node.body if condition_value else node.orelse
-
-        return node
-
-    def visit_Call(self, node: ast.Call) -> Any:
-        self.generic_visit(node)
-
-        func = node.func
-        if (
-            isinstance(func, ast.Name)
-            and len(node.args) == 1
-            and isinstance(node.args[0], ast.Constant)
-            and isinstance(node.args[0].value, str)
-        ):
-            if func.id == COMMENT_IDENTIFIER:
-                func.id = NEW_COMMENT_IDENTIFIER
-                node.args[0].value += "'\""
-            elif func.id == PREVIOUS_LINE_COMMENT_IDENTIFIER:
-                func.id = NEW_PREVIOUS_LINE_COMMENT_IDENTIFIER
-                node.args[0].value += "'\""
 
         return node
 
@@ -185,24 +163,97 @@ class SyncCodegenNodeTransformer(ast.NodeTransformer):
 
         return node
 
-    def visit_Call(self, node: ast.Call) -> Any:
-        self.generic_visit(node)
 
-        func = node.func
-        if (
-            isinstance(func, ast.Name)
-            and len(node.args) == 1
-            and isinstance(node.args[0], ast.Constant)
-            and isinstance(node.args[0].value, str)
-        ):
-            if func.id == COMMENT_IDENTIFIER:
-                func.id = NEW_COMMENT_IDENTIFIER
-                node.args[0].value += "'\""
-            elif func.id == PREVIOUS_LINE_COMMENT_IDENTIFIER:
-                func.id = NEW_PREVIOUS_LINE_COMMENT_IDENTIFIER
-                node.args[0].value += "'\""
+class CommentTransformer(libcst.CSTTransformer):
+    @staticmethod
+    def _get_comment(node: libcst.CSTNode, target_name: str) -> str | None:
+        if isinstance(node, libcst.SimpleStatementLine) and len(node.body) == 1:
+            expr = node.body[0]
+            if (
+                isinstance(expr, libcst.Expr)
+                and isinstance((call := expr.value), libcst.Call)
+                and isinstance((func := call.func), libcst.Name)
+                and func.value == target_name
+                and len(call.args) == 1
+                and isinstance((comment_value := call.args[0].value), libcst.SimpleString)
+            ):
+                comment_value_string = comment_value.evaluated_value
+                if isinstance(comment_value_string, bytes):
+                    return comment_value_string.decode()
+                return comment_value_string
+        return None
 
-        return node
+    @classmethod
+    def _process_statement_sequence(
+        cls, sequence: Sequence[libcst.BaseStatement]
+    ) -> tuple[list[libcst.BaseStatement], list[libcst.EmptyLine], libcst.Comment | None]:
+        new_body: list[libcst.BaseStatement] = []
+        pending_comments: list[libcst.EmptyLine] = []
+        header_comment: libcst.Comment | None = None
+        for statement in sequence:
+            prev_line_comment_text = cls._get_comment(statement, PREVIOUS_LINE_COMMENT_IDENTIFIER)
+            if prev_line_comment_text is not None:
+                comment = libcst.Comment(f"# {prev_line_comment_text}")
+                if new_body:
+                    prev_statement = new_body[-1]
+                    if isinstance(prev_statement, libcst.SimpleStatementLine):
+                        whitespace = libcst.TrailingWhitespace(
+                            whitespace=libcst.SimpleWhitespace(" "), comment=comment
+                        )
+                        new_body[-1] = prev_statement.with_changes(trailing_whitespace=whitespace)
+                    else:
+                        pending_comments.append(libcst.EmptyLine(indent=True, comment=comment))
+                elif header_comment is None:
+                    header_comment = comment
+                else:
+                    pending_comments.append(libcst.EmptyLine(indent=True, comment=comment))
+                continue
+            comment_text = cls._get_comment(statement, COMMENT_IDENTIFIER)
+            if comment_text is not None:
+                pending_comments.append(
+                    libcst.EmptyLine(indent=True, comment=libcst.Comment(f"# {comment_text}"))
+                )
+                continue
+            if (
+                pending_comments
+                and (leading_lines := getattr(statement, "leading_lines", None)) is not None
+            ):
+                statement = statement.with_changes(
+                    leading_lines=(*leading_lines, *pending_comments)
+                )
+                pending_comments = []
+            new_body.append(statement)
+        return (new_body, pending_comments, header_comment)
+
+    def leave_Module(
+        self, original_node: libcst.Module, updated_node: libcst.Module
+    ) -> libcst.Module:
+        new_body, pending_comments, header_comment = self._process_statement_sequence(
+            updated_node.body
+        )
+        if header_comment is not None:
+            pending_comments.insert(0, libcst.EmptyLine(indent=True, comment=header_comment))
+        new_footer = (*updated_node.footer, *pending_comments)
+        return updated_node.with_changes(body=new_body, footer=new_footer)
+
+    def leave_IndentedBlock(
+        self, original_node: libcst.IndentedBlock, updated_node: libcst.IndentedBlock
+    ) -> libcst.IndentedBlock:
+        new_body, pending_comments, header_comment = self._process_statement_sequence(
+            updated_node.body
+        )
+        new_footer = (*updated_node.footer, *pending_comments)
+        if not new_body:
+            new_body = [libcst.SimpleStatementLine([libcst.Pass()])]
+
+        changes: dict[str, Any] = {"body": new_body, "footer": new_footer}
+
+        if header_comment:
+            changes["header"] = libcst.TrailingWhitespace(
+                whitespace=libcst.SimpleWhitespace(" "), comment=header_comment
+            )
+
+        return updated_node.with_changes(**changes)
 
 
 def codegen_for_ast(ast: ast.AST) -> tuple[ast.AST, ast.AST]:
@@ -214,7 +265,9 @@ def codegen_for_ast(ast: ast.AST) -> tuple[ast.AST, ast.AST]:
 
 
 def add_comments(code: str) -> str:
-    return re.sub(REPL_PATTERN_STR, lambda m: f"# {ast.literal_eval(m.group(1))[:-2]}", code)
+    cst = libcst.parse_module(code)
+    transformer = CommentTransformer()
+    return cst.visit(transformer).code
 
 
 def codegen_for_file(file: Path) -> tuple[ast.AST, ast.AST]:
