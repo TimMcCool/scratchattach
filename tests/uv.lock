@@ -910,7 +910,7 @@ requires-dist = [
 provides-extras = ["cli", "lark"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "ruff", specifier = ">=0.15.13" }]
+dev = [{ name = "ruff", specifier = ">=0.15.12" }]
 
 [[package]]
 name = "shadowcopy"

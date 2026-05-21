@@ -1,4 +1,5 @@
 from __future__ import annotations
+import traceback
 
 import json
 import ssl
@@ -8,6 +9,8 @@ from typing import Optional, Union, TypeVar, Generic, TYPE_CHECKING, Any
 from abc import ABC, abstractmethod, ABCMeta
 from threading import Lock
 from collections.abc import Iterator
+
+from scratchattach.cloud import cloud as cloud_module
 
 if TYPE_CHECKING:
     from _typeshed import SupportsRead
@@ -173,7 +176,12 @@ class WebSocketEventStream(EventStream):
 
     def __init__(self, cloud: BaseCloud):
         super().__init__()
-        self.source_cloud = type(cloud)(project_id=cloud.project_id)
+        # NOTE: maybe consider using copy.copy here (copy.deepcopy doesn't work as you cannot deepcopy a Thread)
+        cloud_type = type(cloud)
+        if cloud_type is cloud_module.CustomCloud:
+            self.source_cloud = cloud_type(project_id=cloud.project_id, cloud_host=cloud.cloud_host)
+        else:
+            self.source_cloud = cloud_type(project_id=cloud.project_id)
         self.source_cloud._session = cloud._session
         self.source_cloud.cookie = cloud.cookie
         self.source_cloud.header = cloud.header
@@ -217,7 +225,6 @@ class WebSocketEventStream(EventStream):
         done = False
         # print("Getting data...")
         with self.reading:
-            # print("Getting data...", end_time is None, end_time > time.time(), end_time is None or end_time > time.time())
             while not done:
                 # print("Getting data...")
                 try:
@@ -229,11 +236,18 @@ class WebSocketEventStream(EventStream):
                             self.receive_new(timeout=timeout_end - time.time() if has_timeout else None)
                         if not self.packets_left:
                             continue
-                        yield json.loads(self.packets_left.pop(0))
                         i += 1
+                        yield json.loads(self.packets_left.pop(0))
                     done = True
+                except json.JSONDecodeError as e:
+                    # this could happen e.g. when the scratchattach server sends the message
+                    # "This server uses @TimMcCool's scratchattach 2.0.0"
+                    warnings.warn(f"Invalid JSON sent from server: {e}")
                 except Exception:
-                    # traceback.print_exc()
+                    # NOTE: at the very least for `except Exception`, let's print the traceback
+                    # ideally we would never even use `except Exception`. Maybe this is technical debt.
+                    # TODO: investigate what the exception we actually want to catch here
+                    traceback.print_exc()
                     self.source_cloud.reconnect()
 
     def __del__(self):
