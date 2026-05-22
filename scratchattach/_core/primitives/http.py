@@ -197,6 +197,10 @@ if "IS_ASYNC":
                 raise ValueError('Cannot specify "json" alongside "content", "data", or "files"')
             if options.json is not shared_http._JsonEmptySentinel:
                 kwargs["json"] = options.json
+            if options.timeout:
+                kwargs["timeout"] = aiohttp.ClientTimeout(
+                    total=options.timeout, sock_connect=min(30, options.timeout)
+                )
             return kwargs
 
         def get(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
@@ -214,6 +218,12 @@ if "IS_ASYNC":
         def delete(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
             kwargs = self._get_kwargs(options)
             return _WrappedHTTPResponse(self._http_session.delete(url, **kwargs))
+
+        def request(
+            self, method: shared_http.HTTPMethod, url: str, options: HTTPOptions
+        ) -> _WrappedHTTPResponse:
+            kwargs = self._get_kwargs(options)
+            return _WrappedHTTPResponse(self._http_session.request(method.name, url, **kwargs))
 else:
 
     class _HTTPResponse:  # type: ignore[no-redef]
@@ -366,6 +376,8 @@ else:
                 raise ValueError('Cannot specify "json" alongside "content", "data", or "files"')
             if options.json is not shared_http._JsonEmptySentinel:
                 kwargs["json"] = options.json
+            if options.timeout:
+                kwargs["timeout"] = options.timeout
             return kwargs
 
         def get(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
@@ -383,3 +395,9 @@ else:
         def delete(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
             kwargs = self._get_kwargs(options)
             return _WrappedHTTPResponse(self._http_session.delete(url, **kwargs))  # type: ignore[arg-type]
+
+        def request(
+            self, method: shared_http.HTTPMethod, url: str, options: HTTPOptions
+        ) -> _WrappedHTTPResponse:
+            kwargs = self._get_kwargs(options)
+            return _WrappedHTTPResponse(self._http_session.request(method.name, url, **kwargs))  # type: ignore[arg-type]

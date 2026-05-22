@@ -145,6 +145,8 @@ class _HTTPSession:
             raise ValueError('Cannot specify "json" alongside "content", "data", or "files"')
         if options.json is not shared_http._JsonEmptySentinel:
             kwargs["json"] = options.json
+        if options.timeout:
+            kwargs["timeout"] = options.timeout
         return kwargs
 
     def get(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
@@ -162,3 +164,7 @@ class _HTTPSession:
     def delete(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
         kwargs = self._get_kwargs(options)
         return _WrappedHTTPResponse(self._http_session.delete(url, **kwargs))
+
+    def request(self, method: shared_http.HTTPMethod, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
+        kwargs = self._get_kwargs(options)
+        return _WrappedHTTPResponse(self._http_session.request(method.name, url, **kwargs))
