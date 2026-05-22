@@ -132,7 +132,7 @@ class TwCloudSocket(WebSocket):
                 return
 
             data = json.loads(self.data)
-            print(data)
+            # print(data)
 
             if data["method"] == "set":
                 self.handle_set(data)
