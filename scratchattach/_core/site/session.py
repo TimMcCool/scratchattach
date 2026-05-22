@@ -184,11 +184,11 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
     if "IS_ASYNC":
 
-        async def __aenter__(self) -> Self:
+        async def _aenter(self) -> Self:
             await self.http_session.__aenter__()
             return self
 
-        async def __aexit__(
+        async def _aexit(
             self,
             exc_type: type[BaseException] | None,
             exc_val: BaseException | None,
@@ -196,10 +196,10 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         ) -> None:
             await self.http_session.__aexit__(exc_type, exc_val, exc_tb)
 
-        def __enter__(self) -> None:
+        def _enter(self) -> None:
             raise TypeError("Use async with instead")
 
-        def __exit__(
+        def _exit(
             self,
             exc_type: Optional[type[BaseException]],
             exc_val: Optional[BaseException],
@@ -210,11 +210,11 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
     else:
 
-        def __enter__(self) -> Self:  # type: ignore[misc]
+        def _enter(self) -> Self:  # type: ignore[misc]
             self.http_session.__enter__()
             return self
 
-        def __exit__(
+        def _exit(
             self,
             exc_type: type[BaseException] | None,
             exc_val: BaseException | None,
@@ -1519,6 +1519,61 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         return self._cookies
 
 
+@dataclass
+class PreparedSession:
+    """
+    Session that needs to be activated in a context manager first. Do not instantiate this yourself.
+    """
+
+    args: Any = field(repr=False)
+    kwargs: Any = field(repr=False)
+    _session: Session = field(repr=False, init=False)
+
+    if "IS_ASYNC":
+
+        def __enter__(self) -> None:
+            raise TypeError("Use async with instead")
+
+        def __exit__(
+            self,
+            exc_type: Optional[type[BaseException]],
+            exc_val: Optional[BaseException],
+            exc_tb: Optional[TracebackType],
+        ) -> None:
+            # __exit__ should exist in pair with __enter__ but never executed
+            pass  # pragma: no cover
+
+        async def __aenter__(self) -> Session:
+            self._session = await Session(
+                *self.args, **(self.kwargs | {"http_session": http._HTTPSession()})
+            )._aenter()
+            return self._session
+
+        async def __aexit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: TracebackType | None,
+        ) -> None:
+            await self._session._aexit(exc_type, exc_val, exc_tb)
+
+    else:
+
+        def __enter__(self) -> Session:  # type: ignore[misc]
+            self._session = Session(
+                *self.args, **(self.kwargs | {"http_session": http._HTTPSession()})
+            )._enter()  # type: ignore[func-returns-value]
+            return self._session
+
+        def __exit__(
+            self,
+            exc_type: Optional[type[BaseException]],
+            exc_val: Optional[BaseException],
+            exc_tb: Optional[TracebackType],
+        ) -> None:
+            self._session._exit(exc_type, exc_val, exc_tb)
+
+
 # ------ #
 
 
@@ -1553,6 +1608,17 @@ def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetim
 
 # ------ #
 
+_global_http_session: http._HTTPSession | None = None
+
+
+async def _get_global_http_session() -> http._HTTPSession:
+    global _global_http_session
+    if _global_http_session is None:
+        async with http._HTTPSession() as session:
+            _global_http_session = session
+    return _global_http_session
+
+
 suppressed_login_warning = local()
 
 
@@ -1586,7 +1652,7 @@ def issue_login_warning() -> None:
 
 def login_by_id(
     session_id: str, *, username: Optional[str] = None, password: Optional[str] = None, xtoken=None
-) -> Session:
+) -> PreparedSession:
     """
     Creates a session / log in to the Scratch website with the specified session id.
     Structured similarly to Session._connect_object method.
@@ -1611,15 +1677,17 @@ def login_by_id(
     else:
         session_string = None
 
-    _session = Session(id=session_id, username=username or "", session_string=session_string)
-    if xtoken is not None:
-        # xtoken is retrievable from session id, so the most we can do is assert equality
-        assert xtoken == _session.xtoken
+    _session = PreparedSession(
+        (), {"id": session_id, "username": username or "", "session_string": session_string}
+    )
+    # if xtoken is not None:
+    #     # xtoken is retrievable from session id, so the most we can do is assert equality
+    #     assert xtoken == _session.xtoken
 
     return _session
 
 
-def login(username, password, *, timeout=10) -> Session:
+async def login(username, password, *, timeout: float | int = 10) -> PreparedSession:
     """
     Creates a session / log in to the Scratch website with the specified username and password.
 
@@ -1639,32 +1707,32 @@ def login(username, password, *, timeout=10) -> Session:
     """
     issue_login_warning()
 
+    http_session = await _get_global_http_session()
     # Post request to login API:
     _headers = headers.copy()
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
-    with requests.no_error_handling():
-        request = requests.post(
-            "https://scratch.mit.edu/login/",
-            json={"username": username, "password": password},
-            headers=_headers,
-            timeout=timeout,
-        )
+    async with http_session.post(
+        "https://scratch.mit.edu/login/",
+        shared_http.options()
+        .headers(_headers)
+        .timeout(timeout)
+        .json({"username": username, "password": password})
+        .value,
+    ) as response:
+        try:
+            result = re.search('"(.*)"', response.headers["Set-Cookie"])
+            assert result is not None
+            session_id = str(result.group())
+        except Exception:
+            raise exceptions.LoginFailure(
+                "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in"
+            )
 
-    try:
-        result = re.search('"(.*)"', request.headers["Set-Cookie"])
-        assert result is not None
-        session_id = str(result.group())
-    except Exception:
-        raise exceptions.LoginFailure(
-            "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in"
-        )
-
-    # Create session object:
     with suppress_login_warning():
         return login_by_id(session_id, username=username, password=password)
 
 
-def login_by_session_string(session_string: str) -> Session:
+async def login_by_session_string(session_string: str) -> PreparedSession:
     """
     Login using a session string.
     """
@@ -1694,32 +1762,32 @@ def login_by_session_string(session_string: str) -> Session:
     try:
         assert session_data.get("username") and session_data.get("password")
         with suppress_login_warning():
-            return login(username=session_data["username"], password=session_data["password"])
+            return await login(username=session_data["username"], password=session_data["password"])
     except Exception:
         pass
     raise ValueError("Couldn't log in.")
 
 
-def login_by_io(file: SupportsRead[str]) -> Session:
+async def login_by_io(file: SupportsRead[str]) -> PreparedSession:
     """
     Login using a file object.
-    """
+    """ # TODO: implement async
     with suppress_login_warning():
-        return login_by_session_string(file.read())
+        return await login_by_session_string(file.read())
 
 
-def login_by_file(file: FileDescriptorOrPath) -> Session:
+async def login_by_file(file: FileDescriptorOrPath) -> PreparedSession:
     """
     Login using a path to a file.
-    """
+    """ # TODO: implement async
     with suppress_login_warning(), open(file, encoding="utf-8") as f:
-        return login_by_io(f)
+        return await login_by_io(f)
 
 
-def login_from_browser(browser: Browser = ANY):
+def login_from_browser(browser: Browser = ANY) -> PreparedSession:
     """
     Login from a browser
-    """
+    """ # TODO: warn about blocking nature
     cookies = cookies_from_browser(browser)
     if "scratchsessionsid" in cookies:
         with suppress_login_warning():
