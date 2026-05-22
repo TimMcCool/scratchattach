@@ -167,6 +167,10 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
         # Base headers and cookies of every session:
         self._headers = dict(headers)
+        try:
+            self.id = json.loads(self.id)
+        except json.JSONDecodeError:
+            pass
         self._cookies = {
             "scratchsessionsid": self.id,
             "scratchcsrftoken": "a",
@@ -362,7 +366,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             # headers=self._headers,
             # cookies=self._cookies,
         ) as response:
-            soup = BeautifulSoup(await response.content(), "html.parser")
+            soup = BeautifulSoup(await response.text(), "html.parser")
 
             email = None
             for label_span in soup.find_all("span", {"class": "label"}):
@@ -375,6 +379,9 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
                 elif label_span.contents[0] == "Current Email Address":
                     email = label_span.parent.contents[-1].text.strip("\n ")
+            if email is None:
+                for label_span in soup.select("form#email-change span.current-email"):
+                    email = label_span.text
             assert email is not None
             return email
 
@@ -1600,7 +1607,7 @@ def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetim
     """
     p1, p2, _ = session_id.split(":")
     p1_bytes = base64.urlsafe_b64decode(p1 + "==")
-    if p1.startswith('".'):
+    if p1.startswith('".') or p1.startswith("."):
         p1_bytes = zlib.decompress(p1_bytes)
 
     return (json.loads(p1_bytes), datetime.datetime.fromtimestamp(commons.b62_decode(p2)))
@@ -1771,7 +1778,7 @@ async def login_by_session_string(session_string: str) -> PreparedSession:
 async def login_by_io(file: SupportsRead[str]) -> PreparedSession:
     """
     Login using a file object.
-    """ # TODO: implement async
+    """  # TODO: implement async
     with suppress_login_warning():
         return await login_by_session_string(file.read())
 
@@ -1779,7 +1786,7 @@ async def login_by_io(file: SupportsRead[str]) -> PreparedSession:
 async def login_by_file(file: FileDescriptorOrPath) -> PreparedSession:
     """
     Login using a path to a file.
-    """ # TODO: implement async
+    """  # TODO: implement async
     with suppress_login_warning(), open(file, encoding="utf-8") as f:
         return await login_by_io(f)
 
@@ -1787,7 +1794,7 @@ async def login_by_file(file: FileDescriptorOrPath) -> PreparedSession:
 def login_from_browser(browser: Browser = ANY) -> PreparedSession:
     """
     Login from a browser
-    """ # TODO: warn about blocking nature
+    """  # TODO: warn about blocking nature
     cookies = cookies_from_browser(browser)
     if "scratchsessionsid" in cookies:
         with suppress_login_warning():

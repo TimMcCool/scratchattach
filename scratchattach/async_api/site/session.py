@@ -128,6 +128,10 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         self.update_function = shared_http.HTTPMethod.POST
         self.update_api = "https://scratch.mit.edu/session"
         self._headers = dict(headers)
+        try:
+            self.id = json.loads(self.id)
+        except json.JSONDecodeError:
+            pass
         self._cookies = {
             "scratchsessionsid": self.id,
             "scratchcsrftoken": "a",
@@ -257,7 +261,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             str: The email that this session wants to switch to
         """
         async with self.http_session.get("https://scratch.mit.edu/accounts/email_change/") as response:
-            soup = BeautifulSoup(await response.content(), "html.parser")
+            soup = BeautifulSoup(await response.text(), "html.parser")
             email = None
             for label_span in soup.find_all("span", {"class": "label"}):
                 if not isinstance(label_span, Tag):
@@ -268,6 +272,9 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
                     return label_span.parent.contents[-1].text.strip("\n ")
                 elif label_span.contents[0] == "Current Email Address":
                     email = label_span.parent.contents[-1].text.strip("\n ")
+            if email is None:
+                for label_span in soup.select("form#email-change span.current-email"):
+                    email = label_span.text
             assert email is not None
             return email
 
@@ -1233,7 +1240,7 @@ def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetim
     """
     p1, p2, _ = session_id.split(":")
     p1_bytes = base64.urlsafe_b64decode(p1 + "==")
-    if p1.startswith('".'):
+    if p1.startswith('".') or p1.startswith("."):
         p1_bytes = zlib.decompress(p1_bytes)
     return (json.loads(p1_bytes), datetime.datetime.fromtimestamp(commons.b62_decode(p2)))
 
