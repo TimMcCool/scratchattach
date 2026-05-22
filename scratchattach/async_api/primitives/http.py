@@ -1,7 +1,10 @@
 from __future__ import annotations
 from types import TracebackType
 from collections.abc import Iterable, Mapping
-from typing import Optional, Self, cast, Any, Sequence, SupportsInt, BinaryIO
+from typing import Optional, Self, cast, Any, Sequence, SupportsInt, BinaryIO, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from _typeshed import SupportsKeysAndGetItem
 from scratchattach._shared import http as shared_http
 import contextlib
 import aiohttp
@@ -69,10 +72,35 @@ class _HTTPSession:
     def remove_cookie(self, key: str):
         del self._cookies[key]
 
+    def clear_cookies(self):
+        self._cookies.clear()
+
+    def update_cookies(self, new: "SupportsKeysAndGetItem[str, str]"):
+        self._cookies.update(new)
+
     def list_cookies(self) -> Iterable[tuple[str, str]]:
         return self._cookies.items()
 
+    def add_header(self, key: str, value: str):
+        self._headers[key] = value
+
+    def get_header(self, key: str) -> Optional[str]:
+        return self._headers.get(key)
+
+    def remove_header(self, key: str):
+        del self._headers[key]
+
+    def clear_headers(self):
+        self._headers.clear()
+
+    def update_headers(self, new: "SupportsKeysAndGetItem[str, str]"):
+        self._headers.update(new)
+
+    def list_headers(self) -> Iterable[tuple[str, str]]:
+        return self._headers.items()
+
     _cookies: dict[str, str]
+    _headers: dict[str, str]
     _http_session: aiohttp.ClientSession
 
     def __init__(self):
@@ -109,10 +137,12 @@ class _HTTPSession:
             params = params.items()
         if not isinstance(params, str) and isinstance(params, Iterable):
             new_params: Any = []
-            for key, value in cast(Iterable[tuple[str, Iterable[str | SupportsInt] | SupportsInt]], params):
+            for key, value in cast(Iterable[tuple[str, Iterable[str | SupportsInt] | SupportsInt | None]], params):
                 if not isinstance(value, str) and isinstance(value, Iterable):
                     for item in value:
                         new_params.append((key, cast(str | SupportsInt, item)))
+                elif value is None:
+                    pass
                 else:
                     new_params.append((key, cast(str | SupportsInt, value)))
             params = new_params
@@ -137,10 +167,24 @@ class _HTTPSession:
         return form_data
 
     @staticmethod
-    def _get_headers_kwarg(headers: Iterable[tuple[str, str]] | shared_http.SupportsItems[str, str]) -> dict[str, str]:
+    def _get_headers_kwarg(
+        default_headers: dict[str, str], headers: Iterable[tuple[str, str]] | shared_http.SupportsItems[str, str] | None
+    ) -> dict[str, str]:
+        if headers is None:
+            return default_headers
         if isinstance(headers, shared_http.SupportsItems):
-            headers = cast(Any, headers.items())
-        return dict(cast(Iterable[tuple[str, str]], headers))
+            headers = cast(Iterable[tuple[str, str]], headers.items())
+        return default_headers | dict(headers)
+
+    @staticmethod
+    def _get_cookies_kwarg(
+        default_cookies: dict[str, str], cookies: Iterable[tuple[str, str]] | shared_http.SupportsItems[str, str] | None
+    ) -> dict[str, str]:
+        if cookies is None:
+            return default_cookies
+        if isinstance(cookies, shared_http.SupportsItems):
+            cookies = cast(Iterable[tuple[str, str]], cookies.items())
+        return default_cookies | dict(cookies)
 
     def _get_kwargs(self, options: HTTPOptions) -> aiohttp.client._RequestOptions:  # noqa: C901
         kwargs: aiohttp.client._RequestOptions = {}
@@ -154,15 +198,12 @@ class _HTTPSession:
             kwargs["data"] = options.content
         if options.data is not None or options.files is not None:
             kwargs["data"] = self._get_data_and_files_kwargs(options.data, options.files)
-        merged_cookies = self._cookies.copy()
-        if options.cookies is not None:
-            cookies = options.cookies
-            if isinstance(cookies, shared_http.SupportsItems):
-                cookies = cookies.items()
-            merged_cookies.update(dict(cast(Iterable[tuple[str, str]], cookies)))
-        kwargs["cookies"] = merged_cookies
-        if options.headers is not None:
-            kwargs["headers"] = self._get_headers_kwarg(options.headers)
+        kwargs["cookies"] = self._get_cookies_kwarg(
+            {} if options.disregard_default_cookies else self._cookies, options.cookies
+        )
+        kwargs["headers"] = self._get_headers_kwarg(
+            {} if options.disregard_default_headers else self._headers, options.headers
+        )
         if options.json is not shared_http._JsonEmptySentinel and (
             options.content is not None or options.data is not None or options.files is not None
         ):
@@ -173,22 +214,22 @@ class _HTTPSession:
             kwargs["timeout"] = aiohttp.ClientTimeout(total=options.timeout, sock_connect=min(30, options.timeout))
         return kwargs
 
-    def get(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
-        kwargs = self._get_kwargs(options)
+    def get(self, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
+        kwargs = self._get_kwargs(options) if options is not None else {}
         return _WrappedHTTPResponse(self._http_session.get(url, **kwargs))
 
-    def post(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
-        kwargs = self._get_kwargs(options)
+    def post(self, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
+        kwargs = self._get_kwargs(options) if options is not None else {}
         return _WrappedHTTPResponse(self._http_session.post(url, **kwargs))
 
-    def put(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
-        kwargs = self._get_kwargs(options)
+    def put(self, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
+        kwargs = self._get_kwargs(options) if options is not None else {}
         return _WrappedHTTPResponse(self._http_session.put(url, **kwargs))
 
-    def delete(self, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
-        kwargs = self._get_kwargs(options)
+    def delete(self, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
+        kwargs = self._get_kwargs(options) if options is not None else {}
         return _WrappedHTTPResponse(self._http_session.delete(url, **kwargs))
 
-    def request(self, method: shared_http.HTTPMethod, url: str, options: HTTPOptions) -> _WrappedHTTPResponse:
-        kwargs = self._get_kwargs(options)
+    def request(self, method: shared_http.HTTPMethod, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
+        kwargs = self._get_kwargs(options) if options is not None else {}
         return _WrappedHTTPResponse(self._http_session.request(method.name, url, **kwargs))

@@ -1,6 +1,7 @@
 """Session class and login function"""
 
 from __future__ import annotations
+from types import TracebackType
 
 import base64
 import bs4
@@ -15,7 +16,7 @@ import warnings
 import zlib
 
 from dataclasses import dataclass, field
-from typing import Literal, Optional, TypeVar, TYPE_CHECKING, overload, Any, Union, cast
+from typing import Literal, Optional, TypeVar, TYPE_CHECKING, overload, Any, Union, cast, Self
 from contextlib import contextmanager
 from threading import local
 
@@ -38,7 +39,7 @@ from . import activity, classroom, forum, studio, user, project, backpack_asset,
 from . import typed_dicts
 
 # noinspection PyProtectedMember
-from ._base import BaseSiteComponent
+from ._base import BaseSiteComponent, api_iterative
 from scratchattach.cloud import cloud, _base
 from scratchattach.eventhandlers import message_events, filterbot
 from scratchattach.other import other_apis
@@ -49,6 +50,7 @@ from scratchattach.utils.commons import (
     webscrape_count,
     get_class_sort_mode,
 )
+from scratchattach._shared import http as shared_http
 from ..primitives import http
 from .browser_cookies import Browser, ANY, cookies_from_browser
 
@@ -80,7 +82,7 @@ class UnauthSession:
 
 
 @dataclass
-class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
+class Session(BaseSiteComponent[typed_dicts.SessionDict]):
     """
     Represents a Scratch log in / session. Stores authentication data (session id and xtoken).
 
@@ -119,7 +121,7 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
     ocular_token: Optional[str] = field(
         repr=False, default=None
     )  # note that this is a header, not a cookie
-    _session: Optional[Session] = field(kw_only=True, default=None)
+    _session: Session | UnauthSession = field(kw_only=True, init=False)
 
     def __str__(self) -> str:
         return f"-L {self.username}"
@@ -130,10 +132,10 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
         from rich import box
         from rich.markup import escape
 
-        try:
-            self.update()
-        except KeyError as e:
-            warnings.warn(f"Ignored KeyError: {e}")
+        # try:
+        #     self.update()
+        # except KeyError as e:
+        #     warnings.warn(f"Ignored KeyError: {e}")
 
         ret = Table(
             f"[link={self.connect_linked_user().url}]{escape(self.username)}[/]",
@@ -160,7 +162,7 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
 
     def __post_init__(self):
         # Info on how the .update method has to fetch the data:
-        self.update_function = requests.post
+        self.update_function = shared_http.HTTPMethod.POST
         self.update_api = "https://scratch.mit.edu/session"
 
         # Base headers and cookies of every session:
@@ -173,18 +175,57 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
             "Content-Type": "application/json",
         }
 
+        self._update_http_cookies_and_headers()
+
         if self.id:
             self._process_session_id()
 
         self._session = self
 
-    def _update_from_data(self, data: Union[dict, typed_dicts.SessionDict]):
+    if "IS_ASYNC":
+
+        async def __aenter__(self) -> Self:
+            await self.http_session.__aenter__()
+            return self
+
+        async def __aexit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: TracebackType | None,
+        ) -> None:
+            await self.http_session.__aexit__(exc_type, exc_val, exc_tb)
+
+        def __enter__(self) -> None:
+            raise TypeError("Use async with instead")
+
+        def __exit__(
+            self,
+            exc_type: Optional[type[BaseException]],
+            exc_val: Optional[BaseException],
+            exc_tb: Optional[TracebackType],
+        ) -> None:
+            # __exit__ should exist in pair with __enter__ but never executed
+            pass  # pragma: no cover
+
+    else:
+
+        def __enter__(self) -> Self:  # type: ignore[misc]
+            self.http_session.__enter__()
+            return self
+
+        def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_val: BaseException | None,
+            exc_tb: TracebackType | None,
+        ) -> None:
+            self.http_session.__exit__(exc_type, exc_val, exc_tb)
+
+    def _update_from_data(self, data: typed_dicts.SessionDict):
         # Note: there are a lot more things you can get from this data dict.
         # Maybe it would be a good idea to also store the dict itself?
         # self.data = data
-
-        data = cast(typed_dicts.SessionDict, data)
-
         self.xtoken = data["user"]["token"]
         self._headers["X-Token"] = self.xtoken
 
@@ -198,7 +239,7 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
         self.is_teacher = data["permissions"]["educator"]
         self.is_teacher_invitee = data["permissions"]["educator_invitee"]
 
-        self.mute_status: dict = data["permissions"]["mute_status"]
+        self.mute_status = data["permissions"]["mute_status"]
 
         self.username = data["user"]["username"]
         self.banned = data["user"]["banned"]
@@ -233,11 +274,18 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
         self.language = data.get("_language", "en")
         # self._cookies["scratchlanguage"] = self.language
 
-    def _assert_ocular_auth(self):
+    def _assert_ocular_auth(self) -> str:
         if not self.ocular_token:
             raise ValueError(
                 f"No ocular token supplied for {self}! You can add one by using Session.set_ocular_token(YOUR_TOKEN)."
             )
+        return self.ocular_token
+
+    def _update_http_cookies_and_headers(self):
+        self.http_session.clear_cookies()
+        self.http_session.update_cookies(self._cookies)
+        self.http_session.clear_headers()
+        self.http_session.update_headers(self._headers)
 
     def set_ocular_token(self, token: str):
         self.ocular_token = token
@@ -267,37 +315,41 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
         # To avoid inconsistencies with "connect" and "get", this function was renamed
         return self.connect_linked_user()
 
-    def set_country(self, country: str = "Antarctica"):
+    async def set_country(self, country: str = "Antarctica"):
         """
         Sets the profile country of the session's associated user
 
         Arguments:
             country (str): The country to relocate to
         """
-        requests.post(
+        async with self.http_session.post(
             "https://scratch.mit.edu/accounts/settings/",
-            data={"country": country},
-            headers=self._headers,
-            cookies=self._cookies,
-        )
+            shared_http.options().data({"country": country}).value,
+            # data={"country": country},
+            # headers=self._headers,
+            # cookies=self._cookies,
+        ):
+            pass
 
-    def resend_email(self, password: str):
+    async def resend_email(self, password: str):
         """
         Sends a request to resend a confirmation email for this session's account
 
         Keyword arguments:
             password (str): Password associated with the session (not stored)
         """
-        requests.post(
+        async with self.http_session.post(
             "https://scratch.mit.edu/accounts/email_change/",
-            data={"email_address": self.get_new_email_address(), "password": password},
-            headers=self._headers,
-            cookies=self._cookies,
-        )
+            shared_http.options()
+            .data({"email_address": await self.get_new_email_address(), "password": password})
+            .value,
+            # data={"email_address": self.get_new_email_address(), "password": password},
+            # headers=self._headers,
+            # cookies=self._cookies,
+        ):
+            pass
 
-    @property
-    @deprecated("Use get_new_email_address instead.")
-    def new_email_address(self) -> str:
+    async def get_new_email_address(self) -> str:
         """
         Gets the (unconfirmed) email address that this session has requested to transfer to, if any,
         otherwise the current address.
@@ -305,47 +357,35 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
         Returns:
             str: The email that this session wants to switch to
         """
-        return self.get_new_email_address()
-
-    def get_new_email_address(self) -> str:
-        """
-        Gets the (unconfirmed) email address that this session has requested to transfer to, if any,
-        otherwise the current address.
-
-        Returns:
-            str: The email that this session wants to switch to
-        """
-        response = requests.get(
+        async with self.http_session.get(
             "https://scratch.mit.edu/accounts/email_change/",
-            headers=self._headers,
-            cookies=self._cookies,
-        )
+            # headers=self._headers,
+            # cookies=self._cookies,
+        ) as response:
+            soup = BeautifulSoup(await response.content(), "html.parser")
 
-        soup = BeautifulSoup(response.content, "html.parser")
+            email = None
+            for label_span in soup.find_all("span", {"class": "label"}):
+                if not isinstance(label_span, Tag):
+                    continue
+                if not isinstance(label_span.parent, Tag):
+                    continue
+                if label_span.contents[0] == "New Email Address":
+                    return label_span.parent.contents[-1].text.strip("\n ")
 
-        email = None
-        for label_span in soup.find_all("span", {"class": "label"}):
-            if not isinstance(label_span, Tag):
-                continue
-            if not isinstance(label_span.parent, Tag):
-                continue
-            if label_span.contents[0] == "New Email Address":
-                return label_span.parent.contents[-1].text.strip("\n ")
+                elif label_span.contents[0] == "Current Email Address":
+                    email = label_span.parent.contents[-1].text.strip("\n ")
+            assert email is not None
+            return email
 
-            elif label_span.contents[0] == "Current Email Address":
-                email = label_span.parent.contents[-1].text.strip("\n ")
-        assert email is not None
-        return email
-
-    def logout(self):
+    async def logout(self):
         """
         Sends a logout request to scratch. (Might not do anything, might log out this account on other ips/sessions.)
         """
-        requests.post(
-            "https://scratch.mit.edu/accounts/logout/", headers=self._headers, cookies=self._cookies
-        )
+        async with self.http_session.post("https://scratch.mit.edu/accounts/logout/"):
+            pass
 
-    def set_featured_data(
+    async def set_featured_data(
         self,
         project_id: Optional[int] | Literal[""],
         project_label: Optional[int] | Literal[""] = None,
@@ -368,53 +408,75 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
         if project_id is not None:
             payload["featured_project"] = project_id
 
-        data = requests.put(
+        async with self.http_session.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/",
-            json=payload,
-            headers=self._headers,
-            cookies=self._cookies,
-        ).json()
-        if errors := data.get("errors"):
-            raise Exception(
-                f"Backend responded with error: {errors[0] if len(errors) == 1 else errors}"
-            )
+            shared_http.options().json(payload).value,
+            # json=payload,
+            # headers=self._headers,
+            # cookies=self._cookies,
+        ) as response:
+            data = await response.json()
+            if errors := data.get("errors"):
+                raise Exception(
+                    f"Backend responded with error: {errors[0] if len(errors) == 1 else errors}"
+                )
 
-        return data
+            return data
 
     @property
     def ocular_headers(self) -> dict[str, str]:
-        self._assert_ocular_auth()
         return {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
             "(KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
             "referer": "https://ocular.jeffalo.net/",
-            "authorization": self.ocular_token,
+            "authorization": self._assert_ocular_auth(),
         }
 
-    def get_ocular_status(self) -> typed_dicts.OcularUserDict:
+    async def get_ocular_status(self) -> typed_dicts.OcularUserDict:
         # You can use sess.connect_linked_user().ocular_status() but this uses the ocular token to work out the username.
         # In the case the username does not match the session, this would mismatch, and a warning could even be issued
         self._assert_ocular_auth()
 
-        resp = requests.get(
-            "https://my-ocular.jeffalo.net/auth/me", headers=self.ocular_headers
-        ).json()
-        return resp
+        async with self.http_session.get(
+            "https://my-ocular.jeffalo.net/auth/me",
+            shared_http.options()
+            .disregard_default_headers()
+            .disregard_default_cookies()
+            .headers(self.ocular_headers)
+            .value,
+        ) as response:
+            return cast(typed_dicts.OcularUserDict, await response.json())
 
-    def set_ocular_status(self, status: Optional[str] = None, color: Optional[str] = None) -> None:
+    async def set_ocular_status(
+        self, status: Optional[str] = None, color: Optional[str] = None
+    ) -> None:
         self._assert_ocular_auth()
-        old = self.get_ocular_status()
+        old = await self.get_ocular_status()
         payload = {"color": color or old["color"], "status": status or old["status"]}
 
-        assert requests.put(
+        async with self.http_session.put(
             f"https://my-ocular.jeffalo.net/api/user/{old['name']}",
-            json=payload,
-            headers=self.ocular_headers,
-        ).json() == {"ok": "user updated"}, (
-            f"Error occured on setting ocular status. auth/me response: {old}"
-        )
+            shared_http.options()
+            .disregard_default_headers()
+            .disregard_default_cookies()
+            .headers(self.ocular_headers)
+            .json(payload)
+            .value,
+            # json=payload,
+            # headers=self.ocular_headers,
+        ) as response:
+            assert response.json() == {"ok": "user updated"}, (
+                f"Error occured on setting ocular status. auth/me response: {old}"
+            )
+        # assert requests.put(
+        #     f"https://my-ocular.jeffalo.net/api/user/{old['name']}",
+        #     json=payload,
+        #     headers=self.ocular_headers,
+        # ).json() == {"ok": "user updated"}, (
+        #     f"Error occured on setting ocular status. auth/me response: {old}"
+        # )
 
-    def messages(
+    async def messages(
         self, *, limit: int = 40, offset: int = 0, date_limit=None, filter_by=None
     ) -> list[activity.Activity]:
         """
@@ -433,7 +495,8 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
         if filter_by is not None:
             add_params += f"&filter={filter_by}"
 
-        data = commons.api_iterative(
+        data: list[Any] = await api_iterative(
+            self,
             f"https://api.scratch.mit.edu/users/{self._username}/messages",
             limit=limit,
             offset=offset,
@@ -441,7 +504,7 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
             cookies=self._cookies,
             add_params=add_params,
         )
-        return commons.parse_object_list(data, activity.Activity, self)
+        return activity.Activity.parse_object_list(data, self)
 
     def admin_messages(self, *, limit=40, offset=0) -> list[dict]:
         """
@@ -455,7 +518,7 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
             cookies=self._cookies,
         )
 
-    def classroom_alerts(
+    async def classroom_alerts(
         self,
         _classroom: Optional[classroom.Classroom | int] = None,
         mode: str = "Last created",
@@ -478,12 +541,23 @@ class Session(BaseSiteComponent[Union[dict, typed_dicts.SessionDict]]):
 
         ascsort, descsort = get_class_sort_mode(mode)
 
-        data = requests.get(
+        async with self.http_session.get(
             f"https://scratch.mit.edu/site-api/classrooms/alerts/{_classroom_str}",
-            params={"page": page, "ascsort": ascsort, "descsort": descsort},
-            headers=self._headers,
-            cookies=self._cookies,
-        ).json()
+            shared_http.options()
+            .params({"page": page, "ascsort": ascsort, "descsort": descsort})
+            .value,
+            # params={"page": page, "ascsort": ascsort, "descsort": descsort},
+            # headers=self._headers,
+            # cookies=self._cookies,
+        ) as response:
+            data = await response.json()
+
+        # data = requests.get(
+        #     f"https://scratch.mit.edu/site-api/classrooms/alerts/{_classroom_str}",
+        #     params={"page": page, "ascsort": ascsort, "descsort": descsort},
+        #     headers=self._headers,
+        #     cookies=self._cookies,
+        # ).json()
 
         alerts = [alert.EducatorAlert.from_json(alert_data, self) for alert_data in data]
 

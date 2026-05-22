@@ -15,7 +15,7 @@ class SupportsItems(Protocol[_KT_co, _VT_co]):
     def items(self) -> Iterable[tuple[_KT_co, _VT_co]]: ...
 
 
-_ParamsValue: TypeAlias = str | int | float | Iterable[str | int | float]
+_ParamsValue: TypeAlias = str | int | float | Iterable[str | int | float] | None
 
 _FilesValue: TypeAlias = BinaryIO | bytes
 
@@ -35,7 +35,7 @@ class HTTPOptionsBuilder:
 
     def params(
         self,
-        value: (Iterable[tuple[str, _ParamsValue]] | SupportsItems[str, _ParamsValue] | str | None),
+        value: Iterable[tuple[str, _ParamsValue]] | SupportsItems[str, _ParamsValue] | str | None,
     ) -> Self:
         self.value.params = value
         return self
@@ -62,8 +62,16 @@ class HTTPOptionsBuilder:
         self.value.headers = value
         return self
 
+    def disregard_default_headers(self, value: bool = True) -> Self:
+        self.value.disregard_default_headers = value
+        return self
+
     def cookies(self, value: Iterable[tuple[str, str]] | SupportsItems[str, str] | None) -> Self:
         self.value.cookies = value
+        return self
+
+    def disregard_default_cookies(self, value: bool = True) -> Self:
+        self.value.disregard_default_cookies = value
         return self
 
     def timeout(self, value: int | float | None) -> Self:
@@ -80,7 +88,9 @@ class HTTPOptions:
     files: Iterable[tuple[str, _FilesValue]] | SupportsItems[str, _FilesValue] | None = None
     json: Any = _JsonEmptySentinel
     headers: Iterable[tuple[str, str]] | SupportsItems[str, str] | None = None
+    disregard_default_headers: bool = False
     cookies: Iterable[tuple[str, str]] | SupportsItems[str, str] | None = None
+    disregard_default_cookies: bool = False
     timeout: int | float | None = None
 
 
