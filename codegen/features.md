@@ -9,10 +9,14 @@ Codegen automatically formats result files using ruff. This cannot currently be 
 ## Dynamic checking
 
 You can declare a variable `IS_ASYNC` like so (recommended to be in global scope):
+
 ```python
 IS_ASYNC = True
 ```
+
 It will be `True` in the async code and `False` in the sync code. This can be used to check dynamically where you currently are.
+
+More specifically, any assignment of `IS_ASYNC` will be left as is in the async code and will be changed to assign `False` in the sync code.
 
 ## Static checking
 
@@ -41,7 +45,7 @@ sync_implementation()
 
 ### `"IS_PRE_CODEGEN"`
 
-If you use exactly `"IS_PRE_CODEGEN"` as a condition (and nothing else) in an if, if else or if elif else statement, only paths with it being false will be included in the async and sync code.
+If you use exactly `"IS_PRE_CODEGEN"` as a condition (and nothing else) in an if, if else or if elif else statement, only paths with it being false will be included in the async and sync code. The purpose of this feature is to allow you to satisfy static code analysis without bloating the resulting code.
 
 Example:
 
