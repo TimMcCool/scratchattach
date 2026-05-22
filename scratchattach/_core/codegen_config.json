@@ -4,5 +4,5 @@
     "exclude": [
         "./__init__.py"
     ],
-    "include_directories": ["./primitives"]
+    "include_directories": ["./primitives", "./site"]
 }

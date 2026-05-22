@@ -1,0 +1,1355 @@
+"""Session class and login function"""
+
+from __future__ import annotations
+from types import TracebackType
+import base64
+import bs4
+import datetime
+import hashlib
+import json
+import pathlib
+import random
+import re
+import time
+import warnings
+import zlib
+from dataclasses import dataclass, field
+from typing import Literal, Optional, TypeVar, TYPE_CHECKING, overload, Any, Union, cast, Self
+from contextlib import contextmanager
+from threading import local
+from scratchattach import editor
+
+Type = type
+if TYPE_CHECKING:
+    from _typeshed import FileDescriptorOrPath, SupportsRead
+    from scratchattach.cloud._base import BaseCloud
+
+    T = TypeVar("T", bound=BaseCloud)
+else:
+    T = TypeVar("T")
+from bs4 import BeautifulSoup, Tag
+from typing_extensions import deprecated
+from . import activity, classroom, forum, studio, user, project, backpack_asset, alert
+from . import typed_dicts
+from ._base import BaseSiteComponent, api_iterative
+from scratchattach.cloud import cloud, _base
+from scratchattach.eventhandlers import message_events, filterbot
+from scratchattach.other import other_apis
+from scratchattach.utils import commons, exceptions
+from scratchattach.utils.commons import headers, empty_project_json, webscrape_count, get_class_sort_mode
+from scratchattach._shared import http as shared_http
+from ..primitives import http
+from .browser_cookies import Browser, ANY, cookies_from_browser
+
+ratelimit_cache: dict[str, list[float]] = {}
+
+
+def enforce_ratelimit(__type: str, name: str, amount: int = 5, duration: int = 60) -> None:
+    cache = ratelimit_cache
+    cache.setdefault(__type, [])
+    uses = cache[__type]
+    while uses and uses[-1] < time.time() - duration:
+        uses.pop()
+    if len(uses) < amount:
+        uses.insert(0, time.time())
+        return
+    raise exceptions.RateLimitedError(
+        f"Rate limit for {name} exceeded.\nThis rate limit is enforced by scratchattach, not by the Scratch API.\nFor security reasons, it cannot be turned off.\n\nDon't spam-create studios or similar, it WILL get you banned."
+    )
+
+
+C = TypeVar("C", bound=BaseSiteComponent)
+
+
+class UnauthSession:
+    http_session: http._HTTPSession
+
+
+@dataclass
+class Session(BaseSiteComponent[typed_dicts.SessionDict]):
+    """
+    Represents a Scratch log in / session. Stores authentication data (session id and xtoken).
+
+    Attributes:
+        id: The session id associated with the login
+        username: The username associated with the login
+        xtoken: The xtoken associated with the login
+        email: The email address associated with the logged in account
+        new_scratcher: True if the associated account is a new Scratcher
+        mute_status: Information about commenting restrictions of the associated account
+        banned: Returns True if the associated account is banned
+    """
+
+    http_session: http._HTTPSession = field(repr=False, kw_only=True)
+    username: str = field(repr=False, default="")
+    _user: Optional[user.User] = field(repr=False, default=None)
+    id: str = field(repr=False, default="")
+    session_string: Optional[str] = field(repr=False, default=None)
+    xtoken: Optional[str] = field(repr=False, default=None)
+    email: Optional[str] = field(repr=False, default=None)
+    new_scratcher: bool = field(repr=False, default=False)
+    mute_status: Any = field(repr=False, default=None)
+    banned: bool = field(repr=False, default=False)
+    time_created: datetime.datetime = field(repr=False, default=datetime.datetime.fromtimestamp(0.0))
+    language: str = field(repr=False, default="en")
+    has_outstanding_email_confirmation: bool = field(repr=False, default=False)
+    is_teacher: bool = field(repr=False, default=False)
+    is_teacher_invitee: bool = field(repr=False, default=False)
+    ocular_token: Optional[str] = field(repr=False, default=None)
+    _session: Session | UnauthSession = field(kw_only=True, init=False)
+
+    def __str__(self) -> str:
+        return f"-L {self.username}"
+
+    def __rich__(self):
+        from rich.panel import Panel
+        from rich.table import Table
+        from rich import box
+        from rich.markup import escape
+
+        ret = Table(
+            f"[link={self.connect_linked_user().url}]{escape(self.username)}[/]", f"Created: {self.time_created}", expand=True
+        )
+        ret.add_row("Email", escape(str(self.email)))
+        ret.add_row("Language", escape(str(self.language)))
+        ret.add_row("Mute status", escape(str(self.mute_status)))
+        ret.add_row("New scratcher?", str(self.new_scratcher))
+        ret.add_row("Banned?", str(self.banned))
+        ret.add_row("Has outstanding email confirmation?", str(self.has_outstanding_email_confirmation))
+        ret.add_row("Is teacher invitee?", str(self.is_teacher_invitee))
+        ret.add_row("Is teacher?", str(self.is_teacher))
+        return ret
+
+    @property
+    def _username(self) -> str:
+        return self.username
+
+    def __post_init__(self):
+        self.update_function = shared_http.HTTPMethod.POST
+        self.update_api = "https://scratch.mit.edu/session"
+        self._headers = dict(headers)
+        self._cookies = {
+            "scratchsessionsid": self.id,
+            "scratchcsrftoken": "a",
+            "scratchlanguage": "en",
+            "accept": "application/json",
+            "Content-Type": "application/json",
+        }
+        self._update_http_cookies_and_headers()
+        if self.id:
+            self._process_session_id()
+        self._session = self
+
+    def __enter__(self) -> Self:
+        self.http_session.__enter__()
+        return self
+
+    def __exit__(
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
+    ) -> None:
+        self.http_session.__exit__(exc_type, exc_val, exc_tb)
+
+    def _update_from_data(self, data: typed_dicts.SessionDict):
+        self.xtoken = data["user"]["token"]
+        self._headers["X-Token"] = self.xtoken
+        self.has_outstanding_email_confirmation = data["flags"]["has_outstanding_email_confirmation"]
+        self.email = data["user"]["email"]
+        self.new_scratcher = data["permissions"]["new_scratcher"]
+        self.is_teacher = data["permissions"]["educator"]
+        self.is_teacher_invitee = data["permissions"]["educator_invitee"]
+        self.mute_status = data["permissions"]["mute_status"]
+        self.username = data["user"]["username"]
+        self.banned = data["user"]["banned"]
+        if self.banned:
+            warnings.warn(
+                f"Warning: The account {self.username} you logged in to is BANNED. Some features may not work properly."
+            )
+        if self.has_outstanding_email_confirmation:
+            warnings.warn(
+                f"Warning: The account {self.username} you logged is not email confirmed. Some features may not work properly."
+            )
+        return True
+
+    def _process_session_id(self):
+        assert self.id
+        data, self.time_created = decode_session_id(self.id)
+        self.username = data["username"]
+        self.xtoken = data["token"]
+        self._headers["X-Token"] = self.xtoken
+        self.language = data.get("_language", "en")
+
+    def _assert_ocular_auth(self) -> str:
+        if not self.ocular_token:
+            raise ValueError(
+                f"No ocular token supplied for {self}! You can add one by using Session.set_ocular_token(YOUR_TOKEN)."
+            )
+        return self.ocular_token
+
+    def _update_http_cookies_and_headers(self):
+        self.http_session.clear_cookies()
+        self.http_session.update_cookies(self._cookies)
+        self.http_session.clear_headers()
+        self.http_session.update_headers(self._headers)
+
+    def set_ocular_token(self, token: str):
+        self.ocular_token = token
+
+    def connect_linked_user(self) -> user.User:
+        """
+        Gets the user associated with the login / session.
+
+        Warning:
+            The returned User object is cached. To ensure its attribute are up to date, you need to run .update() on it.
+
+        Returns:
+            scratchattach.user.User: Object representing the user associated with the session.
+        """
+        cached = hasattr(self, "_user")
+        if cached:
+            cached = self._user is not None
+        if not cached:
+            self._user = self.connect_user(self._username)
+        assert self._user is not None
+        return self._user
+
+    def get_linked_user(self) -> user.User:
+        return self.connect_linked_user()
+
+    def set_country(self, country: str = "Antarctica"):
+        """
+        Sets the profile country of the session's associated user
+
+        Arguments:
+            country (str): The country to relocate to
+        """
+        with self.http_session.post(
+            "https://scratch.mit.edu/accounts/settings/", shared_http.options().data({"country": country}).value
+        ):
+            pass
+
+    def resend_email(self, password: str):
+        """
+        Sends a request to resend a confirmation email for this session's account
+
+        Keyword arguments:
+            password (str): Password associated with the session (not stored)
+        """
+        with self.http_session.post(
+            "https://scratch.mit.edu/accounts/email_change/",
+            shared_http.options().data({"email_address": self.get_new_email_address(), "password": password}).value,
+        ):
+            pass
+
+    def get_new_email_address(self) -> str:
+        """
+        Gets the (unconfirmed) email address that this session has requested to transfer to, if any,
+        otherwise the current address.
+
+        Returns:
+            str: The email that this session wants to switch to
+        """
+        with self.http_session.get("https://scratch.mit.edu/accounts/email_change/") as response:
+            soup = BeautifulSoup(response.content(), "html.parser")
+            email = None
+            for label_span in soup.find_all("span", {"class": "label"}):
+                if not isinstance(label_span, Tag):
+                    continue
+                if not isinstance(label_span.parent, Tag):
+                    continue
+                if label_span.contents[0] == "New Email Address":
+                    return label_span.parent.contents[-1].text.strip("\n ")
+                elif label_span.contents[0] == "Current Email Address":
+                    email = label_span.parent.contents[-1].text.strip("\n ")
+            assert email is not None
+            return email
+
+    def logout(self):
+        """
+        Sends a logout request to scratch. (Might not do anything, might log out this account on other ips/sessions.)
+        """
+        with self.http_session.post("https://scratch.mit.edu/accounts/logout/"):
+            pass
+
+    def set_featured_data(self, project_id: Optional[int] | Literal[""], project_label: Optional[int] | Literal[""] = None):
+        """
+        Sends a request to change your featured project area.
+
+        Positional arguments:
+            project_id: None -> don't change; empty string -> set to latest project (this is what most accounts have); int -> set the featured project to the one with the corresponding ID. If you do not own that project, an error is raised.
+            project_lavel: None -> don't change; empty string -> "Featured project"; 0 -> "Featured Tutorial"; 1 -> "Work in progress"; 2 -> "Remix this!"; 3 -> "My favorite things"; 4 -> "Why I scratch"
+
+        Returns:
+            list<scratch.activity.Activity>: List that contains all messages as Activity objects.
+
+        """
+        payload: dict[str, int | str] = {}
+        if project_label is not None:
+            payload["featured_project_label"] = str(project_label)
+        if project_id is not None:
+            payload["featured_project"] = project_id
+        with self.http_session.put(
+            f"https://scratch.mit.edu/site-api/users/all/{self.username}/", shared_http.options().json(payload).value
+        ) as response:
+            data = response.json()
+            if errors := data.get("errors"):
+                raise Exception(f"Backend responded with error: {(errors[0] if len(errors) == 1 else errors)}")
+            return data
+
+    @property
+    def ocular_headers(self) -> dict[str, str]:
+        return {
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36",
+            "referer": "https://ocular.jeffalo.net/",
+            "authorization": self._assert_ocular_auth(),
+        }
+
+    def get_ocular_status(self) -> typed_dicts.OcularUserDict:
+        self._assert_ocular_auth()
+        with self.http_session.get(
+            "https://my-ocular.jeffalo.net/auth/me",
+            shared_http.options().disregard_default_headers().disregard_default_cookies().headers(self.ocular_headers).value,
+        ) as response:
+            return cast(typed_dicts.OcularUserDict, response.json())
+
+    def set_ocular_status(self, status: Optional[str] = None, color: Optional[str] = None) -> None:
+        self._assert_ocular_auth()
+        old = self.get_ocular_status()
+        payload = {"color": color or old["color"], "status": status or old["status"]}
+        with self.http_session.put(
+            f"https://my-ocular.jeffalo.net/api/user/{old['name']}",
+            shared_http.options()
+            .disregard_default_headers()
+            .disregard_default_cookies()
+            .headers(self.ocular_headers)
+            .json(payload)
+            .value,
+        ) as response:
+            assert response.json() == {"ok": "user updated"}, (
+                f"Error occured on setting ocular status. auth/me response: {old}"
+            )
+
+    def messages(self, *, limit: int = 40, offset: int = 0, date_limit=None, filter_by=None) -> list[activity.Activity]:
+        """
+        Returns the messages.
+
+        Keyword arguments:
+            limit, offset, date_limit
+            filter_by (str or None): Can either be None (no filter), "comments", "projects", "studios" or "forums"
+
+        Returns:
+            list<scratch.activity.Activity>: List that contains all messages as Activity objects.
+        """
+        add_params = ""
+        if date_limit is not None:
+            add_params += f"&dateLimit={date_limit}"
+        if filter_by is not None:
+            add_params += f"&filter={filter_by}"
+        data: list[Any] = api_iterative(
+            self,
+            f"https://api.scratch.mit.edu/users/{self._username}/messages",
+            limit=limit,
+            offset=offset,
+            _headers=self._headers,
+            cookies=self._cookies,
+            add_params=add_params,
+        )
+        return activity.Activity.parse_object_list(data, self)
+
+    def admin_messages(self, *, limit=40, offset=0) -> list[dict]:
+        """
+        Returns your messages sent by the Scratch team (alerts).
+        """
+        return commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self._username}/messages/admin",
+            limit=limit,
+            offset=offset,
+            _headers=self._headers,
+            cookies=self._cookies,
+        )
+
+    def classroom_alerts(
+        self, _classroom: Optional[classroom.Classroom | int] = None, mode: str = "Last created", page: Optional[int] = None
+    ):
+        """
+        Load and parse admin alerts, optionally for a specific class, using https://scratch.mit.edu/site-api/classrooms/alerts/
+
+        Returns:
+            list[alert.EducatorAlert]: A list of parsed EducatorAlert objects
+        """
+        if isinstance(_classroom, classroom.Classroom):
+            _classroom = _classroom.id
+        if _classroom is None:
+            _classroom_str = ""
+        else:
+            _classroom_str = f"{_classroom}/"
+        ascsort, descsort = get_class_sort_mode(mode)
+        with self.http_session.get(
+            f"https://scratch.mit.edu/site-api/classrooms/alerts/{_classroom_str}",
+            shared_http.options().params({"page": page, "ascsort": ascsort, "descsort": descsort}).value,
+        ) as response:
+            data = response.json()
+        alerts = [alert.EducatorAlert.from_json(alert_data, self) for alert_data in data]
+        return alerts
+
+    def clear_messages(self):
+        """
+        Clears all messages.
+        """
+        return requests.post(
+            "https://scratch.mit.edu/site-api/messages/messages-clear/",
+            headers=self._headers,
+            cookies=self._cookies,
+            timeout=10,
+        ).text
+
+    def message_count(self) -> int:
+        """
+        Returns the message count.
+
+        Returns:
+            int: message count
+        """
+        return json.loads(
+            requests.get(
+                f"https://scratch.mit.edu/messages/ajax/get-message-count/",
+                headers=self._headers,
+                cookies=self._cookies,
+                timeout=10,
+            ).text
+        )["msg_count"]
+
+    def feed(self, *, limit=20, offset=0, date_limit=None) -> list[activity.Activity]:
+        """
+        Returns the "What's happening" section (frontpage).
+
+        Returns:
+            list<scratch.activity.Activity>: List that contains all "What's happening" entries as Activity objects
+        """
+        add_params = ""
+        if date_limit is not None:
+            add_params = f"&dateLimit={date_limit}"
+        data = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self._username}/following/users/activity",
+            limit=limit,
+            offset=offset,
+            _headers=self._headers,
+            cookies=self._cookies,
+            add_params=add_params,
+        )
+        return commons.parse_object_list(data, activity.Activity, self)
+
+    def get_feed(self, *, limit=20, offset=0, date_limit=None):
+        return self.feed(limit=limit, offset=offset, date_limit=date_limit)
+
+    def loved_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
+        """
+        Returns the "Projects loved by Scratchers I'm following" section (frontpage).
+
+        Returns:
+            list<scratchattach.project.Project>: List that contains all "Projects loved by Scratchers I'm following"
+            entries as Project objects
+        """
+        data = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self._username}/following/users/loves",
+            limit=limit,
+            offset=offset,
+            _headers=self._headers,
+            cookies=self._cookies,
+        )
+        return commons.parse_object_list(data, project.Project, self)
+
+    def shared_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
+        """
+        Returns the "Projects by Scratchers I'm following" section (frontpage).
+        This section is only visible to old accounts (until ~2018).
+        For newer users, this method will always return an empty list.
+
+        Returns:
+            list<scratchattach.project.Project>: List that contains all "Projects by Scratchers I'm following"
+            entries as Project objects
+        """
+        data = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self._username}/following/users/projects",
+            limit=limit,
+            offset=offset,
+            _headers=self._headers,
+            cookies=self._cookies,
+        )
+        ret = commons.parse_object_list(data, project.Project, self)
+        if not ret:
+            warnings.warn(
+                f"`shared_by_followed_users` got empty list `[]`. Note that this method is not supported for accounts made after 2018."
+            )
+        return ret
+
+    def in_followed_studios(self, *, limit=40, offset=0) -> list["project.Project"]:
+        """
+        Returns the "Projects in studios I'm following" section (frontpage).
+        This section is only visible to old accounts (until ~2018)
+        For newer users, this method will always return an empty list.
+
+        Returns:
+            list<scratchattach.project.Project>: List that contains all "Projects in studios I'm following" section"
+            entries as Project objects
+        """
+        data = commons.api_iterative(
+            f"https://api.scratch.mit.edu/users/{self._username}/following/studios/projects",
+            limit=limit,
+            offset=offset,
+            _headers=self._headers,
+            cookies=self._cookies,
+        )
+        ret = commons.parse_object_list(data, project.Project, self)
+        if not ret:
+            warnings.warn(
+                f"`in_followed_studios` got empty list `[]`. Note that this method is not supported for accounts made after 2018."
+            )
+        return ret
+
+    def connect_empty_project_pb(self) -> editor.Project:
+        pb = editor.Project.from_json(empty_project_json)
+        pb._session = self
+        return pb
+
+    def connect_pb_from_dict(self, project_json: dict) -> editor.Project:
+        pb = editor.Project.from_json(project_json)
+        pb._session = self
+        return pb
+
+    def connect_pb_from_file(self, path_to_file) -> editor.Project:
+        pb = editor.Project.from_sb3(path_to_file)
+        pb._session = self
+        return pb
+
+    @staticmethod
+    def download_asset(asset_id_with_file_ext, *, filename: Optional[str] = None, fp=""):
+        if not (fp.endswith("/") or fp.endswith("\\")):
+            fp = fp + "/"
+        try:
+            if filename is None:
+                filename = str(asset_id_with_file_ext)
+            response = requests.get("https://assets.scratch.mit.edu/" + str(asset_id_with_file_ext), timeout=10)
+            open(f"{fp}{filename}", "wb").write(response.content)
+        except Exception:
+            raise exceptions.FetchError("Failed to download asset")
+
+    def upload_asset(self, asset_content, *, asset_id=None, file_ext=None):
+        data = asset_content if isinstance(asset_content, bytes) else open(asset_content, "rb").read()
+        if isinstance(asset_content, str):
+            file_ext = pathlib.Path(asset_content).suffix
+        file_ext = file_ext.replace(".", "")
+        if asset_id is None:
+            asset_id = hashlib.md5(data).hexdigest()
+        requests.post(
+            f"https://assets.scratch.mit.edu/{asset_id}.{file_ext}",
+            headers=self._headers,
+            cookies=self._cookies,
+            data=data,
+            timeout=10,
+        )
+
+    def search_projects(
+        self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
+    ) -> list[project.Project]:
+        """
+        Uses the Scratch search to search projects.
+
+        Keyword arguments:
+            query (str): The query that will be searched.
+            mode (str): Has to be one of these values: "trending", "popular" or "recent". Defaults to "trending".
+            language (str): A language abbreviation, defaults to "en".
+                (Depending on the language used on the Scratch website, Scratch displays you different results.)
+            limit (int): Max. amount of returned projects.
+            offset (int): Offset of the first returned project.
+
+        Returns:
+            list<scratchattach.project.Project>: List that contains the search results.
+        """
+        query = f"&q={query}" if query else ""
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/search/projects",
+            limit=limit,
+            offset=offset,
+            add_params=f"&language={language}&mode={mode}{query}",
+        )
+        return commons.parse_object_list(response, project.Project, self)
+
+    def explore_projects(
+        self, *, query: str = "*", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
+    ) -> list[project.Project]:
+        """
+        Gets projects from the explore page.
+
+        Keyword arguments:
+            query (str): Specifies the tag of the explore page.
+                To get the projects from the "All" tag, set this argument to "*".
+            mode (str): Has to be one of these values: "trending", "popular" or "recent".
+                Defaults to "trending".
+            language (str): A language abbreviation, defaults to "en".
+                (Depending on the language used on the Scratch website, Scratch displays you different explore pages.)
+            limit (int): Max. amount of returned projects.
+            offset (int): Offset of the first returned project.
+
+        Returns:
+            list<scratchattach.project.Project>: List that contains the explore page projects.
+        """
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/explore/projects",
+            limit=limit,
+            offset=offset,
+            add_params=f"&language={language}&mode={mode}&q={query}",
+        )
+        return commons.parse_object_list(response, project.Project, self)
+
+    def search_studios(
+        self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
+    ) -> list[studio.Studio]:
+        query = f"&q={query}" if query else ""
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/search/studios",
+            limit=limit,
+            offset=offset,
+            add_params=f"&language={language}&mode={mode}{query}",
+        )
+        return commons.parse_object_list(response, studio.Studio, self)
+
+    def explore_studios(
+        self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
+    ) -> list[studio.Studio]:
+        query = f"&q={query}" if query else ""
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/explore/studios",
+            limit=limit,
+            offset=offset,
+            add_params=f"&language={language}&mode={mode}{query}",
+        )
+        return commons.parse_object_list(response, studio.Studio, self)
+
+    def create_project(
+        self, *, title: Optional[str] = None, project_json: dict = empty_project_json, parent_id=None
+    ) -> project.Project:
+        """
+        Creates a project on the Scratch website.
+
+        Warning:
+            Don't spam this method - it WILL get you banned from Scratch.
+            To prevent accidental spam, a rate limit (5 projects per minute) is implemented for this function.
+        """
+        enforce_ratelimit("create_scratch_project", "creating Scratch projects")
+        if title is None:
+            title = f"Untitled-{random.randint(0, 1 << 16)}"
+        params = {"is_remix": "0" if parent_id is None else "1", "original_id": parent_id, "title": title}
+        response = requests.post(
+            "https://projects.scratch.mit.edu/", params=params, cookies=self._cookies, headers=self._headers, json=project_json
+        ).json()
+        return self.connect_project(response["content-name"])
+
+    def create_studio(self, *, title: Optional[str] = None, description: Optional[str] = None) -> studio.Studio:
+        """
+        Create a studio on the scratch website
+
+        Warning:
+            Don't spam this method - it WILL get you banned from Scratch.
+            To prevent accidental spam, a rate limit (5 studios per minute) is implemented for this function.
+        """
+        enforce_ratelimit("create_scratch_studio", "creating Scratch studios")
+        if self.new_scratcher:
+            raise exceptions.Unauthorized(f"\nNew scratchers (like {self.username}) cannot create studios.")
+        response = requests.post("https://scratch.mit.edu/studios/create/", cookies=self._cookies, headers=self._headers)
+        studio_id = webscrape_count(response.json()["redirect"], "/studios/", "/")
+        new_studio = self.connect_studio(studio_id)
+        if title is not None:
+            new_studio.set_title(title)
+        if description is not None:
+            new_studio.set_description(description)
+        return new_studio
+
+    def create_class(self, title: str, desc: str = "") -> classroom.Classroom:
+        """
+        Create a class on the scratch website
+
+        Warning:
+            Don't spam this method - it WILL get you banned from Scratch.
+            To prevent accidental spam, a rate limit (5 classes per minute) is implemented for this function.
+        """
+        enforce_ratelimit("create_scratch_class", "creating Scratch classes")
+        if not self.is_teacher:
+            raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't create class")
+        data = requests.post(
+            "https://scratch.mit.edu/classes/create_classroom/",
+            json={"title": title, "description": desc},
+            headers=self._headers,
+            cookies=self._cookies,
+        ).json()
+        class_id = data[0]["id"]
+        return self.connect_classroom(class_id)
+
+    def mystuff_counts(self) -> tuple[int, int, int]:
+        """
+        Gets the number of shared projects, unshared projects, and studios as listed on the mystuff page,
+        and returns them in that order.
+
+        Example usage:
+        shared, unshared, studios = sess.mystuff_counts()
+        print(f"You have {shared} shared projects, {unshared} unshared projects, and are in {studios} studios")
+        """
+        with requests.no_error_handling():
+            resp = requests.get("https://scratch.mit.edu/mystuff/", headers=self._headers, cookies=self._cookies)
+        soup = bs4.BeautifulSoup(resp.text, "html.parser")
+        shared_elem = soup.select_one("span[data-content='shared-count']")
+        unshared_elem = soup.select_one("span[data-content='unshared-count']")
+        gallery_elem = soup.select_one("span[data-content='gallery-count']")
+        assert shared_elem is not None
+        assert unshared_elem is not None
+        assert gallery_elem is not None
+        shared: str = shared_elem.text.strip()
+        unshared: str = unshared_elem.text.strip()
+        gallery: str = gallery_elem.text.strip()
+        return (int(shared), int(unshared), int(gallery))
+
+    def mystuff_projects(
+        self, filter_arg: str = "all", *, page: int = 1, sort_by: str = "", descending: bool = True
+    ) -> list[project.Project]:
+        """
+        Gets the projects from the "My stuff" page.
+
+        Args:
+            filter_arg (str): Possible values for this parameter are "all", "shared", "unshared" and "trashed"
+
+        Keyword Arguments:
+            page (int): The page of the "My Stuff" projects that should be returned
+            sort_by (str): The key the projects should be sorted based on. Possible values for this parameter are "" (then the projects are sorted based on last modified), "view_count", love_count", "remixers_count" (then the projects are sorted based on remix count) and "title" (then the projects are sorted based on title)
+            descending (boolean): Determines if the element with the highest key value (the key is specified in the sort_by argument) should be returned first. Defaults to True.
+
+        Returns:
+            list<scratchattach.project.Project>: A list with the projects from the "My Stuff" page, each project is represented by a Project object.
+        """
+        if descending:
+            ascsort = ""
+            descsort = sort_by
+        else:
+            ascsort = sort_by
+            descsort = ""
+        try:
+            targets = requests.get(
+                f"https://scratch.mit.edu/site-api/projects/{filter_arg}/?page={page}&ascsort={ascsort}&descsort={descsort}",
+                headers=headers,
+                cookies=self._cookies,
+                timeout=10,
+            ).json()
+            projects = []
+            for target in targets:
+                projects.append(
+                    project.Project(
+                        id=target["pk"],
+                        _session=self,
+                        author_name=self._username,
+                        comments_allowed=None,
+                        instructions=None,
+                        notes=None,
+                        created=target["fields"]["datetime_created"],
+                        last_modified=target["fields"]["datetime_modified"],
+                        share_date=target["fields"]["datetime_shared"],
+                        thumbnail_url="https:" + target["fields"]["thumbnail_url"],
+                        favorites=target["fields"]["favorite_count"],
+                        loves=target["fields"]["love_count"],
+                        remix_count=target["fields"]["remixers_count"],
+                        views=target["fields"]["view_count"],
+                        title=target["fields"]["title"],
+                        comment_count=target["fields"]["commenters_count"],
+                    )
+                )
+            return projects
+        except Exception:
+            raise exceptions.FetchError()
+
+    def mystuff_studios(
+        self, filter_arg: str = "all", *, page: int = 1, sort_by: str = "", descending: bool = True
+    ) -> list[studio.Studio]:
+        if descending:
+            ascsort = ""
+            descsort = sort_by
+        else:
+            ascsort = sort_by
+            descsort = ""
+        try:
+            params: dict[str, Union[str, int]] = {"page": page, "ascsort": ascsort, "descsort": descsort}
+            targets = requests.get(
+                f"https://scratch.mit.edu/site-api/galleries/{filter_arg}/",
+                params=params,
+                headers=headers,
+                cookies=self._cookies,
+                timeout=10,
+            ).json()
+            studios = []
+            for target in targets:
+                studios.append(
+                    studio.Studio(
+                        id=target["pk"],
+                        _session=self,
+                        title=target["fields"]["title"],
+                        description=None,
+                        host_id=target["fields"]["owner"]["pk"],
+                        host_name=target["fields"]["owner"]["username"],
+                        open_to_all=None,
+                        comments_allowed=None,
+                        image_url="https:" + target["fields"]["thumbnail_url"],
+                        created=target["fields"]["datetime_created"],
+                        modified=target["fields"]["datetime_modified"],
+                        follower_count=None,
+                        manager_count=None,
+                        curator_count=target["fields"]["curators_count"],
+                        project_count=target["fields"]["projecters_count"],
+                    )
+                )
+            return studios
+        except Exception:
+            raise exceptions.FetchError()
+
+    def mystuff_classes_counts(self) -> tuple[int, int]:
+        """
+        Returns the number of open and ended classes owned by a teacher session.
+        If this is not a teacher session, NotATeacherError is raised
+        """
+        with requests.no_error_handling():
+            resp = requests.get("https://scratch.mit.edu/educators/classes/", headers=self._headers, cookies=self._cookies)
+        if resp.status_code == 403:
+            raise exceptions.NotATeacherError("Response 403 when getting educators/classes")
+        soup = BeautifulSoup(resp.text, "html.parser")
+        sidebar = soup.find("div", {"id": "sidebar", "class": "tabs-index"})
+        if not sidebar:
+            return (0, 0)
+        count_elem = sidebar.find("span", {"data-content": "classroom-count"})
+        ended_elem = sidebar.find("span", {"data-content": "closed-count"})
+        if not count_elem or not ended_elem:
+            return (0, 0)
+        count = str(count_elem.text).strip()
+        ended_count = str(ended_elem.text).strip()
+        return (int(count), int(ended_count))
+
+    def mystuff_classes(self, mode: str = "Last created", page: Optional[int] = None) -> list[classroom.Classroom]:
+        if not self.is_teacher:
+            self.update()
+        if not self.is_teacher:
+            raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have classes")
+        ascsort, descsort = get_class_sort_mode(mode)
+        classes_data = requests.get(
+            "https://scratch.mit.edu/site-api/classrooms/all/",
+            params={"page": page, "ascsort": ascsort, "descsort": descsort},
+            headers=self._headers,
+            cookies=self._cookies,
+        ).json()
+        classes = []
+        for data in classes_data:
+            fields = data["fields"]
+            educator_pf = fields["educator_profile"]
+            classes.append(
+                classroom.Classroom(
+                    id=data["pk"],
+                    title=fields["title"],
+                    classtoken=fields["token"],
+                    datetime=datetime.datetime.fromisoformat(fields["datetime_created"]),
+                    author=user.User(username=educator_pf["user"]["username"], id=educator_pf["user"]["pk"], _session=self),
+                    _session=self,
+                )
+            )
+        return classes
+
+    def mystuff_ended_classes(self, mode: str = "Last created", page: Optional[int] = None) -> list[classroom.Classroom]:
+        if not self.is_teacher:
+            raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have (deleted) classes")
+        ascsort, descsort = get_class_sort_mode(mode)
+        classes_data = requests.get(
+            "https://scratch.mit.edu/site-api/classrooms/closed/",
+            params={"page": page, "ascsort": ascsort, "descsort": descsort},
+            headers=self._headers,
+            cookies=self._cookies,
+        ).json()
+        classes = []
+        for data in classes_data:
+            fields = data["fields"]
+            educator_pf = fields["educator_profile"]
+            classes.append(
+                classroom.Classroom(
+                    id=data["pk"],
+                    title=fields["title"],
+                    classtoken=fields["token"],
+                    datetime=datetime.datetime.fromisoformat(fields["datetime_created"]),
+                    author=user.User(username=educator_pf["user"]["username"], id=educator_pf["user"]["pk"], _session=self),
+                    _session=self,
+                )
+            )
+        return classes
+
+    def backpack(self, limit: int = 20, offset: int = 0) -> list[backpack_asset.BackpackAsset]:
+        """
+        Lists the assets that are in the backpack of the user associated with the session.
+
+        Returns:
+            list<backpack_asset.BackpackAsset>: List that contains the backpack items
+        """
+        data = commons.api_iterative(
+            f"https://backpack.scratch.mit.edu/{self._username}", limit=limit, offset=offset, _headers=self._headers
+        )
+        return commons.parse_object_list(data, backpack_asset.BackpackAsset, self)
+
+    def delete_from_backpack(self, backpack_asset_id) -> backpack_asset.BackpackAsset:
+        """
+        Deletes an asset from the backpack.
+
+        Args:
+            backpack_asset_id: ID of the backpack asset that will be deleted
+        """
+        return backpack_asset.BackpackAsset(id=backpack_asset_id, _session=self).delete()
+
+    def become_scratcher_invite(self) -> dict:
+        """
+        If you are a new Scratcher and have been invited for becoming a Scratcher, this API endpoint will provide
+        more info on the invite.
+        """
+        return requests.get(
+            f"https://api.scratch.mit.edu/users/{self.username}/invites", headers=self._headers, cookies=self._cookies
+        ).json()
+
+    @overload
+    def connect_cloud(self, project_id, *, cloud_class: type[T]) -> T:
+        """
+        Connects to a cloud as logged-in user.
+
+        Args:
+            project_id:
+
+        Keyword arguments: CloudClass: The class that the returned object should be of. By default, this class is
+        scratchattach.cloud.ScratchCloud.
+
+        Returns: Type[scratchattach.cloud._base.BaseCloud]: An object representing the cloud of a project. Can be of any
+        class inheriting from BaseCloud.
+        """
+
+    @overload
+    def connect_cloud(self, project_id) -> cloud.ScratchCloud:
+        """
+        Connects to a cloud (by default Scratch's cloud) as logged-in user.
+
+        Args:
+            project_id:
+
+        Keyword arguments: CloudClass: The class that the returned object should be of. By default, this class is
+        scratchattach.cloud.ScratchCloud.
+
+        Returns: Type[scratchattach.cloud._base.BaseCloud]: An object representing the cloud of a project. Can be of any
+        class inheriting from BaseCloud.
+        """
+
+    def connect_cloud(self, project_id, *, cloud_class: Optional[type[_base.BaseCloud]] = None) -> _base.BaseCloud:
+        cloud_class = cloud_class or cloud.ScratchCloud
+        return cloud_class(project_id=project_id, _session=self)
+
+    def connect_scratch_cloud(self, project_id) -> cloud.ScratchCloud:
+        """
+        Returns:
+            scratchattach.cloud.ScratchCloud: An object representing the Scratch cloud of a project.
+        """
+        return cloud.ScratchCloud(project_id=project_id, _session=self)
+
+    def connect_tw_cloud(
+        self, project_id, *, purpose="", contact="", cloud_host="wss://clouddata.turbowarp.org"
+    ) -> cloud.TwCloud:
+        """
+        Returns:
+            scratchattach.cloud.TwCloud: An object representing the TurboWarp cloud of a project.
+        """
+        return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host, _session=self)
+
+    def _make_linked_object(
+        self, identificator_name, identificator, __class: type[C], NotFoundException: type[Exception]
+    ) -> C:
+        """
+        The Session class doesn't save the login in a ._session attribute, but IS the login ITSELF.
+
+        Therefore, the _make_linked_object method has to be adjusted
+        to get it to work for in the Session class.
+
+        Class must inherit from BaseSiteComponent
+        """
+        return commons._get_object(identificator_name, identificator, __class, NotFoundException, self)
+
+    def connect_user(self, username: str) -> user.User:
+        """
+        Gets a user using this session, connects the session to the User object to allow authenticated actions
+
+        Args:
+            username (str): Username of the requested user
+
+        Returns:
+            scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
+        """
+        return self._make_linked_object("username", username, user.User, exceptions.UserNotFound)
+
+    @deprecated("Finding usernames by user ids has been fixed.")
+    def find_username_from_id(self, user_id: int) -> str:
+        """
+        Warning:
+            Every time this functions is run, a comment on your profile is posted and deleted. Therefore you shouldn't run this too often.
+
+        Returns:
+            str: The username that corresponds to the user id
+        """
+        you = user.User(username=self.username, _session=self)
+        try:
+            comment = you.post_comment("scratchattach", commentee_id=int(user_id))
+        except exceptions.CommentPostFailure:
+            raise exceptions.BadRequest(
+                "After posting a comment, you need to wait 10 seconds before you can connect users by id again."
+            )
+        except exceptions.BadRequest:
+            raise exceptions.UserNotFound("Invalid user id")
+        except Exception as e:
+            raise e
+        you.delete_comment(comment_id=comment.id)
+        try:
+            username = comment.content.split('">@')[1]
+            username = username.split("</a>")[0]
+        except IndexError:
+            raise exceptions.UserNotFound()
+        return username
+
+    @deprecated("Finding usernames by user ids has been fixed.")
+    def connect_user_by_id(self, user_id: int) -> user.User:
+        """
+        Gets a user using this session, connects the session to the User object to allow authenticated actions
+
+        This method ...
+        1) gets the username by posting a comment with the user_id as commentee_id.
+        2) deletes the posted comment.
+        3) fetches other information about the user using Scratch's api.scratch.mit.edu/users/username API.
+
+        Warning:
+            Every time this functions is run, a comment on your profile is posted and deleted. Therefore, you shouldn't run this too often.
+
+        Args:
+            user_id (int): User ID of the requested user
+
+        Returns:
+            scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
+        """
+        return self._make_linked_object("username", self.find_username_from_id(user_id), user.User, exceptions.UserNotFound)
+
+    def connect_project(self, project_id) -> project.Project:
+        """
+                Gets a project using this session, connects the session to the Project object to allow authenticated actions
+        sess
+                Args:
+                    project_id (int): ID of the requested project
+
+                Returns:
+                    scratchattach.project.Project: An object that represents the requested project and allows you to perform actions on the project (like project.love)
+        """
+        return self._make_linked_object("id", int(project_id), project.Project, exceptions.ProjectNotFound)
+
+    def connect_studio(self, studio_id) -> studio.Studio:
+        """
+        Gets a studio using this session, connects the session to the Studio object to allow authenticated actions
+
+        Args:
+            studio_id (int): ID of the requested studio
+
+        Returns:
+            scratchattach.studio.Studio: An object that represents the requested studio and allows you to perform actions on the studio (like studio.follow)
+        """
+        return self._make_linked_object("id", int(studio_id), studio.Studio, exceptions.StudioNotFound)
+
+    def connect_classroom(self, class_id) -> classroom.Classroom:
+        """
+        Gets a class using this session.
+
+        Args:
+            class_id (str): class id of the requested class
+
+        Returns:
+            scratchattach.classroom.Classroom: An object representing the requested classroom
+        """
+        return self._make_linked_object("id", int(class_id), classroom.Classroom, exceptions.ClassroomNotFound)
+
+    def connect_classroom_from_token(self, class_token) -> classroom.Classroom:
+        """
+        Gets a class using this session.
+
+        Args:
+            class_token (str): class token of the requested class
+
+        Returns:
+            scratchattach.classroom.Classroom: An object representing the requested classroom
+        """
+        return self._make_linked_object("classtoken", int(class_token), classroom.Classroom, exceptions.ClassroomNotFound)
+
+    def connect_topic(self, topic_id) -> forum.ForumTopic:
+        """
+        Gets a forum topic using this session, connects the session to the ForumTopic object to allow authenticated actions
+        Data is up-to-date. Data received from Scratch's RSS feed XML API.
+
+        Args:
+            topic_id (int): ID of the requested forum topic (can be found in the browser URL bar)
+
+        Returns:
+            scratchattach.forum.ForumTopic: An object that represents the requested forum topic
+        """
+        return self._make_linked_object("id", int(topic_id), forum.ForumTopic, exceptions.ForumContentNotFound)
+
+    def connect_topic_list(self, category_id, *, page=1):
+        """
+        Gets the topics from a forum category. Data web-scraped from Scratch's forums UI.
+        Data is up-to-date.
+
+        Args:
+            category_id (str): ID of the forum category
+
+        Keyword Arguments:
+            page (str): Page of the category topics that should be returned
+
+        Returns:
+            list<scratchattach.forum.ForumTopic>: A list containing the forum topics from the specified category
+        """
+        try:
+            response = requests.get(
+                f"https://scratch.mit.edu/discuss/{category_id}/?page={page}", headers=self._headers, cookies=self._cookies
+            )
+            soup = BeautifulSoup(response.content, "html.parser")
+        except Exception as e:
+            raise exceptions.FetchError(str(e))
+        try:
+            category_name = soup.find("h4").find("span").get_text()
+        except Exception:
+            raise exceptions.BadRequest("Invalid category id")
+        try:
+            topics = soup.find_all("tr")
+            topics.pop(0)
+            return_topics = []
+            for topic in topics:
+                title_link = topic.find("a")
+                title = title_link.text.strip()
+                topic_id = title_link["href"].split("/")[-2]
+                columns = topic.find_all("td")
+                columns = [column.text for column in columns]
+                if len(columns) == 1:
+                    continue
+                last_updated = columns[3].split(" ")[0] + " " + columns[3].split(" ")[1]
+                return_topics.append(
+                    forum.ForumTopic(
+                        _session=self,
+                        id=int(topic_id),
+                        title=title,
+                        category_name=category_name,
+                        last_updated=last_updated,
+                        reply_count=int(columns[1]),
+                        view_count=int(columns[2]),
+                    )
+                )
+            return return_topics
+        except Exception as e:
+            raise exceptions.ScrapeError(str(e))
+
+    def connect_featured(self) -> other_apis.FeaturedData:
+        """
+        Request and return connected featured projects and studios from the front page.
+        """
+        return other_apis.get_featured_data(self)
+
+    def connect_message_events(self, *, update_interval=2) -> message_events.MessageEvents:
+        return message_events.MessageEvents(user.User(username=self.username, _session=self), update_interval=update_interval)
+
+    def connect_filterbot(self, *, log_deletions=True) -> filterbot.Filterbot:
+        return filterbot.Filterbot(user.User(username=self.username, _session=self), log_deletions=log_deletions)
+
+    def get_session_string(self) -> str:
+        assert self.session_string
+        return self.session_string
+
+    def get_headers(self) -> dict[str, str]:
+        return self._headers
+
+    def get_cookies(self) -> dict[str, str]:
+        return self._cookies
+
+
+def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetime]:
+    """
+    Extract the JSON data from the main part of a session ID string
+    Session id is in the format:
+    <p1: long base64 string>:<p2: short base64 string>:<p3: medium base64 string>
+
+    p1 contains a base64 JSON string (if it starts with `.`, then it is zlib compressed)
+    p2 is a base 62 encoded timestamp
+    p3 might be a `synchronous signature` for the first 2 parts (might be useless for us)
+
+    The dict has these attributes:
+    - username
+    - _auth_user_id
+    - testcookie
+    - _auth_user_backend
+    - token
+    - login-ip
+    - _language
+    - django_timezone
+    - _auth_user_hash
+    """
+    p1, p2, _ = session_id.split(":")
+    p1_bytes = base64.urlsafe_b64decode(p1 + "==")
+    if p1.startswith('".'):
+        p1_bytes = zlib.decompress(p1_bytes)
+    return (json.loads(p1_bytes), datetime.datetime.fromtimestamp(commons.b62_decode(p2)))
+
+
+suppressed_login_warning = local()
+
+
+@contextmanager
+def suppress_login_warning():
+    """
+    Suppress the login warning.
+    """
+    suppressed_login_warning.suppressed = getattr(suppressed_login_warning, "suppressed", 0)
+    try:
+        suppressed_login_warning.suppressed += 1
+        yield
+    finally:
+        suppressed_login_warning.suppressed -= 1
+
+
+def issue_login_warning() -> None:
+    """
+    Issue a login data warning.
+    """
+    if getattr(suppressed_login_warning, "suppressed", 0):
+        return
+    warnings.warn(
+        "IMPORTANT: If you included login credentials directly in your code (e.g. session_id, session_string, ...), then make sure to EITHER instead load them from environment variables or files OR remember to remove them before you share your code with anyone else. If you want to remove this warning, use `warnings.filterwarnings('ignore', category=scratchattach.LoginDataWarning)`",
+        exceptions.LoginDataWarning,
+    )
+
+
+def login_by_id(session_id: str, *, username: Optional[str] = None, password: Optional[str] = None, xtoken=None) -> Session:
+    """
+    Creates a session / log in to the Scratch website with the specified session id.
+    Structured similarly to Session._connect_object method.
+
+    Args:
+        session_id (str)
+
+    Keyword arguments:
+        username (str)
+        password (str)
+        xtoken (str)
+
+    Returns:
+        scratchattach.session.Session: An object that represents the created login / session
+    """
+    issue_login_warning()
+    if password is not None:
+        session_data = dict(id=session_id, username=username, password=password)
+        session_string = base64.b64encode(json.dumps(session_data).encode()).decode()
+    else:
+        session_string = None
+    _session = Session(id=session_id, username=username or "", session_string=session_string)
+    if xtoken is not None:
+        assert xtoken == _session.xtoken
+    return _session
+
+
+def login(username, password, *, timeout=10) -> Session:
+    """
+    Creates a session / log in to the Scratch website with the specified username and password.
+
+    This method ...
+    1. creates a session id by posting a login request to Scratch's login API. (If this fails, scratchattach.exceptions.LoginFailure is raised)
+    2. fetches the xtoken and other information by posting a request to scratch.mit.edu/session. (If this fails, a warning is displayed)
+
+    Args:
+        username (str)
+        password (str)
+
+    Keyword arguments:
+        timeout (int): Timeout for the request to Scratch's login API (in seconds). Defaults to 10.
+
+    Returns:
+        scratchattach.session.Session: An object that represents the created login / session
+    """
+    issue_login_warning()
+    _headers = headers.copy()
+    _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
+    with requests.no_error_handling():
+        request = requests.post(
+            "https://scratch.mit.edu/login/",
+            json={"username": username, "password": password},
+            headers=_headers,
+            timeout=timeout,
+        )
+    try:
+        result = re.search('"(.*)"', request.headers["Set-Cookie"])
+        assert result is not None
+        session_id = str(result.group())
+    except Exception:
+        raise exceptions.LoginFailure(
+            "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in"
+        )
+    with suppress_login_warning():
+        return login_by_id(session_id, username=username, password=password)
+
+
+def login_by_session_string(session_string: str) -> Session:
+    """
+    Login using a session string.
+    """
+    issue_login_warning()
+    session_string = base64.b64decode(session_string).decode()
+    session_data = json.loads(session_string)
+    try:
+        assert session_data.get("id")
+        with suppress_login_warning():
+            return login_by_id(
+                session_data["id"], username=session_data.get("username"), password=session_data.get("password")
+            )
+    except Exception:
+        pass
+    try:
+        assert session_data.get("session_id")
+        with suppress_login_warning():
+            return login_by_id(
+                session_data["session_id"], username=session_data.get("username"), password=session_data.get("password")
+            )
+    except Exception:
+        pass
+    try:
+        assert session_data.get("username") and session_data.get("password")
+        with suppress_login_warning():
+            return login(username=session_data["username"], password=session_data["password"])
+    except Exception:
+        pass
+    raise ValueError("Couldn't log in.")
+
+
+def login_by_io(file: SupportsRead[str]) -> Session:
+    """
+    Login using a file object.
+    """
+    with suppress_login_warning():
+        return login_by_session_string(file.read())
+
+
+def login_by_file(file: FileDescriptorOrPath) -> Session:
+    """
+    Login using a path to a file.
+    """
+    with suppress_login_warning(), open(file, encoding="utf-8") as f:
+        return login_by_io(f)
+
+
+def login_from_browser(browser: Browser = ANY):
+    """
+    Login from a browser
+    """
+    cookies = cookies_from_browser(browser)
+    if "scratchsessionsid" in cookies:
+        with suppress_login_warning():
+            return login_by_id(cookies["scratchsessionsid"])
+    raise ValueError("Not enough data to log in.")
