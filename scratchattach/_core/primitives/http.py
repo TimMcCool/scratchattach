@@ -32,6 +32,29 @@ if "IS_ASYNC":
         if "IS_PRE_CODEGEN":
             _sync_response: requests.Response
 
+        async def text(self) -> str:
+            return await self._async_response.text()
+
+        async def content(self) -> bytes:
+            return await self._async_response.content.read()
+
+        async def json(self) -> Any:
+            return await self._async_response.json()
+
+        @property
+        def headers(self) -> Mapping[str, str]:
+            """
+            Headers are case-insensitive.
+            """
+            return self._async_response.headers
+
+        def get_all_headers_for_key(self, key: str) -> list[str]:
+            return self._async_response.headers.getall(key)
+
+        @property
+        def status_code(self) -> int:
+            return self._async_response.status
+
     class _WrappedHTTPResponse:
         _aiohttp_response_context_manager: aiohttp.client._BaseRequestContextManager[
             aiohttp.ClientResponse
@@ -228,6 +251,29 @@ else:
 
     class _HTTPResponse:  # type: ignore[no-redef]
         _sync_response: requests.Response
+
+        def text(self) -> str:
+            return self._sync_response.text
+
+        def content(self) -> bytes:
+            return self._sync_response.content
+
+        def json(self) -> Any:
+            return self._sync_response.json()
+
+        @property
+        def headers(self) -> Mapping[str, str]:
+            """
+            Headers are case-insensitive.
+            """
+            return self._sync_response.headers
+
+        def get_all_headers_for_key(self, key: str) -> list[str]:
+            return self._sync_response.raw.headers.getlist(key)
+
+        @property
+        def status_code(self) -> int:
+            return self._sync_response.status_code
 
     class _WrappedHTTPResponse:  # type: ignore[no-redef]
         _response: requests.Response

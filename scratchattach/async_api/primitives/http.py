@@ -12,6 +12,29 @@ HTTPOptions = shared_http.HTTPOptions
 class _HTTPResponse:
     _async_response: aiohttp.ClientResponse
 
+    async def text(self) -> str:
+        return await self._async_response.text()
+
+    async def content(self) -> bytes:
+        return await self._async_response.content.read()
+
+    async def json(self) -> Any:
+        return await self._async_response.json()
+
+    @property
+    def headers(self) -> Mapping[str, str]:
+        """
+        Headers are case-insensitive.
+        """
+        return self._async_response.headers
+
+    def get_all_headers_for_key(self, key: str) -> list[str]:
+        return self._async_response.headers.getall(key)
+
+    @property
+    def status_code(self) -> int:
+        return self._async_response.status
+
 
 class _WrappedHTTPResponse:
     _aiohttp_response_context_manager: aiohttp.client._BaseRequestContextManager[aiohttp.ClientResponse]
