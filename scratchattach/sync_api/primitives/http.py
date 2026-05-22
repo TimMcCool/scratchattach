@@ -214,21 +214,21 @@ class _HTTPSession:
         return kwargs
 
     def get(self, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
-        kwargs = self._get_kwargs(options) if options is not None else {}
+        kwargs = self._get_kwargs(options if options is not None else shared_http._EMPTY_OPTIONS)
         return _WrappedHTTPResponse(self._http_session.get(url, **kwargs))
 
     def post(self, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
-        kwargs = self._get_kwargs(options) if options is not None else {}
+        kwargs = self._get_kwargs(options if options is not None else shared_http._EMPTY_OPTIONS)
         return _WrappedHTTPResponse(self._http_session.post(url, **kwargs))
 
     def put(self, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
-        kwargs = self._get_kwargs(options) if options is not None else {}
+        kwargs = self._get_kwargs(options if options is not None else shared_http._EMPTY_OPTIONS)
         return _WrappedHTTPResponse(self._http_session.put(url, **kwargs))
 
     def delete(self, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
-        kwargs = self._get_kwargs(options) if options is not None else {}
+        kwargs = self._get_kwargs(options if options is not None else shared_http._EMPTY_OPTIONS)
         return _WrappedHTTPResponse(self._http_session.delete(url, **kwargs))
 
     def request(self, method: shared_http.HTTPMethod, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
-        kwargs = self._get_kwargs(options) if options is not None else {}
+        kwargs = self._get_kwargs(options if options is not None else shared_http._EMPTY_OPTIONS)
         return _WrappedHTTPResponse(self._http_session.request(method.name, url, **kwargs))

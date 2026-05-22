@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import TypeAlias, TypeVar, Protocol, runtime_checkable, Any, BinaryIO, Self
+from typing import TypeAlias, TypeVar, Protocol, runtime_checkable, Any, BinaryIO, Self, Final
 from collections.abc import Iterable
 from enum import Enum, auto
 
@@ -99,3 +99,6 @@ class HTTPMethod(Enum):
     POST = auto()
     PUT = auto()
     DELETE = auto()
+
+
+_EMPTY_OPTIONS: Final = HTTPOptions()
