@@ -116,6 +116,7 @@ class _HTTPSession:
 
     def __init__(self):
         self._cookies = {}
+        self._headers = {}
         self._http_session = requests.Session()
         self._http_session.cookies = DummyCookieJar()
 
