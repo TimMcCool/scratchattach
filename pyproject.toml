@@ -97,6 +97,11 @@ max-complexity = 10
 [tool.uv]
 config-settings = { editable_mode = "compat" }
 
+[tool.uv.workspace]
+members = [
+    "codegen",
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["scratchattach*"]

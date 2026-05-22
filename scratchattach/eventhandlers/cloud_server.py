@@ -200,10 +200,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
             blocked_ips = []
 
         SimpleWebSocketServer.__init__(self, hostname, port=port, websocketclass=websocketclass)
-        BaseEventHandler.__init__(self)
-
-        self.running = False
-        self._events = {}  # saves event functions called on cloud updates
+        BaseEventHandler.__init__(self) # saves event functions called on cloud updates
 
         self.tw_clients = {}  # saves connected clients
         self.tw_variables = {}  # holds cloud variable states

@@ -9,16 +9,36 @@ from enum import Enum, auto
 from dataclasses import dataclass, field
 import json
 
-from aiohttp.cookiejar import DummyCookieJar
+from aiohttp.cookiejar import DummyCookieJar as DummyCookieJar2
 from typing_extensions import override
 from requests import Session as HTTPSession
 from requests import Response
+from requests.cookies import RequestsCookieJar
 import aiohttp
 
 from . import exceptions
 from . import optional_async
 
+
+class DummyCookieJar(RequestsCookieJar):
+    def set_cookie(self, *args, **kwargs):
+        pass
+
+    def update(self, *args, **kwargs):
+        pass
+
+    def copy(self):
+        return DummyCookieJar()
+
+    def __setitem__(self, name, value):
+        pass
+
+    def set(self, *args, **kwargs):
+        pass
+
+
 proxies: Optional[MutableMapping[str, str]] = None
+
 
 class HTTPMethod(Enum):
     GET = auto()
@@ -29,6 +49,7 @@ class HTTPMethod(Enum):
     OPTIONS = auto()
     PATCH = auto()
     TRACE = auto()
+
     @classmethod
     def of(cls, name: str) -> HTTPMethod:
         member_map = {
@@ -39,9 +60,10 @@ class HTTPMethod(Enum):
             "HEAD": cls.HEAD,
             "OPTIONS": cls.OPTIONS,
             "PATCH": cls.PATCH,
-            "TRACE": cls.TRACE
+            "TRACE": cls.TRACE,
         }
         return member_map[name]
+
 
 class AnyHTTPResponse(ABC):
     request_method: HTTPMethod
@@ -49,9 +71,10 @@ class AnyHTTPResponse(ABC):
     content: bytes
     text: str
     headers: dict[str, str]
-    
+
     def json(self) -> Any:
         return json.loads(self.text)
+
 
 @dataclass
 class HTTPResponse(AnyHTTPResponse):
@@ -61,8 +84,10 @@ class HTTPResponse(AnyHTTPResponse):
     text: str = field(kw_only=True)
     headers: dict[str, str] = field(kw_only=True)
 
+
 class OAHTTPSession(ABC):
     error_handling: bool = True
+
     @abstractmethod
     def sync_request(
         self,
@@ -73,10 +98,10 @@ class OAHTTPSession(ABC):
         headers: Optional[dict[str, str]] = None,
         params: Optional[dict[str, str]] = None,
         data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[Any] = None
+        json: Optional[Any] = None,
     ) -> AnyHTTPResponse:
         pass
-    
+
     @abstractmethod
     async def async_request(
         self,
@@ -87,7 +112,7 @@ class OAHTTPSession(ABC):
         headers: Optional[dict[str, str]] = None,
         params: Optional[dict[str, str]] = None,
         data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[Any] = None
+        json: Optional[Any] = None,
     ) -> AnyHTTPResponse:
         pass
 
@@ -98,10 +123,9 @@ class OAHTTPSession(ABC):
             raise exceptions.APIError("Internal Scratch server error")
         if r.status_code == 429:
             raise exceptions.Response429("You are being rate-limited (or blocked) by Scratch")
-        if r.json() == {"code":"BadRequest","message":""}:
+        if r.json() == {"code": "BadRequest", "message": ""}:
             raise exceptions.BadRequest("Make sure all provided arguments are valid")
-    
-    
+
     def request(
         self,
         method: Union[HTTPMethod, str],
@@ -111,21 +135,14 @@ class OAHTTPSession(ABC):
         headers: Optional[dict[str, str]] = None,
         params: Optional[dict[str, str]] = None,
         data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[Any] = None
+        json: Optional[Any] = None,
     ) -> optional_async.CARequest:
         if isinstance(method, str):
             method = HTTPMethod.of(method.upper())
         return optional_async.CARequest(
-            self,
-            method,
-            url,
-            cookies = cookies,
-            headers = headers,
-            params = params,
-            data = data,
-            json = json
+            self, method, url, cookies=cookies, headers=headers, params=params, data=data, json=json
         )
-    
+
     @contextmanager
     def no_error_handling(self) -> Iterator[None]:
         val_before = self.error_handling
@@ -134,7 +151,7 @@ class OAHTTPSession(ABC):
             yield
         finally:
             self.error_handling = val_before
-    
+
     @contextmanager
     def yes_error_handling(self) -> Iterator[None]:
         val_before = self.error_handling
@@ -144,19 +161,22 @@ class OAHTTPSession(ABC):
         finally:
             self.error_handling = val_before
 
+
 class SyncRequests(OAHTTPSession):
     @override
-    def sync_request(self, method, url, *, cookies = None, headers = None, params = None, data = None, json = None):
+    def sync_request(
+        self, method, url, *, cookies=None, headers=None, params=None, data=None, json=None
+    ):
         try:
             r = requests.request(
                 method.name,
                 url,
-                cookies = cookies,
-                headers = headers,
-                params = params,
-                data = data,
-                json = json,
-                proxies = proxies
+                cookies=cookies,
+                headers=headers,
+                params=params,
+                data=data,
+                json=json,
+                proxies=proxies,
             )
         except Exception as e:
             raise exceptions.FetchError(e)
@@ -165,34 +185,42 @@ class SyncRequests(OAHTTPSession):
             status_code=r.status_code,
             content=r.content,
             text=r.text,
-            headers=r.headers
+            headers=r.headers,
         )
         if self.error_handling:
             self.check_response(response)
         return response
-    
-    async def async_request(self, method, url, *, cookies = None, headers = None, params = None, data = None, json = None):
+
+    async def async_request(
+        self, method, url, *, cookies=None, headers=None, params=None, data=None, json=None
+    ):
         raise NotImplementedError()
+
 
 class AsyncRequests(OAHTTPSession):
     client_session: aiohttp.ClientSession
+
     async def __aenter__(self) -> Self:
-        self.client_session = await aiohttp.ClientSession(cookie_jar=DummyCookieJar()).__aenter__()
+        self.client_session = await aiohttp.ClientSession(cookie_jar=DummyCookieJar2()).__aenter__()
         return self
-    
+
     async def __aexit__(
         self,
         exc_type: Optional[type[BaseException]] = None,
         exc_val: Optional[BaseException] = None,
-        exc_tb: Optional[TracebackType] = None
+        exc_tb: Optional[TracebackType] = None,
     ) -> None:
         await self.client_session.__aexit__(exc_type, exc_val, exc_tb)
-    
+
     @override
-    def sync_request(self, method, url, *, cookies = None, headers = None, params = None, data = None, json = None):
+    def sync_request(
+        self, method, url, *, cookies=None, headers=None, params=None, data=None, json=None
+    ):
         raise NotImplementedError()
-    
-    async def async_request(self, method, url, *, cookies = None, headers = None, params = None, data = None, json = None):
+
+    async def async_request(
+        self, method, url, *, cookies=None, headers=None, params=None, data=None, json=None
+    ):
         proxy = None
         if url.startswith("http"):
             proxy = proxies.get("http")
@@ -201,12 +229,12 @@ class AsyncRequests(OAHTTPSession):
         async with self.client_session.request(
             method.name,
             url,
-            cookies = cookies,
-            headers = headers,
-            params = params,
-            data = data,
-            json = json,
-            proxy = proxy
+            cookies=cookies,
+            headers=headers,
+            params=params,
+            data=data,
+            json=json,
+            proxy=proxy,
         ) as resp:
             assert isinstance(resp, aiohttp.ClientResponse)
             content = await resp.read()
@@ -219,17 +247,23 @@ class AsyncRequests(OAHTTPSession):
                 status_code=resp.status,
                 content=content,
                 text=text,
-                headers=resp.headers
+                headers=resp.headers,
             )
             if self.error_handling:
                 self.check_response(response)
             return response
 
+
 class Requests(HTTPSession):
     """
     Centralized HTTP request handler (for better error handling and proxies)
     """
+
     error_handling: bool = True
+
+    def __init__(self):
+        super().__init__()
+        self.cookies = DummyCookieJar()
 
     def check_response(self, r: Response):
         if r.status_code == 403 or r.status_code == 401:
@@ -238,7 +272,7 @@ class Requests(HTTPSession):
             raise exceptions.APIError("Internal Scratch server error")
         if r.status_code == 429:
             raise exceptions.Response429("You are being rate-limited (or blocked) by Scratch")
-        if r.json() == {"code":"BadRequest","message":""}:
+        if r.json() == {"code": "BadRequest", "message": ""}:
             raise exceptions.BadRequest("Make sure all provided arguments are valid")
 
     @override
@@ -284,7 +318,7 @@ class Requests(HTTPSession):
         if self.error_handling:
             self.check_response(r)
         return r
-    
+
     @contextmanager
     def no_error_handling(self) -> Iterator[None]:
         val_before = self.error_handling
@@ -293,7 +327,7 @@ class Requests(HTTPSession):
             yield
         finally:
             self.error_handling = val_before
-    
+
     @contextmanager
     def yes_error_handling(self) -> Iterator[None]:
         val_before = self.error_handling
@@ -302,5 +336,6 @@ class Requests(HTTPSession):
             yield
         finally:
             self.error_handling = val_before
+
 
 requests = Requests()
