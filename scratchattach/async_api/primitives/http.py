@@ -105,6 +105,7 @@ class _HTTPSession:
 
     def __init__(self):
         self._cookies = {}
+        self._headers = {}
 
     def __enter__(self) -> None:
         raise TypeError("Use async with instead")

@@ -128,6 +128,10 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         self.update_function = shared_http.HTTPMethod.POST
         self.update_api = "https://scratch.mit.edu/session"
         self._headers = dict(headers)
+        try:
+            self.id = json.loads(self.id)
+        except json.JSONDecodeError:
+            pass
         self._cookies = {
             "scratchsessionsid": self.id,
             "scratchcsrftoken": "a",
@@ -140,13 +144,11 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             self._process_session_id()
         self._session = self
 
-    def __enter__(self) -> Self:
+    def _enter(self) -> Self:
         self.http_session.__enter__()
         return self
 
-    def __exit__(
-        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
-    ) -> None:
+    def _exit(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
         self.http_session.__exit__(exc_type, exc_val, exc_tb)
 
     def _update_from_data(self, data: typed_dicts.SessionDict):
@@ -249,7 +251,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             str: The email that this session wants to switch to
         """
         with self.http_session.get("https://scratch.mit.edu/accounts/email_change/") as response:
-            soup = BeautifulSoup(response.content(), "html.parser")
+            soup = BeautifulSoup(response.text(), "html.parser")
             email = None
             for label_span in soup.find_all("span", {"class": "label"}):
                 if not isinstance(label_span, Tag):
@@ -260,6 +262,9 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
                     return label_span.parent.contents[-1].text.strip("\n ")
                 elif label_span.contents[0] == "Current Email Address":
                     email = label_span.parent.contents[-1].text.strip("\n ")
+            if email is None:
+                for label_span in soup.select("form#email-change span.current-email"):
+                    email = label_span.text
             assert email is not None
             return email
 
@@ -1172,6 +1177,26 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         return self._cookies
 
 
+@dataclass
+class PreparedSession:
+    """
+    Session that needs to be activated in a context manager first. Do not instantiate this yourself.
+    """
+
+    args: Any = field(repr=False)
+    kwargs: Any = field(repr=False)
+    _session: Session = field(repr=False, init=False)
+
+    def __enter__(self) -> Session:
+        self._session = Session(*self.args, **self.kwargs | {"http_session": http._HTTPSession()})._enter()
+        return self._session
+
+    def __exit__(
+        self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
+    ) -> None:
+        self._session._exit(exc_type, exc_val, exc_tb)
+
+
 def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetime]:
     """
     Extract the JSON data from the main part of a session ID string
@@ -1195,9 +1220,20 @@ def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetim
     """
     p1, p2, _ = session_id.split(":")
     p1_bytes = base64.urlsafe_b64decode(p1 + "==")
-    if p1.startswith('".'):
+    if p1.startswith('".') or p1.startswith("."):
         p1_bytes = zlib.decompress(p1_bytes)
     return (json.loads(p1_bytes), datetime.datetime.fromtimestamp(commons.b62_decode(p2)))
+
+
+_global_http_session: http._HTTPSession | None = None
+
+
+def _get_global_http_session() -> http._HTTPSession:
+    global _global_http_session
+    if _global_http_session is None:
+        with http._HTTPSession() as session:
+            _global_http_session = session
+    return _global_http_session
 
 
 suppressed_login_warning = local()
@@ -1228,7 +1264,9 @@ def issue_login_warning() -> None:
     )
 
 
-def login_by_id(session_id: str, *, username: Optional[str] = None, password: Optional[str] = None, xtoken=None) -> Session:
+def login_by_id(
+    session_id: str, *, username: Optional[str] = None, password: Optional[str] = None, xtoken=None
+) -> PreparedSession:
     """
     Creates a session / log in to the Scratch website with the specified session id.
     Structured similarly to Session._connect_object method.
@@ -1250,13 +1288,11 @@ def login_by_id(session_id: str, *, username: Optional[str] = None, password: Op
         session_string = base64.b64encode(json.dumps(session_data).encode()).decode()
     else:
         session_string = None
-    _session = Session(id=session_id, username=username or "", session_string=session_string)
-    if xtoken is not None:
-        assert xtoken == _session.xtoken
+    _session = PreparedSession((), {"id": session_id, "username": username or "", "session_string": session_string})
     return _session
 
 
-def login(username, password, *, timeout=10) -> Session:
+def login(username, password, *, timeout: float | int = 10) -> PreparedSession:
     """
     Creates a session / log in to the Scratch website with the specified username and password.
 
@@ -1275,28 +1311,26 @@ def login(username, password, *, timeout=10) -> Session:
         scratchattach.session.Session: An object that represents the created login / session
     """
     issue_login_warning()
+    http_session = _get_global_http_session()
     _headers = headers.copy()
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
-    with requests.no_error_handling():
-        request = requests.post(
-            "https://scratch.mit.edu/login/",
-            json={"username": username, "password": password},
-            headers=_headers,
-            timeout=timeout,
-        )
-    try:
-        result = re.search('"(.*)"', request.headers["Set-Cookie"])
-        assert result is not None
-        session_id = str(result.group())
-    except Exception:
-        raise exceptions.LoginFailure(
-            "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in"
-        )
+    with http_session.post(
+        "https://scratch.mit.edu/login/",
+        shared_http.options().headers(_headers).timeout(timeout).json({"username": username, "password": password}).value,
+    ) as response:
+        try:
+            result = re.search('"(.*)"', response.headers["Set-Cookie"])
+            assert result is not None
+            session_id = str(result.group())
+        except Exception:
+            raise exceptions.LoginFailure(
+                "Either the provided authentication data is wrong or your network is banned from Scratch.\n\nIf you're using an online IDE (like replit.com) Scratch possibly banned its IP address. In this case, try logging in with your session id: https://github.com/TimMcCool/scratchattach/wiki#logging-in"
+            )
     with suppress_login_warning():
         return login_by_id(session_id, username=username, password=password)
 
 
-def login_by_session_string(session_string: str) -> Session:
+def login_by_session_string(session_string: str) -> PreparedSession:
     """
     Login using a session string.
     """
@@ -1328,7 +1362,7 @@ def login_by_session_string(session_string: str) -> Session:
     raise ValueError("Couldn't log in.")
 
 
-def login_by_io(file: SupportsRead[str]) -> Session:
+def login_by_io(file: SupportsRead[str]) -> PreparedSession:
     """
     Login using a file object.
     """
@@ -1336,7 +1370,7 @@ def login_by_io(file: SupportsRead[str]) -> Session:
         return login_by_session_string(file.read())
 
 
-def login_by_file(file: FileDescriptorOrPath) -> Session:
+def login_by_file(file: FileDescriptorOrPath) -> PreparedSession:
     """
     Login using a path to a file.
     """
@@ -1344,7 +1378,7 @@ def login_by_file(file: FileDescriptorOrPath) -> Session:
         return login_by_io(f)
 
 
-def login_from_browser(browser: Browser = ANY):
+def login_from_browser(browser: Browser = ANY) -> PreparedSession:
     """
     Login from a browser
     """
