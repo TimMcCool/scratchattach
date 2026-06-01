@@ -331,9 +331,9 @@ class CloudRequests(CloudEvents):
             # Parsing the received request
             raw_request, request_id = activity_value.split(".")
 
-            if len(request_id) == 8 and request_id[-1] == "9":
+            if len(request_id) == 9 and request_id[-1] == "9":
                 # A lost packet was re-requested
-                self._request_packet_from_memory(request_id[1:], int(raw_request))
+                self._request_packet_from_memory(request_id[:-1], int(raw_request))
                 return
 
             if request_id in self.responded_request_ids:
