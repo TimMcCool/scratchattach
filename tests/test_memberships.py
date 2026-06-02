@@ -4,10 +4,8 @@ import warnings
 warnings.filterwarnings("ignore", category=sa.UserAuthenticationWarning)
 
 
-def test_memberships():
-    # unfortunately we don't have amazingly robust test-cases here.
-    
-    # these are subject to change, we need to find long term members for this
+def test_memberships():    
+    # NOTE: these are subject to change
     member_users = [
         sa.get_user("-KittyMax-"),
         sa.get_user("scratchteam"),
