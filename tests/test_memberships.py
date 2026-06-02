@@ -1,5 +1,4 @@
 import scratchattach as sa
-from scratchattach import get_user, is_member, has_ears, has_badge
 import warnings
 
 warnings.filterwarnings("ignore", category=sa.UserAuthenticationWarning)
@@ -10,16 +9,16 @@ def test_memberships():
     
     # these are subject to change, we need to find long term members for this
     member_users = [
-        get_user("-KittyMax-"),
-        get_user("scratchteam"),
-        get_user("peekir"),
-        get_user("StardreamT2"),
+        sa.get_user("-KittyMax-"),
+        sa.get_user("scratchteam"),
+        sa.get_user("peekir"),
+        sa.get_user("StardreamT2"),
     ]
     nomember_users = [
-        get_user("scratchattachv2"),
-        get_user("GoatyJules"),
-        get_user("SkittlesTheBunny"),
-        get_user("Boss_1s") # not sure if it works since im banned
+        sa.get_user("scratchattachv2"),
+        sa.get_user("GoatyJules"),
+        sa.get_user("SkittlesTheBunny"),
+        sa.get_user("Boss_1s") # not sure if it works since im banned
     ]
 
     assert all(getattr(user, "is_member", False) for user in member_users)
