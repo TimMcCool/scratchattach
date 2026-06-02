@@ -63,9 +63,7 @@ class CloudEvents(BaseEventHandler):
                             #     continue
                             cloud_activity_dict = cast(CloudActivityDict, data)
                             cloud_activity_dict["variable_name"] = cloud_activity_dict["name"]
-                            cloud_activity_dict["name"] = cloud_activity_dict[
-                                "variable_name"
-                            ].replace("☁ ", "")
+                            cloud_activity_dict["name"] = cloud_activity_dict["variable_name"].replace("☁ ", "")
                             _a._update_from_dict(cloud_activity_dict)
                             # print(f"sending event {_a}")
                             self.call_event(f"on_{_a.type}", [_a])
@@ -73,6 +71,7 @@ class CloudEvents(BaseEventHandler):
                             print(f"Cloud events _updated ignored: {e} {traceback.format_exc()}")
                             pass
             except Exception:
+                traceback.print_exc()  # always print blanketed exceptions!!
                 self.subsequent_reconnects += 1
                 time.sleep(0.1)  # cooldown
 
@@ -88,9 +87,7 @@ class ManualCloudLogEvents:
 
     def __init__(self, cloud: _base.LogCloud):
         if not isinstance(cloud, _base.LogCloud):
-            raise ValueError(
-                "Cloud log events can't be used with a cloud that has no logs available"
-            )
+            raise ValueError("Cloud log events can't be used with a cloud that has no logs available")
         self.cloud = cloud
         self.source_cloud = cloud
         self._session = cloud._session
@@ -121,9 +118,7 @@ class CloudLogEvents(BaseEventHandler):
     def __init__(self, cloud: _base.LogCloud, *, update_interval=0.1):
         super().__init__()
         if not isinstance(cloud, _base.LogCloud):
-            raise ValueError(
-                "Cloud log events can't be used with a cloud that has no logs available"
-            )
+            raise ValueError("Cloud log events can't be used with a cloud that has no logs available")
         self.cloud = cloud
         self.source_cloud = cloud
         self.update_interval = update_interval
