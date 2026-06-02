@@ -19,11 +19,11 @@ def test_memberships():
         sa.get_user("Boss_1s")
     ]
 
-    assert all(getattr(user, "is_member", False) for user in member_users)
-    assert all(not getattr(user, "is_member", True) for user in nomember_users)
+    assert all(user.is_member for user in member_users)
+    assert all(not user.is_member for user in nomember_users)
     
-    assert any(getattr(user, "has_ears", False) for user in member_users)
-    assert all(not getattr(user, "has_ears", True) for user in nomember_users)
+    assert any(user.has_ears for user in member_users)
+    assert all(not user.has_ears for user in nomember_users)
 
     assert any(user.has_badge() for user in member_users)
     assert all(not user.has_badge() for user in nomember_users)
