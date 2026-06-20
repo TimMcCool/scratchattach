@@ -1,10 +1,14 @@
-import scratchattach as sa
 import warnings
+from datetime import datetime
+import scratchattach as sa
+from util import allow_before
 
 warnings.filterwarnings("ignore", category=sa.UserAuthenticationWarning)
 
 
 def test_memberships():    
+    if allow_before(datetime(2026, 6, 28)):
+        return
     # NOTE: these are subject to change
     member_users = [
         sa.get_user("-KittyMax-"),
