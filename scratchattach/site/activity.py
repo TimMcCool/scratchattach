@@ -1,7 +1,8 @@
 """Activity and CloudActivity class"""
+
 from __future__ import annotations
 
-from bs4 import PageElement
+from bs4 import PageElement, Tag
 
 from . import user, project, studio
 from ._base import BaseSiteComponent
@@ -113,7 +114,7 @@ class Activity(BaseSiteComponent):
             raw = f"{username} loved project https://scratch.mit.edu/projects/{project_id}"
 
             self.raw = raw
-            self.datetime_created = _time,
+            self.datetime_created = (_time,)
             self.type = "loveproject"
 
             self.username = username
@@ -182,7 +183,7 @@ class Activity(BaseSiteComponent):
             self.recipient_username = recipient_username
 
         # type 12 does not exist in the HTML. That's why it was removed, not merged with type 13.
-        
+
         elif activity_type == 13:
             # Create ('add') studio
             studio_id = data["gallery"]
@@ -295,24 +296,23 @@ class Activity(BaseSiteComponent):
 
             self.username = username
 
-    def _update_from_html(self, data: PageElement):
+    def _update_from_html(self, data: Tag):
 
         self.raw = data
 
-        _time = data.find('div').find('span').findNext().findNext().text.strip()
+        _time = getattr(data.select_one("div span.time"), "text", "").strip()
 
-        if '\xa0' in _time:
-            while '\xa0' in _time:
-                _time = _time.replace('\xa0', ' ')
+        while "\xa0" in _time:
+            _time = _time.replace("\xa0", " ")
 
         self.datetime_created = _time
-        self.actor_username = data.find('div').find('span').text
+        self.actor_username = getattr(data.select_one("div span"), "text", "")
 
-        self.target_name = data.find('div').find('span').findNext().text
-        self.target_link = data.find('div').find('span').findNext()["href"]
-        self.target_id = data.find('div').find('span').findNext()["href"].split("/")[-2]
+        self.target_name = getattr(data.select_one("div a"), "text", "")
+        self.target_link = str((data.select_one("div a") or {"href": ""})["href"])
+        self.target_id = self.target_link.split("/")[-2]
 
-        self.type = data.find('div').find_all('span')[0].next_sibling.strip()
+        self.type = getattr(data.select_one("div span"), "next_sibling", "").strip()
         if self.type == "loved":
             self.type = "loveproject"
 
@@ -337,7 +337,9 @@ class Activity(BaseSiteComponent):
         """
         Returns the user that performed the activity as User object
         """
-        return self._make_linked_object("username", self.actor_username, user.User, exceptions.UserNotFound)
+        return self._make_linked_object(
+            "username", self.actor_username, user.User, exceptions.UserNotFound
+        )
 
     def target(self):
         """
@@ -347,35 +349,60 @@ class Activity(BaseSiteComponent):
 
         if "project" in self.type:  # target is a project
             if "target_id" in self.__dict__:
-                return self._make_linked_object("id", self.target_id, project.Project, exceptions.ProjectNotFound)
+                return self._make_linked_object(
+                    "id", self.target_id, project.Project, exceptions.ProjectNotFound
+                )
             if "project_id" in self.__dict__:
-                return self._make_linked_object("id", self.project_id, project.Project, exceptions.ProjectNotFound)
+                return self._make_linked_object(
+                    "id", self.project_id, project.Project, exceptions.ProjectNotFound
+                )
 
         if self.type == "becomecurator" or self.type == "followstudio":  # target is a studio
             if "target_id" in self.__dict__:
-                return self._make_linked_object("id", self.target_id, studio.Studio, exceptions.StudioNotFound)
+                return self._make_linked_object(
+                    "id", self.target_id, studio.Studio, exceptions.StudioNotFound
+                )
             if "gallery_id" in self.__dict__:
-                return self._make_linked_object("id", self.gallery_id, studio.Studio, exceptions.StudioNotFound)
+                return self._make_linked_object(
+                    "id", self.gallery_id, studio.Studio, exceptions.StudioNotFound
+                )
             # NOTE: the "becomecurator" type is ambigous - if it is inside the studio activity tab, the target is the user who joined
             if "username" in self.__dict__:
-                return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
+                return self._make_linked_object(
+                    "username", self.username, user.User, exceptions.UserNotFound
+                )
 
         if self.type == "followuser" or "curator" in self.type:  # target is a user
             if "target_name" in self.__dict__:
-                return self._make_linked_object("username", self.target_name, user.User, exceptions.UserNotFound)
+                return self._make_linked_object(
+                    "username", self.target_name, user.User, exceptions.UserNotFound
+                )
             if "followed_username" in self.__dict__:
-                return self._make_linked_object("username", self.followed_username, user.User, exceptions.UserNotFound)
-        if "recipient_username" in self.__dict__:  # the recipient_username field always indicates the target is a user
-            return self._make_linked_object("username", self.recipient_username, user.User, exceptions.UserNotFound)
+                return self._make_linked_object(
+                    "username", self.followed_username, user.User, exceptions.UserNotFound
+                )
+        if (
+            "recipient_username" in self.__dict__
+        ):  # the recipient_username field always indicates the target is a user
+            return self._make_linked_object(
+                "username", self.recipient_username, user.User, exceptions.UserNotFound
+            )
 
         if self.type == "addcomment":  # target is a comment
             if self.comment_type == 0:
-                _c = project.Project(id=self.comment_obj_id, author_name=self._session.username,
-                                     _session=self._session).comment_by_id(self.comment_id)
+                _c = project.Project(
+                    id=self.comment_obj_id,
+                    author_name=self._session.username,
+                    _session=self._session,
+                ).comment_by_id(self.comment_id)
             if self.comment_type == 1:
-                _c = user.User(username=self.comment_obj_title, _session=self._session).comment_by_id(self.comment_id)
+                _c = user.User(
+                    username=self.comment_obj_title, _session=self._session
+                ).comment_by_id(self.comment_id)
             if self.comment_type == 2:
-                _c = user.User(id=self.comment_obj_id, _session=self._session).comment_by_id(self.comment_id)
+                _c = user.User(id=self.comment_obj_id, _session=self._session).comment_by_id(
+                    self.comment_id
+                )
             else:
                 raise ValueError(f"{self.comment_type} is an invalid comment type")
 
