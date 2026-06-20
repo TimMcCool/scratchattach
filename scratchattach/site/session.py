@@ -88,7 +88,7 @@ class Session(BaseSiteComponent):
     is_teacher: bool = field(repr=False, default=None)
 
     time_created: datetime.datetime = None
-    language: str = field(repr=False, default="en")
+    language: Optional[str] = field(repr=False, default="en")
 
     def __str__(self) -> str:
         return f"<Login for {self.username!r}>"
@@ -161,7 +161,7 @@ class Session(BaseSiteComponent):
 
         # not saving the login ip because it is a security issue, and is not very helpful
 
-        self.language = data["_language"]
+        self.language = data.get("_language")
         # self._cookies["scratchlanguage"] = self.language
 
     def connect_linked_user(self) -> user.User:
