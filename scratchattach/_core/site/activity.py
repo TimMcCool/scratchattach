@@ -39,8 +39,10 @@ class ActivityTypes(Enum):
     performaction = "performaction"
 
 
+TempActivityDataType = dict
+
 @dataclass
-class Activity(BaseSiteComponent):
+class Activity(BaseSiteComponent[TempActivityDataType]): # TODO: Actual TypedDict
     """
     Represents a Scratch activity (message or other user page activity)
     """

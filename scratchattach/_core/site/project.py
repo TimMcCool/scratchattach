@@ -16,7 +16,7 @@ from typing import Any, Optional
 from typing_extensions import deprecated
 
 from scratchattach.site.typed_dicts import ProjectDict
-from . import user, comment, studio, session
+from . import user, comment, studio, session, typed_dicts
 from scratchattach.utils import exceptions
 from scratchattach.utils import commons
 from scratchattach.utils.commons import empty_project_json, headers
@@ -30,7 +30,7 @@ CREATE_PROJECT_USES: list[float] = []
 
 
 @dataclass
-class PartialProject(BaseSiteComponent):
+class PartialProject(BaseSiteComponent[typed_dicts.ProjectDict]):
     """
     Represents an unshared Scratch project that can't be accessed.
     """

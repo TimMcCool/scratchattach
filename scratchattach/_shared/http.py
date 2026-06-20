@@ -27,7 +27,7 @@ def options() -> HTTPOptionsBuilder:
 
 
 class HTTPOptionsBuilder:
-    __slots__ = "options"
+    __slots__ = ["value"]
     value: HTTPOptions
 
     def __init__(self):

@@ -513,16 +513,15 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         )
         return activity.Activity.parse_object_list(data, self)
 
-    def admin_messages(self, *, limit=40, offset=0) -> list[dict]:
+    async def admin_messages(self, *, limit=40, offset=0) -> list[dict]:
         """
         Returns your messages sent by the Scratch team (alerts).
         """
-        return commons.api_iterative(
+        return await api_iterative(
+            self,
             f"https://api.scratch.mit.edu/users/{self._username}/messages/admin",
             limit=limit,
             offset=offset,
-            _headers=self._headers,
-            cookies=self._cookies,
         )
 
     async def classroom_alerts(
@@ -553,9 +552,6 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             shared_http.options()
             .params({"page": page, "ascsort": ascsort, "descsort": descsort})
             .value,
-            # params={"page": page, "ascsort": ascsort, "descsort": descsort},
-            # headers=self._headers,
-            # cookies=self._cookies,
         ) as response:
             data = await response.json()
 
@@ -570,36 +566,32 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
         return alerts
 
-    def clear_messages(self):
+    async def clear_messages(self):
         """
         Clears all messages.
         """
-        return requests.post(
-            "https://scratch.mit.edu/site-api/messages/messages-clear/",
-            headers=self._headers,
-            cookies=self._cookies,
-            timeout=10,
-        ).text
+        async with self.http_session.post(
+            f"https://scratch.mit.edu/site-api/messages/messages-clear/",
+            shared_http.options().timeout(10).value,
+        ) as response:
+            return await response.text()
 
-    def message_count(self) -> int:
+    async def message_count(self) -> int:
         """
         Returns the message count.
 
         Returns:
             int: message count
         """
-        return json.loads(
-            requests.get(
-                f"https://scratch.mit.edu/messages/ajax/get-message-count/",
-                headers=self._headers,
-                cookies=self._cookies,
-                timeout=10,
-            ).text
-        )["msg_count"]
+        async with self.http_session.get(
+            f"https://scratch.mit.edu/messages/ajax/get-message-count/",
+            shared_http.options().timeout(10).value,
+        ) as response:
+            return (await response.json())["msg_count"]
 
     # Front-page-related stuff:
 
-    def feed(self, *, limit=20, offset=0, date_limit=None) -> list[activity.Activity]:
+    async def feed(self, *, limit=20, offset=0, date_limit=None) -> list[activity.Activity]:
         """
         Returns the "What's happening" section (frontpage).
 
@@ -609,23 +601,23 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         add_params = ""
         if date_limit is not None:
             add_params = f"&dateLimit={date_limit}"
-        data = commons.api_iterative(
+            
+        data: list[activity.TempActivityDataType] = await api_iterative(
+            self,
             f"https://api.scratch.mit.edu/users/{self._username}/following/users/activity",
             limit=limit,
             offset=offset,
-            _headers=self._headers,
-            cookies=self._cookies,
             add_params=add_params,
         )
-        return commons.parse_object_list(data, activity.Activity, self)
+        return activity.Activity.parse_object_list(data, self)
 
-    def get_feed(self, *, limit=20, offset=0, date_limit=None):
+    async def get_feed(self, *, limit=20, offset=0, date_limit=None):
         # for more consistent names, this method was renamed
-        return self.feed(
+        return await self.feed(
             limit=limit, offset=offset, date_limit=date_limit
         )  # for backwards compatibility with v1
 
-    def loved_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
+    async def loved_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
         """
         Returns the "Projects loved by Scratchers I'm following" section (frontpage).
 
@@ -633,14 +625,13 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             list<scratchattach.project.Project>: List that contains all "Projects loved by Scratchers I'm following"
             entries as Project objects
         """
-        data = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self._username}/following/users/loves",
+        data: list[typed_dicts.ProjectDict] = await api_iterative(
+            self,
+            url=f"https://api.scratch.mit.edu/users/{self._username}/following/users/loves",
             limit=limit,
             offset=offset,
-            _headers=self._headers,
-            cookies=self._cookies,
         )
-        return commons.parse_object_list(data, project.Project, self)
+        return project.Project.parse_object_list(data, self)
 
     def shared_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
         """

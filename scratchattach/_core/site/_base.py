@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections.abc import Iterable
 
 from abc import ABC, abstractmethod
 from typing import TypeVar, Optional, Self, Union, Any, Generic, TypeAlias, cast, overload, Literal
@@ -232,16 +233,12 @@ async def api_iterative(
     offset: int,
     max_req_limit: int = 40,
     add_params: str = "",
-    _headers: Optional[dict] = None,
-    cookies: Optional[dict] = None,
+    _headers: Optional[Iterable[tuple[str, str]] | shared_http.SupportsItems[str, str]] = None,
+    cookies: Optional[Iterable[tuple[str, str]] | shared_http.SupportsItems[str, str]] = None,
 ) -> list[F]:
     """
     Function for getting data from one of Scratch's iterative JSON API endpoints (like /users/<user>/followers, or /users/<user>/projects)
     """
-    if _headers is None:
-        _headers = commons.headers.copy()
-    if cookies is None:
-        cookies = {}
 
     if offset < 0:
         raise exceptions.BadRequest("offset parameter must be >= 0")
@@ -254,6 +251,10 @@ async def api_iterative(
         """
         async with session.http_session.get(
             f"{url}?limit={lim}&offset={off}{add_params}",
+            shared_http.options()
+            .headers(_headers)
+            .cookies(cookies)
+            .value
         ) as response:
             resp = cast(
                 list[F],
