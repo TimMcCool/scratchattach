@@ -6,6 +6,8 @@ from typing import Optional, Self, cast, Any, Sequence, SupportsInt, BinaryIO, T
 if TYPE_CHECKING:
     from _typeshed import SupportsKeysAndGetItem
 from scratchattach._shared import http as shared_http
+from scratchattach import exceptions
+import json
 import contextlib
 import aiohttp
 
@@ -22,7 +24,16 @@ class _HTTPResponse:
         return await self._async_response.content.read()
 
     async def json(self) -> Any:
-        return await self._async_response.json()
+        try:
+            return await self._async_response.json()
+        except aiohttp.ContentTypeError:
+            raise shared_http.JSONError(
+                "Tried to decode an http response as json but the headers of the response did not match"
+            )
+        except json.JSONDecodeError:
+            raise shared_http.JSONError(
+                "Tried to decode an http response as json but the content did not conform to the json format"
+            )
 
     @property
     def headers(self) -> Mapping[str, str]:
@@ -37,6 +48,19 @@ class _HTTPResponse:
     @property
     def status_code(self) -> int:
         return self._async_response.status
+
+    async def check_response(self):
+        if self.status_code == 403 or self.status_code == 401:
+            raise exceptions.Unauthorized(f"Request content: {self.content!r}")
+        if self.status_code == 500:
+            raise exceptions.APIError("Internal Scratch server error")
+        if self.status_code == 429:
+            raise exceptions.Response429("You are being rate-limited (or blocked) by Scratch")
+        try:
+            if await self.json() == {"code": "BadRequest", "message": ""}:
+                raise exceptions.BadRequest("Make sure all provided arguments are valid")
+        except shared_http.JSONError:
+            raise shared_http.JSONError("Scratch API endpoint did not return valid json")
 
 
 class _WrappedHTTPResponse:

@@ -7,8 +7,10 @@ if TYPE_CHECKING:
     from _typeshed import SupportsKeysAndGetItem
 
 from scratchattach._shared import http as shared_http
+from scratchattach import exceptions
 
 if "IS_PRE_CODEGEN":
+    import json
     import contextlib
     from typing import LiteralString
     import aiohttp
@@ -18,6 +20,7 @@ if "IS_PRE_CODEGEN":
     def PREV_LINE_COMMENT(msg: LiteralString) -> None: ...
 else:
     if "IS_ASYNC":
+        import json
         import contextlib
         import aiohttp
     else:
@@ -42,7 +45,12 @@ if "IS_ASYNC":
             return await self._async_response.content.read()
 
         async def json(self) -> Any:
-            return await self._async_response.json()
+            try:
+                return await self._async_response.json()
+            except aiohttp.ContentTypeError:
+                raise shared_http.JSONError("Tried to decode an http response as json but the headers of the response did not match")
+            except json.JSONDecodeError:
+                raise shared_http.JSONError("Tried to decode an http response as json but the content did not conform to the json format")
 
         @property
         def headers(self) -> Mapping[str, str]:
@@ -57,6 +65,19 @@ if "IS_ASYNC":
         @property
         def status_code(self) -> int:
             return self._async_response.status
+        
+        async def check_response(self):
+            if self.status_code == 403 or self.status_code == 401:
+                raise exceptions.Unauthorized(f"Request content: {self.content!r}")
+            if self.status_code == 500:
+                raise exceptions.APIError("Internal Scratch server error")
+            if self.status_code == 429:
+                raise exceptions.Response429("You are being rate-limited (or blocked) by Scratch")
+            try:
+                if await self.json() == {"code": "BadRequest", "message": ""}:
+                    raise exceptions.BadRequest("Make sure all provided arguments are valid")
+            except shared_http.JSONError:
+                raise shared_http.JSONError("Scratch API endpoint did not return valid json")
 
     class _WrappedHTTPResponse:
         _aiohttp_response_context_manager: aiohttp.client._BaseRequestContextManager[
@@ -311,7 +332,10 @@ else:
             return self._sync_response.content
 
         def json(self) -> Any:
-            return self._sync_response.json()
+            try:
+                return self._sync_response.json()
+            except requests.JSONDecodeError:
+                raise shared_http.JSONError("Tried to decode an http response as json but the content did not conform to the json format")
 
         @property
         def headers(self) -> Mapping[str, str]:
@@ -326,6 +350,19 @@ else:
         @property
         def status_code(self) -> int:
             return self._sync_response.status_code
+        
+        def check_response(self):
+            if self.status_code == 403 or self.status_code == 401:
+                raise exceptions.Unauthorized(f"Request content: {self.content!r}")
+            if self.status_code == 500:
+                raise exceptions.APIError("Internal Scratch server error")
+            if self.status_code == 429:
+                raise exceptions.Response429("You are being rate-limited (or blocked) by Scratch")
+            try:
+                if self.json() == {"code": "BadRequest", "message": ""}:
+                    raise exceptions.BadRequest("Make sure all provided arguments are valid")
+            except shared_http.JSONError:
+                raise shared_http.JSONError("Scratch API endpoint did not return valid json")
 
     class _WrappedHTTPResponse:  # type: ignore[no-redef]
         _response: requests.Response

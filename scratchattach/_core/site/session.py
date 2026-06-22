@@ -332,8 +332,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             # data={"country": country},
             # headers=self._headers,
             # cookies=self._cookies,
-        ):
-            pass
+        ) as response:
+            await response.check_response()
 
     async def resend_email(self, password: str):
         """
@@ -350,8 +350,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             # data={"email_address": self.get_new_email_address(), "password": password},
             # headers=self._headers,
             # cookies=self._cookies,
-        ):
-            pass
+        ) as response:
+            await response.check_response()
 
     async def get_new_email_address(self) -> str:
         """
@@ -366,6 +366,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             # headers=self._headers,
             # cookies=self._cookies,
         ) as response:
+            await response.check_response()
             soup = BeautifulSoup(await response.text(), "html.parser")
 
             email = None
@@ -389,8 +390,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         """
         Sends a logout request to scratch. (Might not do anything, might log out this account on other ips/sessions.)
         """
-        async with self.http_session.post("https://scratch.mit.edu/accounts/logout/"):
-            pass
+        async with self.http_session.post("https://scratch.mit.edu/accounts/logout/") as response:
+            await response.check_response()
 
     async def set_featured_data(
         self,
@@ -422,6 +423,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             # headers=self._headers,
             # cookies=self._cookies,
         ) as response:
+            await response.check_response()
             data = await response.json()
             if errors := data.get("errors"):
                 raise Exception(
@@ -452,6 +454,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             .headers(self.ocular_headers)
             .value,
         ) as response:
+            await response.check_response()
             return cast(typed_dicts.OcularUserDict, await response.json())
 
     async def set_ocular_status(
@@ -472,6 +475,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             # json=payload,
             # headers=self.ocular_headers,
         ) as response:
+            await response.check_response()
             assert response.json() == {"ok": "user updated"}, (
                 f"Error occured on setting ocular status. auth/me response: {old}"
             )
@@ -553,6 +557,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             .params({"page": page, "ascsort": ascsort, "descsort": descsort})
             .value,
         ) as response:
+            await response.check_response()
             data = await response.json()
 
         # data = requests.get(
@@ -574,6 +579,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             f"https://scratch.mit.edu/site-api/messages/messages-clear/",
             shared_http.options().timeout(10).value,
         ) as response:
+            await response.check_response()
             return await response.text()
 
     async def message_count(self) -> int:
@@ -587,6 +593,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             f"https://scratch.mit.edu/messages/ajax/get-message-count/",
             shared_http.options().timeout(10).value,
         ) as response:
+            await response.check_response()
             return (await response.json())["msg_count"]
 
     # Front-page-related stuff:
@@ -716,6 +723,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
                 "https://assets.scratch.mit.edu/{asset_id_with_file_ext}",
                 shared_http.options().timeout(10).value,
             ) as response:
+                await response.check_response()
                 with open(f"{fp}{filename}", "wb") as f:
                     f.write(await response.content())
         except Exception:
@@ -744,8 +752,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         async with self.http_session.post(
             f"https://assets.scratch.mit.edu/{asset_id}.{file_ext}",
             shared_http.options().timeout(10).content(data).value,
-        ) as _:
-            pass
+        ) as response:
+            await response.check_response()
 
     # --- Search ---
 
@@ -887,6 +895,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             "https://projects.scratch.mit.edu/",
             shared_http.options().params(params).json(project_json).value,
         ) as response:
+            await response.check_response()
             return self.connect_project((await response.json())["content-name"])
 
     async def create_studio(
@@ -909,6 +918,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         async with self.http_session.post(
             "https://scratch.mit.edu/studios/create/",
         ) as response:
+            await response.check_response()
             studio_id = webscrape_count((await response.json())["redirect"], "/studios/", "/")
 
     
@@ -939,6 +949,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             "https://scratch.mit.edu/classes/create_classroom/",
             shared_http.options().json({"title": title, "description": desc}).value
         ) as response:
+            await response.check_response()
             class_id = (await response.json())[0]["id"]
 
         return self.connect_classroom(class_id)

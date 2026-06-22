@@ -102,3 +102,6 @@ class HTTPMethod(Enum):
 
 
 _EMPTY_OPTIONS: Final = HTTPOptions()
+
+class JSONError(Exception):
+    pass

@@ -236,8 +236,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         """
         async with self.http_session.post(
             "https://scratch.mit.edu/accounts/settings/", shared_http.options().data({"country": country}).value
-        ):
-            pass
+        ) as response:
+            await response.check_response()
 
     async def resend_email(self, password: str):
         """
@@ -249,8 +249,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         async with self.http_session.post(
             "https://scratch.mit.edu/accounts/email_change/",
             shared_http.options().data({"email_address": await self.get_new_email_address(), "password": password}).value,
-        ):
-            pass
+        ) as response:
+            await response.check_response()
 
     async def get_new_email_address(self) -> str:
         """
@@ -261,6 +261,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             str: The email that this session wants to switch to
         """
         async with self.http_session.get("https://scratch.mit.edu/accounts/email_change/") as response:
+            await response.check_response()
             soup = BeautifulSoup(await response.text(), "html.parser")
             email = None
             for label_span in soup.find_all("span", {"class": "label"}):
@@ -282,8 +283,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         """
         Sends a logout request to scratch. (Might not do anything, might log out this account on other ips/sessions.)
         """
-        async with self.http_session.post("https://scratch.mit.edu/accounts/logout/"):
-            pass
+        async with self.http_session.post("https://scratch.mit.edu/accounts/logout/") as response:
+            await response.check_response()
 
     async def set_featured_data(
         self, project_id: Optional[int] | Literal[""], project_label: Optional[int] | Literal[""] = None
@@ -307,6 +308,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         async with self.http_session.put(
             f"https://scratch.mit.edu/site-api/users/all/{self.username}/", shared_http.options().json(payload).value
         ) as response:
+            await response.check_response()
             data = await response.json()
             if errors := data.get("errors"):
                 raise Exception(f"Backend responded with error: {(errors[0] if len(errors) == 1 else errors)}")
@@ -326,6 +328,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             "https://my-ocular.jeffalo.net/auth/me",
             shared_http.options().disregard_default_headers().disregard_default_cookies().headers(self.ocular_headers).value,
         ) as response:
+            await response.check_response()
             return cast(typed_dicts.OcularUserDict, await response.json())
 
     async def set_ocular_status(self, status: Optional[str] = None, color: Optional[str] = None) -> None:
@@ -341,6 +344,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             .json(payload)
             .value,
         ) as response:
+            await response.check_response()
             assert response.json() == {"ok": "user updated"}, (
                 f"Error occured on setting ocular status. auth/me response: {old}"
             )
@@ -372,16 +376,12 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         )
         return activity.Activity.parse_object_list(data, self)
 
-    def admin_messages(self, *, limit=40, offset=0) -> list[dict]:
+    async def admin_messages(self, *, limit=40, offset=0) -> list[dict]:
         """
         Returns your messages sent by the Scratch team (alerts).
         """
-        return commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self._username}/messages/admin",
-            limit=limit,
-            offset=offset,
-            _headers=self._headers,
-            cookies=self._cookies,
+        return await api_iterative(
+            self, f"https://api.scratch.mit.edu/users/{self._username}/messages/admin", limit=limit, offset=offset
         )
 
     async def classroom_alerts(
@@ -404,38 +404,35 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             f"https://scratch.mit.edu/site-api/classrooms/alerts/{_classroom_str}",
             shared_http.options().params({"page": page, "ascsort": ascsort, "descsort": descsort}).value,
         ) as response:
+            await response.check_response()
             data = await response.json()
         alerts = [alert.EducatorAlert.from_json(alert_data, self) for alert_data in data]
         return alerts
 
-    def clear_messages(self):
+    async def clear_messages(self):
         """
         Clears all messages.
         """
-        return requests.post(
-            "https://scratch.mit.edu/site-api/messages/messages-clear/",
-            headers=self._headers,
-            cookies=self._cookies,
-            timeout=10,
-        ).text
+        async with self.http_session.post(
+            f"https://scratch.mit.edu/site-api/messages/messages-clear/", shared_http.options().timeout(10).value
+        ) as response:
+            await response.check_response()
+            return await response.text()
 
-    def message_count(self) -> int:
+    async def message_count(self) -> int:
         """
         Returns the message count.
 
         Returns:
             int: message count
         """
-        return json.loads(
-            requests.get(
-                f"https://scratch.mit.edu/messages/ajax/get-message-count/",
-                headers=self._headers,
-                cookies=self._cookies,
-                timeout=10,
-            ).text
-        )["msg_count"]
+        async with self.http_session.get(
+            f"https://scratch.mit.edu/messages/ajax/get-message-count/", shared_http.options().timeout(10).value
+        ) as response:
+            await response.check_response()
+            return (await response.json())["msg_count"]
 
-    def feed(self, *, limit=20, offset=0, date_limit=None) -> list[activity.Activity]:
+    async def feed(self, *, limit=20, offset=0, date_limit=None) -> list[activity.Activity]:
         """
         Returns the "What's happening" section (frontpage).
 
@@ -445,20 +442,19 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         add_params = ""
         if date_limit is not None:
             add_params = f"&dateLimit={date_limit}"
-        data = commons.api_iterative(
+        data: list[activity.TempActivityDataType] = await api_iterative(
+            self,
             f"https://api.scratch.mit.edu/users/{self._username}/following/users/activity",
             limit=limit,
             offset=offset,
-            _headers=self._headers,
-            cookies=self._cookies,
             add_params=add_params,
         )
-        return commons.parse_object_list(data, activity.Activity, self)
+        return activity.Activity.parse_object_list(data, self)
 
-    def get_feed(self, *, limit=20, offset=0, date_limit=None):
-        return self.feed(limit=limit, offset=offset, date_limit=date_limit)
+    async def get_feed(self, *, limit=20, offset=0, date_limit=None):
+        return await self.feed(limit=limit, offset=offset, date_limit=date_limit)
 
-    def loved_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
+    async def loved_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
         """
         Returns the "Projects loved by Scratchers I'm following" section (frontpage).
 
@@ -466,16 +462,12 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             list<scratchattach.project.Project>: List that contains all "Projects loved by Scratchers I'm following"
             entries as Project objects
         """
-        data = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self._username}/following/users/loves",
-            limit=limit,
-            offset=offset,
-            _headers=self._headers,
-            cookies=self._cookies,
+        data: list[typed_dicts.ProjectDict] = await api_iterative(
+            self, url=f"https://api.scratch.mit.edu/users/{self._username}/following/users/loves", limit=limit, offset=offset
         )
-        return commons.parse_object_list(data, project.Project, self)
+        return project.Project.parse_object_list(data, self)
 
-    def shared_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
+    async def shared_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
         """
         Returns the "Projects by Scratchers I'm following" section (frontpage).
         This section is only visible to old accounts (until ~2018).
@@ -485,21 +477,20 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             list<scratchattach.project.Project>: List that contains all "Projects by Scratchers I'm following"
             entries as Project objects
         """
-        data = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self._username}/following/users/projects",
+        data: list[typed_dicts.ProjectDict] = await api_iterative(
+            self,
+            url=f"https://api.scratch.mit.edu/users/{self._username}/following/users/projects",
             limit=limit,
             offset=offset,
-            _headers=self._headers,
-            cookies=self._cookies,
         )
-        ret = commons.parse_object_list(data, project.Project, self)
+        ret = project.Project.parse_object_list(data, self)
         if not ret:
             warnings.warn(
                 f"`shared_by_followed_users` got empty list `[]`. Note that this method is not supported for accounts made after 2018."
             )
         return ret
 
-    def in_followed_studios(self, *, limit=40, offset=0) -> list["project.Project"]:
+    async def in_followed_studios(self, *, limit=40, offset=0) -> list["project.Project"]:
         """
         Returns the "Projects in studios I'm following" section (frontpage).
         This section is only visible to old accounts (until ~2018)
@@ -509,14 +500,13 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             list<scratchattach.project.Project>: List that contains all "Projects in studios I'm following" section"
             entries as Project objects
         """
-        data = commons.api_iterative(
-            f"https://api.scratch.mit.edu/users/{self._username}/following/studios/projects",
+        data: list[typed_dicts.ProjectDict] = await api_iterative(
+            self,
+            url=f"https://api.scratch.mit.edu/users/{self._username}/following/studios/projects",
             limit=limit,
             offset=offset,
-            _headers=self._headers,
-            cookies=self._cookies,
         )
-        ret = commons.parse_object_list(data, project.Project, self)
+        ret = project.Project.parse_object_list(data, self)
         if not ret:
             warnings.warn(
                 f"`in_followed_studios` got empty list `[]`. Note that this method is not supported for accounts made after 2018."
@@ -534,38 +524,43 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         return pb
 
     def connect_pb_from_file(self, path_to_file) -> editor.Project:
+        """File operations are performed synchronously."""
         pb = editor.Project.from_sb3(path_to_file)
         pb._session = self
         return pb
 
-    @staticmethod
-    def download_asset(asset_id_with_file_ext, *, filename: Optional[str] = None, fp=""):
+    async def download_asset(self, asset_id_with_file_ext, *, filename: Optional[str] = None, fp=""):
+        """File operations are performed synchronously."""
         if not (fp.endswith("/") or fp.endswith("\\")):
             fp = fp + "/"
         try:
             if filename is None:
                 filename = str(asset_id_with_file_ext)
-            response = requests.get("https://assets.scratch.mit.edu/" + str(asset_id_with_file_ext), timeout=10)
-            open(f"{fp}{filename}", "wb").write(response.content)
+            async with self.http_session.get(
+                "https://assets.scratch.mit.edu/{asset_id_with_file_ext}", shared_http.options().timeout(10).value
+            ) as response:
+                await response.check_response()
+                with open(f"{fp}{filename}", "wb") as f:
+                    f.write(await response.content())
         except Exception:
             raise exceptions.FetchError("Failed to download asset")
 
-    def upload_asset(self, asset_content, *, asset_id=None, file_ext=None):
+    async def upload_asset(
+        self, asset_content: FileDescriptorOrPath, *, asset_id: Optional[str] = None, file_ext: Optional[str] = None
+    ):
+        """File operations are performed synchronously."""
         data = asset_content if isinstance(asset_content, bytes) else open(asset_content, "rb").read()
-        if isinstance(asset_content, str):
+        if isinstance(asset_content, str) or isinstance(asset_content, pathlib.Path):
             file_ext = pathlib.Path(asset_content).suffix
-        file_ext = file_ext.replace(".", "")
+        file_ext = (file_ext or "").replace(".", "")
         if asset_id is None:
             asset_id = hashlib.md5(data).hexdigest()
-        requests.post(
-            f"https://assets.scratch.mit.edu/{asset_id}.{file_ext}",
-            headers=self._headers,
-            cookies=self._cookies,
-            data=data,
-            timeout=10,
-        )
+        async with self.http_session.post(
+            f"https://assets.scratch.mit.edu/{asset_id}.{file_ext}", shared_http.options().timeout(10).content(data).value
+        ) as response:
+            await response.check_response()
 
-    def search_projects(
+    async def search_projects(
         self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
     ) -> list[project.Project]:
         """
@@ -583,15 +578,16 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             list<scratchattach.project.Project>: List that contains the search results.
         """
         query = f"&q={query}" if query else ""
-        response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/search/projects",
+        response: list[typed_dicts.ProjectDict] = await api_iterative(
+            self,
+            url=f"https://api.scratch.mit.edu/search/projects",
             limit=limit,
             offset=offset,
             add_params=f"&language={language}&mode={mode}{query}",
         )
-        return commons.parse_object_list(response, project.Project, self)
+        return project.Project.parse_object_list(response, self)
 
-    def explore_projects(
+    async def explore_projects(
         self, *, query: str = "*", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
     ) -> list[project.Project]:
         """
@@ -610,40 +606,43 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         Returns:
             list<scratchattach.project.Project>: List that contains the explore page projects.
         """
-        response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/explore/projects",
+        response: list[typed_dicts.ProjectDict] = await api_iterative(
+            self,
+            url=f"https://api.scratch.mit.edu/explore/projects",
             limit=limit,
             offset=offset,
             add_params=f"&language={language}&mode={mode}&q={query}",
         )
-        return commons.parse_object_list(response, project.Project, self)
+        return project.Project.parse_object_list(response, self)
 
-    def search_studios(
+    async def search_studios(
         self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
     ) -> list[studio.Studio]:
         query = f"&q={query}" if query else ""
-        response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/search/studios",
+        response: list[typed_dicts.StudioDict] = await api_iterative(
+            self,
+            url=f"https://api.scratch.mit.edu/explore/projects",
             limit=limit,
             offset=offset,
             add_params=f"&language={language}&mode={mode}{query}",
         )
-        return commons.parse_object_list(response, studio.Studio, self)
+        return studio.Studio.parse_object_list(response, self)
 
-    def explore_studios(
+    async def explore_studios(
         self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
     ) -> list[studio.Studio]:
         query = f"&q={query}" if query else ""
-        response = commons.api_iterative(
-            f"https://api.scratch.mit.edu/explore/studios",
+        response: list[typed_dicts.StudioDict] = await api_iterative(
+            self,
+            url=f"https://api.scratch.mit.edu/explore/studios",
             limit=limit,
             offset=offset,
             add_params=f"&language={language}&mode={mode}{query}",
         )
-        return commons.parse_object_list(response, studio.Studio, self)
+        return studio.Studio.parse_object_list(response, self)
 
-    def create_project(
-        self, *, title: Optional[str] = None, project_json: dict = empty_project_json, parent_id=None
+    async def create_project(
+        self, *, title: Optional[str] = None, project_json: dict = empty_project_json, parent_id: Optional[str | int] = None
     ) -> project.Project:
         """
         Creates a project on the Scratch website.
@@ -656,12 +655,13 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         if title is None:
             title = f"Untitled-{random.randint(0, 1 << 16)}"
         params = {"is_remix": "0" if parent_id is None else "1", "original_id": parent_id, "title": title}
-        response = requests.post(
-            "https://projects.scratch.mit.edu/", params=params, cookies=self._cookies, headers=self._headers, json=project_json
-        ).json()
-        return self.connect_project(response["content-name"])
+        async with self.http_session.post(
+            "https://projects.scratch.mit.edu/", shared_http.options().params(params).json(project_json).value
+        ) as response:
+            await response.check_response()
+            return self.connect_project((await response.json())["content-name"])
 
-    def create_studio(self, *, title: Optional[str] = None, description: Optional[str] = None) -> studio.Studio:
+    async def create_studio(self, *, title: Optional[str] = None, description: Optional[str] = None) -> studio.Studio:
         """
         Create a studio on the scratch website
 
@@ -672,8 +672,9 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         enforce_ratelimit("create_scratch_studio", "creating Scratch studios")
         if self.new_scratcher:
             raise exceptions.Unauthorized(f"\nNew scratchers (like {self.username}) cannot create studios.")
-        response = requests.post("https://scratch.mit.edu/studios/create/", cookies=self._cookies, headers=self._headers)
-        studio_id = webscrape_count(response.json()["redirect"], "/studios/", "/")
+        async with self.http_session.post("https://scratch.mit.edu/studios/create/") as response:
+            await response.check_response()
+            studio_id = webscrape_count((await response.json())["redirect"], "/studios/", "/")
         new_studio = self.connect_studio(studio_id)
         if title is not None:
             new_studio.set_title(title)
@@ -681,7 +682,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             new_studio.set_description(description)
         return new_studio
 
-    def create_class(self, title: str, desc: str = "") -> classroom.Classroom:
+    async def create_class(self, title: str, desc: str = "") -> classroom.Classroom:
         """
         Create a class on the scratch website
 
@@ -692,13 +693,12 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         enforce_ratelimit("create_scratch_class", "creating Scratch classes")
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't create class")
-        data = requests.post(
+        async with self.http_session.post(
             "https://scratch.mit.edu/classes/create_classroom/",
-            json={"title": title, "description": desc},
-            headers=self._headers,
-            cookies=self._cookies,
-        ).json()
-        class_id = data[0]["id"]
+            shared_http.options().json({"title": title, "description": desc}).value,
+        ) as response:
+            await response.check_response()
+            class_id = (await response.json())[0]["id"]
         return self.connect_classroom(class_id)
 
     def mystuff_counts(self) -> tuple[int, int, int]:
