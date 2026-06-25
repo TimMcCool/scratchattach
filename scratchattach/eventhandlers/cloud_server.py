@@ -31,7 +31,7 @@ class TwCloudSocket(WebSocket):
                 # cloud variable set received
                 # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
                 if self.server.whitelisted_projects is not None:
-                    if data["project_id"] not in self.server.whitelisted_projects:
+                    if str(data["project_id"]) not in self.server.whitelisted_projects:
                         self.close(4002)
                         if self.server.log_var_sets:
                             print(
@@ -206,7 +206,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
     tw_clients: dict[tuple[str, int], dict[str, Any]]
     tw_variables: dict[str, dict[str, Any]]
     allow_non_numeric: bool
-    whitelisted_projects: Optional[list[Any]]
+    whitelisted_projects: Optional[list[str]]
     length_limit: Optional[int]
     allow_nonscratch_names: bool
     blocked_ips: list[str]
@@ -241,7 +241,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         self.hostname = hostname
         self.port = port
         self.allow_non_numeric = allow_non_numeric
-        self.whitelisted_projects = whitelisted_projects
+        self.whitelisted_projects = [str(i) for i in whitelisted_projects] if whitelisted_projects else None
         self.length_limit = length_limit
         self.allow_nonscratch_names = allow_nonscratch_names
         self.blocked_ips = blocked_ips or []
@@ -451,7 +451,7 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
     tw_clients: dict[tuple[str, int], dict[str, Any]]
     tw_variables: dict[str, dict[str, Any]]
     allow_non_numeric: bool
-    whitelisted_projects: Optional[list[Any]]
+    whitelisted_projects: Optional[list[str]]
     length_limit: Optional[int]
     allow_nonscratch_names: bool
     blocked_ips: list[str]
@@ -499,7 +499,7 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
         self.hostname = hostname
         self.port = port
         self.allow_non_numeric = allow_non_numeric
-        self.whitelisted_projects = whitelisted_projects
+        self.whitelisted_projects = [str(i) for i in whitelisted_projects] if whitelisted_projects else None
         self.length_limit = length_limit
         self.allow_nonscratch_names = allow_nonscratch_names
         self.blocked_ips = blocked_ips or []
