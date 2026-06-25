@@ -36,8 +36,8 @@ class TwCloudSocket(WebSocket):
                         if self.server.log_var_sets:
                             print(
                                 f"{self.address[0]}:{self.address[1]} tried to set a var on non-whitelisted project "
-                                f"and was disconnected, project: {data["project_id"]} "
-                                f"user: {data["user"]}",
+                                f"and was disconnected, project: {data['project_id']} "
+                                f"user: {data['user']}",
                             )
                         return
                 # check if value is valid
@@ -75,7 +75,8 @@ class TwCloudSocket(WebSocket):
                 }
                 # raise event
                 _a = cloud_activity.CloudActivity(timestamp=time.time() * 1000)
-                data["name"] = data["name"].replace("☁ ", "")
+                if self.server.remove_cloud_prefix:
+                    data["name"] = data["name"].removeprefix("☁ ")
                 _a._update_from_dict(send_to_clients)
                 self.server.call_event("on_set", [_a, self])
 
@@ -138,7 +139,9 @@ class TwCloudSocket(WebSocket):
                                 {
                                     "method": "set",
                                     "project_id": data["project_id"],
-                                    "name": "☁ " + varname,
+                                    "name": "☁ " + varname
+                                    if self.server.remove_cloud_prefix
+                                    else varname,
                                     "value": self.server.tw_variables[str(data["project_id"])][
                                         varname
                                     ],
@@ -212,6 +215,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
     blocked_ips: list[str]
     sync_players: bool
     log_var_sets: bool
+    remove_cloud_prefix: bool
 
     def __init__(
         self,
@@ -226,6 +230,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         blocked_ips: Optional[list[str]] = None,
         sync_players: bool = True,
         log_var_sets: bool = True,
+        remove_cloud_prefix: bool = True,
     ):
         SimpleWebSocketServer.__init__(self, hostname, port, websocketclass)
         self._thread = None
@@ -241,12 +246,15 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         self.hostname = hostname
         self.port = port
         self.allow_non_numeric = allow_non_numeric
-        self.whitelisted_projects = [str(i) for i in whitelisted_projects] if whitelisted_projects else None
+        self.whitelisted_projects = (
+            [str(i) for i in whitelisted_projects] if whitelisted_projects else None
+        )
         self.length_limit = length_limit
         self.allow_nonscratch_names = allow_nonscratch_names
         self.blocked_ips = blocked_ips or []
         self.sync_players = sync_players
         self.log_var_sets = log_var_sets
+        self.remove_cloud_prefix = remove_cloud_prefix
 
     def check_for_ip_ban(self, client: WebSocket) -> bool:
         if (
@@ -290,7 +298,8 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
 
     def get_var(self, project_id: Union[str, int], var_name: str) -> Any:
         project_id = str(project_id)
-        var_name = var_name.replace("☁ ", "")
+        if self.remove_cloud_prefix:
+            var_name = var_name.removeprefix("☁ ")
         if project_id in self.tw_variables:
             if var_name in self.tw_variables[project_id]:
                 return self.tw_variables[project_id][var_name]
@@ -316,7 +325,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
                             {
                                 "method": "set",
                                 "project_id": project_id,
-                                "name": "☁ " + varname,
+                                "name": "☁ " + varname if self.remove_cloud_prefix else varname,
                                 "value": data[varname],
                                 "server": "scratchattach/2.0.0",
                                 "timestamp": time.time() * 1000,
@@ -337,7 +346,8 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         user: str = "@server",
         skip_forward: Optional[WebSocket] = None,
     ):
-        var_name = var_name.replace("☁ ", "")
+        if self.remove_cloud_prefix:
+            var_name = var_name.removeprefix("☁ ")
         project_id = str(project_id)
         if project_id not in self.tw_variables:
             self.tw_variables[project_id] = {}
@@ -354,7 +364,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
                         {
                             "method": "set",
                             "project_id": project_id,
-                            "name": "☁ " + var_name,
+                            "name": "☁ " + var_name if self.remove_cloud_prefix else var_name,
                             "value": value,
                             "timestamp": time.time() * 1000,
                             "user": user,
@@ -419,6 +429,7 @@ def init_cloud_server(
     blocked_ips: Optional[list[str]] = None,
     sync_players: bool = True,
     log_var_sets: bool = True,
+    remove_cloud_prefix: bool = True,
 ) -> TwCloudServer:
     if thread is not None:
         warnings.warn(
@@ -442,6 +453,7 @@ def init_cloud_server(
         blocked_ips=blocked_ips,
         sync_players=sync_players,
         log_var_sets=log_var_sets,
+        remove_cloud_prefix=remove_cloud_prefix,
     )
 
 
@@ -457,6 +469,7 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
     blocked_ips: list[str]
     sync_players: bool
     log_var_sets: bool
+    remove_cloud_prefix: bool
 
     def __init__(
         self,
@@ -475,6 +488,7 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
         blocked_ips: Optional[list[str]] = None,
         sync_players: bool = True,
         log_var_sets: bool = True,
+        remove_cloud_prefix: bool = True,
     ):
         SimpleSSLWebSocketServer.__init__(
             self,
@@ -499,12 +513,15 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
         self.hostname = hostname
         self.port = port
         self.allow_non_numeric = allow_non_numeric
-        self.whitelisted_projects = [str(i) for i in whitelisted_projects] if whitelisted_projects else None
+        self.whitelisted_projects = (
+            [str(i) for i in whitelisted_projects] if whitelisted_projects else None
+        )
         self.length_limit = length_limit
         self.allow_nonscratch_names = allow_nonscratch_names
         self.blocked_ips = blocked_ips or []
         self.sync_players = sync_players
         self.log_var_sets = log_var_sets
+        self.remove_cloud_prefix = remove_cloud_prefix
 
     def check_for_ip_ban(self, client: WebSocket) -> bool:
         if (
@@ -548,7 +565,8 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
 
     def get_var(self, project_id: Union[str, int], var_name: str) -> Any:
         project_id = str(project_id)
-        var_name = var_name.replace("☁ ", "")
+        if self.remove_cloud_prefix:
+            var_name = var_name.removeprefix("☁ ")
         if project_id in self.tw_variables:
             if var_name in self.tw_variables[project_id]:
                 return self.tw_variables[project_id][var_name]
@@ -574,7 +592,7 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
                             {
                                 "method": "set",
                                 "project_id": project_id,
-                                "name": "☁ " + varname,
+                                "name": "☁ " + varname if self.remove_cloud_prefix else varname,
                                 "value": data[varname],
                                 "server": "scratchattach/2.0.0",
                                 "timestamp": time.time() * 1000,
@@ -595,7 +613,8 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
         user: str = "@server",
         skip_forward: Optional[WebSocket] = None,
     ):
-        var_name = var_name.replace("☁ ", "")
+        if self.remove_cloud_prefix:
+            var_name = var_name.removeprefix("☁ ")
         project_id = str(project_id)
         if project_id not in self.tw_variables:
             self.tw_variables[project_id] = {}
@@ -612,7 +631,7 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
                         {
                             "method": "set",
                             "project_id": project_id,
-                            "name": "☁ " + var_name,
+                            "name": "☁ " + var_name if self.remove_cloud_prefix else var_name,
                             "value": value,
                             "timestamp": time.time() * 1000,
                             "user": user,
@@ -681,6 +700,7 @@ def init_ssl_cloud_server(
     blocked_ips: Optional[list[str]] = None,
     sync_players: bool = True,
     log_var_sets: bool = True,
+    remove_cloud_prefix: bool = True,
 ) -> TwSSLCloudServer:
     """
     Inits a websocket server which can be used with TurboWarp's ?cloud_host URL parameter.
@@ -708,4 +728,5 @@ def init_ssl_cloud_server(
         blocked_ips=blocked_ips,
         sync_players=sync_players,
         log_var_sets=log_var_sets,
+        remove_cloud_prefix=remove_cloud_prefix,
     )
