@@ -114,7 +114,7 @@ class Activity(BaseSiteComponent):
             raw = f"{username} loved project https://scratch.mit.edu/projects/{project_id}"
 
             self.raw = raw
-            self.datetime_created = (_time,)
+            self.datetime_created = _time
             self.type = "loveproject"
 
             self.username = username
