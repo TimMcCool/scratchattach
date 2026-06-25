@@ -243,7 +243,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         self.hostname = hostname
         self.port = port
         self.allow_non_numeric = allow_non_numeric
-        self.whitelisted_projects = whitelisted_projects or []
+        self.whitelisted_projects = whitelisted_projects
         self.length_limit = length_limit
         self.allow_nonscratch_names = allow_nonscratch_names
         self.blocked_ips = blocked_ips or []
@@ -501,7 +501,7 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
         self.hostname = hostname
         self.port = port
         self.allow_non_numeric = allow_non_numeric
-        self.whitelisted_projects = whitelisted_projects or []
+        self.whitelisted_projects = whitelisted_projects
         self.length_limit = length_limit
         self.allow_nonscratch_names = allow_nonscratch_names
         self.blocked_ips = blocked_ips or []
