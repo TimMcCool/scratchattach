@@ -35,11 +35,9 @@ class TwCloudSocket(WebSocket):
                         self.close(4002)
                         if self.server.log_var_sets:
                             print(
-                                self.address[0] + ":" + str(self.address[1]),
-                                "tried to set a var on non-whitelisted project and was disconnected, project:",
-                                data["project_id"],
-                                "user:",
-                                data["user"],
+                                f"{self.address[0]}:{self.address[1]} tried to set a var on non-whitelisted project "
+                                f"and was disconnected, project: {data["project_id"]} "
+                                f"user: {data["user"]}",
                             )
                         return
                 # check if value is valid
@@ -424,7 +422,7 @@ def init_cloud_server(
 ) -> TwCloudServer:
     if thread is not None:
         warnings.warn(
-            "`thread` is set in `init_cloud_server`, which has no effect."
+            "`thread` is set in `init_cloud_server`, which has no effect. "
             "Maybe you meant to provide `thread` in the `start` method of the cloud server?"
         )
     """
@@ -691,7 +689,7 @@ def init_ssl_cloud_server(
     """
     if thread is not None:
         warnings.warn(
-            "`thread` is set in `init_ssl_cloud_server`, which has no effect."
+            "`thread` is set in `init_ssl_cloud_server`, which has no effect. "
             "Maybe you meant to provide `thread` in the `start` method of the cloud server?"
         )
 
