@@ -4,6 +4,7 @@ from threading import Thread
 from typing import Union, Any, Callable, Optional
 import json
 import time
+import warnings
 import ssl
 from scratchattach.utils import exceptions
 from scratchattach.site import cloud_activity
@@ -412,7 +413,7 @@ def init_cloud_server(
     hostname: str = "127.0.0.1",
     port: int = 8080,
     *,
-    thread: bool = True,
+    thread: Optional[bool] = None,
     length_limit: Optional[int] = None,
     allow_non_numeric: bool = True,
     whitelisted_projects: Optional[list[Any]] = None,
@@ -421,6 +422,11 @@ def init_cloud_server(
     sync_players: bool = True,
     log_var_sets: bool = True,
 ) -> TwCloudServer:
+    if thread is not None:
+        warnings.warn(
+            "`thread` is set in `init_cloud_server`, which has no effect."
+            "Maybe you meant to provide `thread` in the `start` method of the cloud server?"
+        )
     """
     Inits a websocket server which can be used with TurboWarp's ?cloud_host URL parameter.
 
@@ -669,7 +675,7 @@ def init_ssl_cloud_server(
     keyfile: Optional[str] = None,
     ssl_version: int = ssl.PROTOCOL_TLSv1_2,
     ssl_context: Optional[ssl.SSLContext] = None,
-    thread: bool = True,
+    thread: Optional[bool] = None,
     length_limit: Optional[int] = None,
     allow_non_numeric: bool = True,
     whitelisted_projects: Optional[list[Any]] = None,
@@ -683,6 +689,11 @@ def init_ssl_cloud_server(
 
     Prints out the websocket address in the console.
     """
+    if thread is not None:
+        warnings.warn(
+            "`thread` is set in `init_ssl_cloud_server`, which has no effect."
+            "Maybe you meant to provide `thread` in the `start` method of the cloud server?"
+        )
 
     return TwSSLCloudServer(
         hostname,
