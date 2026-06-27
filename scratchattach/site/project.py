@@ -619,11 +619,12 @@ class Project(PartialProject):
         Shares the project. You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_project`
         """
         self._assert_permission()
-        requests.put(
-            f"https://api.scratch.mit.edu/proxy/projects/{self.id}/share/",
-            headers=self._json_headers,
-            cookies=self._cookies,
-        )
+        with requests.no_error_handling():
+            requests.put(
+                f"https://api.scratch.mit.edu/proxy/projects/{self.id}/share/",
+                headers=self._json_headers,
+                cookies=self._cookies,
+            )
 
     def unshare(self):
         """

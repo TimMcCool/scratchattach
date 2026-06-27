@@ -2,6 +2,45 @@ import warnings
 from util import session, credentials_available, allow_before
 import scratchattach as sa
 from datetime import datetime
+from scratchattach.site.project import Project
+
+
+class FakeSession:
+    username = "ScratchAttachV2"
+
+    def get_headers(self):
+        return {"x-token": "token"}
+
+    def get_cookies(self):
+        return {"scratchsessionsid": "session"}
+
+
+def test_project_share_disables_response_json_error_handling(monkeypatch):
+    project = Project(id=123, author_name="ScratchAttachV2", _session=FakeSession())
+    calls = []
+
+    def fake_put(*args, **kwargs):
+        calls.append((args, kwargs, sa.utils.requests.requests.error_handling))
+
+    monkeypatch.setattr(sa.utils.requests.requests, "put", fake_put)
+
+    project.share()
+
+    assert calls == [
+        (
+            ("https://api.scratch.mit.edu/proxy/projects/123/share/",),
+            {
+                "headers": {
+                    "x-token": "token",
+                    "accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                "cookies": {"scratchsessionsid": "session"},
+            },
+            False,
+        )
+    ]
+    assert sa.utils.requests.requests.error_handling is True
 
 
 def test_project():
