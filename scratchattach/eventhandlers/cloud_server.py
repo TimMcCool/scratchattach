@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
-from threading import Thread
+from threading import Thread # unused threading.Thread? not changing, just noting -Boss_1s
 from scratchattach.utils import exceptions
 import json
 import time
@@ -131,22 +131,44 @@ class TwCloudSocket(WebSocket):
             if self.server.check_for_ip_ban(self):
                 return
 
-            data = json.loads(self.data)
-            # print(data)
+            try:
+                data = json.loads(self.data)
+            except json.decoder.JSONDecodeError:
+                print(f"Warning! Client {self.address[0] + ":" + str(self.address[1])} sent invalid JSON to the server. ",
+                      "The client may be unsafe, please stay alert."
+                     )
+                return
 
-            if data["method"] == "set":
-                self.handle_set(data)
-            elif data["method"] == "handshake":
-                self.handle_handshake(data)
+            print(f"Data recieved: {data}")
+            if data == {}:
+                print(
+                    "Error:",
+                    self.address[0] + ":" + str(self.address[1]),
+                    "sent a blank JSON message. If this seems suspicious, ban the IP.",
+                )
+                return
+            if 'method' in data:
+                if data["method"] == "set":
+                    self.handle_set(data)
+                elif data["method"] == "handshake":
+                    self.handle_handshake(data)
+                else:
+                    print(
+                        "Error:",
+                        self.address[0] + ":" + str(self.address[1]),
+                        "sent a message without providing a valid method (set, handshake)",
+                        f"but provided method {list(data.values())[0]} instead.",
+                    )
             else:
                 print(
                     "Error:",
                     self.address[0] + ":" + str(self.address[1]),
-                    "sent a message without providing a valid method (set, handshake)",
+                    "sent a message without providing a valid 'method' key,",
+                    f"but provided key {list(data.keys())[0]} instead.",
                 )
 
         except Exception as e:
-            print("Internal error in handleMessage:", e, traceback.format_exc())
+            print("Internal error in handleMessage:", e, "\n", traceback.format_exc())
 
     def handleConnected(self):
         if not self.server.running:
@@ -228,7 +250,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         ):
             client.sendMessage("You have been banned from this server")
             client.close(4002)
-            print(client.address[0] + ":" + str(client.address[1]), "(IP-banned) was disconnected")
+            print(client.address[0] + ":" + str(client.address[1]), "(IP-banned) was forced disconnected")
             return True
         return False
 
@@ -344,7 +366,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         self.running = True
 
     def stop(self, wait_call_threads: bool = True):
-        BaseEventHandler.stop(self, wait_call_threads)
+        BaseEventHandler.stop(self, wait_call_threads) # wait_call_threads does not exist in BaseEventHandler.stop
         self.close()
 
 
