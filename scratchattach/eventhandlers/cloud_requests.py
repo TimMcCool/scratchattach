@@ -53,13 +53,13 @@ class Request:
         except Exception as e:
             self.cloud_requests.call_event("on_error", [received_request, e])
             if self.cloud_requests.ignore_exceptions:
-                print(f"Warning: Caught error in request '{self.name}' - Full error below")
+                print(f"Warning: Caught error in request {self.name!r} - Full error below")
                 try:
                     traceback.print_exc()
                 except Exception:
                     print(e)
             else:
-                print(f"Exception in request '{self.name}':")
+                print(f"Exception in request {self.name!r}:")
                 raise (e)
             if self.debug:
                 traceback_full = traceback.format_exc().splitlines()
@@ -180,7 +180,7 @@ class CloudRequests(CloudEvents):
         try:
             self._requests.pop(name)
         except Exception:
-            raise ValueError(f"No request with name {name} found to remove")
+            raise ValueError(f"No request with name {name!r} found to remove")
 
     # -- Parse and send back the request output --
 
@@ -190,7 +190,7 @@ class CloudRequests(CloudEvents):
         """
         if len(str(output)) > 3000:
             print(
-                f"Warning: Output of request '{request_name}' is longer than 3000 characters (length: {len(str(output))} characters). Responding the request will take >4 seconds."
+                f"Warning: Output of request {request_name!r} is longer than 3000 characters (length: {len(str(output))} characters). Responding the request will take >4 seconds."
             )
 
         if str(request_id).endswith("0"):
@@ -204,7 +204,7 @@ class CloudRequests(CloudEvents):
             send_as_integer = False
 
         if output is None:
-            print(f"Warning: Request '{request_name}' didn't return anything.")
+            print(f"Warning: Request {request_name!r} didn't return anything.")
             return
         elif send_as_integer:
             output = str(output)
@@ -337,7 +337,7 @@ class CloudRequests(CloudEvents):
 
             # Check if the request is unknown:
             if request_name not in self._requests:
-                print(f"Warning: Client received an unknown request called '{request_name}'")
+                print(f"Warning: Client received an unknown request called {request_name!r}")
                 self.call_event(
                     "on_unknown_request",
                     [
