@@ -5,14 +5,14 @@ import warnings
 
 from websocket import WebSocketBadStatusException
 
-from ._base import BaseCloud
-from typing import Type
+from ._base import BaseCloud, LogCloud
+from typing import Type, Optional
 from scratchattach.utils.requests import requests
 from scratchattach.utils import exceptions, commons
 from scratchattach.site import cloud_activity
 
 
-class ScratchCloud(BaseCloud):
+class ScratchCloud(LogCloud):
     def __init__(self, *, project_id, _session=None):
         super().__init__()
         
@@ -63,7 +63,7 @@ class ScratchCloud(BaseCloud):
         except Exception as e:
             raise exceptions.FetchError(str(e))
 
-    def get_var(self, var, *, use_logs=False):
+    def get_var(self, var, *, recorder_initial_values: Optional[dict] = None, use_logs=False):
         var = var.removeprefix("☁ ")
         if self._session is None or use_logs:
             filtered = self.logs(limit=100, filter_by_var_named="☁ "+var)
@@ -77,7 +77,7 @@ class ScratchCloud(BaseCloud):
             else:
                 return super().get_var("☁ "+var)
 
-    def get_all_vars(self, *, use_logs=False):
+    def get_all_vars(self, *, recorder_initial_values: Optional[dict] = None, use_logs=False):
         if self._session is None or use_logs:
             logs = self.logs(limit=100)
             logs.reverse()

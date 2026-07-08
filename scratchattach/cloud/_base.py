@@ -109,6 +109,12 @@ class AnyCloud(ABC, Generic[T]):
     def storage(self, *, no_packet_loss: bool = False, used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]) -> CloudStorage:
         return CloudStorage(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
     
+    def shortterm_ratelimit_hint(self) -> float:
+        return 0.06667
+    
+    def longterm_ratelimit_hint(self) -> float:
+        return 0.1
+    
     @abstractmethod
     def create_event_stream(self) -> EventStream:
         pass
@@ -121,7 +127,7 @@ class WebSocketEventStream(EventStream):
         super().__init__()
         # NOTE: maybe consider using copy.copy here (copy.deepcopy doesn't work as you cannot deepcopy a Thread)
         cloud_type = type(cloud)
-        if cloud_type is cloud_module.CustomCloud:
+        if issubclass(cloud_type, cloud_module.CustomCloud):
             self.source_cloud = cloud_type(project_id=cloud.project_id, cloud_host=cloud.cloud_host)
         else:
             self.source_cloud = cloud_type(project_id=cloud.project_id)
@@ -247,6 +253,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
     ws_timeout: Optional[int]
     websocket: websocket.WebSocket
     event_stream: Optional[EventStream] = None
+    recorder: Optional[cloud_recorder.CloudRecorder]
 
     def __init__(self, *, project_id: Optional[Union[int, str]] = None, _session=None):
 
@@ -276,6 +283,16 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self.print_connect_message = False
         
         self.project_id = project_id
+    
+    def shortterm_ratelimit_hint(self) -> float:
+        return self.ws_shortterm_ratelimit
+    
+    def longterm_ratelimit_hint(self) -> float:
+        return self.ws_longterm_ratelimit
+
+    @property
+    def var_sets_since_first(self) -> int:
+        return self.var_stets_since_first
 
     def _assert_auth(self):
         if self._session is None:
@@ -462,7 +479,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self._send_packet_list(packet_list)
         self.last_var_set = time.time()
 
-    def get_var(self, var, *, recorder_initial_values={}):
+    def get_var(self, var, *, recorder_initial_values: Optional[dict] = None):
         var = "☁ "+var.removeprefix("☁ ")
         if self.recorder is None:
             self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
@@ -472,7 +489,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
                 time.sleep(0.01)
         return self.recorder.get_var(var)
 
-    def get_all_vars(self, *, recorder_initial_values={}):
+    def get_all_vars(self, *, recorder_initial_values: Optional[dict] = None):
         if self.recorder is None:
             self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
             self.recorder.start()
