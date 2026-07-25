@@ -58,7 +58,9 @@ class _OcularStatus(TypedDict):
 
 class Verificator:
     def __init__(self, user: User, project_id: int):
-        self.project = user._make_linked_object("id", project_id, project.Project, exceptions.ProjectNotFound)
+        self.project = user._make_linked_object(
+            "id", project_id, project.Project, exceptions.ProjectNotFound
+        )
         self.projecturl = self.project.url
         self.code = "".join(random.choices(string.ascii_letters + string.digits, k=8))
         self.username = user.username
@@ -69,7 +71,11 @@ class Verificator:
                 filter(
                     lambda x: (
                         x.author_name == self.username
-                        and (x.content == self.code or x.content.startswith(self.code) or x.content.endswith(self.code))
+                        and (
+                            x.content == self.code
+                            or x.content.startswith(self.code)
+                            or x.content.endswith(self.code)
+                        )
                     ),
                     self.project.comments(),
                 )
@@ -109,9 +115,11 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     icon_url: str = field(kw_only=True, default="")
     id: int = field(kw_only=True, default=0)
     scratchteam: bool = field(kw_only=True, repr=False, default=False)
-    is_member: bool = field(kw_only=True, repr=False, default=False)
-    has_ears: bool = field(kw_only=True, repr=False, default=False)
-    _classroom: tuple[bool, Optional[classroom.Classroom]] = field(init=False, default=(False, None))
+    _is_member: bool = field(kw_only=True, repr=False, default=False)
+    _has_ears: bool = field(kw_only=True, repr=False, default=False)
+    _classroom: tuple[bool, Optional[classroom.Classroom]] = field(
+        init=False, default=(False, None)
+    )
     _headers: dict[str, str] = field(init=False, default_factory=headers.copy)
     _cookies: dict[str, str] = field(init=False, default_factory=dict)
     _json_headers: dict[str, str] = field(init=False, default_factory=dict)
@@ -136,6 +144,29 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     @property
     def name(self) -> str:
         return self.username
+
+    @property
+    @deprecated("memberships are over")
+    def is_member(self) -> bool:
+        return self._is_member
+
+    @is_member.setter
+    @deprecated("memberships are over")
+    def is_member(self, value: bool):
+        "deprecated: memberships are over"
+        self._is_member = value
+
+    @property
+    @deprecated("memberships are over")
+    def has_ears(self) -> bool:
+        "deprecated: memberships are over"
+        return self._has_ears
+
+    @has_ears.setter
+    @deprecated("memberships are over")
+    def has_ears(self, value: bool):
+        "deprecated: memberships are over"
+        self._has_ears = value
 
     def __post_init__(self):
 
@@ -178,7 +209,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     def _assert_permission(self):
         self._assert_auth()
         if self._session.username != self.username:
-            raise exceptions.Unauthorized("You need to be authenticated as the profile owner to do this.")
+            raise exceptions.Unauthorized(
+                "You need to be authenticated as the profile owner to do this."
+            )
 
     @property
     def url(self):
@@ -266,7 +299,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                 href = str(a.get("href"))
                 if re.match(r"/classes/\d*/", href):
                     class_name = a.text.strip()[len("Student of: ") :]
-                    is_closed = bool(re.search(r"\n *\(ended\)", class_name))  # as this has a \n, we can be sure
+                    is_closed = bool(
+                        re.search(r"\n *\(ended\)", class_name)
+                    )  # as this has a \n, we can be sure
                     if is_closed:
                         class_name = re.sub(r"\n *\(ended\)", "", class_name).strip()
 
@@ -294,7 +329,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             boolean : True if the user exists, False if the user is deleted, None if an error occured
         """
         with requests.no_error_handling():
-            status_code = requests.get(f"https://scratch.mit.edu/users/{self.username}/").status_code
+            status_code = requests.get(
+                f"https://scratch.mit.edu/users/{self.username}/"
+            ).status_code
             if status_code == 200:
                 return True
             elif status_code == 404:
@@ -335,13 +372,16 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             dict: Gets info on the user's featured project and featured label (like "Featured project", "My favorite things", etc.)
         """
         try:
-            response = requests.get(f"https://scratch.mit.edu/site-api/users/all/{self.username}/").json()
+            response = requests.get(
+                f"https://scratch.mit.edu/site-api/users/all/{self.username}/"
+            ).json()
             return {
                 "label": response["featured_project_label_name"],
                 "project": dict(
                     id=str(response["featured_project_data"]["id"]),
                     author=response["featured_project_data"]["creator"],
-                    thumbnail_url="https://" + response["featured_project_data"]["thumbnail_url"][2:],
+                    thumbnail_url="https://"
+                    + response["featured_project_data"]["thumbnail_url"][2:],
                     title=response["featured_project_data"]["title"],
                 ),
             }
@@ -371,7 +411,11 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         # api response contains all-time followers, including deleted and unfollowed
         unfollowers = []
         for offset in range(0, follower_count, 40):
-            unfollowers.extend(user for user in self.followers(offset=offset, limit=40) if user.username not in usernames)
+            unfollowers.extend(
+                user
+                for user in self.followers(offset=offset, limit=40)
+                if user.username not in usernames
+            )
 
         return unfollowers
 
@@ -629,7 +673,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                     break
 
             # Each project element is a list item with the class name 'project thumb item' so we can just use that
-            for i, project_element in enumerate(soup.find_all("li", {"class": "project thumb item"})):
+            for i, project_element in enumerate(
+                soup.find_all("li", {"class": "project thumb item"})
+            ):
                 # Remember we only want certain projects:
                 # The current project idx = first_idx + i
                 # We want to start at {offset} and end at {offset + limit}
@@ -656,7 +702,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                     assert isinstance(first_anchor, Tag)
                     assert isinstance(second_anchor, Tag)
                     assert isinstance(third_anchor, Tag)
-                    project_id = commons.webscrape_count(first_anchor.attrs["href"], "/projects/", "/")
+                    project_id = commons.webscrape_count(
+                        first_anchor.attrs["href"], "/projects/", "/"
+                    )
                     title = second_anchor.text
                     author = third_anchor.contents[0]
 
@@ -715,10 +763,12 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             ).text
         return commons.webscrape_count(text, "Favorites (", ")")
 
+    @deprecated("memberships are over")
     def has_badge(self) -> bool:
         """
         Returns:
             bool: Whether the user has a scratch membership badge on their profile (located next to the follow button)
+        deprecated: memberships are over
         """
         with requests.no_error_handling():
             resp = requests.get(self.url)
@@ -876,7 +926,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         try:
             data = {
                 "id": text.split('<div id="comments-')[1].split('" class="comment')[0],
-                "author": {"username": text.split('" data-comment-user="')[1].split('"><img class')[0]},
+                "author": {
+                    "username": text.split('" data-comment-user="')[1].split('"><img class')[0]
+                },
                 "content": text.split('<div class="content">')[1].split("</div>")[0].strip(),
                 "reply_count": 0,
                 "cached_replies": [],
@@ -900,11 +952,15 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
                     )
                 ) from e
             elif '<script id="error-data" type="application/json">' in text:
-                raw_error_data = text.split('<script id="error-data" type="application/json">')[1].split("</script>")[0]
+                raw_error_data = text.split('<script id="error-data" type="application/json">')[
+                    1
+                ].split("</script>")[0]
                 error_data = json.loads(raw_error_data)
                 expires = error_data["mute_status"]["muteExpiresAt"]
                 expires = datetime.fromtimestamp(expires, timezone.utc)
-                raise (exceptions.CommentPostFailure(f"You have been muted. Mute expires on {expires}")) from e
+                raise (
+                    exceptions.CommentPostFailure(f"You have been muted. Mute expires on {expires}")
+                ) from e
             else:
                 raise (exceptions.FetchError(f"Couldn't parse API response: {r.text!r}")) from e
 
@@ -933,7 +989,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         """
         with requests.no_error_handling():
             soup = BeautifulSoup(
-                requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text,
+                requests.get(
+                    f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}"
+                ).text,
                 "html.parser",
             )
 
@@ -953,7 +1011,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             str: The raw user activity HTML data
         """
         with requests.no_error_handling():
-            return requests.get(f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}").text
+            return requests.get(
+                f"https://scratch.mit.edu/messages/ajax/user-activity/?user={self.username}&max={limit}"
+            ).text
 
     def follow(self):
         """
@@ -1021,7 +1081,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
         data = []
 
         with requests.no_error_handling():
-            resp = requests.get(f"https://scratch.mit.edu/site-api/comments/user/{self.username}/?page={page}")
+            resp = requests.get(
+                f"https://scratch.mit.edu/site-api/comments/user/{self.username}/?page={page}"
+            )
 
         if resp.status_code == 404:
             # Profile comments seem to end at page 67, and afterwards give 404.
@@ -1137,7 +1199,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             dict: A dict containing the user's stats. If the stats aren't available, all values will be -1.
         """
         try:
-            stats = requests.get(f"https://scratchdb.lefty.one/v3/user/info/{self.username}").json()["statistics"]
+            stats = requests.get(
+                f"https://scratchdb.lefty.one/v3/user/info/{self.username}"
+            ).json()["statistics"]
             stats.pop("ranks")
         except Exception:
             stats = {
@@ -1162,7 +1226,9 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
             dict: A dict containing the user's ranks. If the ranks aren't available, all values will be -1.
         """
         try:
-            return requests.get(f"https://scratchdb.lefty.one/v3/user/info/{self.username}").json()["statistics"]["ranks"]
+            return requests.get(f"https://scratchdb.lefty.one/v3/user/info/{self.username}").json()[
+                "statistics"
+            ]["ranks"]
         except Exception:
             return {
                 "country": {

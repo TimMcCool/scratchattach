@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 77.0.3"]
+requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -102,4 +102,4 @@ where = ["."]
 include = ["scratchattach*"]
 
 [dependency-groups]
-dev = ["ruff>=0.15.12"]
+dev = ["ruff>=0.15.22"]
