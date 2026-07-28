@@ -53,7 +53,7 @@ class BaseSiteComponent(ABC, Generic[D]):
 
     @classmethod
     def _get_object(
-        cls, identificator_name, identificator, NotFoundException, session: session.Session | session.UnauthSession
+        cls, identificator_name: str, identificator: Any, not_found_exception, session: session.Session | session.UnauthSession
     ) -> Self:
         from scratchattach.site import project
 
@@ -76,20 +76,22 @@ class BaseSiteComponent(ABC, Generic[D]):
                     assert isinstance(_object, cls)
                     return _object
                 else:
-                    raise NotFoundException
+                    raise not_found_exception
             else:
                 return _object
         except KeyError as e:
-            raise NotFoundException(f"Key error at key {e} when reading API response")
+            raise not_found_exception(f"Key error at key {e} when reading API response")
         except Exception as e:
             raise e
 
-    def _make_linked_object(self, identificator_id, identificator, cls: type[C], not_found_exception) -> C:
+    def _make_linked_object(
+        self, identificator_name: str, identificator: Any, cls: type[C], not_found_exception: type[Exception]
+    ) -> C:
         """
         Internal function for making a linked object (authentication kept) based on an identificator (like a project id or username)
         Class must inherit from BaseSiteComponent
         """
-        return cls._get_object(identificator_id, identificator, not_found_exception, self._session)
+        return cls._get_object(identificator_name, identificator, not_found_exception, self._session)
 
     @classmethod
     def parse_object_list(

@@ -996,7 +996,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
     # noinspection PyPep8Naming
     # Class is camelcase here
     def _make_linked_object(
-        self, identificator_name, identificator, __class: type[C], NotFoundException: type[Exception]
+        self, identificator_name: str, identificator: Any, cls: type[C], not_found_exception: type[Exception]
     ) -> C:
         """
         The Session class doesn't save the login in a ._session attribute, but IS the login ITSELF.
@@ -1007,7 +1007,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         Class must inherit from BaseSiteComponent
         """
         # noinspection PyProtectedMember
-        return commons._get_object(identificator_name, identificator, __class, NotFoundException, self)
+        # _get_object is protected
+        return cls._get_object(identificator_name, identificator, not_found_exception, self)
 
     def connect_user(self, username: str) -> user.User:
         """
@@ -1132,7 +1133,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         """
         return self._make_linked_object("id", int(topic_id), forum.ForumTopic, exceptions.ForumContentNotFound)
 
-    def connect_topic_list(self, category_id, *, page=1):
+    async def connect_topic_list(self, category_id, *, page=1):
         """
         Gets the topics from a forum category. Data web-scraped from Scratch's forums UI.
         Data is up-to-date.
@@ -1147,14 +1148,14 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             list<scratchattach.forum.ForumTopic>: A list containing the forum topics from the specified category
         """
         try:
-            response = requests.get(
-                f"https://scratch.mit.edu/discuss/{category_id}/?page={page}", headers=self._headers, cookies=self._cookies
-            )
-            soup = BeautifulSoup(response.content, "html.parser")
+            async with self.http_session.get(
+                f"https://scratch.mit.edu/discuss/{category_id}/", shared_http.options().params({"page": page}).value
+            ) as response:
+                soup = BeautifulSoup(await response.text(), "html.parser")
         except Exception as e:
             raise exceptions.FetchError(str(e))
         try:
-            category_name = soup.find("h4").find("span").get_text()
+            category_name = getattr(soup.select_one("h4 span"), "text")
         except Exception:
             raise exceptions.BadRequest("Invalid category id")
         try:
@@ -1163,8 +1164,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             return_topics = []
             for topic in topics:
                 title_link = topic.find("a")
-                title = title_link.text.strip()
-                topic_id = title_link["href"].split("/")[-2]
+                title = getattr(title_link, "text", "").strip()
+                topic_id = getattr(title_link, "attrs", {}).get("href", "").split("/")[-2]
                 columns = topic.find_all("td")
                 columns = [column.text for column in columns]
                 if len(columns) == 1:
