@@ -31,6 +31,8 @@ from bs4 import BeautifulSoup, Tag
 from typing_extensions import deprecated
 from . import activity, classroom, forum, studio, user, project, backpack_asset, alert
 from . import typed_dicts
+
+# noinspection PyProtectedMember
 from ._base import BaseSiteComponent, api_iterative
 from scratchattach.cloud import cloud, _base
 from scratchattach.eventhandlers import message_events, filterbot
@@ -95,7 +97,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
     has_outstanding_email_confirmation: bool = field(repr=False, default=False)
     is_teacher: bool = field(repr=False, default=False)
     is_teacher_invitee: bool = field(repr=False, default=False)
-    ocular_token: Optional[str] = field(repr=False, default=None)
+    ocular_token: Optional[str] = field(repr=False, default=None)  # note that this is a header, not a cookie
     _session: Session | UnauthSession = field(kw_only=True, init=False)
 
     def __str__(self) -> str:
@@ -125,8 +127,10 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         return self.username
 
     def __post_init__(self):
+        # Info on how the .update method has to fetch the data:
         self.update_function = shared_http.HTTPMethod.POST
         self.update_api = "https://scratch.mit.edu/session"
+        # Base headers and cookies of every session:
         self._headers = dict(headers)
         try:
             self.id = json.loads(self.id)
@@ -159,9 +163,12 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
     def _exit(
         self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
     ) -> None:
-        pass
+        # __exit__ should exist in pair with __enter__ but never executed
+        pass  # pragma: no cover
 
     def _update_from_data(self, data: typed_dicts.SessionDict):
+        # Note: there are a lot more things you can get from this data dict.
+        # Maybe it would be a good idea to also store the dict itself?
         self.xtoken = data["user"]["token"]
         self._headers["X-Token"] = self.xtoken
         self.has_outstanding_email_confirmation = data["flags"]["has_outstanding_email_confirmation"]
@@ -188,6 +195,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         self.username = data["username"]
         self.xtoken = data["token"]
         self._headers["X-Token"] = self.xtoken
+        # not saving the login ip because it is a security issue, and is not very helpful
         self.language = data.get("_language", "en")
 
     def _assert_ocular_auth(self) -> str:
@@ -225,6 +233,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         return self._user
 
     def get_linked_user(self) -> user.User:
+        # backwards compatibility with v1
+        # To avoid inconsistencies with "connect" and "get", this function was renamed
         return self.connect_linked_user()
 
     async def set_country(self, country: str = "Antarctica"):
@@ -300,6 +310,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             list<scratch.activity.Activity>: List that contains all messages as Activity objects.
 
         """
+        # TODO: consider using an enum here for project label and match that with user.get_featured_data
         payload: dict[str, int | str] = {}
         if project_label is not None:
             payload["featured_project_label"] = str(project_label)
@@ -323,6 +334,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         }
 
     async def get_ocular_status(self) -> typed_dicts.OcularUserDict:
+        # You can use sess.connect_linked_user().ocular_status() but this uses the ocular token to work out the username.
+        # In the case the username does not match the session, this would mismatch, and a warning could even be issued
         self._assert_ocular_auth()
         async with self.http_session.get(
             "https://my-ocular.jeffalo.net/auth/me",
@@ -432,6 +445,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             await response.check_response()
             return (await response.json())["msg_count"]
 
+    # Front-page-related stuff:
     async def feed(self, *, limit=20, offset=0, date_limit=None) -> list[activity.Activity]:
         """
         Returns the "What's happening" section (frontpage).
@@ -452,7 +466,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         return activity.Activity.parse_object_list(data, self)
 
     async def get_feed(self, *, limit=20, offset=0, date_limit=None):
-        return await self.feed(limit=limit, offset=offset, date_limit=date_limit)
+        # for more consistent names, this method was renamed
+        return await self.feed(limit=limit, offset=offset, date_limit=date_limit)  # for backwards compatibility with v1
 
     async def loved_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
         """
@@ -513,8 +528,12 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             )
         return ret
 
+    # -- Project JSON editing capabilities ---
+    # These are set to staticmethods right now, but they probably should not be
     def connect_empty_project_pb(self) -> editor.Project:
-        pb = editor.Project.from_json(empty_project_json)
+        pb = editor.Project.from_json(
+            empty_project_json
+        )  # in the future, ideally just init a new editor.Project, instead of loading an empty one
         pb._session = self
         return pb
 
@@ -560,6 +579,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         ) as response:
             await response.check_response()
 
+    # --- Search ---
     async def search_projects(
         self, *, query: str = "", mode: str = "trending", language: str = "en", limit: int = 40, offset: int = 0
     ) -> list[project.Project]:
@@ -641,16 +661,11 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         )
         return studio.Studio.parse_object_list(response, self)
 
+    # --- Create project API ---
     async def create_project(
         self, *, title: Optional[str] = None, project_json: dict = empty_project_json, parent_id: Optional[str | int] = None
-    ) -> project.Project:
-        """
-        Creates a project on the Scratch website.
-
-        Warning:
-            Don't spam this method - it WILL get you banned from Scratch.
-            To prevent accidental spam, a rate limit (5 projects per minute) is implemented for this function.
-        """
+    ) -> project.Project:  # not working
+        "\n        Creates a project on the Scratch website.\n\n        Warning:\n            Don't spam this method - it WILL get you banned from Scratch.\n            To prevent accidental spam, a rate limit (5 projects per minute) is implemented for this function.\n"
         enforce_ratelimit("create_scratch_project", "creating Scratch projects")
         if title is None:
             title = f"Untitled-{random.randint(0, 1 << 16)}"
@@ -701,6 +716,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             class_id = (await response.json())[0]["id"]
         return self.connect_classroom(class_id)
 
+    # --- My stuff page ---
     async def mystuff_counts(self) -> tuple[int, int, int]:
         """
         Gets the number of shared projects, unshared projects, and studios as listed on the mystuff page,
@@ -710,6 +726,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         shared, unshared, studios = sess.mystuff_counts()
         print(f"You have {shared} shared projects, {unshared} unshared projects, and are in {studios} studios")
         """
+        # TODO: classrooms?
         async with self.http_session.get("https://scratch.mit.edu/mystuff/") as response:
             soup = bs4.BeautifulSoup(await response.text(), "html.parser")
         shared_elem = soup.select_one("span[data-content='shared-count']")
@@ -923,6 +940,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             await response.check_response()
             return await response.json()
 
+    # --- Connect classes inheriting from BaseCloud ---
     @overload
     def connect_cloud(self, project_id, *, cloud_class: type[T]) -> T:
         """
@@ -953,6 +971,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         class inheriting from BaseCloud.
         """
 
+    # noinspection PyPep8Naming
     def connect_cloud(self, project_id, *, cloud_class: Optional[type[_base.BaseCloud]] = None) -> _base.BaseCloud:
         cloud_class = cloud_class or cloud.ScratchCloud
         return cloud_class(project_id=project_id, _session=self)
@@ -973,6 +992,9 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         """
         return cloud.TwCloud(project_id=project_id, purpose=purpose, contact=contact, cloud_host=cloud_host, _session=self)
 
+    # --- Connect classes inheriting from BaseSiteComponent ---
+    # noinspection PyPep8Naming
+    # Class is camelcase here
     def _make_linked_object(
         self, identificator_name, identificator, __class: type[C], NotFoundException: type[Exception]
     ) -> C:
@@ -984,6 +1006,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
         Class must inherit from BaseSiteComponent
         """
+        # noinspection PyProtectedMember
         return commons._get_object(identificator_name, identificator, __class, NotFoundException, self)
 
     def connect_user(self, username: str) -> user.User:
@@ -1045,6 +1068,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         Returns:
             scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
         """
+        # noinspection PyDeprecation
         return self._make_linked_object("username", self.find_username_from_id(user_id), user.User, exceptions.UserNotFound)
 
     def connect_project(self, project_id) -> project.Project:
@@ -1144,6 +1168,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
                 columns = topic.find_all("td")
                 columns = [column.text for column in columns]
                 if len(columns) == 1:
+                    # This is a sticky topic -> Skip it
                     continue
                 last_updated = columns[3].split(" ")[0] + " " + columns[3].split(" ")[1]
                 return_topics.append(
@@ -1167,7 +1192,9 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         """
         return other_apis.get_featured_data(self)
 
+    # --- Connect classes inheriting from BaseEventHandler ---
     def connect_message_events(self, *, update_interval=2) -> message_events.MessageEvents:
+        # shortcut for connect_linked_user().message_events()
         return message_events.MessageEvents(user.User(username=self.username, _session=self), update_interval=update_interval)
 
     def connect_filterbot(self, *, log_deletions=True) -> filterbot.Filterbot:
@@ -1200,7 +1227,8 @@ class PreparedSession:
     def __exit__(
         self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
     ) -> None:
-        pass
+        # __exit__ should exist in pair with __enter__ but never executed
+        pass  # pragma: no cover
 
     async def __aenter__(self) -> Session:
         self._session = await Session(*self.args, **self.kwargs | {"http_session": http._HTTPSession()})._aenter()
@@ -1212,6 +1240,7 @@ class PreparedSession:
         await self._session._aexit(exc_type, exc_val, exc_tb)
 
 
+# ------ #
 def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetime]:
     """
     Extract the JSON data from the main part of a session ID string
@@ -1240,6 +1269,7 @@ def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetim
     return (json.loads(p1_bytes), datetime.datetime.fromtimestamp(commons.b62_decode(p2)))
 
 
+# ------ #
 _global_http_session: http._HTTPSession | None = None
 
 
@@ -1297,6 +1327,8 @@ def login_by_id(
     Returns:
         scratchattach.session.Session: An object that represents the created login / session
     """
+    # Generate session_string (a scratchattach-specific authentication method)
+    # should this be changed to a @property?
     issue_login_warning()
     if password is not None:
         session_data = dict(id=session_id, username=username, password=password)
@@ -1327,6 +1359,7 @@ async def login(username, password, *, timeout: float | int = 10) -> PreparedSes
     """
     issue_login_warning()
     http_session = await _get_global_http_session()
+    # Post request to login API:
     _headers = headers.copy()
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     async with http_session.post(
@@ -1350,7 +1383,7 @@ async def login_by_session_string(session_string: str) -> PreparedSession:
     Login using a session string.
     """
     issue_login_warning()
-    session_string = base64.b64decode(session_string).decode()
+    session_string = base64.b64decode(session_string).decode()  # unobfuscate
     session_data = json.loads(session_string)
     try:
         assert session_data.get("id")
@@ -1380,7 +1413,7 @@ async def login_by_session_string(session_string: str) -> PreparedSession:
 async def login_by_io(file: SupportsRead[str]) -> PreparedSession:
     """
     Login using a file object.
-    """
+    """  # TODO: implement async
     with suppress_login_warning():
         return await login_by_session_string(file.read())
 
@@ -1388,7 +1421,7 @@ async def login_by_io(file: SupportsRead[str]) -> PreparedSession:
 async def login_by_file(file: FileDescriptorOrPath) -> PreparedSession:
     """
     Login using a path to a file.
-    """
+    """  # TODO: implement async
     with suppress_login_warning(), open(file, encoding="utf-8") as f:
         return await login_by_io(f)
 
@@ -1396,7 +1429,7 @@ async def login_by_file(file: FileDescriptorOrPath) -> PreparedSession:
 def login_from_browser(browser: Browser = ANY) -> PreparedSession:
     """
     Login from a browser
-    """
+    """  # TODO: warn about blocking nature
     cookies = cookies_from_browser(browser)
     if "scratchsessionsid" in cookies:
         with suppress_login_warning():

@@ -32,6 +32,10 @@ if TYPE_CHECKING:
 else:
     T = TypeVar("T")
 
+if "IS_PRE_CODEGEN":
+    def COMMENT(comment: str): ...
+    def PREV_LINE_COMMENT(comment: str): ...
+
 from bs4 import BeautifulSoup, Tag
 from typing_extensions import deprecated
 
@@ -39,6 +43,7 @@ from . import activity, classroom, forum, studio, user, project, backpack_asset,
 from . import typed_dicts
 
 # noinspection PyProtectedMember
+COMMENT("noinspection PyProtectedMember")
 from ._base import BaseSiteComponent, api_iterative
 from scratchattach.cloud import cloud, _base
 from scratchattach.eventhandlers import message_events, filterbot
@@ -121,6 +126,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
     ocular_token: Optional[str] = field(
         repr=False, default=None
     )  # note that this is a header, not a cookie
+    PREV_LINE_COMMENT("note that this is a header, not a cookie")
     _session: Session | UnauthSession = field(kw_only=True, init=False)
 
     def __str__(self) -> str:
@@ -162,10 +168,12 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
     def __post_init__(self):
         # Info on how the .update method has to fetch the data:
+        COMMENT("Info on how the .update method has to fetch the data:")
         self.update_function = shared_http.HTTPMethod.POST
         self.update_api = "https://scratch.mit.edu/session"
 
         # Base headers and cookies of every session:
+        COMMENT("Base headers and cookies of every session:")
         self._headers = dict(headers)
         try:
             self.id = json.loads(self.id)
@@ -210,7 +218,9 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             exc_tb: Optional[TracebackType],
         ) -> None:
             # __exit__ should exist in pair with __enter__ but never executed
+            COMMENT("__exit__ should exist in pair with __enter__ but never executed")
             pass  # pragma: no cover
+            PREV_LINE_COMMENT("pragma: no cover")
 
     else:
 
@@ -228,7 +238,9 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
     def _update_from_data(self, data: typed_dicts.SessionDict):
         # Note: there are a lot more things you can get from this data dict.
+        COMMENT("Note: there are a lot more things you can get from this data dict.")
         # Maybe it would be a good idea to also store the dict itself?
+        COMMENT("Maybe it would be a good idea to also store the dict itself?")
         # self.data = data
         self.xtoken = data["user"]["token"]
         self._headers["X-Token"] = self.xtoken
@@ -274,6 +286,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         self._headers["X-Token"] = self.xtoken
 
         # not saving the login ip because it is a security issue, and is not very helpful
+        COMMENT("not saving the login ip because it is a security issue, and is not very helpful")
 
         self.language = data.get("_language", "en")
         # self._cookies["scratchlanguage"] = self.language
@@ -315,8 +328,10 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
     def get_linked_user(self) -> user.User:
         # backwards compatibility with v1
+        COMMENT("backwards compatibility with v1")
 
         # To avoid inconsistencies with "connect" and "get", this function was renamed
+        COMMENT("To avoid inconsistencies with \"connect\" and \"get\", this function was renamed")
         return self.connect_linked_user()
 
     async def set_country(self, country: str = "Antarctica"):
@@ -410,6 +425,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
         """
         # TODO: consider using an enum here for project label and match that with user.get_featured_data
+        COMMENT("TODO: consider using an enum here for project label and match that with user.get_featured_data")
         payload: dict[str, int | str] = {}
         if project_label is not None:
             payload["featured_project_label"] = str(project_label)
@@ -443,7 +459,9 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
     async def get_ocular_status(self) -> typed_dicts.OcularUserDict:
         # You can use sess.connect_linked_user().ocular_status() but this uses the ocular token to work out the username.
+        COMMENT("You can use sess.connect_linked_user().ocular_status() but this uses the ocular token to work out the username.")
         # In the case the username does not match the session, this would mismatch, and a warning could even be issued
+        COMMENT("In the case the username does not match the session, this would mismatch, and a warning could even be issued")
         self._assert_ocular_auth()
 
         async with self.http_session.get(
@@ -597,6 +615,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             return (await response.json())["msg_count"]
 
     # Front-page-related stuff:
+    COMMENT("Front-page-related stuff:")
 
     async def feed(self, *, limit=20, offset=0, date_limit=None) -> list[activity.Activity]:
         """
@@ -620,9 +639,11 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
     async def get_feed(self, *, limit=20, offset=0, date_limit=None):
         # for more consistent names, this method was renamed
+        COMMENT("for more consistent names, this method was renamed")
         return await self.feed(
             limit=limit, offset=offset, date_limit=date_limit
         )  # for backwards compatibility with v1
+        PREV_LINE_COMMENT("for backwards compatibility with v1")
 
     async def loved_by_followed_users(self, *, limit=40, offset=0) -> list[project.Project]:
         """
@@ -689,11 +710,14 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         return ret
 
     # -- Project JSON editing capabilities ---
+    COMMENT("-- Project JSON editing capabilities ---")
     # These are set to staticmethods right now, but they probably should not be
+    COMMENT("These are set to staticmethods right now, but they probably should not be")
     def connect_empty_project_pb(self) -> editor.Project:
         pb = editor.Project.from_json(
             empty_project_json
         )  # in the future, ideally just init a new editor.Project, instead of loading an empty one
+        PREV_LINE_COMMENT("in the future, ideally just init a new editor.Project, instead of loading an empty one")
         pb._session = self
         return pb
 
@@ -756,6 +780,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             await response.check_response()
 
     # --- Search ---
+    COMMENT("--- Search ---")
 
     async def search_projects(
         self,
@@ -865,6 +890,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         return studio.Studio.parse_object_list(response, self)
 
     # --- Create project API ---
+    COMMENT("--- Create project API ---")
 
     async def create_project(
         self,
@@ -873,6 +899,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         project_json: dict = empty_project_json,
         parent_id: Optional[str | int] = None,
     ) -> project.Project:  # not working
+        PREV_LINE_COMMENT("not working")
         """
         Creates a project on the Scratch website.
 
@@ -953,6 +980,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         return self.connect_classroom(class_id)
 
     # --- My stuff page ---
+    COMMENT("--- My stuff page ---")
 
     async def mystuff_counts(self) -> tuple[int, int, int]:
         """
@@ -964,6 +992,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         print(f"You have {shared} shared projects, {unshared} unshared projects, and are in {studios} studios")
         """
         # TODO: classrooms?
+        COMMENT("TODO: classrooms?")
         async with self.http_session.get("https://scratch.mit.edu/mystuff/") as response:
             soup = bs4.BeautifulSoup(await response.text(), "html.parser")
 
@@ -1223,6 +1252,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             return await response.json()
 
     # --- Connect classes inheriting from BaseCloud ---
+    COMMENT("--- Connect classes inheriting from BaseCloud ---")
 
     @overload
     def connect_cloud(self, project_id, *, cloud_class: type[T]) -> T:
@@ -1255,6 +1285,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         """
 
     # noinspection PyPep8Naming
+    COMMENT("noinspection PyPep8Naming")
     def connect_cloud(
         self, project_id, *, cloud_class: Optional[type[_base.BaseCloud]] = None
     ) -> _base.BaseCloud:
@@ -1284,9 +1315,12 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         )
 
     # --- Connect classes inheriting from BaseSiteComponent ---
+    COMMENT("--- Connect classes inheriting from BaseSiteComponent ---")
 
     # noinspection PyPep8Naming
+    COMMENT("noinspection PyPep8Naming")
     # Class is camelcase here
+    COMMENT("Class is camelcase here")
     def _make_linked_object(
         self,
         identificator_name,
@@ -1303,6 +1337,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         Class must inherit from BaseSiteComponent
         """
         # noinspection PyProtectedMember
+        COMMENT("noinspection PyProtectedMember")
         # _get_object is protected
         return commons._get_object(
             identificator_name, identificator, __class, NotFoundException, self
@@ -1368,6 +1403,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             scratchattach.user.User: An object that represents the requested user and allows you to perform actions on the user (like user.follow)
         """
         # noinspection PyDeprecation
+        COMMENT("noinspection PyDeprecation")
         return self._make_linked_object(
             "username", self.find_username_from_id(user_id), user.User, exceptions.UserNotFound
         )
@@ -1487,6 +1523,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
                 columns = [column.text for column in columns]
                 if len(columns) == 1:
                     # This is a sticky topic -> Skip it
+                    COMMENT("This is a sticky topic -> Skip it")
                     continue
 
                 last_updated = columns[3].split(" ")[0] + " " + columns[3].split(" ")[1]
@@ -1513,9 +1550,11 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         return other_apis.get_featured_data(self)
 
     # --- Connect classes inheriting from BaseEventHandler ---
+    COMMENT("--- Connect classes inheriting from BaseEventHandler ---")
 
     def connect_message_events(self, *, update_interval=2) -> message_events.MessageEvents:
         # shortcut for connect_linked_user().message_events()
+        COMMENT("shortcut for connect_linked_user().message_events()")
         return message_events.MessageEvents(
             user.User(username=self.username, _session=self), update_interval=update_interval
         )
@@ -1558,7 +1597,9 @@ class PreparedSession:
             exc_tb: Optional[TracebackType],
         ) -> None:
             # __exit__ should exist in pair with __enter__ but never executed
+            COMMENT("__exit__ should exist in pair with __enter__ but never executed")
             pass  # pragma: no cover
+            PREV_LINE_COMMENT("pragma: no cover")
 
         async def __aenter__(self) -> Session:
             self._session = await Session(
@@ -1592,6 +1633,7 @@ class PreparedSession:
 
 
 # ------ #
+COMMENT("------ #")
 
 
 def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetime]:
@@ -1624,6 +1666,7 @@ def decode_session_id(session_id: str) -> tuple[dict[str, str], datetime.datetim
 
 
 # ------ #
+COMMENT("------ #")
 
 _global_http_session: http._HTTPSession | None = None
 
@@ -1686,7 +1729,9 @@ def login_by_id(
         scratchattach.session.Session: An object that represents the created login / session
     """
     # Generate session_string (a scratchattach-specific authentication method)
+    COMMENT("Generate session_string (a scratchattach-specific authentication method)")
     # should this be changed to a @property?
+    COMMENT("should this be changed to a @property?")
     issue_login_warning()
     if password is not None:
         session_data = dict(id=session_id, username=username, password=password)
@@ -1726,6 +1771,7 @@ async def login(username, password, *, timeout: float | int = 10) -> PreparedSes
 
     http_session = await _get_global_http_session()
     # Post request to login API:
+    COMMENT("Post request to login API:")
     _headers = headers.copy()
     _headers["Cookie"] = "scratchcsrftoken=a;scratchlanguage=en;"
     async with http_session.post(
@@ -1755,6 +1801,7 @@ async def login_by_session_string(session_string: str) -> PreparedSession:
     """
     issue_login_warning()
     session_string = base64.b64decode(session_string).decode()  # unobfuscate
+    PREV_LINE_COMMENT("unobfuscate")
     session_data = json.loads(session_string)
     try:
         assert session_data.get("id")
@@ -1789,6 +1836,7 @@ async def login_by_io(file: SupportsRead[str]) -> PreparedSession:
     """
     Login using a file object.
     """  # TODO: implement async
+    PREV_LINE_COMMENT("TODO: implement async")
     with suppress_login_warning():
         return await login_by_session_string(file.read())
 
@@ -1797,6 +1845,7 @@ async def login_by_file(file: FileDescriptorOrPath) -> PreparedSession:
     """
     Login using a path to a file.
     """  # TODO: implement async
+    PREV_LINE_COMMENT("TODO: implement async")
     with suppress_login_warning(), open(file, encoding="utf-8") as f:
         return await login_by_io(f)
 
@@ -1805,6 +1854,7 @@ def login_from_browser(browser: Browser = ANY) -> PreparedSession:
     """
     Login from a browser
     """  # TODO: warn about blocking nature
+    PREV_LINE_COMMENT("TODO: warn about blocking nature")
     cookies = cookies_from_browser(browser)
     if "scratchsessionsid" in cookies:
         with suppress_login_warning():
