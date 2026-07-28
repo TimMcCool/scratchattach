@@ -8,7 +8,7 @@ import bs4
 from bs4 import BeautifulSoup
 
 if TYPE_CHECKING:
-    from scratchattach.site.session import Session
+    from .session import Session
 from scratchattach.utils.commons import requests
 from . import user, activity, typed_dicts
 from ._base import BaseSiteComponent

@@ -698,9 +698,8 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         shared, unshared, studios = sess.mystuff_counts()
         print(f"You have {shared} shared projects, {unshared} unshared projects, and are in {studios} studios")
         """
-        with requests.no_error_handling():
-            resp = requests.get("https://scratch.mit.edu/mystuff/", headers=self._headers, cookies=self._cookies)
-        soup = bs4.BeautifulSoup(resp.text, "html.parser")
+        with self.http_session.get("https://scratch.mit.edu/mystuff/") as response:
+            soup = bs4.BeautifulSoup(response.text(), "html.parser")
         shared_elem = soup.select_one("span[data-content='shared-count']")
         unshared_elem = soup.select_one("span[data-content='unshared-count']")
         gallery_elem = soup.select_one("span[data-content='gallery-count']")
@@ -717,6 +716,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
     ) -> list[project.Project]:
         """
         Gets the projects from the "My stuff" page.
+        Projects do not have accurate data on whether comments are allowed and what the instructions and notes are.
 
         Args:
             filter_arg (str): Possible values for this parameter are "all", "shared", "unshared" and "trashed"
@@ -736,12 +736,12 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             ascsort = sort_by
             descsort = ""
         try:
-            targets = requests.get(
+            with self.http_session.get(
                 f"https://scratch.mit.edu/site-api/projects/{filter_arg}/?page={page}&ascsort={ascsort}&descsort={descsort}",
-                headers=headers,
-                cookies=self._cookies,
-                timeout=10,
-            ).json()
+                shared_http.options().timeout(10).value,
+            ) as response:
+                response.check_response()
+                targets = response.json()
             projects = []
             for target in targets:
                 projects.append(
@@ -749,9 +749,6 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
                         id=target["pk"],
                         _session=self,
                         author_name=self._username,
-                        comments_allowed=None,
-                        instructions=None,
-                        notes=None,
                         created=target["fields"]["datetime_created"],
                         last_modified=target["fields"]["datetime_modified"],
                         share_date=target["fields"]["datetime_shared"],
@@ -779,13 +776,12 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
             descsort = ""
         try:
             params: dict[str, Union[str, int]] = {"page": page, "ascsort": ascsort, "descsort": descsort}
-            targets = requests.get(
+            with self.http_session.get(
                 f"https://scratch.mit.edu/site-api/galleries/{filter_arg}/",
-                params=params,
-                headers=headers,
-                cookies=self._cookies,
-                timeout=10,
-            ).json()
+                shared_http.options().params(params).timeout(10).value,
+            ) as response:
+                response.check_response()
+                targets = response.json()
             studios = []
             for target in targets:
                 studios.append(
@@ -816,11 +812,10 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         Returns the number of open and ended classes owned by a teacher session.
         If this is not a teacher session, NotATeacherError is raised
         """
-        with requests.no_error_handling():
-            resp = requests.get("https://scratch.mit.edu/educators/classes/", headers=self._headers, cookies=self._cookies)
-        if resp.status_code == 403:
-            raise exceptions.NotATeacherError("Response 403 when getting educators/classes")
-        soup = BeautifulSoup(resp.text, "html.parser")
+        with self.http_session.get("https://scratch.mit.edu/educators/classes/") as response:
+            if response.status_code == 403:
+                raise exceptions.NotATeacherError("Response 403 when getting educators/classes")
+            soup = BeautifulSoup(response.text(), "html.parser")
         sidebar = soup.find("div", {"id": "sidebar", "class": "tabs-index"})
         if not sidebar:
             return (0, 0)
@@ -838,12 +833,12 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have classes")
         ascsort, descsort = get_class_sort_mode(mode)
-        classes_data = requests.get(
+        with self.http_session.get(
             "https://scratch.mit.edu/site-api/classrooms/all/",
-            params={"page": page, "ascsort": ascsort, "descsort": descsort},
-            headers=self._headers,
-            cookies=self._cookies,
-        ).json()
+            shared_http.options().params({"page": page, "ascsort": ascsort, "descsort": descsort}).value,
+        ) as response:
+            response.check_response()
+            classes_data = response.json()
         classes = []
         for data in classes_data:
             fields = data["fields"]
@@ -864,12 +859,12 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have (deleted) classes")
         ascsort, descsort = get_class_sort_mode(mode)
-        classes_data = requests.get(
+        with self.http_session.get(
             "https://scratch.mit.edu/site-api/classrooms/closed/",
-            params={"page": page, "ascsort": ascsort, "descsort": descsort},
-            headers=self._headers,
-            cookies=self._cookies,
-        ).json()
+            shared_http.options().params({"page": page, "ascsort": ascsort, "descsort": descsort}).value,
+        ) as response:
+            response.check_response()
+            classes_data = response.json()
         classes = []
         for data in classes_data:
             fields = data["fields"]
@@ -893,10 +888,10 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         Returns:
             list<backpack_asset.BackpackAsset>: List that contains the backpack items
         """
-        data = commons.api_iterative(
-            f"https://backpack.scratch.mit.edu/{self._username}", limit=limit, offset=offset, _headers=self._headers
+        data: list[dict] = api_iterative(
+            self, f"https://backpack.scratch.mit.edu/{self._username}", limit=limit, offset=offset, _headers=self._headers
         )
-        return commons.parse_object_list(data, backpack_asset.BackpackAsset, self)
+        return backpack_asset.BackpackAsset.parse_object_list(data, self)
 
     def delete_from_backpack(self, backpack_asset_id) -> backpack_asset.BackpackAsset:
         """
@@ -912,9 +907,9 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         If you are a new Scratcher and have been invited for becoming a Scratcher, this API endpoint will provide
         more info on the invite.
         """
-        return requests.get(
-            f"https://api.scratch.mit.edu/users/{self.username}/invites", headers=self._headers, cookies=self._cookies
-        ).json()
+        with self.http_session.get(f"https://api.scratch.mit.edu/users/{self.username}/invites") as response:
+            response.check_response()
+            return response.json()
 
     @overload
     def connect_cloud(self, project_id, *, cloud_class: type[T]) -> T:

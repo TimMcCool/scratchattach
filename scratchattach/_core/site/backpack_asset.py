@@ -13,7 +13,7 @@ from scratchattach.utils import exceptions
 from scratchattach.utils.requests import requests
 
 if TYPE_CHECKING:
-    from scratchattach import session
+    from . import session
 
 
 @dataclass

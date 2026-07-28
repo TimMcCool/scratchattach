@@ -25,8 +25,10 @@ class Studio(BaseSiteComponent[StudioDict]):
     description: Optional[str] = None
     host_id: Optional[int] = None
     "The user id of the studio host"
+    host_name: Optional[str] = None
     follower_count: Optional[int] = None
     manager_count: Optional[int] = None
+    curator_count: Optional[int] = None
     project_count: Optional[int] = None
     image_url: Optional[str] = None
     open_to_all: Optional[bool] = None
