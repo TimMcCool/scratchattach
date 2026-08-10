@@ -9,7 +9,7 @@ dependencies = [
   "cryptography>=50.0.0",
   "pytest>=9.1.1",
   "python-dotenv>=1.2.2",
-  "ruff>=0.16.1",
+  "ruff>=0.16.2",
   "scratchattach",
 ]
 

@@ -102,4 +102,4 @@ where = ["."]
 include = ["scratchattach*"]
 
 [dependency-groups]
-dev = ["ruff>=0.16.1"]
+dev = ["ruff>=0.16.2"]
