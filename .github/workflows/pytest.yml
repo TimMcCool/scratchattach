@@ -10,8 +10,9 @@ on:
     branches: ['main', 'semver2']
   release:
     types: [prereleased, published]
-  schedule:
-    - cron: '0 0 * * *' # every day at midnight UTC
+  # rtk: disabled cronjob because it fails too much
+  # schedule:
+  #   - cron: '0 0 * * *' # every day at midnight UTC
   workflow_dispatch:
 
 jobs:
