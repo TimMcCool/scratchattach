@@ -11,3 +11,4 @@ setup.py
 setup.py
 .env
 tests/manual_tests/**
+.vscode

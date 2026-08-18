@@ -712,6 +712,9 @@ def init_ssl_cloud_server(
             "`thread` is set in `init_ssl_cloud_server`, which has no effect. "
             "Maybe you meant to provide `thread` in the `start` method of the cloud server?"
         )
+        
+    if (certfile is None or keyfile is None) and ssl_context is None:
+        warnings.warn("To init a ssl cloud server, you need provide `certfile` and `keyfile` or `ssl_context`.")
 
     return TwSSLCloudServer(
         hostname,
