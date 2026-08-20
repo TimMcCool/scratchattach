@@ -8,7 +8,7 @@ requires-python = ">=3.12.12"
 dependencies = [
   "cryptography>=50.0.0",
   "pytest>=9.1.1",
-  "python-dotenv>=1.2.2",
+  "python-dotenv>=1.2.3",
   "ruff>=0.16.1",
   "scratchattach",
 ]
