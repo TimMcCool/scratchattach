@@ -1,6 +1,6 @@
 <!-- Thanks for contributing to scratchattach! -->
 
-Solves issue #
+Resolves #
 <!-- 
 Give the issue that this solves from:
 https://github.com/TimMcCool/scratchattach/issues
