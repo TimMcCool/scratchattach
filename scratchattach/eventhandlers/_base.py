@@ -146,7 +146,6 @@ class BaseCloudServer(BaseEventHandler):
         if blocked_ips is None:
             blocked_ips = []
 
-        SimpleWebSocketServer.__init__(self, hostname, port=port, websocketclass=websocketclass)
         BaseEventHandler.__init__(self)
 
         self.running = False
