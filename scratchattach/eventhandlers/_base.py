@@ -4,11 +4,13 @@ import json
 import time
 import ssl
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Any
 from collections import defaultdict
 from threading import Thread, Event
 from collections.abc import Callable
 import traceback
+
+from SimpleWebSocketServer import WebSocket
 
 from scratchattach.utils.requests import requests
 from scratchattach.utils import exceptions
