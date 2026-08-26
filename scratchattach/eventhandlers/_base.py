@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import json
+import time
+import ssl
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Any
 from collections import defaultdict
 from threading import Thread, Event
 from collections.abc import Callable
 import traceback
+
+from SimpleWebSocketServer import WebSocket
+
 from scratchattach.utils.requests import requests
 from scratchattach.utils import exceptions
 
@@ -41,7 +47,7 @@ class BaseEventHandler(ABC):
             else:
                 self._thread = None
                 self._updater()
-    
+
     def call_event(self, event_name, args : list = []):
         try:
             # print(f"Calling for {event_name}...")
@@ -69,7 +75,7 @@ class BaseEventHandler(ABC):
     @abstractmethod
     def _updater(self):
         pass
-    
+
     def __del__(self):
         self.stop()
 
@@ -121,3 +127,170 @@ class BaseEventHandler(ABC):
         else:
             # => the decorator doesn't provide arguments
             inner(function)
+
+class BaseCloudServer(BaseEventHandler):
+    def __init__(
+        self,
+        hostname,
+        *,
+        port,
+        websocketclass,
+        length_limit=None,
+        allow_non_numeric=True,
+        whitelisted_projects=None,
+        allow_nonscratch_names=True,
+        blocked_ips=None,
+        sync_players=True,
+        log_var_sets=True,
+    ):
+        if blocked_ips is None:
+            blocked_ips = []
+
+        SimpleWebSocketServer.__init__(self, hostname, port=port, websocketclass=websocketclass)
+        BaseEventHandler.__init__(self)
+
+        self.running = False
+        self._events = {}  # saves event functions called on cloud updates
+
+        self.tw_clients = {}  # saves connected clients
+        self.tw_variables = {}  # holds cloud variable states
+
+        self.hostname = hostname
+        self.port = port
+
+        # server config
+        self.allow_non_numeric = allow_non_numeric
+        self.whitelisted_projects = whitelisted_projects
+        self.length_limit = length_limit
+        self.allow_nonscratch_names = allow_nonscratch_names
+        self.blocked_ips = blocked_ips
+        self.sync_players = sync_players
+        self.log_var_sets = log_var_sets
+
+    def check_for_ip_ban(self, client):
+        if (
+            client.address[0] in self.blocked_ips
+            or client.address[0] + ":" + str(client.address[1]) in self.blocked_ips
+            or client.address in self.blocked_ips
+        ):
+            client.sendMessage("You have been banned from this server")
+            client.close(4002)
+            print(f"[yellow]Client {client.address[0]}:{client.address[1]} was forced disconnected "+
+                  "due to IP ban. [b]If this dosen't look right, remove them from the list.[/][/]")
+            return True
+        return False
+
+    def active_projects(self):
+        only_active = {}
+        for project_id in self.tw_variables:
+            if self.active_user_ips(project_id) != []:
+                only_active[project_id] = self.tw_variables[project_id]
+        return only_active
+
+    def active_user_names(self, project_id):
+        return [self.tw_clients[user]["username"] for user in self.active_user_ips(project_id)]
+
+    def active_user_ips(self, project_id):
+        return list(filter(lambda user: str(self.tw_clients[user]["project_id"]) == str(project_id), self.tw_clients))
+
+    def get_global_vars(self):
+        return self.tw_variables
+
+    def get_project_vars(self, project_id):
+        project_id = str(project_id)
+        if project_id in self.tw_variables:
+            return self.tw_variables[project_id]
+        else:
+            return {}
+
+    def get_var(self, project_id, var_name):
+        project_id = str(project_id)
+        var_name = var_name.replace("☁ ", "")
+        if project_id in self.tw_variables:
+            if var_name in self.tw_variables[project_id]:
+                return self.tw_variables[project_id][var_name]
+            else:
+                return None
+        else:
+            return None
+
+    def set_global_vars(self, data):
+        for project_id in data:
+            self.set_project_vars(project_id, data[project_id])
+
+    def set_project_vars(self, project_id, data, *, user="@server"):
+        project_id = str(project_id)
+        self.tw_variables[project_id] = data
+        for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
+            client.sendMessage(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "method": "set",
+                                "project_id": project_id,
+                                "name": "☁ " + varname,
+                                "value": data[varname],
+                                "server": "scratchattach/2.0.0",
+                                "timestamp": time.time() * 1000,
+                                "user": user,
+                            }
+                        )
+                        for varname in data
+                    ]
+                )
+            )
+
+    def set_var(self, project_id, var_name, value, *, user="@server", skip_forward=None):
+        var_name = var_name.replace("☁ ", "")
+        project_id = str(project_id)
+        if project_id not in self.tw_variables:
+            self.tw_variables[project_id] = {}
+        self.tw_variables[project_id][var_name] = value
+
+        if self.sync_players is True:
+            for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
+                if client == skip_forward:
+                    continue
+                client.sendMessage(
+                    json.dumps(
+                        {
+                            "method": "set",
+                            "project_id": project_id,
+                            "name": "☁ " + var_name,
+                            "value": value,
+                            "timestamp": time.time() * 1000,
+                            "user": user,
+                        }
+                    )
+                )
+
+    def _check_value(self, value):
+        # Checks if a received cloud value satisfies the server's constraints
+        if self.length_limit is not None:
+            if len(str(value)) > self.length_limit:
+                return False
+        if self.allow_non_numeric is False:
+            x = value.replace(".", "")
+            x = x.replace("-", "")
+            if not (x.isnumeric() or x == ""):
+                return False
+        return True
+
+    def _updater(self):
+        try:
+            # Function called when .start() is executed (.start is inherited from BaseEventHandler)
+            print(f"Serving websocket server: ws://{self.hostname}:{self.port}")
+            self.serveforever()
+        except Exception as e:
+            raise exceptions.WebsocketServerError(str(e))
+
+    def pause(self):
+        self.running = False
+
+    def resume(self):
+        self.running = True
+
+    def stop(self, wait_call_threads: bool = True):
+        BaseEventHandler.stop(self, wait_call_threads) # wait_call_threads does not exist in BaseEventHandler.stop
+        self.close()
