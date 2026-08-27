@@ -9,6 +9,7 @@ from typing import Optional, Union, TypeVar, Generic, TYPE_CHECKING, Any
 from abc import ABC, abstractmethod, ABCMeta
 from threading import Lock
 from collections.abc import Iterator
+from rich import print
 
 from scratchattach.cloud import cloud as cloud_module
 
@@ -242,7 +243,8 @@ class WebSocketEventStream(EventStream):
                 except json.JSONDecodeError as e:
                     # this could happen e.g. when the scratchattach server sends the message
                     # "This server uses @TimMcCool's scratchattach 2.0.0"
-                    warnings.warn(f"Invalid JSON sent from server: {e}")
+                    print(f"[yellow]Warning: Cloud events handler received invalid JSON.[/]")
+                    print(f"    [b]Data received:[/] \"{self.packets_left}\"")
                 except Exception:
                     # NOTE: at the very least for `except Exception`, let's print the traceback
                     # ideally we would never even use `except Exception`. Maybe this is technical debt.
