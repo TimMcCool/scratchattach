@@ -6,6 +6,7 @@ import ssl
 import traceback
 
 from SimpleWebSocketServer import SimpleSSLWebSocketServer, SimpleWebSocketServer, WebSocket
+from rich import print
 
 from scratchattach.utils import exceptions
 from scratchattach.site import cloud_activity
