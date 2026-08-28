@@ -191,6 +191,8 @@ class WebSocketEventStream(EventStream):
                     # this could happen e.g. when the scratchattach server sends the message
                     # "This server uses @TimMcCool's scratchattach 2.0.0"
                     warnings.warn(f"Invalid JSON sent from server: {e}")
+                except websocket.WebSocketConnectionClosedException:
+                    self.source_cloud.reconnect()
                 except Exception:
                     # NOTE: at the very least for `except Exception`, let's print the traceback
                     # ideally we would never even use `except Exception`. Maybe this is technical debt.
