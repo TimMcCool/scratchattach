@@ -321,7 +321,7 @@ def init_ssl_cloud_server(
     Prints out the websocket address in the console.
     """
     if (certfile is None or keyfile is None) and ssl_context is None:
-        warnings.warn("WARNING: To init a ssl cloud server, you need provide `certfile` and "+
+        warnings.warn("To init a ssl cloud server, you need provide `certfile` and "+
                       "`keyfile` or `ssl_context`.")
 
     return TwSSLCloudServer(
