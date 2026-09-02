@@ -224,36 +224,44 @@ class BaseCloudServer(BaseEventHandler):
             if var_name in self.tw_variables[project_id]:
                 return self.tw_variables[project_id][var_name]
             else:
+                print(f"[yellow]Warning: Could not find variable {var_name} in project {project_id}![/]")
                 return None
         else:
+            print(f"[yellow]Warning: Could not find project {project_id}! Are you sure it exists from the server's perspective? Is it whitelisted?[/]")
             return None
 
     def set_global_vars(self, data):
-        for project_id in data:
-            self.set_project_vars(project_id, data[project_id])
+        try:
+            for project_id in data:
+                self.set_project_vars(project_id, data[project_id])
+        except Exception as e: # TODO: determine which exception we want to catch specifically
+            print(f"[red]Internal Error in BaseCloudServer.set_global_vars:[/]", traceback.format_exc())
 
     def set_project_vars(self, project_id, data, *, user="@server"):
         project_id = str(project_id)
         self.tw_variables[project_id] = data
         for client in (self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)):
-            client.sendMessage(
-                "\n".join(
-                    [
-                        json.dumps(
-                            {
-                                "method": "set",
-                                "project_id": project_id,
-                                "name": "☁ " + varname,
-                                "value": data[varname],
-                                "server": "scratchattach/2.0.0",
-                                "timestamp": time.time() * 1000,
-                                "user": user,
-                            }
-                        )
-                        for varname in data
-                    ]
+            try:
+                client.sendMessage(
+                    "\n".join(
+                        [
+                            json.dumps(
+                                {
+                                    "method": "set",
+                                    "project_id": project_id,
+                                    "name": "☁ " + varname,
+                                    "value": data[varname],
+                                    "server": "scratchattach/2.0.0",
+                                    "timestamp": time.time() * 1000,
+                                    "user": user,
+                                }
+                            )
+                            for varname in data
+                        ]
+                    )
                 )
-            )
+            except Exception as e: # TODO: determine which exceptions we want to catch specifically
+                print(f"[red]Internal Error in BaseCloudServer.set_project_vars:[/]", traceback.format_exc())
 
     def set_var(self, project_id, var_name, value, *, user="@server", skip_forward=None):
         var_name = var_name.replace("☁ ", "")
@@ -266,18 +274,21 @@ class BaseCloudServer(BaseEventHandler):
             for client in (self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)):
                 if client == skip_forward:
                     continue
-                client.sendMessage(
-                    json.dumps(
-                        {
-                            "method": "set",
-                            "project_id": project_id,
-                            "name": "☁ " + var_name,
-                            "value": value,
-                            "timestamp": time.time() * 1000,
-                            "user": user,
-                        }
+                try:
+                    client.sendMessage(
+                        json.dumps(
+                            {
+                                "method": "set",
+                                "project_id": project_id,
+                                "name": "☁ " + var_name,
+                                "value": value,
+                                "timestamp": time.time() * 1000,
+                                "user": user,
+                            }
+                        )
                     )
-                )
+                except Exception as e: # TODO: determine which exceptions we want to catch specifically
+                    print(f"[red]Internal Error in BaseCloudServer.set_var:[/]", traceback.format_exc())
 
     def _check_value(self, value):
         # Checks if a received cloud value satisfies the server's constraints
@@ -306,5 +317,8 @@ class BaseCloudServer(BaseEventHandler):
         self.running = True
 
     def stop(self, wait_call_threads: bool = True):
-        BaseEventHandler.stop(self, wait_call_threads) # wait_call_threads does not exist in BaseEventHandler.stop
-        self.close()
+        try:
+            BaseEventHandler.stop(self, wait_call_threads)
+            self.close()
+        except Exception as e:
+            print(f"[red]Error while stopping cloud server: [/]", traceback.format_exc())
