@@ -158,6 +158,9 @@ class BaseCloudServer(BaseEventHandler):
                 sync_players: bool = True,
                 log_var_sets: bool = True):
 
+        if blocked_ips is None:
+            blocked_ips = []
+
         BaseEventHandler.__init__(self)
 
         self.running = False
