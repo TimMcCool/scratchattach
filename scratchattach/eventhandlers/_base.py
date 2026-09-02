@@ -128,20 +128,35 @@ class BaseEventHandler(ABC):
             inner(function)
 
 class BaseCloudServer(BaseEventHandler):
-    def __init__(
-        self,
-        hostname,
-        *,
-        port,
-        websocketclass,
-        length_limit=None,
-        allow_non_numeric=True,
-        whitelisted_projects=None,
-        allow_nonscratch_names=True,
-        blocked_ips=None,
-        sync_players=True,
-        log_var_sets=True,
-    ):
+    hostname: str
+    port: int
+    tw_clients: dict[tuple[str, int], dict[str, Any]]
+    tw_variables: dict[str, dict[str, Any]]
+    allow_non_numeric: bool
+    whitelisted_projects: Optional[list[str]]
+    length_limit: Optional[int]
+    allow_nonscratch_names: bool
+    blocked_ips: list[str]
+    sync_players: bool
+    log_var_sets: bool
+
+    def __init__(self,
+                hostname: str,
+                *,
+                certfile: str|None = None,
+                keyfile: str|None = None,
+                ssl_version: int = ssl.PROTOCOL_TLSv1_2,
+                ssl_context: ssl.SSLContext|None = None,
+                port: int,
+                websocketclass: type[WebSocket],
+                length_limit: int|None = None,
+                allow_non_numeric: bool = True,
+                whitelisted_projects: list[Any]|None = None,
+                allow_nonscratch_names: bool = True,
+                blocked_ips: list[str]|None = None,
+                sync_players: bool = True,
+                log_var_sets: bool = True):
+
         if blocked_ips is None:
             blocked_ips = []
 
@@ -219,7 +234,7 @@ class BaseCloudServer(BaseEventHandler):
     def set_project_vars(self, project_id, data, *, user="@server"):
         project_id = str(project_id)
         self.tw_variables[project_id] = data
-        for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
+        for client in (self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)):
             client.sendMessage(
                 "\n".join(
                     [
@@ -247,7 +262,7 @@ class BaseCloudServer(BaseEventHandler):
         self.tw_variables[project_id][var_name] = value
 
         if self.sync_players is True:
-            for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
+            for client in (self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)):
                 if client == skip_forward:
                     continue
                 client.sendMessage(

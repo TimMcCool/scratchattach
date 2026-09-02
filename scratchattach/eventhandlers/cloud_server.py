@@ -4,6 +4,8 @@ import json
 import time
 import ssl
 import traceback
+from typing import Any
+import warnings
 
 from SimpleWebSocketServer import SimpleSSLWebSocketServer, SimpleWebSocketServer, WebSocket
 from rich import print
@@ -224,17 +226,17 @@ class TwCloudSocket(WebSocket):
 class TwCloudServer(BaseCloudServer, SimpleWebSocketServer):
     def __init__(
         self,
-        hostname,
+        hostname: str,
         *,
-        port,
-        websocketclass,
-        length_limit=None,
-        allow_non_numeric=True,
-        whitelisted_projects=None,
-        allow_nonscratch_names=True,
-        blocked_ips=None,
-        sync_players=True,
-        log_var_sets=True,
+        port: int,
+        websocketclass: type[WebSocket],
+        length_limit: int | None = None,
+        allow_non_numeric: bool = True,
+        whitelisted_projects: list[Any] | None = None,
+        allow_nonscratch_names: bool = True,
+        blocked_ips: list[str] | None = None,
+        sync_players: bool = True,
+        log_var_sets: bool = True,
     ):
         if blocked_ips is None:
             blocked_ips = []
@@ -258,19 +260,19 @@ class TwSSLCloudServer(BaseCloudServer, SimpleSSLWebSocketServer):
         self,
         hostname: str,
         *,
-        certfile=None,
-        keyfile=None,
-        ssl_version=ssl.PROTOCOL_TLSv1_2,
-        ssl_context=None,
-        port,
-        websocketclass,
-        length_limit=None,
-        allow_non_numeric=True,
-        whitelisted_projects=None,
-        allow_nonscratch_names=True,
-        blocked_ips=None,
-        sync_players=True,
-        log_var_sets= True
+        certfile: str | None = None,
+        keyfile: str | None = None,
+        ssl_version: int = ssl.PROTOCOL_TLSv1_2,
+        ssl_context: ssl.SSLContext | None = None,
+        port: int,
+        websocketclass: type[WebSocket],
+        length_limit: int | None = None,
+        allow_non_numeric: bool = True,
+        whitelisted_projects: list[Any] | None = None,
+        allow_nonscratch_names: bool = True,
+        blocked_ips: list[str] | None = None,
+        sync_players: bool = True,
+        log_var_sets: bool = True
     ):
         SimpleSSLWebSocketServer.__init__(
             self,
@@ -304,16 +306,16 @@ class TwSSLCloudServer(BaseCloudServer, SimpleSSLWebSocketServer):
             raise exceptions.WebsocketServerError(str(e))
 
 def init_cloud_server(
-    hostname="127.0.0.1",
-    port=8080,
+    hostname: str="127.0.0.1",
+    port: int=8080,
     *,
-    length_limit=None,
-    allow_non_numeric=True,
-    whitelisted_projects=None,
-    allow_nonscratch_names=True,
-    blocked_ips=None,
-    sync_players=True,
-    log_var_sets=True,
+    length_limit: int | None = None,
+    allow_non_numeric: bool = True,
+    whitelisted_projects: list[Any] | None = None,
+    allow_nonscratch_names: bool = True,
+    blocked_ips: list[str] | None = None,
+    sync_players: bool = True,
+    log_var_sets: bool = True,
 ):
     """
     Inits a websocket server which can be used with TurboWarp's ?cloud_host URL parameter.
@@ -340,17 +342,17 @@ def init_ssl_cloud_server(
     hostname: str = "127.0.0.1",
     port: int = 8080,
     *,
-    certfile=None,
-    keyfile=None,
-    ssl_version=ssl.PROTOCOL_TLSv1_2,
-    ssl_context=None,
-    length_limit=None,
-    allow_non_numeric=True,
-    whitelisted_projects=None,
-    allow_nonscratch_names=True,
-    blocked_ips=None,
-    sync_players=True,
-    log_var_sets=True
+    certfile: str | None = None,
+    keyfile: str | None = None,
+    ssl_version: int = ssl.PROTOCOL_TLSv1_2,
+    ssl_context: ssl.SSLContext | None = None,
+    length_limit: int | None = None,
+    allow_non_numeric: bool = True,
+    whitelisted_projects: list[Any] | None = None,
+    allow_nonscratch_names: bool = True,
+    blocked_ips: list[str] | None = None,
+    sync_players: bool = True,
+    log_var_sets: bool =    True
 ) -> TwSSLCloudServer:
     """
     Inits a websocket server which can be used with TurboWarp's ?cloud_host URL parameter.
@@ -358,8 +360,8 @@ def init_ssl_cloud_server(
     Prints out the websocket address in the console.
     """
     if (certfile is None or keyfile is None) and ssl_context is None:
-        print("[yellow]WARNING: To init a ssl cloud server, you need provide `certfile` and "+
-              "`keyfile` or `ssl_context`.[/]")
+        warnings.warn("WARNING: To init a ssl cloud server, you need provide `certfile` and "+
+                      "`keyfile` or `ssl_context`.")
 
     return TwSSLCloudServer(
         hostname,
