@@ -9,6 +9,7 @@ from collections import defaultdict
 from threading import Thread, Event
 from collections.abc import Callable
 import traceback
+from SimpleWebSocketServer import WebSocket
 from rich import print
 
 from scratchattach.utils.requests import requests
