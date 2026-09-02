@@ -137,15 +137,15 @@ class BaseCloudServer(BaseEventHandler):
     """
 
     hostname: str
-    "IP address or domain name of the host to bind to."
+    "IP address or domain name of the host to bind the server to."
     port: int
-    "Port to bind to."
+    "Port to bind the server to."
     tw_clients: dict[tuple[str, int], dict[str, Any]]
-    "Dict of client information."
+    "Dictionary containing client information."
     tw_variables: dict[str, dict[str, Any]]
-    "Dict of existing cloud variables."
+    "Dictionary containing existing cloud variables."
     allow_non_numeric: bool
-    "Whether or not non-numeric charecters are allowed in cloud variable values."
+    "Whether or not non-numeric characters are allowed in cloud variable values."
     whitelisted_projects: list[str] | None
     "Optional list of whitelisted projects."
     length_limit: int | None
@@ -162,13 +162,14 @@ class BaseCloudServer(BaseEventHandler):
                 *,
                 port: int,
                 websocketclass: type[WebSocket],
-                length_limit: int|None = None,
+                length_limit: int | None = None,
                 allow_non_numeric: bool = True,
-                whitelisted_projects: list[Any]|None = None,
+                whitelisted_projects: list[Any] | None = None,
                 allow_nonscratch_names: bool = True,
-                blocked_ips: list[str]|None = None,
+                blocked_ips: list[str] | None = None,
                 sync_players: bool = True,
-                log_var_sets: bool = True):
+                log_var_sets: bool = True
+    ):
 
         if blocked_ips is None:
             blocked_ips = []
