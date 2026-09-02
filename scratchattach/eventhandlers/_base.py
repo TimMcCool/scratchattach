@@ -129,15 +129,31 @@ class BaseEventHandler(ABC):
             inner(function)
 
 class BaseCloudServer(BaseEventHandler):
+    """
+    Base class for all sa cloud servers.
+
+    If you are developing a custom cloud server with sa, please inherit from this class
+    and change up the methods as needed.
+    """
+
     hostname: str
+    "IP address or domain name of the host to bind to."
     port: int
+    "Port to bind to."
     tw_clients: dict[tuple[str, int], dict[str, Any]]
+    "Dict of client information."
     tw_variables: dict[str, dict[str, Any]]
+    "Dict of existing cloud variables."
     allow_non_numeric: bool
-    whitelisted_projects: Optional[list[str]]
-    length_limit: Optional[int]
+    "Whether or not non-numeric charecters are allowed in cloud variable values."
+    whitelisted_projects: list[str] | None
+    "Optional list of whitelisted projects."
+    length_limit: int | None
+    "Optional limit on the length of cloud variable values."
     allow_nonscratch_names: bool
+    "Whether or not usernames that do not exist on scratch are allowed."
     blocked_ips: list[str]
+    "List of blocked IP addresses."
     sync_players: bool
     log_var_sets: bool
 
