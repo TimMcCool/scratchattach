@@ -14,6 +14,7 @@ class CloudEvents(BaseEventHandler):
     """
     Class that calls events when on cloud updates that are received through a websocket connection.
     """
+    subsequent_reconnects: int
 
     def __init__(self, cloud: _base.AnyCloud):
         super().__init__()
@@ -21,6 +22,7 @@ class CloudEvents(BaseEventHandler):
         self._session = cloud._session
         self.source_stream = cloud.create_event_stream()
         self.startup_time = time.time() * 1000
+        self.subsequent_reconnects = 0
 
     def disconnect(self):
         self.source_stream.close()
@@ -39,6 +41,7 @@ class CloudEvents(BaseEventHandler):
                 while self.running:
                     self.source_stream.timeout = 1
                     for data in self.source_stream.read():
+                        self.subsequent_reconnects = 0
                         try:
                             _a = cloud_activity.CloudActivity(
                                 timestamp=time.time() * 1000,
@@ -62,6 +65,11 @@ class CloudEvents(BaseEventHandler):
                 traceback.print_exc()  # always print blanketed exceptions!!
                 self.subsequent_reconnects += 1
                 time.sleep(0.1)  # cooldown
+                
+                if self.subsequent_reconnects >= 5:
+                    print(
+                        f"Warning: {self.subsequent_reconnects} subsequent cloud disconnects. Cloud may be down, causing CloudEvents to not call events."
+                    )
 
                 # print("CloudEvents: Reconnected.", time.time())
                 self.call_event("on_reconnect", [])
