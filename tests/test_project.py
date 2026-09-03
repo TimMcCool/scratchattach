@@ -2,6 +2,32 @@ import warnings
 from util import session, credentials_available, allow_before
 import scratchattach as sa
 from datetime import datetime
+from scratchattach.site.project import Project
+
+
+def test_project_share_disables_response_json_error_handling(monkeypatch):
+    # Regression for #609: a shared response with a non-JSON body must not trip
+    # the response checker, so share() should run the PUT with error_handling
+    # disabled and restore it afterwards.
+    class FakeSession:
+        username = "ScratchAttachV2"
+
+        def get_headers(self):
+            return {"x-token": "token"}
+
+        def get_cookies(self):
+            return {"scratchsessionsid": "session"}
+
+    flag_during = []
+
+    def fake_put(*args, **kwargs):
+        flag_during.append(sa.utils.requests.requests.error_handling)
+
+    monkeypatch.setattr(sa.utils.requests.requests, "put", fake_put)
+    Project(id=123, author_name="ScratchAttachV2", _session=FakeSession()).share()
+
+    assert flag_during == [False]  # disabled during the PUT
+    assert sa.utils.requests.requests.error_handling is True  # restored after
 
 
 def test_project():
