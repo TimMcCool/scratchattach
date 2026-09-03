@@ -9,6 +9,7 @@ from typing import Optional, Union, TypeVar, Generic, TYPE_CHECKING, Any
 from abc import ABC, abstractmethod, ABCMeta
 from threading import Lock
 from collections.abc import Iterator
+from rich import print
 
 from scratchattach.cloud import cloud as cloud_module
 
@@ -199,7 +200,7 @@ class WebSocketEventStream(EventStream):
         except exceptions.CloudConnectionError:
             warnings.warn("Initial cloud connection attempt failed, retrying...", exceptions.UnexpectedWebsocketEventWarning)
         self.packets_left = []
-    
+
     def wait_before_reconnect(self):
         if time.time() - self.most_recent_reconnection_time > self.RECENT_RECONNECT_TIME_DELTA:
             self.recent_reconnect_count = 0
@@ -254,10 +255,12 @@ class WebSocketEventStream(EventStream):
                         i += 1
                         yield json.loads(self.packets_left.pop(0))
                     done = True
-                except json.JSONDecodeError as e:
+                except json.JSONDecodeError:
                     # this could happen e.g. when the scratchattach server sends the message
                     # "This server uses @TimMcCool's scratchattach 2.0.0"
-                    warnings.warn(f"Invalid JSON sent from server: {e}")
+                    # print(f"[yellow]Warning: Cloud events handler received invalid JSON.[/]")
+                    # print(f"    [b]Data received:[/] \"{self.packets_left}\"")
+                    warnings.warn(f"Cloud events handler received invalid JSON. Data received: {self.packets_left}")
                 except (websocket.WebSocketConnectionClosedException, ssl.SSLWantReadError):
                     self.wait_before_reconnect()
                     self.source_cloud.reconnect()

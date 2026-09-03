@@ -1,14 +1,21 @@
 from __future__ import annotations
 
-from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
-from threading import Thread
-from scratchattach.utils import exceptions
+from scratchattach.site.typed_dicts import CloudActivityDict
+
 import json
 import time
+import ssl
+import traceback
+from typing import Any
+import warnings
+
+from SimpleWebSocketServer import SimpleSSLWebSocketServer, SimpleWebSocketServer, WebSocket
+from rich import print
+
+from scratchattach.utils import exceptions
 from scratchattach.site import cloud_activity
 from scratchattach.site.user import User
-from ._base import BaseEventHandler
-import traceback
+from ._base import BaseCloudServer
 
 
 class TwCloudSocket(WebSocket):
@@ -17,89 +24,106 @@ class TwCloudSocket(WebSocket):
     def handle_set(self, data: dict):
         # cloud variable set received
         # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
-        if self.server.whitelisted_projects is not None:
-            if data["project_id"] not in self.server.whitelisted_projects:
-                self.close(4002)
-                if self.server.log_var_sets:
-                    print(
-                        self.address[0] + ":" + str(self.address[1]),
-                        "tried to set a var on non-whitelisted project and was disconnected, project:",
-                        data["project_id"],
-                        "user:",
-                        data["user"],
-                    )
-                return
+        if (self.server.whitelisted_projects is not None and
+            str(data["project_id"]) not in self.server.whitelisted_projects):
+            self.close(4002)
+            if self.server.log_var_sets:
+                print("[red]Error: "+
+                    self.address[0] + ":" + str(self.address[1])+
+                    " with username "+
+                    data["user"]+
+                    " tried to set a var on non-whitelisted project ID "+
+                    data["project_id"]+
+                    " and was disconnected.[/]"
+                )
+            return
         # check if value is valid
         if not self.server._check_value(data["value"]):
             if self.server.log_var_sets:
-                print(self.address[0] + ":" + str(self.address[1]), "sent an invalid var value")
+                print("[yellow]Warning: "+
+                    self.address[0] + ":" + str(self.address[1])+
+                    " sent an invalid variable value.[/]\n"+
+                    f"    Value: {data["value"]}")
             return
         # perform cloud var and forward to other players
         if self.server.log_var_sets:
             print(
-                self.address[0] + ":" + str(self.address[1]),
-                f"set {data['name']} to {data['value']}, project:",
-                str(data["project_id"]),
-                "user:",
-                data["user"],
+                self.address[0] + ":" + str(self.address[1])+
+                f" with username {data['user']}"+
+                f" sucessfully set {data['name']} to {data['value']} in project "+
+                f"{str(data['project_id'])}."
             )
-        self.server.set_var(data["project_id"], data["name"], data["value"], user=data["user"], skip_forward=self)
-        send_to_clients = {
+        self.server.set_var(
+            data["project_id"],
+            data["name"],
+            data["value"],
+            user=data["user"],
+            skip_forward=self,
+            no_prefix=True,
+        )
+        send_to_clients: CloudActivityDict = {
             "method": "set",
             "user": data["user"],
             "project_id": data["project_id"],
             "name": data["name"],
             "value": data["value"],
             "timestamp": round(time.time() * 1000),
-            "server": "scratchattach/2.0.0",
+            "server": "scratchattach/3",
         }
+        # TODO: Add a cloud to the activity dict (possibly some kind of adapter)
         # raise event
         _a = cloud_activity.CloudActivity(timestamp=time.time() * 1000)
-        data["name"] = data["name"].replace("☁ ", "")
         _a._update_from_dict(send_to_clients)
         self.server.call_event("on_set", [_a, self])
 
     def handle_handshake(self, data: dict):
         # check if handshake is valid
-        if not "user" in data:
-            print(self.address[0] + ":" + str(self.address[1]), "tried to handshake without providing a username")
+        if not data["user"]:
+            print("[red]Error: "+
+                  str(self.address[0]) + ":" + str(self.address[1])+
+                  " tried to handshake without providing a username.[/]")
             self.close(4002)
             return
-        if not "project_id" in data:
-            print(self.address[0] + ":" + str(self.address[1]), "tried to handshake without providing a project_id")
+        if not data["project_id"]:
+            print("[red]Error: "+
+                  str(self.address[0]) + ":" + str(self.address[1])+
+                  " tried to handshake without providing a project_id.[/]")
             self.close(4002)
             return
+
         # check if project_id is in username is allowed
-        if self.server.allow_nonscratch_names is False:
-            if not User(username=data["user"]).does_exist():
-                print(
-                    self.address[0] + ":" + str(self.address[1]),
-                    "tried to handshake using a username not existing on Scratch, project:",
-                    data["project_id"],
-                    "user:",
-                    data["user"],
-                )
-                self.close(4002)
-                return
+        if not self.server.allow_nonscratch_names and not User(username=data["user"]).does_exist():
+            print("[red]Error: "+
+                str(self.address[0]) + ":" + str(self.address[1])+
+                " tried to handshake with non-existent Scratch username "+
+                data["user"]+
+                ".[/]"
+            )
+            self.close(4002)
+            return
+
         # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
-        if self.server.whitelisted_projects is not None:
-            if str(data["project_id"]) not in self.server.whitelisted_projects:
-                self.close(4002)
-                print(
-                    self.address[0] + ":" + str(self.address[1]),
-                    "tried to handshake on a non-whitelisted project:",
-                    data["project_id"],
-                    "user:",
-                    data["user"],
-                )
-                return
+        if (self.server.whitelisted_projects is not None
+            and str(data["project_id"]) not in self.server.whitelisted_projects):
+            self.close(4002)
+            print("[red]Error: "+
+                str(self.address[0]) + ":" + str(self.address[1])+
+                " with username "+
+                data["user"]+
+                " tried to handshake on a non-whitelisted project with ID "+
+                data["project_id"]+
+                ".[/]"
+            )
+            return
         # register handshake in users list (save username and project_id)
-        print(
-            self.address[0] + ":" + str(self.address[1]),
-            "handshaked, project:",
-            data["project_id"],
-            "user:",
-            data["user"],
+        print("[green b]Handshake successful![/]\n"+
+            "[green]    Address "+
+            str(self.address[0]) + ":" + str(self.address[1])+
+            " under username [b]"+
+            data["user"]+
+            "[/] and project ID [b]"+
+            data["project_id"]+
+            " sucessfully handshaked with the server.[/green]"
         )
         self.server.tw_clients[self.address]["username"] = data["user"]
         self.server.tw_clients[self.address]["project_id"] = data["project_id"]
@@ -113,7 +137,7 @@ class TwCloudSocket(WebSocket):
                             "project_id": data["project_id"],
                             "name": "☁ " + varname,
                             "value": self.server.tw_variables[str(data["project_id"])][varname],
-                            "server": "scratchattach/2.0.0",
+                            "server": "scratchattach/3",
                         }
                     )
                     for varname in self.server.get_project_vars(str(data["project_id"]))
@@ -131,22 +155,44 @@ class TwCloudSocket(WebSocket):
             if self.server.check_for_ip_ban(self):
                 return
 
-            data = json.loads(self.data)
-            # print(data)
+            try:
+                data = json.loads(self.data)
+            except json.decoder.JSONDecodeError:
+                print(f"[yellow]Warning: Client {str(self.address[0]) + ':' + str(self.address[1])} sent"+
+                      " invalid JSON to the server. The client may be unsafe, please stay alert.[/]\n"+
+                      f"    [b]Data received:[/] {self.data}")
+                return
 
-            if data["method"] == "set":
-                self.handle_set(data)
-            elif data["method"] == "handshake":
-                self.handle_handshake(data)
+            if data == {}:
+                print(
+                    "[yellow]Warning: "+
+                    str(self.address[0]) + ":" + str(self.address[1])+
+                    " sent a blank JSON message. [b]If this seems suspicious, ban the IP.[/][/]",
+                )
+                return
+            if 'method' in data:
+                if data["method"] == "set":
+                    self.handle_set(data)
+                elif data["method"] == "handshake":
+                    self.handle_handshake(data)
+                else:
+                    print(
+                        "[yellow]Warning: "+
+                        str(self.address[0]) + ":" + str(self.address[1]),
+                        " sent a message without providing a valid method (either [b]set[/b] or [b]handshake[/b]),"+
+                        f"but provided method '{list(data.values())[0]}' instead.[/]\n",
+                        f"    [b]Data received:[/] {self.data}"
+                    )
             else:
                 print(
-                    "Error:",
-                    self.address[0] + ":" + str(self.address[1]),
-                    "sent a message without providing a valid method (set, handshake)",
+                    "[yellow]Warning: "+
+                    str(self.address[0]) + ":" + str(self.address[1])+
+                    " sent a message without providing a valid [b]'method'[/b] key,"+
+                    f" but provided key '{list(data.keys())[0]}' instead.[/]\n",
+                    f"    [b]Data received:[/] {self.data}"
                 )
-
         except Exception as e:
-            print("Internal error in handleMessage:", e, traceback.format_exc())
+            print(f"[red]Internal error in handleMessage: {e}[/]\n", traceback.format_exc())
 
     def handleConnected(self):
         if not self.server.running:
@@ -155,19 +201,22 @@ class TwCloudSocket(WebSocket):
             if self.server.check_for_ip_ban(self):
                 return
 
-            print(self.address[0] + ":" + str(self.address[1]), "connected")
-            self.server.tw_clients[self.address] = {"client": self, "username": None, "project_id": None}
-            # raise event
+            print("[green]New client " + str(self.address[0]) + ":" + str(self.address[1]) + " connected![/]")
+            self.server.tw_clients[self.address] = {"client": self,
+                                                     "username": None,
+                                                     "project_id": None,}
+            # raise connect event
             self.server.call_event("on_connect", [self])
         except Exception as e:
-            print("Internal error in handleConntected:", e)
+            print(f"[red]Internal error in handleConnected: {e} [/]\n", traceback.format_exc())
 
     def handleClose(self):
         if not self.server.running:
             return
+
         try:
             if self.address in self.server.tw_clients:
-                # raise event
+                # raise disconnect event
                 self.server.call_event(
                     "on_disconnect",
                     [
@@ -176,189 +225,108 @@ class TwCloudSocket(WebSocket):
                         self,
                     ],
                 )
-                print(self.address[0] + ":" + str(self.address[1]), "disconnected")
+                print(f"[blue]Client {self.address[0]}:{self.address[1]} disconnected from server sucessfully.[/]")
         except Exception as e:
-            print("Internal error in handleClose:", e)
+            print(f"[red]Internal error in handleClose: {e} [/]\n", traceback.format_exc())
 
 
-class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
+class TwCloudServer(BaseCloudServer, SimpleWebSocketServer):
     def __init__(
         self,
-        hostname,
+        hostname: str,
         *,
-        port,
-        websocketclass,
-        length_limit=None,
-        allow_non_numeric=True,
-        whitelisted_projects=None,
-        allow_nonscratch_names=True,
-        blocked_ips=None,
-        sync_players=True,
-        log_var_sets=True,
+        port: int,
+        websocketclass: type[WebSocket],
+        length_limit: int | None = None,
+        allow_non_numeric: bool = True,
+        whitelisted_projects: list[Any] | None = None,
+        allow_nonscratch_names: bool = True,
+        blocked_ips: list[str] | None = None,
+        sync_players: bool = True,
+        log_var_sets: bool = True,
     ):
         if blocked_ips is None:
             blocked_ips = []
 
         SimpleWebSocketServer.__init__(self, hostname, port=port, websocketclass=websocketclass)
-        BaseEventHandler.__init__(self)
 
-        self.running = False
-        self._events = {}  # saves event functions called on cloud updates
+        BaseCloudServer.__init__(
+            self,
+            hostname=hostname,
+            port=port,
+            length_limit=length_limit,
+            allow_non_numeric=allow_non_numeric,
+            whitelisted_projects=whitelisted_projects,
+            allow_nonscratch_names=allow_nonscratch_names,
+            blocked_ips=blocked_ips,
+            sync_players=sync_players,
+            log_var_sets=log_var_sets,
+        )
 
-        self.tw_clients = {}  # saves connected clients
-        self.tw_variables = {}  # holds cloud variable states
 
-        self.hostname = hostname
-        self.port = port
+class TwSSLCloudServer(BaseCloudServer, SimpleSSLWebSocketServer):
+    def __init__(
+        self,
+        hostname: str,
+        *,
+        certfile: str | None = None,
+        keyfile: str | None = None,
+        ssl_version: int = ssl.PROTOCOL_TLSv1_2,
+        ssl_context: ssl.SSLContext | None = None,
+        port: int,
+        websocketclass: type[WebSocket],
+        length_limit: int | None = None,
+        allow_non_numeric: bool = True,
+        whitelisted_projects: list[Any] | None = None,
+        allow_nonscratch_names: bool = True,
+        blocked_ips: list[str] | None = None,
+        sync_players: bool = True,
+        log_var_sets: bool = True,
+    ):
+        SimpleSSLWebSocketServer.__init__(
+            self,
+            hostname,
+            port=port,
+            websocketclass=websocketclass,
+            certfile=certfile,
+            keyfile=keyfile,
+            version=ssl_version,
+            ssl_context=ssl_context,
+        )
 
-        # server config
-        self.allow_non_numeric = allow_non_numeric
-        self.whitelisted_projects = whitelisted_projects
-        self.length_limit = length_limit
-        self.allow_nonscratch_names = allow_nonscratch_names
-        self.blocked_ips = blocked_ips
-        self.sync_players = sync_players
-        self.log_var_sets = log_var_sets
-
-    def check_for_ip_ban(self, client):
-        if (
-            client.address[0] in self.blocked_ips
-            or client.address[0] + ":" + str(client.address[1]) in self.blocked_ips
-            or client.address in self.blocked_ips
-        ):
-            client.sendMessage("You have been banned from this server")
-            client.close(4002)
-            print(client.address[0] + ":" + str(client.address[1]), "(IP-banned) was disconnected")
-            return True
-        return False
-
-    def active_projects(self):
-        only_active = {}
-        for project_id in self.tw_variables:
-            if self.active_user_ips(project_id) != []:
-                only_active[project_id] = self.tw_variables[project_id]
-        return only_active
-
-    def active_user_names(self, project_id):
-        return [self.tw_clients[user]["username"] for user in self.active_user_ips(project_id)]
-
-    def active_user_ips(self, project_id):
-        return list(filter(lambda user: str(self.tw_clients[user]["project_id"]) == str(project_id), self.tw_clients))
-
-    def get_global_vars(self):
-        return self.tw_variables
-
-    def get_project_vars(self, project_id):
-        project_id = str(project_id)
-        if project_id in self.tw_variables:
-            return self.tw_variables[project_id]
-        else:
-            return {}
-
-    def get_var(self, project_id, var_name):
-        project_id = str(project_id)
-        var_name = var_name.replace("☁ ", "")
-        if project_id in self.tw_variables:
-            if var_name in self.tw_variables[project_id]:
-                return self.tw_variables[project_id][var_name]
-            else:
-                return None
-        else:
-            return None
-
-    def set_global_vars(self, data):
-        for project_id in data:
-            self.set_project_vars(project_id, data[project_id])
-
-    def set_project_vars(self, project_id, data, *, user="@server"):
-        project_id = str(project_id)
-        self.tw_variables[project_id] = data
-        for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
-            client.sendMessage(
-                "\n".join(
-                    [
-                        json.dumps(
-                            {
-                                "method": "set",
-                                "project_id": project_id,
-                                "name": "☁ " + varname,
-                                "value": data[varname],
-                                "server": "scratchattach/2.0.0",
-                                "timestamp": time.time() * 1000,
-                                "user": user,
-                            }
-                        )
-                        for varname in data
-                    ]
-                )
-            )
-
-    def set_var(self, project_id, var_name, value, *, user="@server", skip_forward=None):
-        var_name = var_name.replace("☁ ", "")
-        project_id = str(project_id)
-        if project_id not in self.tw_variables:
-            self.tw_variables[project_id] = {}
-        self.tw_variables[project_id][var_name] = value
-
-        if self.sync_players is True:
-            for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
-                if client == skip_forward:
-                    continue
-                client.sendMessage(
-                    json.dumps(
-                        {
-                            "method": "set",
-                            "project_id": project_id,
-                            "name": "☁ " + var_name,
-                            "value": value,
-                            "timestamp": time.time() * 1000,
-                            "user": user,
-                        }
-                    )
-                )
-
-    def _check_value(self, value):
-        # Checks if a received cloud value satisfies the server's constraints
-        if self.length_limit is not None:
-            if len(str(value)) > self.length_limit:
-                return False
-        if self.allow_non_numeric is False:
-            x = value.replace(".", "")
-            x = x.replace("-", "")
-            if not (x.isnumeric() or x == ""):
-                return False
-        return True
+        BaseCloudServer.__init__(
+            self,
+            hostname=hostname,
+            port=port,
+            length_limit=length_limit,
+            allow_non_numeric=allow_non_numeric,
+            whitelisted_projects=whitelisted_projects,
+            allow_nonscratch_names=allow_nonscratch_names,
+            blocked_ips=blocked_ips,
+            sync_players=sync_players,
+            log_var_sets=log_var_sets,
+        )
 
     def _updater(self):
         try:
             # Function called when .start() is executed (.start is inherited from BaseEventHandler)
-            print(f"Serving websocket server: ws://{self.hostname}:{self.port}")
+            print(f"Serving websocket server: wss://{self.hostname}:{self.port}")
             self.serveforever()
         except Exception as e:
             raise exceptions.WebsocketServerError(str(e))
 
-    def pause(self):
-        self.running = False
-
-    def resume(self):
-        self.running = True
-
-    def stop(self, wait_call_threads: bool = True):
-        BaseEventHandler.stop(self, wait_call_threads)
-        self.close()
-
 
 def init_cloud_server(
-    hostname="127.0.0.1",
-    port=8080,
+    hostname: str = "127.0.0.1",
+    port: int = 8080,
     *,
-    length_limit=None,
-    allow_non_numeric=True,
-    whitelisted_projects=None,
-    allow_nonscratch_names=True,
-    blocked_ips=None,
-    sync_players=True,
-    log_var_sets=True,
+    length_limit: int | None = None,
+    allow_non_numeric: bool = True,
+    whitelisted_projects: list[Any] | None = None,
+    allow_nonscratch_names: bool = True,
+    blocked_ips: list[str] | None = None,
+    sync_players: bool = True,
+    log_var_sets: bool = True,
 ):
     """
     Inits a websocket server which can be used with TurboWarp's ?cloud_host URL parameter.
@@ -372,6 +340,51 @@ def init_cloud_server(
         hostname,
         port=port,
         websocketclass=TwCloudSocket,
+        length_limit=length_limit,
+        allow_non_numeric=allow_non_numeric,
+        whitelisted_projects=whitelisted_projects,
+        allow_nonscratch_names=allow_nonscratch_names,
+        blocked_ips=blocked_ips,
+        sync_players=sync_players,
+        log_var_sets=log_var_sets,
+    )
+
+
+def init_ssl_cloud_server(
+    hostname: str = "127.0.0.1",
+    port: int = 8080,
+    *,
+    certfile: str | None = None,
+    keyfile: str | None = None,
+    ssl_version: int = ssl.PROTOCOL_TLSv1_2,
+    ssl_context: ssl.SSLContext | None = None,
+    length_limit: int | None = None,
+    allow_non_numeric: bool = True,
+    whitelisted_projects: list[Any] | None = None,
+    allow_nonscratch_names: bool = True,
+    blocked_ips: list[str] | None = None,
+    sync_players: bool = True,
+    log_var_sets: bool = True,
+) -> TwSSLCloudServer:
+    """
+    Inits a websocket server which can be used with TurboWarp's ?cloud_host URL parameter.
+
+    Prints out the websocket address in the console.
+    """
+    if (certfile is None or keyfile is None) and ssl_context is None:
+        warnings.warn(
+            "To init a ssl cloud server, you need provide `certfile` and "
+            + "`keyfile` or `ssl_context`."
+        )
+
+    return TwSSLCloudServer(
+        hostname,
+        port=port,
+        websocketclass=TwCloudSocket,
+        certfile=certfile,
+        keyfile=keyfile,
+        ssl_version=ssl_version,
+        ssl_context=ssl_context,
         length_limit=length_limit,
         allow_non_numeric=allow_non_numeric,
         whitelisted_projects=whitelisted_projects,
