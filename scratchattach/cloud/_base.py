@@ -123,6 +123,9 @@ class WebSocketEventStream(EventStream):
     packets_left: list[Union[str, bytes]]
     source_cloud: BaseCloud
     reading: Lock
+    recent_reconnect_count: int
+    most_recent_reconnection_time: float
+    RECENT_RECONNECT_TIME_DELTA = 1.0
     def __init__(self, cloud: BaseCloud):
         super().__init__()
         # NOTE: maybe consider using copy.copy here (copy.deepcopy doesn't work as you cannot deepcopy a Thread)
@@ -138,11 +141,23 @@ class WebSocketEventStream(EventStream):
         self.source_cloud.username = cloud.username
         self.source_cloud.ws_timeout = None # No timeout -> allows continous listening
         self.reading = Lock()
+        self.most_recent_reconnection_time = time.time()
+        self.recent_reconnect_count = 1
         try:
             self.source_cloud.connect()
         except exceptions.CloudConnectionError:
             warnings.warn("Initial cloud connection attempt failed, retrying...", exceptions.UnexpectedWebsocketEventWarning)
         self.packets_left = []
+    
+    def wait_before_reconnect(self):
+        if time.time() - self.most_recent_reconnection_time > self.RECENT_RECONNECT_TIME_DELTA:
+            self.recent_reconnect_count = 0
+        self.recent_reconnect_count += 1
+        if self.recent_reconnect_count > 5:
+            time.sleep(5.0)
+        elif self.recent_reconnect_count > 2:
+            time.sleep(1.0)
+        self.most_recent_reconnection_time = time.time()
 
     def receive_new(self, non_blocking: bool = False, timeout: Optional[float] = 0):
         timeout = None if timeout is None else max(timeout, 0)
@@ -191,13 +206,15 @@ class WebSocketEventStream(EventStream):
                     # this could happen e.g. when the scratchattach server sends the message
                     # "This server uses @TimMcCool's scratchattach 2.0.0"
                     warnings.warn(f"Invalid JSON sent from server: {e}")
-                except websocket.WebSocketConnectionClosedException:
+                except (websocket.WebSocketConnectionClosedException, ssl.SSLWantReadError):
+                    self.wait_before_reconnect()
                     self.source_cloud.reconnect()
                 except Exception:
                     # NOTE: at the very least for `except Exception`, let's print the traceback
                     # ideally we would never even use `except Exception`. Maybe this is technical debt.
                     # TODO: investigate what the exception we actually want to catch here
                     traceback.print_exc()
+                    self.wait_before_reconnect()
                     self.source_cloud.reconnect()
     
     def __del__(self):
