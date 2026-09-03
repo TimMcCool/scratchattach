@@ -14,3 +14,4 @@ identifier.sqlite
 obfuscated.sb3
 .pytest_cache
 .ruff_cache
+.vscode
