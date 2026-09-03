@@ -80,12 +80,14 @@ class BaseEventHandler(ABC):
         self.running = False
         thread = self._thread
         if thread is not None:
-            thread.join()
+            if thread.is_alive():
+                thread.join()
             self._thread = None
         if not wait_call_threads:
             return
         for thread in self._call_threads:
-            thread.join()
+            if thread.is_alive():
+                thread.join()
 
     def pause(self):
         """
@@ -93,7 +95,7 @@ class BaseEventHandler(ABC):
         """
         self.running = False
         thread = self._thread
-        if thread is not None:
+        if thread is not None and thread.is_alive():
             thread.join()
 
     def resume(self):

@@ -399,7 +399,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         """
         self.running = False
         thread = self._thread
-        if thread is not None:
+        if thread is not None and thread.is_alive():
             thread.join()
         self.close()
 
@@ -408,13 +408,15 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         self.running = False
         thread = self._thread
         if thread is not None:
-            thread.join()
+            if thread.is_alive():
+                thread.join()
             self._thread = None
         self.close()
         if not wait_call_threads:
             return
         for thread in self._call_threads:
-            thread.join()
+            if thread.is_alive():
+                thread.join()
 
 
 def init_cloud_server(
@@ -666,7 +668,7 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
         """
         self.running = False
         thread = self._thread
-        if thread is not None:
+        if thread is not None and thread.is_alive():
             thread.join()
         self.close()
 
@@ -675,13 +677,15 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
         self.running = False
         thread = self._thread
         if thread is not None:
-            thread.join()
+            if thread.is_alive():
+                thread.join()
             self._thread = None
         self.close()
         if not wait_call_threads:
             return
         for thread in self._call_threads:
-            thread.join()
+            if thread.is_alive():
+                thread.join()
 
 
 def init_ssl_cloud_server(
