@@ -169,7 +169,7 @@ class WebSocketEventStream(EventStream):
         # print("Receiving...")
         try:
             received = self.source_cloud.websocket.recv().splitlines()
-        except websocket.WebSocketTimeoutException:
+        except (websocket.WebSocketTimeoutException, ssl.SSLWantReadError):
             return
         # print(f"{received=}")
         self.packets_left.extend(received)
@@ -206,7 +206,7 @@ class WebSocketEventStream(EventStream):
                     # this could happen e.g. when the scratchattach server sends the message
                     # "This server uses @TimMcCool's scratchattach 2.0.0"
                     warnings.warn(f"Invalid JSON sent from server: {e}")
-                except (websocket.WebSocketConnectionClosedException, ssl.SSLWantReadError):
+                except websocket.WebSocketConnectionClosedException:
                     self.wait_before_reconnect()
                     self.source_cloud.reconnect()
                 except Exception:
