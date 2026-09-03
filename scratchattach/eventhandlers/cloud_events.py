@@ -63,7 +63,7 @@ class CloudEvents(BaseEventHandler):
                             #     continue
                             cloud_activity_dict = cast(CloudActivityDict, data)
                             cloud_activity_dict["variable_name"] = cloud_activity_dict["name"]
-                            cloud_activity_dict["name"] = cloud_activity_dict["variable_name"].replace("☁ ", "")
+                            cloud_activity_dict["name"] = cloud_activity_dict["variable_name"].removeprefix("☁ ")
                             _a._update_from_dict(cloud_activity_dict)
                             # print(f"sending event {_a}")
                             self.call_event(f"on_{_a.type}", [_a])

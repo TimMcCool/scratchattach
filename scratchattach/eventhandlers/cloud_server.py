@@ -55,7 +55,7 @@ class TwCloudSocket(WebSocket):
             data["name"],
             data["value"],
             user=data["user"],
-            skip_forward=self,
+            skip_broadcast_for=self,
             no_prefix=True,
         )
         send_to_clients: CloudActivityDict = {
@@ -64,7 +64,7 @@ class TwCloudSocket(WebSocket):
             "project_id": data["project_id"],
             "name": data["name"],
             "value": data["value"],
-            "timestamp": round(time.time() * 1000),
+            "timestamp": round(number=time.time() * 1000),
             "server": "scratchattach/3",
         }
         # TODO: Add a cloud to the activity dict (possibly some kind of adapter)
@@ -132,7 +132,7 @@ class TwCloudSocket(WebSocket):
                         {
                             "method": "set",
                             "project_id": data["project_id"],
-                            "name": "☁ " + varname,
+                            "name": varname,
                             "value": self.server.tw_variables[str(data["project_id"])][varname],
                             "server": "scratchattach/3",
                         }

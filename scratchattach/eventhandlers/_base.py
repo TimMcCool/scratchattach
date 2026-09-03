@@ -290,7 +290,7 @@ class BaseCloudServer(BaseEventHandler):
         value: Any,
         *,
         user: str = "@server",
-        skip_forward=None,
+        skip_broadcast_for: WebSocket | None = None,
         no_prefix: bool = False,
     ):
         if not no_prefix:
@@ -304,7 +304,7 @@ class BaseCloudServer(BaseEventHandler):
             for client in (
                 self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)
             ):
-                if client == skip_forward:
+                if client == skip_broadcast_for:
                     continue
                 client.sendMessage(
                     json.dumps(
