@@ -15,6 +15,7 @@ from SimpleWebSocketServer import WebSocket
 from scratchattach.utils.requests import requests
 from scratchattach.utils import exceptions
 
+
 class BaseEventHandler(ABC):
     _events: defaultdict[str, list[Callable]]
     _threaded_events: defaultdict[str, list[Callable]]
@@ -48,7 +49,7 @@ class BaseEventHandler(ABC):
                 self._thread = None
                 self._updater()
 
-    def call_event(self, event_name, args : list = []):
+    def call_event(self, event_name, args: list = []):
         try:
             # print(f"Calling for {event_name}...")
             if event_name in self._threaded_events:
@@ -62,15 +63,13 @@ class BaseEventHandler(ABC):
                     func(*args)
         except Exception as e:
             if self.ignore_exceptions:
-                print(
-                    f"Warning: Caught error in event '{event_name}' - Full error below"
-                )
+                print(f"Warning: Caught error in event '{event_name}' - Full error below")
                 try:
                     traceback.print_exc()
                 except Exception:
                     print(e)
             else:
-                raise(e)
+                raise (e)
 
     @abstractmethod
     def _updater(self):
@@ -114,6 +113,7 @@ class BaseEventHandler(ABC):
         """
         Decorator function. Adds an event.
         """
+
         def inner(function):
             # called directly if the decorator provides arguments
             if thread is True:
@@ -127,6 +127,7 @@ class BaseEventHandler(ABC):
         else:
             # => the decorator doesn't provide arguments
             inner(function)
+
 
 class BaseCloudServer(BaseEventHandler):
     """
@@ -146,7 +147,7 @@ class BaseCloudServer(BaseEventHandler):
     "Dictionary containing existing cloud variables."
     allow_non_numeric: bool
     "Whether or not non-numeric characters are allowed in cloud variable values."
-    whitelisted_projects: list[str] | None
+    whitelisted_projects: set[str] | None
     "Optional list of whitelisted projects."
     length_limit: int | None
     "Optional limit on the length of cloud variable values."
@@ -157,27 +158,24 @@ class BaseCloudServer(BaseEventHandler):
     sync_players: bool
     log_var_sets: bool
 
-    def __init__(self,
-                hostname: str,
-                *,
-                port: int,
-                websocketclass: type[WebSocket],
-                length_limit: int | None = None,
-                allow_non_numeric: bool = True,
-                whitelisted_projects: list[Any] | None = None,
-                allow_nonscratch_names: bool = True,
-                blocked_ips: list[str] | None = None,
-                sync_players: bool = True,
-                log_var_sets: bool = True
+    def __init__(
+        self,
+        hostname: str,
+        *,
+        port: int,
+        length_limit: int | None = None,
+        allow_non_numeric: bool = True,
+        whitelisted_projects: list[Any] | None = None,
+        allow_nonscratch_names: bool = True,
+        blocked_ips: list[str] | None = None,
+        sync_players: bool = True,
+        log_var_sets: bool = True,
     ):
 
         if blocked_ips is None:
             blocked_ips = []
 
         BaseEventHandler.__init__(self)
-
-        self.running = False
-        self._events = {}  # saves event functions called on cloud updates
 
         self.tw_clients = {}  # saves connected clients
         self.tw_variables = {}  # holds cloud variable states
@@ -187,7 +185,9 @@ class BaseCloudServer(BaseEventHandler):
 
         # server config
         self.allow_non_numeric = allow_non_numeric
-        self.whitelisted_projects = whitelisted_projects
+        self.whitelisted_projects = (
+            {str(i) for i in whitelisted_projects} if whitelisted_projects else None
+        )
         self.length_limit = length_limit
         self.allow_nonscratch_names = allow_nonscratch_names
         self.blocked_ips = blocked_ips
@@ -216,22 +216,25 @@ class BaseCloudServer(BaseEventHandler):
     def active_user_names(self, project_id):
         return [self.tw_clients[user]["username"] for user in self.active_user_ips(project_id)]
 
-    def active_user_ips(self, project_id):
-        return list(filter(lambda user: str(self.tw_clients[user]["project_id"]) == str(project_id), self.tw_clients))
+    def active_user_ips(self, project_id: Any):
+        project_id = str(project_id)
+        return [
+            user
+            for user in self.tw_clients
+            if str(self.tw_clients[user]["project_id"]) == project_id
+        ]
 
     def get_global_vars(self):
         return self.tw_variables
 
-    def get_project_vars(self, project_id):
+    def get_project_vars(self, project_id: Any):
         project_id = str(project_id)
-        if project_id in self.tw_variables:
-            return self.tw_variables[project_id]
-        else:
-            return {}
+        return self.tw_variables.get(project_id, {})
 
-    def get_var(self, project_id, var_name):
+    def get_var(self, project_id: Any, var_name: str, *, no_prefix: bool = False):
         project_id = str(project_id)
-        var_name = var_name.replace("☁ ", "")
+        if not no_prefix:
+            var_name = "☁ " + var_name.removeprefix("☁ ")
         if project_id in self.tw_variables:
             if var_name in self.tw_variables[project_id]:
                 return self.tw_variables[project_id][var_name]
@@ -240,13 +243,26 @@ class BaseCloudServer(BaseEventHandler):
         else:
             return None
 
-    def set_global_vars(self, data):
-        for project_id in data:
-            self.set_project_vars(project_id, data[project_id])
+    def set_global_vars(
+        self,
+        data: dict[str, dict[str, Any]],
+        no_prefix: bool = False,
+    ):
+        for project_id, project_data in data.items():
+            self.set_project_vars(project_id, project_data, no_prefix=no_prefix)
 
-    def set_project_vars(self, project_id, data, *, user="@server"):
+    def set_project_vars(
+        self,
+        project_id: Any,
+        data: dict[str, Any],
+        *,
+        user: str = "@server",
+        no_prefix: bool = False,
+    ):
         project_id = str(project_id)
-        self.tw_variables[project_id] = data
+        if not no_prefix:
+            data = {"☁ " + key.removeprefix("☁ "): value for key, value in data.items()}
+        self.tw_variables[project_id].update(data)
         for client in (self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)):
             client.sendMessage(
                 "\n".join(
@@ -255,9 +271,9 @@ class BaseCloudServer(BaseEventHandler):
                             {
                                 "method": "set",
                                 "project_id": project_id,
-                                "name": "☁ " + varname,
+                                "name": varname,
                                 "value": data[varname],
-                                "server": "scratchattach/2.0.0",
+                                "server": "scratchattach/3",
                                 "timestamp": time.time() * 1000,
                                 "user": user,
                             }
@@ -267,15 +283,27 @@ class BaseCloudServer(BaseEventHandler):
                 )
             )
 
-    def set_var(self, project_id, var_name, value, *, user="@server", skip_forward=None):
-        var_name = var_name.replace("☁ ", "")
+    def set_var(
+        self,
+        project_id: Any,
+        var_name: str,
+        value: Any,
+        *,
+        user: str = "@server",
+        skip_forward=None,
+        no_prefix: bool = False,
+    ):
+        if not no_prefix:
+            var_name = "☁ " + var_name.removeprefix("☁ ")
         project_id = str(project_id)
         if project_id not in self.tw_variables:
             self.tw_variables[project_id] = {}
         self.tw_variables[project_id][var_name] = value
 
         if self.sync_players is True:
-            for client in (self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)):
+            for client in (
+                self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)
+            ):
                 if client == skip_forward:
                     continue
                 client.sendMessage(
@@ -283,7 +311,7 @@ class BaseCloudServer(BaseEventHandler):
                         {
                             "method": "set",
                             "project_id": project_id,
-                            "name": "☁ " + var_name,
+                            "name": var_name,
                             "value": value,
                             "timestamp": time.time() * 1000,
                             "user": user,

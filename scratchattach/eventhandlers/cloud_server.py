@@ -1,4 +1,5 @@
 from __future__ import annotations
+from scratchattach.site.typed_dicts import CloudActivityDict
 
 import json
 import time
@@ -14,24 +15,27 @@ from scratchattach.site import cloud_activity
 from scratchattach.site.user import User
 from ._base import BaseCloudServer
 
+
 class TwCloudSocket(WebSocket):
     server: TwCloudServer
 
     def handle_set(self, data: dict):
         # cloud variable set received
         # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
-        if self.server.whitelisted_projects is not None:
-            if data["project_id"] not in self.server.whitelisted_projects:
-                self.close(4002)
-                if self.server.log_var_sets:
-                    print(
-                        self.address[0] + ":" + str(self.address[1]),
-                        "tried to set a var on non-whitelisted project and was disconnected, project:",
-                        data["project_id"],
-                        "user:",
-                        data["user"],
-                    )
-                return
+        if (
+            self.server.whitelisted_projects is not None
+            and str(data["project_id"]) not in self.server.whitelisted_projects
+        ):
+            self.close(4002)
+            if self.server.log_var_sets:
+                print(
+                    self.address[0] + ":" + str(self.address[1]),
+                    "tried to set a var on non-whitelisted project and was disconnected, project:",
+                    data["project_id"],
+                    "user:",
+                    data["user"],
+                )
+            return
         # check if value is valid
         if not self.server._check_value(data["value"]):
             if self.server.log_var_sets:
@@ -46,8 +50,15 @@ class TwCloudSocket(WebSocket):
                 "user:",
                 data["user"],
             )
-        self.server.set_var(data["project_id"], data["name"], data["value"], user=data["user"], skip_forward=self)
-        send_to_clients = {
+        self.server.set_var(
+            data["project_id"],
+            data["name"],
+            data["value"],
+            user=data["user"],
+            skip_forward=self,
+            no_prefix=True,
+        )
+        send_to_clients: CloudActivityDict = {
             "method": "set",
             "user": data["user"],
             "project_id": data["project_id"],
@@ -56,46 +67,53 @@ class TwCloudSocket(WebSocket):
             "timestamp": round(time.time() * 1000),
             "server": "scratchattach/2.0.0",
         }
+        # TODO: Add a cloud to the activity dict (possibly some kind of adapter)
         # raise event
         _a = cloud_activity.CloudActivity(timestamp=time.time() * 1000)
-        data["name"] = data["name"].replace("☁ ", "")
         _a._update_from_dict(send_to_clients)
         self.server.call_event("on_set", [_a, self])
 
     def handle_handshake(self, data: dict):
         # check if handshake is valid
         if not "user" in data:
-            print(self.address[0] + ":" + str(self.address[1]), "tried to handshake without providing a username")
+            print(
+                self.address[0] + ":" + str(self.address[1]),
+                "tried to handshake without providing a username",
+            )
             self.close(4002)
             return
         if not "project_id" in data:
-            print(self.address[0] + ":" + str(self.address[1]), "tried to handshake without providing a project_id")
+            print(
+                self.address[0] + ":" + str(self.address[1]),
+                "tried to handshake without providing a project_id",
+            )
             self.close(4002)
             return
         # check if project_id is in username is allowed
-        if self.server.allow_nonscratch_names is False:
-            if not User(username=data["user"]).does_exist():
-                print(
-                    self.address[0] + ":" + str(self.address[1]),
-                    "tried to handshake using a username not existing on Scratch, project:",
-                    data["project_id"],
-                    "user:",
-                    data["user"],
-                )
-                self.close(4002)
-                return
+        if not self.server.allow_nonscratch_names and not User(username=data["user"]).does_exist():
+            print(
+                self.address[0] + ":" + str(self.address[1]),
+                "tried to handshake using a username not existing on Scratch, project:",
+                data["project_id"],
+                "user:",
+                data["user"],
+            )
+            self.close(4002)
+            return
         # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
-        if self.server.whitelisted_projects is not None:
-            if str(data["project_id"]) not in self.server.whitelisted_projects:
-                self.close(4002)
-                print(
-                    self.address[0] + ":" + str(self.address[1]),
-                    "tried to handshake on a non-whitelisted project:",
-                    data["project_id"],
-                    "user:",
-                    data["user"],
-                )
-                return
+        if (
+            self.server.whitelisted_projects is not None
+            and str(data["project_id"]) not in self.server.whitelisted_projects
+        ):
+            self.close(4002)
+            print(
+                self.address[0] + ":" + str(self.address[1]),
+                "tried to handshake on a non-whitelisted project:",
+                data["project_id"],
+                "user:",
+                data["user"],
+            )
+            return
         # register handshake in users list (save username and project_id)
         print(
             self.address[0] + ":" + str(self.address[1]),
@@ -159,7 +177,11 @@ class TwCloudSocket(WebSocket):
                 return
 
             print(self.address[0] + ":" + str(self.address[1]), "connected")
-            self.server.tw_clients[self.address] = {"client": self, "username": None, "project_id": None}
+            self.server.tw_clients[self.address] = {
+                "client": self,
+                "username": None,
+                "project_id": None,
+            }
             # raise event
             self.server.call_event("on_connect", [self])
         except Exception as e:
@@ -204,17 +226,20 @@ class TwCloudServer(BaseCloudServer, SimpleWebSocketServer):
 
         SimpleWebSocketServer.__init__(self, hostname, port=port, websocketclass=websocketclass)
 
-        BaseCloudServer.__init__(self,
-                                hostname=hostname,
-                                port=port,
-                                websocketclass=websocketclass,
-                                length_limit=length_limit,
-                                allow_non_numeric=allow_non_numeric,
-                                whitelisted_projects=whitelisted_projects,
-                                allow_nonscratch_names=allow_nonscratch_names,
-                                blocked_ips=blocked_ips,
-                                sync_players=sync_players,
-                                log_var_sets=log_var_sets)
+        BaseCloudServer.__init__(
+            self,
+            hostname=hostname,
+            port=port,
+            websocketclass=websocketclass,
+            length_limit=length_limit,
+            allow_non_numeric=allow_non_numeric,
+            whitelisted_projects=whitelisted_projects,
+            allow_nonscratch_names=allow_nonscratch_names,
+            blocked_ips=blocked_ips,
+            sync_players=sync_players,
+            log_var_sets=log_var_sets,
+        )
+
 
 class TwSSLCloudServer(BaseCloudServer, SimpleSSLWebSocketServer):
     def __init__(
@@ -233,7 +258,7 @@ class TwSSLCloudServer(BaseCloudServer, SimpleSSLWebSocketServer):
         allow_nonscratch_names: bool = True,
         blocked_ips: list[str] | None = None,
         sync_players: bool = True,
-        log_var_sets: bool = True
+        log_var_sets: bool = True,
     ):
         SimpleSSLWebSocketServer.__init__(
             self,
@@ -246,17 +271,19 @@ class TwSSLCloudServer(BaseCloudServer, SimpleSSLWebSocketServer):
             ssl_context=ssl_context,
         )
 
-        BaseCloudServer.__init__(self,
-                                hostname=hostname,
-                                port=port,
-                                websocketclass=websocketclass,
-                                length_limit=length_limit,
-                                allow_non_numeric=allow_non_numeric,
-                                whitelisted_projects=whitelisted_projects,
-                                allow_nonscratch_names=allow_nonscratch_names,
-                                blocked_ips=blocked_ips,
-                                sync_players=sync_players,
-                                log_var_sets=log_var_sets)
+        BaseCloudServer.__init__(
+            self,
+            hostname=hostname,
+            port=port,
+            websocketclass=websocketclass,
+            length_limit=length_limit,
+            allow_non_numeric=allow_non_numeric,
+            whitelisted_projects=whitelisted_projects,
+            allow_nonscratch_names=allow_nonscratch_names,
+            blocked_ips=blocked_ips,
+            sync_players=sync_players,
+            log_var_sets=log_var_sets,
+        )
 
     def _updater(self):
         try:
@@ -266,9 +293,10 @@ class TwSSLCloudServer(BaseCloudServer, SimpleSSLWebSocketServer):
         except Exception as e:
             raise exceptions.WebsocketServerError(str(e))
 
+
 def init_cloud_server(
-    hostname: str="127.0.0.1",
-    port: int=8080,
+    hostname: str = "127.0.0.1",
+    port: int = 8080,
     *,
     length_limit: int | None = None,
     allow_non_numeric: bool = True,
@@ -299,6 +327,7 @@ def init_cloud_server(
         log_var_sets=log_var_sets,
     )
 
+
 def init_ssl_cloud_server(
     hostname: str = "127.0.0.1",
     port: int = 8080,
@@ -313,7 +342,7 @@ def init_ssl_cloud_server(
     allow_nonscratch_names: bool = True,
     blocked_ips: list[str] | None = None,
     sync_players: bool = True,
-    log_var_sets: bool =    True
+    log_var_sets: bool = True,
 ) -> TwSSLCloudServer:
     """
     Inits a websocket server which can be used with TurboWarp's ?cloud_host URL parameter.
@@ -321,8 +350,10 @@ def init_ssl_cloud_server(
     Prints out the websocket address in the console.
     """
     if (certfile is None or keyfile is None) and ssl_context is None:
-        warnings.warn("To init a ssl cloud server, you need provide `certfile` and "+
-                      "`keyfile` or `ssl_context`.")
+        warnings.warn(
+            "To init a ssl cloud server, you need provide `certfile` and "
+            + "`keyfile` or `ssl_context`."
+        )
 
     return TwSSLCloudServer(
         hostname,
@@ -338,5 +369,5 @@ def init_ssl_cloud_server(
         allow_nonscratch_names=allow_nonscratch_names,
         blocked_ips=blocked_ips,
         sync_players=sync_players,
-        log_var_sets=log_var_sets
+        log_var_sets=log_var_sets,
     )
