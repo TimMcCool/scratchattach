@@ -15,7 +15,7 @@ from .eventhandlers.cloud_server import (
     TwCloudServer,
     TwSSLCloudServer,
 )
-from .eventhandlers._base import BaseEventHandler
+from .eventhandlers._base import BaseEventHandler, BaseCloudServer
 from .eventhandlers.filterbot import Filterbot, HardFilter, SoftFilter, SpamFilter
 from .eventhandlers.cloud_storage import Database
 from .eventhandlers.combine import MultiEventHandler
