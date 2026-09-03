@@ -125,7 +125,7 @@ class WebSocketEventStream(EventStream):
     reading: Lock
     recent_reconnect_count: int
     most_recent_reconnection_time: float
-    RECENT_RECONNECT_TIME_DELTA = 1.0
+    RECENT_RECONNECT_TIME_DELTA: float = 1.0
     def __init__(self, cloud: BaseCloud):
         super().__init__()
         # NOTE: maybe consider using copy.copy here (copy.deepcopy doesn't work as you cannot deepcopy a Thread)
