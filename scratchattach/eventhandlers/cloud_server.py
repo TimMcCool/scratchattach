@@ -65,7 +65,7 @@ class TwCloudSocket(WebSocket):
             "name": data["name"],
             "value": data["value"],
             "timestamp": round(time.time() * 1000),
-            "server": "scratchattach/2.0.0",
+            "server": "scratchattach/3",
         }
         # TODO: Add a cloud to the activity dict (possibly some kind of adapter)
         # raise event
@@ -134,7 +134,7 @@ class TwCloudSocket(WebSocket):
                             "project_id": data["project_id"],
                             "name": "☁ " + varname,
                             "value": self.server.tw_variables[str(data["project_id"])][varname],
-                            "server": "scratchattach/2.0.0",
+                            "server": "scratchattach/3",
                         }
                     )
                     for varname in self.server.get_project_vars(str(data["project_id"]))
