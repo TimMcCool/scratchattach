@@ -337,6 +337,7 @@ class BaseCloudServer(BaseEventHandler):
             print(f"Serving websocket server: ws://{self.hostname}:{self.port}")
             while self.running:
                 self.serveonce()
+                time.sleep(0.01)
         except Exception as e:
             raise exceptions.WebsocketServerError(str(e))
 
