@@ -200,7 +200,7 @@ class BaseCloudServer(BaseEventHandler):
             or client.address[0] + ":" + str(client.address[1]) in self.blocked_ips
             or client.address in self.blocked_ips
         ):
-            client.sendMessage("You have been banned from this server")
+            client.sendMessage("You have been banned from this server. Contanct the server host for assistance")
             client.close(4002)
             print(f"[yellow]Client {client.address[0]}:{client.address[1]} was forced disconnected "+
                   "due to IP ban. [b]If this dosen't look right, remove them from the list.[/][/]")
