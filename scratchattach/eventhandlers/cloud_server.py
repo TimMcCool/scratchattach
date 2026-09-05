@@ -13,6 +13,7 @@ from SimpleWebSocketServer import SimpleSSLWebSocketServer, SimpleWebSocketServe
 from scratchattach.utils import exceptions
 from scratchattach.site import cloud_activity
 from scratchattach.site.user import User
+from scratchattach.cloud.cloud import CustomCloud
 from ._base import BaseCloudServer
 
 
@@ -60,14 +61,35 @@ class TwCloudSocket(WebSocket):
         )
         send_to_clients: CloudActivityDict = {
             "method": "set",
-            "user": data["user"],
             "project_id": data["project_id"],
             "name": data["name"],
             "value": data["value"],
-            "timestamp": round(number=time.time() * 1000),
-            "server": "scratchattach/3",
+            # TODO: Add a cloud to the activity dict (possibly some kind of adapter)
+            # NOTE: this is just a temporary fill-in
+            "cloud": CustomCloud(
+                project_id=data["project_id"],
+                cloud_host=f"ws://{self.server.hostname}:{self.server.port}",
+                username=data["user"],
+                length_limit=self.server.length_limit,
+                allow_non_numeric=self.server.allow_non_numeric,
+                _session=None,
+                header=None,
+                cookie=None,
+                origin=None,
+                print_connect_messages=True,
+            ) if self.server.__dict__.get("ssl_context", None) else CustomCloud(
+                project_id=data["project_id"],
+                cloud_host=f"wss://{self.server.hostname}:{self.server.port}",
+                username=data["user"],
+                length_limit=self.server.length_limit,
+                allow_non_numeric=self.server.allow_non_numeric,
+                _session=None,
+                header=None,
+                cookie=None,
+                origin=None,
+                print_connect_messages=True,
+            ),
         }
-        # TODO: Add a cloud to the activity dict (possibly some kind of adapter)
         # raise event
         _a = cloud_activity.CloudActivity(timestamp=time.time() * 1000)
         _a._update_from_dict(send_to_clients)
