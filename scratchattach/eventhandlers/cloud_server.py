@@ -78,13 +78,13 @@ class TwCloudSocket(WebSocket):
 
     def handle_handshake(self, data: dict):
         # check if handshake is valid
-        if not data["user"]:
+        if not "user" in data:
             print("[red]Error: "+
                   str(self.address[0]) + ":" + str(self.address[1])+
                   " tried to handshake without providing a username.[/]")
-            self.close(4002)
+            self.close(4002, "Please provide a username.")
             return
-        if not data["project_id"]:
+        if not "project_id" in data:
             print("[red]Error: "+
                   str(self.address[0]) + ":" + str(self.address[1])+
                   " tried to handshake without providing a project_id.[/]")
