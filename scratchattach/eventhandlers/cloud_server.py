@@ -17,7 +17,7 @@ from ._base import BaseCloudServer
 
 
 class TwCloudSocket(WebSocket):
-    server: TwCloudServer
+    server: TwCloudServer | TwSSLCloudServer
 
     def handle_set(self, data: dict):
         # cloud variable set received
