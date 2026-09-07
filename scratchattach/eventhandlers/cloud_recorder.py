@@ -24,12 +24,12 @@ class CloudRecorder(CloudEvents):
             self.has_data.set()
         self.event(self.on_set)
 
-    def get_var(self, var):
+    def get_var(self, var) -> Any | None:
         if var not in self.cloud_values:
             return None
         return self.cloud_values[var]
 
-    def get_all_vars(self):
+    def get_all_vars(self) -> dict[str, Any]:
         return self.cloud_values.copy()
 
     def on_set(self, activity: cloud_activity.CloudActivity):
