@@ -3,12 +3,12 @@ from typing_extensions import Optional, Literal
 
 
 class ArgSpace(argparse.Namespace):
-    command: Optional[Literal['login', 'group', 'profile', 'sessions']]
+    command: Literal['login', 'group', 'profile', 'sessions'] | None
     sessid: bool | str
-    username: Optional[str]
-    studio_id: Optional[str]
-    project_id: Optional[str]
-    session_name: Optional[str]
+    username: str | None
+    studio_id: str | None
+    project_id: str | None
+    session_name: str | None
 
-    group_command: Optional[Literal['list', 'new', 'switch', 'add', 'remove',  'delete', 'copy', 'rename']]
+    group_command: Literal['list', 'new', 'switch', 'add', 'remove',  'delete', 'copy', 'rename'] | None
     group_name: str

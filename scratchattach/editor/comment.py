@@ -8,9 +8,9 @@ class Comment(base.IDComponent):
     """
     Represents a comment in the scratch editor.
     """
-    def __init__(self, _id: Optional[str] = None, _block: Optional[block.Block] = None, x: int = 0, y: int = 0, width: int = 200,
-                 height: int = 200, minimized: bool = False, text: str = '', *, _block_id: Optional[str] = None,
-                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT, pos: Optional[tuple[int, int]] = None):
+    def __init__(self, _id: str] = None, _block: Optional[block.Block | None = None, x: int = 0, y: int = 0, width: int = 200,
+                 height: int = 200, minimized: bool = False, text: str = '', *, _block_id: str | None = None,
+                 _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT, pos: tuple[int, int] | None = None):
         self.block = _block
         self._block_id = _block_id
         """

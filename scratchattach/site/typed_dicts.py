@@ -122,7 +122,7 @@ class ClassroomDict(TypedDict):
     description: str
     status: str
     date_start: NotRequired[str]
-    date_end: NotRequired[Optional[str]]
+    date_end: NotRequired[str] | None
     images: NotRequired[dict[str, str]]
     educator: UserDict
     is_closed: NotRequired[bool]
@@ -177,8 +177,8 @@ class ProjectStatsDict(TypedDict):
     remixes: int
 
 class ProjectRemixDict(TypedDict):
-    parent: Optional[int]
-    root: Optional[int]
+    parent: int | None
+    root: int | None
 
 class ProjectDict(TypedDict):
     id: int
@@ -205,4 +205,4 @@ class PlaceholderProjectDataMetadataDict(TypedDict):
 class PlaceholderProjectDataDict(TypedDict):
     metadata: PlaceholderProjectDataMetadataDict
     md5extsToSha256: OrderedDict[str, str]
-    adminOwnershipToken: Optional[str]
+    adminOwnershipToken: str | None

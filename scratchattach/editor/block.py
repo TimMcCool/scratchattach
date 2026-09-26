@@ -13,24 +13,24 @@ class Block(base.SpriteSubComponent):
     Represents a block in the scratch editor, as a subcomponent of a sprite.
     """
 
-    _id: Optional[str] = None
+    _id: str | None = None
 
     def __init__(
         self,
         _opcode: str,
         _shadow: bool = False,
-        _top_level: Optional[bool] = None,
-        _mutation: Optional[mutation.Mutation] = None,
-        _fields: Optional[dict[str, field.Field]] = None,
-        _inputs: Optional[dict[str, inputs.Input]] = None,
+        _top_level: bool | None = None,
+        _mutation: mutation.Mutation | None = None,
+        _fields: dict[str, field.Field] | None = None,
+        _inputs: dict[str, inputs.Input] | None = None,
         x: int = 0,
         y: int = 0,
-        pos: Optional[tuple[int, int]] = None,
-        _next: Optional[Block] = None,
-        _parent: Optional[Block] = None,
+        pos: tuple[int, int] | None = None,
+        _next: Block | None = None,
+        _parent: Block | None = None,
         *,
-        _next_id: Optional[str] = None,
-        _parent_id: Optional[str] = None,
+        _next_id: str | None = None,
+        _parent_id: str | None = None,
         _sprite: commons.SpriteInput = build_defaulting.SPRITE_DEFAULT,
     ):
         # Defaulting for args

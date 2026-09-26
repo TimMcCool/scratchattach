@@ -15,11 +15,11 @@ C = TypeVar("C", bound="BaseSiteComponent")
 
 
 class BaseSiteComponent(ABC, Generic[D]):
-    _session: Optional[session.Session]
+    _session: session.Session | None
     update_api: str
     _headers: dict[str, str]
     _cookies: dict[str, str]
-    oa_http_session: Optional[m_requests.OAHTTPSession] = None
+    oa_http_session: m_requests.OAHTTPSession | None = None
 
     # @abstractmethod
     # def __init__(self):  # dataclasses do not implement __init__ directly
@@ -82,11 +82,11 @@ class BaseSiteComponent(ABC, Generic[D]):
         method: Union[m_requests.HTTPMethod, str],
         url: str,
         *,
-        cookies: Optional[dict[str, str]] = None,
-        headers: Optional[dict[str, str]] = None,
-        params: Optional[dict[str, str]] = None,
-        data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[Any] = None,
+        cookies: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
+        params: dict[str, str] | None = None,
+        data: Union[dict[str, str], str] | None = None,
+        json: Any | None = None,
     ) -> optional_async.CARequest:
         if self.oa_http_session is None:
             raise ValueError("This BaseSiteComponent has no oa_http_session.")

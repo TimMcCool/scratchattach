@@ -58,7 +58,7 @@ def remove_nones(obj: dict) -> None:
         del obj[key]
 
 
-def safe_get(lst: list | tuple, _i: int, default: Optional[Any] = None) -> Any:
+def safe_get(lst: list | tuple, _i: int, default: Any | None = None) -> Any:
     """
     Like dict.get() but for lists
     """
@@ -81,7 +81,7 @@ def trim_final_nones(lst: list[T]) -> list[T]:
     return lst[:i]
 
 
-def dumps_ifnn(obj: Any) -> Optional[str]:
+def dumps_ifnn(obj: Any) -> str | None:
     """
     Return json.dumps(obj) if the object is not None
     """

@@ -41,11 +41,11 @@ class ForumTopic(BaseSiteComponent):
     '''
     id: int
     title: str
-    category_name: Optional[str] = None
-    last_updated: Optional[str] = None
-    _session: Optional[module_session.Session] = field(default=None)
-    reply_count: Optional[int] = field(default=None)
-    view_count: Optional[int] = field(default=None)
+    category_name: str | None = None
+    last_updated: str | None = None
+    _session: module_session.Session | None = field(default=None)
+    reply_count: int | None = field(default=None)
+    view_count: int | None = field(default=None)
 
     def __str__(self):
         return f"-F {self.title} ({self.id})"
@@ -79,7 +79,7 @@ class ForumTopic(BaseSiteComponent):
         # Check for 429 error:
         if "429" in str(response):
             return "429"
-        
+
         # Parse XML response
         if response.status_code == 200:
             try:
@@ -98,14 +98,14 @@ class ForumTopic(BaseSiteComponent):
         self.category_name = category_name
         self.last_updated = last_updated
         return True
-    
+
     @classmethod
     def from_id(cls, __id: int, session: module_session.Session, update: bool = False):
         new = cls(id=__id, _session=session, title="", last_updated="", category_name="")
         if update:
             new.update()
         return new
-    
+
     def _update_from_dict(self, data: dict[str, Any]):
         self.__dict__.update(data)
 
@@ -115,13 +115,13 @@ class ForumTopic(BaseSiteComponent):
             page (int): The page of the forum topic that should be returned. First page is at index 1.
 
         Returns:
-            list<scratchattach.forum.ForumPost>: A list containing the posts from the specified page of the forum topic 
+            list<scratchattach.forum.ForumPost>: A list containing the posts from the specified page of the forum topic
         """
         if order != "oldest":
             warnings.warn("Warning: All post orders except for 'oldest' are deprecated and no longer work") # For backwards compatibility
 
         posts = []
-        
+
         try:
             url = f"https://scratch.mit.edu/discuss/topic/{self.id}/?page={page}"
             response = requests.get(url, headers=headers, cookies=self._cookies)
@@ -149,7 +149,7 @@ class ForumTopic(BaseSiteComponent):
             except Exception as e:
                 warnings.warn(f"Warning: Couldn't scrape topic category for topic {self.id} - {e}")
                 topic_category = ""
-                
+
             # get corresponding posts:
             post_htmls = soup.find_all('div', class_='blockpost')
             for raw_post in post_htmls:
@@ -167,7 +167,7 @@ class ForumTopic(BaseSiteComponent):
     def first_post(self):
         """
         Returns:
-            scratchattach.forum.ForumPost: An object representing the first topic post 
+            scratchattach.forum.ForumPost: An object representing the first topic post
         """
         posts = self.posts(page=1)
         if len(posts) > 0:
@@ -203,7 +203,7 @@ class ForumPost(BaseSiteComponent):
     :.content: Returns the content as text
 
     :.post_index: The index that the post has in the topic
-        
+
     :.update(): Updates the attributes
     '''
     id: int = field(default=0)
@@ -218,7 +218,7 @@ class ForumPost(BaseSiteComponent):
     html_content: str = field(default="")
     content: str = field(default="")
     post_index: int = field(default=0)
-    _session: Optional[module_session.Session] = field(default=None)
+    _session: module_session.Session | None = field(default=None)
     def __post_init__(self):
 
         # A forum post can't be updated the usual way as there is no API anymore
@@ -236,7 +236,7 @@ class ForumPost(BaseSiteComponent):
         self._json_headers = dict(self._headers)
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
-    
+
     def update_function(self, *args, **kwargs):
         raise TypeError("Forum posts cannot be updated like this")
 
@@ -261,7 +261,7 @@ class ForumPost(BaseSiteComponent):
     def _update_from_dict(self, data: dict[str, Any]):
         self.__dict__.update(data)
         return True
-    
+
     def update_from_html(self, soup_html: Tag):
         return self._update_from_html(soup_html)
 
@@ -278,7 +278,7 @@ class ForumPost(BaseSiteComponent):
         assert isinstance(author_name_elm, Tag)
         topic_name_elm = soup_html.find('h3')
         assert isinstance(topic_name_elm, Tag)
-        
+
         self.post_index = int(post_index_elm.text.strip('#'))
         self.id = int(id_attr.replace("p", ""))
         self.posted = posted_elm.text.strip()
@@ -305,15 +305,15 @@ class ForumPost(BaseSiteComponent):
             scratchattach.user.User: An object representing the user who created this forum post.
         """
         return self._make_linked_object("username", self.author_name, user.User, exceptions.UserNotFound)
-    
+
     def edit(self, new_content: str):
         """
         Changes the content of the forum post.  You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_post` or through another method that requires authentication. You must own the forum post.
-        
+
         Args:
             new_content (str): The text that the forum post will be set to.
         """
-        
+
         self._assert_auth()
 
         cookies = dict(self._cookies)
@@ -359,7 +359,7 @@ def get_topic(topic_id) -> ForumTopic:
         Scratch's API uses very heavy caching for logged out users, therefore the returned data will not be up to date.
 
         Any methods that require authentication will not work on the returned object.
-        
+
         If you need up-to-date data or want to use methods that require authentication, create the object with :meth:`scratchattach.session.Session.connect_topic` instead.
     """
     return commons._get_object("id", topic_id, ForumTopic, exceptions.ForumContentNotFound)
@@ -372,7 +372,7 @@ def get_topic_list(category_id, *, page=1):
 
     Args:
         category_id (str): ID of the forum category
-    
+
     Keyword Arguments:
         page (str): Page of the category topics that should be returned
 
