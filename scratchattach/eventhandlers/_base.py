@@ -13,7 +13,7 @@ class BaseEventHandler(ABC):
     _events: defaultdict[str, list[Callable]]
     _threaded_events: defaultdict[str, list[Callable]]
     running: bool
-    _thread: Optional[Thread]
+    _thread: Thread | None
     _call_threads: list[Thread]
 
     def __init__(self):
@@ -41,7 +41,7 @@ class BaseEventHandler(ABC):
             else:
                 self._thread = None
                 self._updater()
-    
+
     def call_event(self, event_name, args : list = []):
         try:
             # print(f"Calling for {event_name}...")
@@ -69,7 +69,7 @@ class BaseEventHandler(ABC):
     @abstractmethod
     def _updater(self):
         pass
-    
+
     def __del__(self):
         self.stop()
 

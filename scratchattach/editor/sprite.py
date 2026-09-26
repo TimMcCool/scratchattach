@@ -21,16 +21,16 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
         is_stage: bool = False,
         name: str = "",
         _current_costume: int = 1,
-        _layer_order: Optional[int] = None,
+        _layer_order: int | None = None,
         _volume: int = 100,
-        _broadcasts: Optional[list[vlb.Broadcast]] = None,
-        _variables: Optional[list[vlb.Variable]] = None,
-        _lists: Optional[list[vlb.List]] = None,
-        _costumes: Optional[list[asset.Costume]] = None,
-        _sounds: Optional[list[asset.Sound]] = None,
-        _comments: Optional[list[comment.Comment]] = None,
-        _prims: Optional[dict[str, prim.Prim]] = None,
-        _blocks: Optional[dict[str, block.Block]] = None,
+        _broadcasts: list[vlb.Broadcast] | None = None,
+        _variables: list[vlb.Variable] | None = None,
+        _lists: list[vlb.List] | None = None,
+        _costumes: list[asset.Costume] | None = None,
+        _sounds: list[asset.Sound] | None = None,
+        _comments: list[comment.Comment] | None = None,
+        _prims: dict[str, prim.Prim] | None = None,
+        _blocks: dict[str, block.Block] | None = None,
         # Stage only:
         _tempo: int | float = 60,
         _video_state: str = "off",
@@ -45,7 +45,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
         _draggable: bool = False,
         _rotation_style: str = "all around",
         *,
-        _project: Optional[project.Project] = None,
+        _project: project.Project | None = None,
     ):
         """
         Represents a sprite or the stage (known internally as a Target)
@@ -384,7 +384,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
 
     # Finding/getting from list/dict attributes
     def find_asset(
-        self, value: str, by: str = "name", multiple: bool = False, a_type: Optional[type] = None
+        self, value: str, by: str = "name", multiple: bool = False, a_type: type | None = None
     ) -> None | asset.Asset | asset.Sound | asset.Costume | list[asset.Asset | asset.Sound | asset.Costume]:
         if a_type is None:
             a_type = asset.Asset
@@ -558,7 +558,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
             return _ret
         return None
 
-    def export(self, fp: Optional[str] = None, *, export_as_zip: bool = True):
+    def export(self, fp: str | None = None, *, export_as_zip: bool = True):
         if fp is None:
             fp = commons.sanitize_fn(f"{self.name}.sprite3")
 
@@ -587,7 +587,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
         return ret
 
     @staticmethod
-    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None):  # noqa: C901
+    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str | None = None):  # noqa: C901
         _dir_for_name = None
 
         if _name is None:
@@ -634,7 +634,7 @@ class Sprite(base.ProjectSubcomponent, base.JSONExtractable):
             return _name, asset_data, json_str
 
     @classmethod
-    def from_sprite3(cls, data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None):
+    def from_sprite3(cls, data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str | None = None):
         """
         Load a project from an .sb3 file/bytes/file path
         """

@@ -14,18 +14,18 @@ R = TypeVar("R")
 
 class CallableAwaitable(Generic[R], ABC, Awaitable[R]):
     result: R
-    
+
     @abstractmethod
     def sync_impl(self) -> R:
         pass
-    
+
     def __pos__(self) -> R:
         return self.sync_impl()
-    
+
     @abstractmethod
     async def async_impl(self) -> R:
         pass
-    
+
     def __await__(self) -> Generator[None, None, R]:
         return self.async_impl().__await__()
 
@@ -46,7 +46,7 @@ def optionally_async(func: Callable[P, Generator[CallableAwaitable, None, R]]) -
                             c.result = +c
                     except StopIteration as excp:
                         return excp.value
-                
+
                 async def async_impl(self) -> R:
                     i = func(*args, **kwargs)
                     try:
@@ -55,7 +55,7 @@ def optionally_async(func: Callable[P, Generator[CallableAwaitable, None, R]]) -
                             c.result = await c
                     except StopIteration as excp:
                         return excp.value
-            
+
             return Implementation()
     return Wrapped()
 
@@ -85,14 +85,14 @@ def make_sync(func: Callable[P, Generator[CallableAwaitable, None, R]]) -> Calla
 
 class CASleep(CallableAwaitable[bool]):
     amount: float
-    
+
     def __init__(self, amount: float) -> None:
         self.amount = amount
-    
+
     def sync_impl(self):
         time.sleep(self.amount)
         return True
-    
+
     async def async_impl(self):
         await asyncio.sleep(self.amount)
         return True
@@ -104,23 +104,23 @@ class CARequest(CallableAwaitable["requests.AnyHTTPResponse"]):
     requests_session: requests.OAHTTPSession
     method: requests.HTTPMethod
     url: str
-    cookies: Optional[dict[str, str]]
-    headers: Optional[dict[str, str]]
-    params: Optional[dict[str, str]]
-    data: Optional[Union[dict[str, str], str]]
-    json: Optional[dict[str, str]]
-    
+    cookies: dict[str, str] | None
+    headers: dict[str, str] | None
+    params: dict[str, str] | None
+    data: Union[dict[str, str], str] | None
+    json: dict[str, str] | None
+
     def __init__(
         self,
         requests_session: requests.OAHTTPSession,
         method: requests.HTTPMethod,
         url: str,
         *,
-        cookies: Optional[dict[str, str]] = None,
-        headers: Optional[dict[str, str]] = None,
-        params: Optional[dict[str, str]] = None,
-        data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[Any] = None
+        cookies: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
+        params: dict[str, str] | None = None,
+        data: Union[dict[str, str], str] | None = None,
+        json: Any | None = None
     ) -> None:
         self.requests_session = requests_session
         self.method = method
@@ -130,7 +130,7 @@ class CARequest(CallableAwaitable["requests.AnyHTTPResponse"]):
         self.params = params
         self.data = data
         self.json = json
-    
+
     def sync_impl(self):
         return self.requests_session.sync_request(
             method = self.method,
@@ -141,7 +141,7 @@ class CARequest(CallableAwaitable["requests.AnyHTTPResponse"]):
             data = self.data,
             json = self.json
         )
-    
+
     async def async_impl(self):
         return await self.requests_session.async_request(
             method = self.method,

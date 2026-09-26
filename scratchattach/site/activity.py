@@ -45,40 +45,40 @@ class Activity(BaseSiteComponent):
     Represents a Scratch activity (message or other user page activity)
     """
 
-    _session: Optional[session.Session] = None
+    _session: session.Session | None = None
     raw: Any = None
 
-    id: Optional[int] = None
-    actor_username: Optional[str] = None
+    id: int | None = None
+    actor_username: str | None = None
 
-    project_id: Optional[int] = None
-    gallery_id: Optional[int] = None
-    username: Optional[str] = None
-    followed_username: Optional[str] = None
-    recipient_username: Optional[str] = None
-    title: Optional[str] = None
-    project_title: Optional[str] = None
-    gallery_title: Optional[str] = None
-    topic_title: Optional[str] = None
-    topic_id: Optional[int] = None
-    target_name: Optional[str] = None
-    target_id: Optional[int | str] = None
+    project_id: int | None = None
+    gallery_id: int | None = None
+    username: str | None = None
+    followed_username: str | None = None
+    recipient_username: str | None = None
+    title: str | None = None
+    project_title: str | None = None
+    gallery_title: str | None = None
+    topic_title: str | None = None
+    topic_id: int | None = None
+    target_name: str | None = None
+    target_id: int | str | None = None
 
-    parent_title: Optional[str] = None
-    parent_id: Optional[int] = None
+    parent_title: str | None = None
+    parent_id: int | None = None
 
-    comment_type: Optional[int] = None
-    comment_obj_id: Optional[int] = None
-    comment_obj_title: Optional[str] = None
-    comment_id: Optional[int] = None
-    comment_fragment: Optional[str] = None
+    comment_type: int | None = None
+    comment_obj_id: int | None = None
+    comment_obj_title: str | None = None
+    comment_id: int | None = None
+    comment_fragment: str | None = None
 
-    changed_fields: Optional[dict[str, str]] = None
-    is_reshare: Optional[bool] = None
+    changed_fields: dict[str, str] | None = None
+    is_reshare: bool | None = None
 
-    datetime_created: Optional[str] = None
+    datetime_created: str | None = None
     time: Any = None
-    type: Optional[ActivityTypes] = None
+    type: ActivityTypes | None = None
 
     def __repr__(self):
         return f"Activity({repr(self.raw)})"
@@ -360,21 +360,21 @@ class Activity(BaseSiteComponent):
         """
         return self._make_linked_object("username", self.actor_username, user.User, exceptions.UserNotFound)
 
-    def target_project(self) -> Optional[project.Project]:
+    def target_project(self) -> project.Project | None:
         if self.target_id:
             return self._make_linked_object("id", self.target_id, project.Project, exceptions.ProjectNotFound)
         if self.project_id:
             return self._make_linked_object("id", self.project_id, project.Project, exceptions.ProjectNotFound)
         return None
 
-    def target_studio(self) -> Optional[studio.Studio]:
+    def target_studio(self) -> studio.Studio | None:
         if self.target_id:
             return self._make_linked_object("id", self.target_id, studio.Studio, exceptions.StudioNotFound)
         if self.gallery_id:
             return self._make_linked_object("id", self.gallery_id, studio.Studio, exceptions.StudioNotFound)
         return None
 
-    def target_user(self) -> Optional[user.User]:
+    def target_user(self) -> user.User | None:
         if self.username:
             return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
         if self.target_name:
@@ -385,7 +385,7 @@ class Activity(BaseSiteComponent):
             return self._make_linked_object("username", self.recipient_username, user.User, exceptions.UserNotFound)
         return None
 
-    def target_comment(self) -> Optional[comment.Comment]:
+    def target_comment(self) -> comment.Comment | None:
         # TODO: make use of self.target_project/target_user/target_studio here.
         # Also why is there no use of studio here??? This needs to be tested
         if self.comment_type == 0:

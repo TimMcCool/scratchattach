@@ -21,14 +21,14 @@ class Project(base.JSONExtractable):
 
     def __init__(
         self,
-        _name: Optional[str] = None,
-        _meta: Optional[meta.Meta] = None,
+        _name: str | None = None,
+        _meta: meta.Meta | None = None,
         _extensions: Iterable[extension.Extension] = (),
         _monitors: Iterable[monitor.Monitor] = (),
         _sprites: Iterable[sprite.Sprite] = (),
         *,
-        _asset_data: Optional[list[asset.AssetFile]] = None,
-        _session: Optional[session.Session] = None,
+        _asset_data: list[asset.AssetFile] | None = None,
+        _session: session.Session | None = None,
     ):
         # Defaulting for list parameters
         if _meta is None:
@@ -79,7 +79,7 @@ class Project(base.JSONExtractable):
         return _ret
 
     @property
-    def stage(self) -> Optional[sprite.Sprite]:
+    def stage(self) -> sprite.Sprite | None:
         for _sprite in self.sprites:
             if _sprite.is_stage:
                 return _sprite
@@ -152,7 +152,7 @@ class Project(base.JSONExtractable):
         return Project(None, _meta, _extensions, _monitors, _sprites)
 
     @staticmethod
-    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None):  # noqa: C901
+    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str | None = None):  # noqa: C901
         """
         Load project JSON and assets from an .sb3 file/bytes/file path
         :return: Project name, asset data, json string
@@ -204,7 +204,7 @@ class Project(base.JSONExtractable):
             return _name, asset_data, json_str
 
     @classmethod
-    def from_sb3(cls, data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None):
+    def from_sb3(cls, data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str | None = None):
         """
         Load a project from an .sb3 file/bytes/file path
         """
@@ -219,7 +219,7 @@ class Project(base.JSONExtractable):
 
     @staticmethod
     @deprecated("Use get_project(id).body() instead")
-    def from_id(project_id: int, _name: Optional[str] = None):
+    def from_id(project_id: int, _name: str | None = None):
         raise Exception("This method is deprecated")
         # _proj = get_project(project_id)
         # data = json.loads(_proj.get_json())
@@ -234,7 +234,7 @@ class Project(base.JSONExtractable):
 
     def find_vlb(
         self, value: str | None, by: str = "name", multiple: bool = False
-    ) -> Optional[vlb.Variable | vlb.List | vlb.Broadcast | list[vlb.Variable | vlb.List | vlb.Broadcast]]:
+    ) -> vlb.Variable | vlb.List | vlb.Broadcast | list[vlb.Variable | vlb.List | vlb.Broadcast] | None:
 
         _ret: list[vlb.Variable | vlb.List | vlb.Broadcast] = []
         for _sprite in self.sprites:

@@ -63,7 +63,7 @@ __fp__ = Path(__file__).parent
 _auth_fp = __fp__ / "auth.toml"
 _local_auth_fp = __fp__ / "local_auth.toml"
 
-_cached_auth: Optional[dict[str, Any]] = None
+_cached_auth: dict[str, Any] | None = None
 
 
 def get_auth() -> dict[str, Any]:

@@ -66,7 +66,7 @@ class JSONExtractable(JSONSerializable, ABC):
     """
     @staticmethod
     @abstractmethod
-    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: Optional[str] = None) -> tuple[
+    def load_json(data: str | bytes | TextIOWrapper | BinaryIO, load_assets: bool = True, _name: str | None = None) -> tuple[
         str, list[asset.AssetFile], str]:
         """
         Automatically extracts the JSON data as a string, as well as providing auto naming
@@ -81,7 +81,7 @@ class ProjectSubcomponent(JSONSerializable, ABC):
     """
     Base class for any class with an associated project
     """
-    def __init__(self, _project: Optional[project.Project] = None):
+    def __init__(self, _project: project.Project | None = None):
         self.project = _project
 
 
@@ -133,7 +133,7 @@ class BlockSubComponent(JSONSerializable, ABC):
     """
     Base class for classes with associated blocks
     """
-    def __init__(self, _block: Optional[block.Block] = None):
+    def __init__(self, _block: block.Block | None = None):
         self.block = _block
 
     @property
@@ -159,8 +159,8 @@ class MutationSubComponent(JSONSerializable, ABC):
     """
     Base class for classes with associated mutations
     """
-    mutation: Optional[module_mutation.Mutation]
-    def __init__(self, _mutation: Optional[module_mutation.Mutation] = None):
+    mutation: module_mutation.Mutation | None
+    def __init__(self, _mutation: module_mutation.Mutation | None = None):
         self.mutation = _mutation
 
     @property

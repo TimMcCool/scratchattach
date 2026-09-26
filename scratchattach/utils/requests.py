@@ -18,7 +18,7 @@ import aiohttp
 from . import exceptions
 from . import optional_async
 
-proxies: Optional[MutableMapping[str, str]] = None
+proxies: MutableMapping[str, str] | None = None
 
 class HTTPMethod(Enum):
     GET = auto()
@@ -49,7 +49,7 @@ class AnyHTTPResponse(ABC):
     content: bytes
     text: str
     headers: dict[str, str]
-    
+
     def json(self) -> Any:
         return json.loads(self.text)
 
@@ -69,25 +69,25 @@ class OAHTTPSession(ABC):
         method: HTTPMethod,
         url: str,
         *,
-        cookies: Optional[dict[str, str]] = None,
-        headers: Optional[dict[str, str]] = None,
-        params: Optional[dict[str, str]] = None,
-        data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[Any] = None
+        cookies: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
+        params: dict[str, str] | None = None,
+        data: Union[dict[str, str], str] | None = None,
+        json: Any | None = None
     ) -> AnyHTTPResponse:
         pass
-    
+
     @abstractmethod
     async def async_request(
         self,
         method: HTTPMethod,
         url: str,
         *,
-        cookies: Optional[dict[str, str]] = None,
-        headers: Optional[dict[str, str]] = None,
-        params: Optional[dict[str, str]] = None,
-        data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[Any] = None
+        cookies: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
+        params: dict[str, str] | None = None,
+        data: Union[dict[str, str], str] | None = None,
+        json: Any | None = None
     ) -> AnyHTTPResponse:
         pass
 
@@ -100,18 +100,18 @@ class OAHTTPSession(ABC):
             raise exceptions.Response429("You are being rate-limited (or blocked) by Scratch")
         if r.json() == {"code":"BadRequest","message":""}:
             raise exceptions.BadRequest("Make sure all provided arguments are valid")
-    
-    
+
+
     def request(
         self,
         method: Union[HTTPMethod, str],
         url: str,
         *,
-        cookies: Optional[dict[str, str]] = None,
-        headers: Optional[dict[str, str]] = None,
-        params: Optional[dict[str, str]] = None,
-        data: Optional[Union[dict[str, str], str]] = None,
-        json: Optional[Any] = None
+        cookies: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
+        params: dict[str, str] | None = None,
+        data: Union[dict[str, str], str] | None = None,
+        json: Any | None = None
     ) -> optional_async.CARequest:
         if isinstance(method, str):
             method = HTTPMethod.of(method.upper())
@@ -125,7 +125,7 @@ class OAHTTPSession(ABC):
             data = data,
             json = json
         )
-    
+
     @contextmanager
     def no_error_handling(self) -> Iterator[None]:
         val_before = self.error_handling
@@ -134,7 +134,7 @@ class OAHTTPSession(ABC):
             yield
         finally:
             self.error_handling = val_before
-    
+
     @contextmanager
     def yes_error_handling(self) -> Iterator[None]:
         val_before = self.error_handling
@@ -170,7 +170,7 @@ class SyncRequests(OAHTTPSession):
         if self.error_handling:
             self.check_response(response)
         return response
-    
+
     async def async_request(self, method, url, *, cookies = None, headers = None, params = None, data = None, json = None):
         raise NotImplementedError()
 
@@ -179,19 +179,19 @@ class AsyncRequests(OAHTTPSession):
     async def __aenter__(self) -> Self:
         self.client_session = await aiohttp.ClientSession(cookie_jar=DummyCookieJar()).__aenter__()
         return self
-    
+
     async def __aexit__(
         self,
-        exc_type: Optional[type[BaseException]] = None,
-        exc_val: Optional[BaseException] = None,
-        exc_tb: Optional[TracebackType] = None
+        exc_type: type[BaseException] | None = None,
+        exc_val: BaseException | None = None,
+        exc_tb: TracebackType | None = None
     ) -> None:
         await self.client_session.__aexit__(exc_type, exc_val, exc_tb)
-    
+
     @override
     def sync_request(self, method, url, *, cookies = None, headers = None, params = None, data = None, json = None):
         raise NotImplementedError()
-    
+
     async def async_request(self, method, url, *, cookies = None, headers = None, params = None, data = None, json = None):
         proxy = None
         if url.startswith("http"):
@@ -284,7 +284,7 @@ class Requests(HTTPSession):
         if self.error_handling:
             self.check_response(r)
         return r
-    
+
     @contextmanager
     def no_error_handling(self) -> Iterator[None]:
         val_before = self.error_handling
@@ -293,7 +293,7 @@ class Requests(HTTPSession):
             yield
         finally:
             self.error_handling = val_before
-    
+
     @contextmanager
     def yes_error_handling(self) -> Iterator[None]:
         val_before = self.error_handling

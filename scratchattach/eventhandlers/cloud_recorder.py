@@ -13,7 +13,7 @@ class CloudRecorder(CloudEvents):
     has_data: Event
     received_data: Event
     cloud_values: dict[str, Any]
-    def __init__(self, cloud, *, initial_values: Optional[dict[str, Any]] = None):
+    def __init__(self, cloud, *, initial_values: dict[str, Any] | None = None):
         self.has_data = Event()
         self.received_data = Event()
         initial_values = initial_values or {}

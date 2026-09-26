@@ -41,9 +41,9 @@ class EducatorAlert:
     # required attrs
     target: user.User
     actor: user.User
-    target_object: Optional[Union[project.Project, studio.Studio, comment.Comment, studio.Studio]]
+    target_object: Union[project.Project, studio.Studio, comment.Comment, studio.Studio] | None
     notification_type: str
-    _session: Optional[session.Session]
+    _session: session.Session | None
 
     # defaulted attrs
     model: str = "educators.educatoralert"
@@ -55,7 +55,7 @@ class EducatorAlert:
 
 
     @classmethod
-    def from_json(cls, data: dict[str, Any], _session: Optional[session.Session] = None) -> Self:
+    def from_json(cls, data: dict[str, Any], _session: session.Session | None = None) -> Self:
         """
         Load an EducatorAlert from a JSON object.
 

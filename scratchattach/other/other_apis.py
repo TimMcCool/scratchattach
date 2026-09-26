@@ -44,7 +44,7 @@ def get_news(*, limit=10, offset=0):
     return commons.api_iterative("https://api.scratch.mit.edu/news", limit=limit, offset=offset)
 
 
-def get_featured_data(sess: Optional[session.Session] = None) -> FeaturedData:
+def get_featured_data(sess: session.Session | None = None) -> FeaturedData:
     data: FeaturedDataRaw = requests.get("https://api.scratch.mit.edu/proxy/featured").json()
 
     return {
@@ -122,9 +122,9 @@ class CloudStatus:
     _raw: Any = field(repr=False, default=None)
 
     _: dataclasses.KW_ONLY
-    uptime: Optional[float] = None
-    load: Optional[list[float]] = None
-    redis: Optional[CloudStatusRedis] = None
+    uptime: float | None = None
+    load: list[float] | None = None
+    redis: CloudStatusRedis | None = None
 
 
 def monthly_site_traffic() -> MonthlySiteTraffic:
@@ -546,7 +546,7 @@ def scratch_team_members() -> dict:
     return json.loads(text)
 
 
-def send_password_reset_email(username: Optional[str] = None, email: Optional[str] = None):
+def send_password_reset_email(username: str] = None, email: Optional[str | None = None):
     requests.post(
         "https://scratch.mit.edu/accounts/password_reset/",
         data={

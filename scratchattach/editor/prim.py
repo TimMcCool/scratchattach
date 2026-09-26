@@ -52,7 +52,7 @@ class PrimTypes(enums._EnumWrapper):
     LIST = PrimType(13, "list", VLB_ATTRS, "data_listcontents")
 
     @classmethod
-    def find(cls, value, by: str, apply_func: Optional[Callable] = None) -> PrimType:
+    def find(cls, value, by: str, apply_func: Callable | None = None) -> PrimType:
         return super().find(value, by, apply_func=apply_func)
 
 
@@ -61,9 +61,9 @@ def is_prim_opcode(opcode: str):
 
 
 class Prim(base.SpriteSubComponent):
-    def __init__(self, _primtype: PrimType | PrimTypes, _value: Optional[str | vlb.Variable | vlb.List | vlb.Broadcast] = None,
-                 _name: Optional[str] = None, _id: Optional[str] = None, _x: Optional[int] = None,
-                 _y: Optional[int] = None, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
+    def __init__(self, _primtype: PrimType | PrimTypes, _value: str | vlb.Variable | vlb.List | vlb.Broadcast | None = None,
+                 _name: str] = None, _id: Optional[str] = None, _x: Optional[int | None = None,
+                 _y: int | None = None, _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         Class representing a Scratch string, number, angle, variable etc.
         Technically blocks but behave differently
@@ -78,16 +78,16 @@ class Prim(base.SpriteSubComponent):
 
         self.name = _name
         """
-        Once you get the object associated with this primitive (sprite.link_prims()), 
+        Once you get the object associated with this primitive (sprite.link_prims()),
         the name will be removed and the value will be changed from ``None``
         """
         self.value_id = _id
         """
         It's not an object accessed by id, but it may reference an object with an id.
-        
+
         ----
-        
-        Once you get the object associated with it (sprite.link_prims()), 
+
+        Once you get the object associated with it (sprite.link_prims()),
         the id will be removed and the value will be changed from ``None``
         """
 

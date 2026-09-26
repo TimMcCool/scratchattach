@@ -86,12 +86,12 @@ class Session(BaseSiteComponent):
     """
 
     username: str = field(repr=False, default="")
-    _user: Optional[user.User] = field(repr=False, default=None)
+    _user: user.User | None = field(repr=False, default=None)
 
     id: str = field(repr=False, default="")
-    session_string: Optional[str] = field(repr=False, default=None)
-    xtoken: Optional[str] = field(repr=False, default=None)
-    email: Optional[str] = field(repr=False, default=None)
+    session_string: str | None = field(repr=False, default=None)
+    xtoken: str | None = field(repr=False, default=None)
+    email: str | None = field(repr=False, default=None)
 
     new_scratcher: bool = field(repr=False, default=False)
     mute_status: Any = field(repr=False, default=None)
@@ -103,8 +103,8 @@ class Session(BaseSiteComponent):
     has_outstanding_email_confirmation: bool = field(repr=False, default=False)
     is_teacher: bool = field(repr=False, default=False)
     is_teacher_invitee: bool = field(repr=False, default=False)
-    ocular_token: Optional[str] = field(repr=False, default=None)  # note that this is a header, not a cookie
-    _session: Optional[Session] = field(kw_only=True, default=None)
+    ocular_token: str | None = field(repr=False, default=None)  # note that this is a header, not a cookie
+    _session: Session | None = field(kw_only=True, default=None)
 
     def __str__(self) -> str:
         return f"-L {self.username}"
@@ -254,7 +254,7 @@ class Session(BaseSiteComponent):
             country (str): The country to relocate to
         """
         with requests.no_error_handling():
-            requests.post(   
+            requests.post(
                 "https://scratch.mit.edu/accounts/settings/",
                 data={"country": country},
                 headers=self._headers,
@@ -319,7 +319,7 @@ class Session(BaseSiteComponent):
         """
         requests.post("https://scratch.mit.edu/accounts/logout/", headers=self._headers, cookies=self._cookies)
 
-    def set_featured_data(self, project_id: Optional[int] | Literal[""], project_label: Optional[int] | Literal[""] = None):
+    def set_featured_data(self, project_id: int] | Literal[""], project_label: Optional[int] | Literal["" | None = None):
         """
         Sends a request to change your featured project area.
 
@@ -367,7 +367,7 @@ class Session(BaseSiteComponent):
         resp = requests.get("https://my-ocular.jeffalo.net/auth/me", headers=self.ocular_headers).json()
         return resp
 
-    def set_ocular_status(self, status: Optional[str] = None, color: Optional[str] = None) -> None:
+    def set_ocular_status(self, status: str] = None, color: Optional[str | None = None) -> None:
         self._assert_ocular_auth()
         old = self.get_ocular_status()
         payload = {"color": color or old["color"], "status": status or old["status"]}
@@ -416,7 +416,7 @@ class Session(BaseSiteComponent):
         )
 
     def classroom_alerts(
-        self, _classroom: Optional[classroom.Classroom | int] = None, mode: str = "Last created", page: Optional[int] = None
+        self, _classroom: classroom.Classroom | int] = None, mode: str = "Last created", page: Optional[int | None = None
     ):
         """
         Load and parse admin alerts, optionally for a specific class, using https://scratch.mit.edu/site-api/classrooms/alerts/
@@ -586,7 +586,7 @@ class Session(BaseSiteComponent):
         return pb
 
     @staticmethod
-    def download_asset(asset_id_with_file_ext, *, filename: Optional[str] = None, fp=""):
+    def download_asset(asset_id_with_file_ext, *, filename: str | None = None, fp=""):
         if not (fp.endswith("/") or fp.endswith("\\")):
             fp = fp + "/"
         try:
@@ -702,7 +702,7 @@ class Session(BaseSiteComponent):
     # --- Create project API ---
 
     def create_project(
-        self, *, title: Optional[str] = None, project_json: dict = empty_project_json, parent_id=None
+        self, *, title: str | None = None, project_json: dict = empty_project_json, parent_id=None
     ) -> project.Project:  # not working
         """
         Creates a project on the Scratch website.
@@ -727,7 +727,7 @@ class Session(BaseSiteComponent):
         ).json()
         return self.connect_project(response["content-name"])
 
-    def create_studio(self, *, title: Optional[str] = None, description: Optional[str] = None) -> studio.Studio:
+    def create_studio(self, *, title: str] = None, description: Optional[str | None = None) -> studio.Studio:
         """
         Create a studio on the scratch website
 
@@ -930,7 +930,7 @@ class Session(BaseSiteComponent):
 
         return int(count), int(ended_count)
 
-    def mystuff_classes(self, mode: str = "Last created", page: Optional[int] = None) -> list[classroom.Classroom]:
+    def mystuff_classes(self, mode: str = "Last created", page: int] = None) -> list[classroom.Classroom | None:
         if not self.is_teacher:
             self.update()
 
@@ -960,7 +960,7 @@ class Session(BaseSiteComponent):
             )
         return classes
 
-    def mystuff_ended_classes(self, mode: str = "Last created", page: Optional[int] = None) -> list[classroom.Classroom]:
+    def mystuff_ended_classes(self, mode: str = "Last created", page: int] = None) -> list[classroom.Classroom | None:
         if not self.is_teacher:
             raise exceptions.Unauthorized(f"{self.username} is not a teacher; can't have (deleted) classes")
         ascsort, descsort = get_class_sort_mode(mode)
@@ -1050,7 +1050,7 @@ class Session(BaseSiteComponent):
         """
 
     # noinspection PyPep8Naming
-    def connect_cloud(self, project_id, *, cloud_class: Optional[type[_base.BaseCloud]] = None) -> _base.BaseCloud:
+    def connect_cloud(self, project_id, *, cloud_class: type[_base.BaseCloud] | None = None) -> _base.BaseCloud:
         cloud_class = cloud_class or cloud.ScratchCloud
         return cloud_class(project_id=project_id, _session=self)
 
@@ -1364,7 +1364,7 @@ def issue_login_warning() -> None:
     )
 
 
-def login_by_id(session_id: str, *, username: Optional[str] = None, password: Optional[str] = None, xtoken=None) -> Session:
+def login_by_id(session_id: str, *, username: str] = None, password: Optional[str | None = None, xtoken=None) -> Session:
     """
     Creates a session / log in to the Scratch website with the specified session id.
     Structured similarly to Session._connect_object method.

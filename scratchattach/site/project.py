@@ -55,9 +55,9 @@ class PartialProject(BaseSiteComponent):
     "The date when the project was modified the last time"
     share_date: str = field(kw_only=True, default="")
     thumbnail_url: str = field(kw_only=True, default="")
-    remix_parent: Optional[Union[str, int]] = field(kw_only=True, default="")
-    parent_title: Optional[str] = field(kw_only=True, default=None)
-    remix_root: Optional[Union[str, int]] = field(kw_only=True, default="")
+    remix_parent: Union[str, int] | None = field(kw_only=True, default="")
+    parent_title: str | None = field(kw_only=True, default=None)
+    remix_root: Union[str, int] | None = field(kw_only=True, default="")
     loves: int = field(kw_only=True, default=0)
     "The project's love count"
     favorites: int = field(kw_only=True, default=0)
@@ -66,10 +66,10 @@ class PartialProject(BaseSiteComponent):
     "The number of remixes"
     views: int = field(kw_only=True, default=0)
     "The view count"
-    project_token: Optional[str] = field(kw_only=True, default=None)
+    project_token: str | None = field(kw_only=True, default=None)
     "The project token (required to access the project json)"
-    _moderation_status: Optional[str] = field(kw_only=True, default=None)
-    _session: Optional[session.Session] = field(kw_only=True, default=None)
+    _moderation_status: str | None = field(kw_only=True, default=None)
+    _session: session.Session | None = field(kw_only=True, default=None)
 
     def __str__(self):
         return f"Unshared project with id {self.id}"
