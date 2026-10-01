@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import Optional, TYPE_CHECKING, Any, Callable
 import bs4
 from bs4 import BeautifulSoup
-
 if TYPE_CHECKING:
     from .session import Session
 from scratchattach.utils.commons import requests
@@ -15,15 +14,14 @@ from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions, commons
 from scratchattach.utils.commons import headers
 
-
 @dataclass
 class Classroom(BaseSiteComponent):
-    title: str = ""
+    title: str = ''
     id: int = 0
-    classtoken: str = ""
+    classtoken: str = ''
     author: Optional[user.User] = None
-    about_class: str = ""
-    working_on: str = ""
+    about_class: str = ''
+    working_on: str = ''
     is_closed: bool = False
     datetime: datetime = datetime.fromtimestamp(0.0)
     update_function: Callable = field(repr=False, default=requests.get)
@@ -31,21 +29,21 @@ class Classroom(BaseSiteComponent):
 
     def __post_init__(self):
         if self.id:
-            self.update_api = f"https://api.scratch.mit.edu/classrooms/{self.id}"
+            self.update_api = f'https://api.scratch.mit.edu/classrooms/{self.id}'
         elif self.classtoken:
-            self.update_api = f"https://api.scratch.mit.edu/classtoken/{self.classtoken}"
+            self.update_api = f'https://api.scratch.mit.edu/classtoken/{self.classtoken}'
         else:
-            raise KeyError(f"No class id or token provided! self.__dict__ = {self.__dict__!r}")
+            raise KeyError(f'No class id or token provided! self.__dict__ = {self.__dict__!r}')
         if self._session is None:
             self._headers = commons.headers
             self._cookies = {}
         else:
             self._headers = self._session._headers
             self._cookies = self._session._cookies
-        self._json_headers = {**self._headers, "accept": "application/json", "Content-Type": "application/json"}
+        self._json_headers = {**self._headers, 'accept': 'application/json', 'Content-Type': 'application/json'}
 
     def __str__(self) -> str:
-        return f"<Classroom {self.title!r}, id={self.id!r}>"
+        return f'<Classroom {self.title!r}, id={self.id!r}>'
 
     def update(self):
         try:
@@ -53,244 +51,178 @@ class Classroom(BaseSiteComponent):
         except exceptions.ClassroomNotFound:
             success = False
         if not success:
-            response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
-            soup = BeautifulSoup(response.text, "html.parser")
-            headings = soup.find_all("h1")
+            response = requests.get(f'https://scratch.mit.edu/classes/{self.id}/')
+            soup = BeautifulSoup(response.text, 'html.parser')
+            headings = soup.find_all('h1')
             for heading in headings:
                 if heading.text == "Whoops! Our server is Scratch'ing its head":
-                    raise exceptions.ClassroomNotFound(f"Classroom id {self.id} is not closed and cannot be found.")
-            title = soup.find("title").contents[0][: -len(" on Scratch")]
-            overviews = soup.find_all("p", {"class": "overview"})
+                    raise exceptions.ClassroomNotFound(f'Classroom id {self.id} is not closed and cannot be found.')
+            title = soup.find('title').contents[0][:-len(' on Scratch')]
+            overviews = soup.find_all('p', {'class': 'overview'})
             description, status = (overviews[0].text, overviews[1].text)
             educator_username = None
             pfx = "Scratch.INIT_DATA.PROFILE = {\n  model: {\n    id: '"
             sfx = "',\n    userId: "
-            for script in soup.find_all("script"):
+            for script in soup.find_all('script'):
                 if pfx in script.text:
                     educator_username = commons.webscrape_count(script.text, pfx, sfx, str)
-            ret: typed_dicts.ClassroomDict = {
-                "id": self.id,
-                "title": title,
-                "description": description,
-                "educator": {},
-                "status": status,
-                "is_closed": True,
-            }
+            ret: typed_dicts.ClassroomDict = {'id': self.id, 'title': title, 'description': description, 'educator': {}, 'status': status, 'is_closed': True}
             if educator_username:
-                ret["educator"]["username"] = educator_username
+                ret['educator']['username'] = educator_username
             return self._update_from_data(ret)
         return success
 
     def _update_from_data(self, data: typed_dicts.ClassroomDict):
-        self.id = int(data["id"])
-        self.title = data["title"]
-        self.about_class = data["description"]
-        self.working_on = data["status"]
-        self.datetime = datetime.fromisoformat(data["date_start"])
-        self.author = user.User(username=data["educator"]["username"], _session=self._session)
-        self.author.supply_data_dict(data["educator"])
-        self.is_closed = bool(data["date_end"])
+        self.id = int(data['id'])
+        self.title = data['title']
+        self.about_class = data['description']
+        self.working_on = data['status']
+        self.datetime = datetime.fromisoformat(data['date_start'])
+        self.author = user.User(username=data['educator']['username'], _session=self._session)
+        self.author.supply_data_dict(data['educator'])
+        self.is_closed = bool(data['date_end'])
         return True
 
     def student_count(self) -> int:
-        text = requests.get(f"https://scratch.mit.edu/classes/{self.id}/", headers=self._headers).text
-        return commons.webscrape_count(text, "Students (", ")")
+        text = requests.get(f'https://scratch.mit.edu/classes/{self.id}/', headers=self._headers).text
+        return commons.webscrape_count(text, 'Students (', ')')
 
     def student_names(self, *, page=1) -> list[str]:
         """
         Returns the student on the class.
-
+        
         Keyword Arguments:
             page: The page of the students that should be returned.
-
+        
         Returns:
             list<str>: The usernames of the class students
         """
         if self.is_closed:
             ret = []
-            response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
-            soup = BeautifulSoup(response.text, "html.parser")
-            found = set("")
-            for result in soup.css.select("ul.scroll-content .user a"):
+            response = requests.get(f'https://scratch.mit.edu/classes/{self.id}/')
+            soup = BeautifulSoup(response.text, 'html.parser')
+            found = set('')
+            for result in soup.css.select('ul.scroll-content .user a'):
                 result_text = result.text.strip()
                 if result_text in found:
                     continue
                 found.add(result_text)
                 ret.append(result_text)
             return ret
-        text = requests.get(f"https://scratch.mit.edu/classes/{self.id}/students/?page={page}", headers=self._headers).text
+        text = requests.get(f'https://scratch.mit.edu/classes/{self.id}/students/?page={page}', headers=self._headers).text
         textlist = [i.split('/">')[0] for i in text.split('        <a href="/users/')[1:]]
         return textlist
 
     def class_studio_count(self) -> int:
-        text = requests.get(f"https://scratch.mit.edu/classes/{self.id}/", headers=self._headers).text
-        return commons.webscrape_count(text, "Class Studios (", ")")
+        text = requests.get(f'https://scratch.mit.edu/classes/{self.id}/', headers=self._headers).text
+        return commons.webscrape_count(text, 'Class Studios (', ')')
 
-    def class_studio_ids(self, *, page: int = 1) -> list[int]:
+    def class_studio_ids(self, *, page: int=1) -> list[int]:
         """
         Returns the class studio on the class.
-
+        
         Keyword Arguments:
             page: The page of the students that should be returned.
-
+        
         Returns:
             list<int>: The id of the class studios
         """
         if self.is_closed:
             ret = []
-            response = requests.get(f"https://scratch.mit.edu/classes/{self.id}/")
-            soup = BeautifulSoup(response.text, "html.parser")
-            for result in soup.css.select("ul.scroll-content .gallery a[href]:not([class])"):
-                value = result["href"]
+            response = requests.get(f'https://scratch.mit.edu/classes/{self.id}/')
+            soup = BeautifulSoup(response.text, 'html.parser')
+            for result in soup.css.select('ul.scroll-content .gallery a[href]:not([class])'):
+                value = result['href']
                 if not isinstance(value, str):
                     value = value[0]
-                ret.append(commons.webscrape_count(value, "/studios/", "/"))
+                ret.append(commons.webscrape_count(value, '/studios/', '/'))
             return ret
-        text = requests.get(f"https://scratch.mit.edu/classes/{self.id}/studios/?page={page}", headers=self._headers).text
+        text = requests.get(f'https://scratch.mit.edu/classes/{self.id}/studios/?page={page}', headers=self._headers).text
         textlist = [int(i.split('/">')[0]) for i in text.split('<span class="title">\n    <a href="/studios/')[1:]]
         return textlist
 
     def _check_session(self) -> None:
         if self._session is None:
-            raise exceptions.Unauthenticated(
-                f"Classroom {self} has no associated session. Use session.connect_classroom() instead of sa.get_classroom()"
-            )
+            raise exceptions.Unauthenticated(f'Classroom {self} has no associated session. Use session.connect_classroom() instead of sa.get_classroom()')
 
     def set_thumbnail(self, thumbnail: bytes) -> None:
         self._check_session()
-        requests.post(
-            f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
-            headers=self._headers,
-            cookies=self._cookies,
-            files={"file": thumbnail},
-        )
+        requests.post(f'https://scratch.mit.edu/site-api/classrooms/all/{self.id}/', headers=self._headers, cookies=self._cookies, files={'file': thumbnail})
 
     def set_description(self, desc: str) -> None:
         self._check_session()
-        response = requests.put(
-            f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
-            headers=self._headers,
-            cookies=self._cookies,
-            json={"description": desc},
-        )
+        response = requests.put(f'https://scratch.mit.edu/site-api/classrooms/all/{self.id}/', headers=self._headers, cookies=self._cookies, json={'description': desc})
         try:
             data = response.json()
-            if data["description"] == desc:
+            if data['description'] == desc:
                 return
             else:
-                warnings.warn(f"{self._session} may not be authenticated to edit {self}")
+                warnings.warn(f'{self._session} may not be authenticated to edit {self}')
         except Exception as e:
-            warnings.warn(f"{self._session} may not be authenticated to edit {self}")
+            warnings.warn(f'{self._session} may not be authenticated to edit {self}')
             raise e
 
     def set_working_on(self, status: str) -> None:
         self._check_session()
-        response = requests.put(
-            f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
-            headers=self._headers,
-            cookies=self._cookies,
-            json={"status": status},
-        )
+        response = requests.put(f'https://scratch.mit.edu/site-api/classrooms/all/{self.id}/', headers=self._headers, cookies=self._cookies, json={'status': status})
         try:
             data = response.json()
-            if data["status"] == status:
+            if data['status'] == status:
                 return
             else:
-                warnings.warn(f"{self._session} may not be authenticated to edit {self}")
+                warnings.warn(f'{self._session} may not be authenticated to edit {self}')
         except Exception as e:
-            warnings.warn(f"{self._session} may not be authenticated to edit {self}")
+            warnings.warn(f'{self._session} may not be authenticated to edit {self}')
             raise e
 
     def set_title(self, title: str) -> None:
         self._check_session()
-        response = requests.put(
-            f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
-            headers=self._headers,
-            cookies=self._cookies,
-            json={"title": title},
-        )
+        response = requests.put(f'https://scratch.mit.edu/site-api/classrooms/all/{self.id}/', headers=self._headers, cookies=self._cookies, json={'title': title})
         try:
             data = response.json()
-            if data["title"] == title:
+            if data['title'] == title:
                 return
             else:
-                warnings.warn(f"{self._session} may not be authenticated to edit {self}")
+                warnings.warn(f'{self._session} may not be authenticated to edit {self}')
         except Exception as e:
-            warnings.warn(f"{self._session} may not be authenticated to edit {self}")
+            warnings.warn(f'{self._session} may not be authenticated to edit {self}')
             raise e
 
-    def add_studio(self, name: str, description: str = "") -> None:
+    def add_studio(self, name: str, description: str='') -> None:
         self._check_session()
-        requests.post(
-            "https://scratch.mit.edu/classes/create_classroom_gallery/",
-            json={"classroom_id": str(self.id), "classroom_token": self.classtoken, "title": name, "description": description},
-            headers=self._headers,
-            cookies=self._cookies,
-        )
+        requests.post('https://scratch.mit.edu/classes/create_classroom_gallery/', json={'classroom_id': str(self.id), 'classroom_token': self.classtoken, 'title': name, 'description': description}, headers=self._headers, cookies=self._cookies)
 
     def reopen(self) -> None:
         self._check_session()
-        response = requests.put(
-            f"https://scratch.mit.edu/site-api/classrooms/all/{self.id}/",
-            headers=self._headers,
-            cookies=self._cookies,
-            json={"visibility": "visible"},
-        )
+        response = requests.put(f'https://scratch.mit.edu/site-api/classrooms/all/{self.id}/', headers=self._headers, cookies=self._cookies, json={'visibility': 'visible'})
         try:
             response.json()
         except Exception as e:
-            warnings.warn(f"{self._session} may not be authenticated to edit {self}")
+            warnings.warn(f'{self._session} may not be authenticated to edit {self}')
             raise e
 
     def close(self) -> None:
         self._check_session()
-        response = requests.post(
-            f"https://scratch.mit.edu/site-api/classrooms/close_classroom/{self.id}/",
-            headers=self._headers,
-            cookies=self._cookies,
-        )
+        response = requests.post(f'https://scratch.mit.edu/site-api/classrooms/close_classroom/{self.id}/', headers=self._headers, cookies=self._cookies)
         try:
             response.json()
         except Exception as e:
-            warnings.warn(f"{self._session} may not be authenticated to edit {self}")
+            warnings.warn(f'{self._session} may not be authenticated to edit {self}')
             raise e
 
-    def register_student(
-        self,
-        username: str,
-        password: str = "",
-        birth_month: Optional[int] = None,
-        birth_year: Optional[int] = None,
-        gender: Optional[str] = None,
-        country: Optional[str] = None,
-        is_robot: bool = False,
-    ) -> None:
-        return register_by_token(
-            self.id,
-            self.classtoken,
-            username,
-            password,
-            birth_month or 1,
-            birth_year or 2000,
-            gender or "(Prefer not to say)",
-            country or "United+States",
-            is_robot,
-        )
+    def register_student(self, username: str, password: str='', birth_month: Optional[int]=None, birth_year: Optional[int]=None, gender: Optional[str]=None, country: Optional[str]=None, is_robot: bool=False) -> None:
+        return register_by_token(self.id, self.classtoken, username, password, birth_month or 1, birth_year or 2000, gender or '(Prefer not to say)', country or 'United+States', is_robot)
 
     def generate_signup_link(self):
         if self.classtoken is not None:
-            return f"https://scratch.mit.edu/signup/{self.classtoken}"
+            return f'https://scratch.mit.edu/signup/{self.classtoken}'
         self._check_session()
-        response = requests.get(
-            f"https://scratch.mit.edu/site-api/classrooms/generate_registration_link/{self.id}/",
-            headers=self._headers,
-            cookies=self._cookies,
-        )
+        response = requests.get(f'https://scratch.mit.edu/site-api/classrooms/generate_registration_link/{self.id}/', headers=self._headers, cookies=self._cookies)
         data = response.json()
-        if "reg_link" in data:
-            return data["reg_link"]
+        if 'reg_link' in data:
+            return data['reg_link']
         else:
-            raise exceptions.Unauthorized(f"{self._session} is not authorised to generate a signup link of {self}")
+            raise exceptions.Unauthorized(f'{self._session} is not authorised to generate a signup link of {self}')
 
     def public_activity(self, *, limit=20):
         """
@@ -298,22 +230,17 @@ class Classroom(BaseSiteComponent):
             list<scratchattach.Activity>: The user's activity data as parsed list of scratchattach.activity.Activity objects
         """
         if limit > 20:
-            warnings.warn("The limit is set to more than 20. There may be an error")
-        soup = BeautifulSoup(
-            requests.get(f"https://scratch.mit.edu/site-api/classrooms/activity/public/{self.id}/?limit={limit}").text,
-            "html.parser",
-        )
+            warnings.warn('The limit is set to more than 20. There may be an error')
+        soup = BeautifulSoup(requests.get(f'https://scratch.mit.edu/site-api/classrooms/activity/public/{self.id}/?limit={limit}').text, 'html.parser')
         activities = []
-        source = soup.find_all("li")
+        source = soup.find_all('li')
         for data in source:
             _activity = activity.Activity(_session=self._session, raw=data)
             _activity._update_from_html(data)
             activities.append(_activity)
         return activities
 
-    def activity(
-        self, student: str = "all", mode: str = "Last created", page: Optional[int] = None
-    ) -> list[activity.Activity]:
+    def activity(self, student: str='all', mode: str='Last created', page: Optional[int]=None) -> list[activity.Activity]:
         """
         Get a list of private activity, only available to the class owner.
         Returns:
@@ -323,12 +250,7 @@ class Classroom(BaseSiteComponent):
         ascsort, descsort = commons.get_class_sort_mode(mode)
         with requests.no_error_handling():
             try:
-                data = requests.get(
-                    f"https://scratch.mit.edu/site-api/classrooms/activity/{self.id}/{student}/",
-                    params={"page": page, "ascsort": ascsort, "descsort": descsort},
-                    headers=self._headers,
-                    cookies=self._cookies,
-                ).json()
+                data = requests.get(f'https://scratch.mit.edu/site-api/classrooms/activity/{self.id}/{student}/', params={'page': page, 'ascsort': ascsort, 'descsort': descsort}, headers=self._headers, cookies=self._cookies).json()
             except json.JSONDecodeError:
                 return []
         _activity: list[activity.Activity] = []
@@ -336,7 +258,6 @@ class Classroom(BaseSiteComponent):
             _activity.append(activity.Activity(_session=self._session))
             _activity[-1]._update_from_json(activity_json)
         return _activity
-
 
 def get_classroom(class_id: str) -> Classroom:
     """
@@ -353,12 +274,8 @@ def get_classroom(class_id: str) -> Classroom:
 
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_classroom` instead.
     """
-    warnings.warn(
-        "For methods that require authentication, use session.connect_classroom instead of get_classroom\nIf you want to remove this warning, use warnings.filterwarnings('ignore', category=scratchattach.ClassroomAuthenticationWarning)\nTo ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use `warnings.filterwarnings('ignore', category=scratchattach.GetAuthenticationWarning)`.",
-        exceptions.ClassroomAuthenticationWarning,
-    )
-    return commons._get_object("id", class_id, Classroom, exceptions.ClassroomNotFound)
-
+    warnings.warn("For methods that require authentication, use session.connect_classroom instead of get_classroom\nIf you want to remove this warning, use warnings.filterwarnings('ignore', category=scratchattach.ClassroomAuthenticationWarning)\nTo ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use `warnings.filterwarnings('ignore', category=scratchattach.GetAuthenticationWarning)`.", exceptions.ClassroomAuthenticationWarning)
+    return commons._get_object('id', class_id, Classroom, exceptions.ClassroomNotFound)
 
 def get_classroom_from_token(class_token) -> Classroom:
     """
@@ -375,43 +292,14 @@ def get_classroom_from_token(class_token) -> Classroom:
 
         If you want to use these, get the user with :meth:`scratchattach.session.Session.connect_classroom` instead.
     """
-    warnings.warn(
-        "For methods that require authentication, use session.connect_classroom instead of get_classroom. If you want to remove this warning, use warnings.filterwarnings('ignore', category=ClassroomAuthenticationWarning). To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use warnings.filterwarnings('ignore', category=GetAuthenticationWarning).",
-        exceptions.ClassroomAuthenticationWarning,
-    )
-    return commons._get_object("classtoken", class_token, Classroom, exceptions.ClassroomNotFound)
+    warnings.warn("For methods that require authentication, use session.connect_classroom instead of get_classroom. If you want to remove this warning, use warnings.filterwarnings('ignore', category=ClassroomAuthenticationWarning). To ignore all warnings of the type GetAuthenticationWarning, which includes this warning, use warnings.filterwarnings('ignore', category=GetAuthenticationWarning).", exceptions.ClassroomAuthenticationWarning)
+    return commons._get_object('classtoken', class_token, Classroom, exceptions.ClassroomNotFound)
 
-
-def register_by_token(
-    class_id: int,
-    class_token: str,
-    username: str,
-    password: str,
-    birth_month: int,
-    birth_year: int,
-    gender: str,
-    country: str,
-    is_robot: bool = False,
-) -> None:
-    data = {
-        "classroom_id": class_id,
-        "classroom_token": class_token,
-        "username": username,
-        "password": password,
-        "birth_month": birth_month,
-        "birth_year": birth_year,
-        "gender": gender,
-        "country": country,
-        "is_robot": is_robot,
-    }
-    response = requests.post(
-        "https://scratch.mit.edu/classes/register_new_student/",
-        data=data,
-        headers=commons.headers,
-        cookies={"scratchcsrftoken": "a"},
-    )
+def register_by_token(class_id: int, class_token: str, username: str, password: str, birth_month: int, birth_year: int, gender: str, country: str, is_robot: bool=False) -> None:
+    data = {'classroom_id': class_id, 'classroom_token': class_token, 'username': username, 'password': password, 'birth_month': birth_month, 'birth_year': birth_year, 'gender': gender, 'country': country, 'is_robot': is_robot}
+    response = requests.post('https://scratch.mit.edu/classes/register_new_student/', data=data, headers=commons.headers, cookies={'scratchcsrftoken': 'a'})
     ret = response.json()[0]
-    if "username" in ret:
+    if 'username' in ret:
         return
     else:
         raise exceptions.Unauthorized(f"Can't create account: {response.text}")

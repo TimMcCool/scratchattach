@@ -2,16 +2,13 @@ from __future__ import annotations
 from types import TracebackType
 from collections.abc import Iterable, Mapping
 from typing import Optional, Self, cast, Any, Sequence, SupportsInt, BinaryIO, TYPE_CHECKING
-
 if TYPE_CHECKING:
     from _typeshed import SupportsKeysAndGetItem
 from scratchattach._shared import http as shared_http
 from scratchattach import exceptions
 import requests
 from requests import cookies as requests_cookies
-
 HTTPOptions = shared_http.HTTPOptions
-
 
 class _HTTPResponse:
     _sync_response: requests.Response
@@ -26,15 +23,13 @@ class _HTTPResponse:
         try:
             return self._sync_response.json()
         except requests.JSONDecodeError:
-            raise shared_http.JSONError(
-                "Tried to decode an http response as json but the content did not conform to the json format"
-            )
+            raise shared_http.JSONError('Tried to decode an http response as json but the content did not conform to the json format')
 
     @property
     def headers(self) -> Mapping[str, str]:
         """
-        Headers are case-insensitive.
-        """
+            Headers are case-insensitive.
+            """
         return self._sync_response.headers
 
     def get_all_headers_for_key(self, key: str) -> list[str]:
@@ -46,17 +41,16 @@ class _HTTPResponse:
 
     def check_response(self):
         if self.status_code == 403 or self.status_code == 401:
-            raise exceptions.Unauthorized(f"Request content: {self.content!r}")
+            raise exceptions.Unauthorized(f'Request content: {self.content!r}')
         if self.status_code == 500:
-            raise exceptions.APIError("Internal Scratch server error")
+            raise exceptions.APIError('Internal Scratch server error')
         if self.status_code == 429:
-            raise exceptions.Response429("You are being rate-limited (or blocked) by Scratch")
+            raise exceptions.Response429('You are being rate-limited (or blocked) by Scratch')
         try:
-            if self.json() == {"code": "BadRequest", "message": ""}:
-                raise exceptions.BadRequest("Make sure all provided arguments are valid")
+            if self.json() == {'code': 'BadRequest', 'message': ''}:
+                raise exceptions.BadRequest('Make sure all provided arguments are valid')
         except shared_http.JSONError:
-            raise shared_http.JSONError("Scratch API endpoint did not return valid json")
-
+            raise shared_http.JSONError('Scratch API endpoint did not return valid json')
 
 class _WrappedHTTPResponse:
     _response: requests.Response
@@ -69,13 +63,11 @@ class _WrappedHTTPResponse:
         response._sync_response = self._response
         return response
 
-    def __exit__(
-        self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
-    ) -> None:
+    def __exit__(self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]) -> None:
         self._response.close()
 
-
 class DummyCookieJar(requests_cookies.RequestsCookieJar):
+
     def set_cookie(self, *args, **kwargs):
         pass
 
@@ -91,8 +83,8 @@ class DummyCookieJar(requests_cookies.RequestsCookieJar):
     def set(self, *args, **kwargs):
         pass
 
-
 class _HTTPSession:
+
     def add_cookie(self, key: str, value: str):
         self._cookies[key] = value
 
@@ -105,7 +97,7 @@ class _HTTPSession:
     def clear_cookies(self):
         self._cookies.clear()
 
-    def update_cookies(self, new: "SupportsKeysAndGetItem[str, str]"):
+    def update_cookies(self, new: 'SupportsKeysAndGetItem[str, str]'):
         self._cookies.update(new)
 
     def list_cookies(self) -> Iterable[tuple[str, str]]:
@@ -123,12 +115,11 @@ class _HTTPSession:
     def clear_headers(self):
         self._headers.clear()
 
-    def update_headers(self, new: "SupportsKeysAndGetItem[str, str]"):
+    def update_headers(self, new: 'SupportsKeysAndGetItem[str, str]'):
         self._headers.update(new)
 
     def list_headers(self) -> Iterable[tuple[str, str]]:
         return self._headers.items()
-
     _cookies: dict[str, str]
     _headers: dict[str, str]
     _http_session: requests.Session
@@ -142,9 +133,7 @@ class _HTTPSession:
     def __enter__(self) -> Self:
         return self
 
-    def __exit__(
-        self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]
-    ) -> None:
+    def __exit__(self, exc_type: Optional[type[BaseException]], exc_val: Optional[BaseException], exc_tb: Optional[TracebackType]) -> None:
         pass
 
     @staticmethod
@@ -165,10 +154,7 @@ class _HTTPSession:
         return params
 
     @staticmethod
-    def _get_data_and_files_kwargs(
-        data: Iterable[tuple[str, Any]] | shared_http.SupportsItems[str, Any] | None,
-        files: Iterable[tuple[str, BinaryIO | bytes]] | shared_http.SupportsItems[str, BinaryIO | bytes] | None,
-    ) -> tuple[list[tuple[str, Any]] | None, list[tuple[str, BinaryIO | bytes]] | None]:
+    def _get_data_and_files_kwargs(data: Iterable[tuple[str, Any]] | shared_http.SupportsItems[str, Any] | None, files: Iterable[tuple[str, BinaryIO | bytes]] | shared_http.SupportsItems[str, BinaryIO | bytes] | None) -> tuple[list[tuple[str, Any]] | None, list[tuple[str, BinaryIO | bytes]] | None]:
         processed_data = None
         processed_files = None
         if data is not None:
@@ -182,9 +168,7 @@ class _HTTPSession:
         return (processed_data, processed_files)
 
     @staticmethod
-    def _get_headers_kwarg(
-        default_headers: dict[str, str], headers: Iterable[tuple[str, str]] | shared_http.SupportsItems[str, str] | None
-    ) -> dict[str, str]:
+    def _get_headers_kwarg(default_headers: dict[str, str], headers: Iterable[tuple[str, str]] | shared_http.SupportsItems[str, str] | None) -> dict[str, str]:
         if headers is None:
             return default_headers
         if isinstance(headers, shared_http.SupportsItems):
@@ -192,63 +176,55 @@ class _HTTPSession:
         return default_headers | dict(headers)
 
     @staticmethod
-    def _get_cookies_kwarg(
-        default_cookies: dict[str, str], cookies: Iterable[tuple[str, str]] | shared_http.SupportsItems[str, str] | None
-    ) -> dict[str, str]:
+    def _get_cookies_kwarg(default_cookies: dict[str, str], cookies: Iterable[tuple[str, str]] | shared_http.SupportsItems[str, str] | None) -> dict[str, str]:
         if cookies is None:
             return default_cookies
         if isinstance(cookies, shared_http.SupportsItems):
             cookies = cast(Iterable[tuple[str, str]], cookies.items())
         return default_cookies | dict(cookies)
 
-    def _get_kwargs(self, options: HTTPOptions) -> dict[str, Any]:  # noqa: C901
+    def _get_kwargs(self, options: HTTPOptions) -> dict[str, Any]: # noqa: C901
         kwargs: dict[str, Any] = {}
         if options.params is not None:
-            kwargs["params"] = self._get_params_kwarg(options.params)
+            kwargs['params'] = self._get_params_kwarg(options.params)
         if options.content is not None and options.data is not None:
             raise ValueError('Cannot specify both "content" and "data"')
         if options.content is not None and options.files is not None:
             raise ValueError('Cannot specify both "content" and "files"')
         if options.content is not None:
-            kwargs["data"] = options.content
+            kwargs['data'] = options.content
         if options.data is not None or options.files is not None:
             processed_data, processed_files = self._get_data_and_files_kwargs(options.data, options.files)
             if processed_data is not None:
-                kwargs["data"] = processed_data
+                kwargs['data'] = processed_data
             if processed_files is not None:
-                kwargs["files"] = processed_files
-        kwargs["cookies"] = self._get_cookies_kwarg(
-            {} if options.disregard_default_cookies else self._cookies, options.cookies
-        )
-        kwargs["headers"] = self._get_headers_kwarg(
-            {} if options.disregard_default_headers else self._headers, options.headers
-        )
-        if options.json is not shared_http._JsonEmptySentinel and (
-            options.content is not None or options.data is not None or options.files is not None
-        ):
+                kwargs['files'] = processed_files
+        kwargs['cookies'] = self._get_cookies_kwarg({} if options.disregard_default_cookies else self._cookies, options.cookies)
+        kwargs['headers'] = self._get_headers_kwarg({} if options.disregard_default_headers else self._headers, options.headers)
+        if options.json is not shared_http._JsonEmptySentinel and (options.content is not None or options.data is not None or options.files is not None):
             raise ValueError('Cannot specify "json" alongside "content", "data", or "files"')
         if options.json is not shared_http._JsonEmptySentinel:
-            kwargs["json"] = options.json
+            kwargs['json'] = options.json
         if options.timeout:
-            kwargs["timeout"] = options.timeout
+            kwargs['timeout'] = options.timeout
         return kwargs
 
-    def get(self, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
+    def get(self, url: str, options: HTTPOptions | None=None) -> _WrappedHTTPResponse:
         kwargs = self._get_kwargs(options if options is not None else shared_http._EMPTY_OPTIONS)
         return _WrappedHTTPResponse(self._http_session.get(url, **kwargs))
 
-    def post(self, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
+    def post(self, url: str, options: HTTPOptions | None=None) -> _WrappedHTTPResponse:
         kwargs = self._get_kwargs(options if options is not None else shared_http._EMPTY_OPTIONS)
         return _WrappedHTTPResponse(self._http_session.post(url, **kwargs))
 
-    def put(self, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
+    def put(self, url: str, options: HTTPOptions | None=None) -> _WrappedHTTPResponse:
         kwargs = self._get_kwargs(options if options is not None else shared_http._EMPTY_OPTIONS)
         return _WrappedHTTPResponse(self._http_session.put(url, **kwargs))
 
-    def delete(self, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
+    def delete(self, url: str, options: HTTPOptions | None=None) -> _WrappedHTTPResponse:
         kwargs = self._get_kwargs(options if options is not None else shared_http._EMPTY_OPTIONS)
         return _WrappedHTTPResponse(self._http_session.delete(url, **kwargs))
 
-    def request(self, method: shared_http.HTTPMethod, url: str, options: HTTPOptions | None = None) -> _WrappedHTTPResponse:
+    def request(self, method: shared_http.HTTPMethod, url: str, options: HTTPOptions | None=None) -> _WrappedHTTPResponse:
         kwargs = self._get_kwargs(options if options is not None else shared_http._EMPTY_OPTIONS)
         return _WrappedHTTPResponse(self._http_session.request(method.name, url, **kwargs))

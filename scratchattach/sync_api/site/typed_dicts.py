@@ -2,7 +2,6 @@ from __future__ import annotations
 from scratchattach.cloud import _base
 from typing import TypedDict, Required, NotRequired
 
-
 class SessionUserDict(TypedDict):
     id: int
     banned: bool
@@ -16,23 +15,19 @@ class SessionUserDict(TypedDict):
     birthMonth: int
     gender: str
 
-
 class SessionOffenseDict(TypedDict):
     expiresAt: float
     messageType: str
     createdAt: float
 
-
 class EmptySessionOffensesDict(TypedDict):
     pass
-
 
 class SessionOffensesDict(TypedDict):
     offenses: list[SessionOffenseDict]
     showWarning: bool
     muteExpiresAt: float
     currentMessageType: str
-
 
 class SessionPermissionsDict(TypedDict):
     admin: bool
@@ -44,7 +39,6 @@ class SessionPermissionsDict(TypedDict):
     educator_invitee: bool
     student: bool
     mute_status: EmptySessionOffensesDict | SessionOffensesDict
-
 
 class SessionFlagsDict(TypedDict):
     must_reset_password: bool
@@ -59,17 +53,14 @@ class SessionFlagsDict(TypedDict):
     userprofile_comments_enabled: bool
     everything_is_totally_normal: bool
 
-
 class SessionDict(TypedDict):
     user: SessionUserDict
     permissions: SessionPermissionsDict
     flags: SessionFlagsDict
 
-
 class OcularUserMetaDict(TypedDict):
     updated: str
     updatedBy: str
-
 
 class OcularUserDict(TypedDict):
     _id: str
@@ -78,15 +69,9 @@ class OcularUserDict(TypedDict):
     color: str
     meta: OcularUserMetaDict
 
-
 class UserHistoryDict(TypedDict):
     joined: str
-
-
-UserProfileImagesDict = TypedDict(
-    "UserProfileImagesDict", {"90x90": str, "60x60": str, "55x55": str, "50x50": str, "32x32": str}
-)
-
+UserProfileImagesDict = TypedDict('UserProfileImagesDict', {'90x90': str, '60x60': str, '55x55': str, '50x50': str, '32x32': str})
 
 class UserProfileDict(TypedDict):
     id: int
@@ -97,14 +82,12 @@ class UserProfileDict(TypedDict):
     membership_label: NotRequired[int]
     membership_avatar_badge: NotRequired[int]
 
-
 class UserDict(TypedDict):
     id: NotRequired[int]
     username: NotRequired[str]
     scratchteam: NotRequired[bool]
     history: NotRequired[UserHistoryDict]
     profile: NotRequired[UserProfileDict]
-
 
 class CloudLogActivityDict(TypedDict):
     user: str
@@ -115,7 +98,6 @@ class CloudLogActivityDict(TypedDict):
     timestamp: int
     cloud: _base.AnyCloud
 
-
 class CloudActivityDict(TypedDict):
     method: str
     name: str
@@ -123,7 +105,6 @@ class CloudActivityDict(TypedDict):
     value: str | float | int
     project_id: int
     cloud: _base.AnyCloud
-
 
 class ClassroomDict(TypedDict):
     id: int
@@ -136,17 +117,14 @@ class ClassroomDict(TypedDict):
     educator: UserDict
     is_closed: NotRequired[bool]
 
-
 class StudioHistoryDict(TypedDict):
     created: str
     modified: str
-
 
 class StudioStatsDict(TypedDict):
     followers: int
     managers: int
     projects: int
-
 
 class StudioDict(TypedDict):
     id: int
@@ -159,24 +137,17 @@ class StudioDict(TypedDict):
     history: StudioHistoryDict
     stats: NotRequired[StudioStatsDict]
 
-
 class StudioRoleDict(TypedDict):
     manager: bool
     curator: bool
     invited: bool
     following: bool
-
-
-ProjectImagesDict = TypedDict(
-    "ProjectImagesDict", {"282x218": str, "216x163": str, "200x200": str, "144x108": str, "135x102": str, "100x80": str}
-)
-
+ProjectImagesDict = TypedDict('ProjectImagesDict', {'282x218': str, '216x163': str, '200x200': str, '144x108': str, '135x102': str, '100x80': str})
 
 class ProjectHistoryDict(TypedDict):
     created: str
     modified: str
     shared: str
-
 
 class ProjectStatsDict(TypedDict):
     views: int
@@ -184,11 +155,9 @@ class ProjectStatsDict(TypedDict):
     favorites: int
     remixes: int
 
-
 class ProjectRemixDict(TypedDict):
     parent: int | None
     root: int | None
-
 
 class ProjectDict(TypedDict):
     id: int
@@ -207,11 +176,9 @@ class ProjectDict(TypedDict):
     remix: ProjectRemixDict
     project_token: str
 
-
 class PlaceholderProjectDataMetadataDict(TypedDict):
     title: str
     description: str
-
 
 class PlaceholderProjectDataDict(TypedDict):
     metadata: PlaceholderProjectDataMetadataDict

@@ -16,7 +16,7 @@ from typing import Any, Optional
 from typing_extensions import deprecated
 
 from scratchattach.site.typed_dicts import ProjectDict
-from . import user, comment, studio, session, typed_dicts
+from . import _base, user, comment, studio, session, typed_dicts
 from scratchattach.utils import exceptions
 from scratchattach.utils import commons
 from scratchattach.utils.commons import empty_project_json, headers
@@ -24,7 +24,14 @@ from ._base import BaseSiteComponent
 
 # from scratchattach.other.project_json_capabilities import ProjectBody
 from scratchattach import editor
-from scratchattach.utils.requests import requests
+from scratchattach._shared import http as shared_http
+from ..primitives import http
+
+if "IS_PRE_CODEGEN":
+
+    def COMMENT(comment: str): ...
+    def PREV_LINE_COMMENT(comment: str): ...
+
 
 CREATE_PROJECT_USES: list[float] = []
 
@@ -69,7 +76,7 @@ class PartialProject(BaseSiteComponent[typed_dicts.ProjectDict]):
     project_token: Optional[str] = field(kw_only=True, default=None)
     "The project token (required to access the project json)"
     _moderation_status: Optional[str] = field(kw_only=True, default=None)
-    _session: Optional[session.Session] = field(kw_only=True, default=None)
+    _session: _base.SessionLike = field(kw_only=True)
 
     def __str__(self):
         return f"Unshared project with id {self.id}"
@@ -77,18 +84,17 @@ class PartialProject(BaseSiteComponent[typed_dicts.ProjectDict]):
     def __post_init__(self) -> None:
 
         # Info on how the .update method has to fetch the data:
-        self.update_function: Callable = requests.get
+        COMMENT("Info on how the .update method has to fetch the data:")
+        self.update_function = shared_http.HTTPMethod.POST
         self.update_api = f"https://api.scratch.mit.edu/projects/{self.id}"
 
         # Headers and cookies:
-        if self._session is None:
-            self._headers = headers
-            self._cookies = {}
-        else:
-            self._headers = self._session.get_headers()
-            self._cookies = self._session.get_cookies()
+        COMMENT("Headers and cookies:")
+        self._headers = self._session.get_headers()
+        self._cookies = self._session.get_cookies()
 
         # Headers for operations that require accept and Content-Type fields:
+        COMMENT("Headers for operations that require accept and Content-Type fields:")
         self._json_headers = dict(self._headers)
         self._json_headers["accept"] = "application/json"
         self._json_headers["Content-Type"] = "application/json"
@@ -98,7 +104,7 @@ class PartialProject(BaseSiteComponent[typed_dicts.ProjectDict]):
         self.url = f"https://scratch.mit.edu/projects/{self.id}"
         if author := data.get("author"):
             self.author_name = author.get("username", self.author_name)
-        self.author_name = data.get("username", self.author_name)
+        self.author_name = data.get("username", self.author_name)  # type: ignore[assignment]
         self.comments_allowed = data.get("comments_allowed", self.comments_allowed)
         self.instructions = data.get("instructions", self.instructions)
         self.notes = data.get("description", self.notes)
@@ -111,7 +117,9 @@ class PartialProject(BaseSiteComponent[typed_dicts.ProjectDict]):
         self.thumbnail_url = data.get("image", self.thumbnail_url)
 
         # NOTE: if we have no value, then we set it to None instead of empty string.
+        COMMENT("NOTE: if we have no value, then we set it to None instead of empty string.")
         # TODO: consider changing this behavior
+        COMMENT("TODO: consider changing this behavior")
         remix_data = data.get("remix", {})
         self.remix_parent = remix_data.get("parent")
         self.remix_root = remix_data.get("root")
@@ -126,8 +134,11 @@ class PartialProject(BaseSiteComponent[typed_dicts.ProjectDict]):
         self.project_token = data.get("project_token", None)
 
         # the typed dict here isn't perfect:
+        COMMENT("the typed dict here isn't perfect:")
         # code as in {"code": "not found"}
+        COMMENT('code as in {"code": "not found"}')
         # if the project is unshared, then we get that error code
+        COMMENT("if the project is unshared, then we get that error code")
         return "code" not in data
 
     def __rich__(self):
@@ -177,7 +188,9 @@ class PartialProject(BaseSiteComponent[typed_dicts.ProjectDict]):
         Returns:
             list<scratchattach.project.Project>: A list containing the remixes of the project, each project is represented by a Project object.
         """
-        response = commons.api_iterative(f"https://api.scratch.mit.edu/projects/{self.id}/remixes", limit=limit, offset=offset)
+        response = commons.api_iterative(
+            f"https://api.scratch.mit.edu/projects/{self.id}/remixes", limit=limit, offset=offset
+        )
         return commons.parse_object_list(response, Project, self._session)
 
     def is_shared(self):
@@ -194,7 +207,7 @@ class PartialProject(BaseSiteComponent[typed_dicts.ProjectDict]):
     def raw_json_or_empty(self) -> dict[str, Any]:
         return empty_project_json
 
-    def create_remix(self, *, title=None, project_json=None) -> Project:  # not working
+    async def create_remix(self, *, title=None, project_json=None) -> Project:  # not working
         """
         Creates a project on the Scratch website.
 
@@ -229,14 +242,18 @@ class PartialProject(BaseSiteComponent[typed_dicts.ProjectDict]):
             "title": title,
         }
 
-        response = requests.post(
-            "https://projects.scratch.mit.edu/", params=params, cookies=self._cookies, headers=self._headers, json=project_json
-        ).json()
-        _project = session.connect_project(response["content-name"])
-        _project.parent_title = base64.b64decode(response["content-title"]).decode("utf-8").split(" remix")[0]
+        async with self.get_http_session().post(
+            "https://projects.scratch.mit.edu/",
+            shared_http.options().params(params).json(project_json).value,
+        ) as response:
+            data = await response.json()
+        _project = session.connect_project(data["content-name"])
+        _project.parent_title = (
+            base64.b64decode(data["content-title"]).decode("utf-8").split(" remix")[0]
+        )
         return _project
 
-    def load_description(self):
+    async def load_description(self):
         """
         Gets the instructions of the unshared project. Requires authentication.
 
@@ -244,7 +261,7 @@ class PartialProject(BaseSiteComponent[typed_dicts.ProjectDict]):
             It's unclear if Scratch allows using this method. This method will create a remix of the unshared project using your account.
         """
         self._assert_auth()
-        new_project = self.create_remix(project_json=empty_project_json)
+        new_project = await self.create_remix(project_json=empty_project_json)
         self.instructions = new_project.instructions
         self.title = new_project.parent_title or ""
 
@@ -269,13 +286,17 @@ class Project(PartialProject):
     def _assert_permission(self):
         session = self._assert_auth()
         if session.username != self.author_name:
-            raise exceptions.Unauthorized("You need to be authenticated as the profile owner to do this.")
+            raise exceptions.Unauthorized(
+                "You need to be authenticated as the profile owner to do this."
+            )
 
     def load_description(self):
         # Overrides the load_description method that exists for unshared projects
+        COMMENT("Overrides the load_description method that exists for unshared projects")
         self.update()
 
     # -- Project contents (body/json) -- #
+    COMMENT("-- Project contents (body/json) -- #")
 
     def download(self, *, filename=None, dir="."):
         """
@@ -299,7 +320,9 @@ class Project(PartialProject):
             with open(f"{dir}{filename}.sb3", "wb") as f:
                 f.write(response.content)
         except Exception as exc:
-            raise (exceptions.FetchError("Method only works for projects created with Scratch 3")) from exc
+            raise (
+                exceptions.FetchError("Method only works for projects created with Scratch 3")
+            ) from exc
 
     @deprecated("Use raw_json instead")
     def get_json(self) -> str:
@@ -315,7 +338,9 @@ class Project(PartialProject):
             return response.text
 
         except Exception as exc:
-            raise (exceptions.FetchError("Method only works for projects created with Scratch 3")) from exc
+            raise (
+                exceptions.FetchError("Method only works for projects created with Scratch 3")
+            ) from exc
 
     def body(self) -> editor.Project:
         """
@@ -338,7 +363,11 @@ class Project(PartialProject):
             self.update()
 
         except Exception as e:
-            raise (exceptions.FetchError(f"You're not authorized for accessing {self}.\nException: {e}"))
+            raise (
+                exceptions.FetchError(
+                    f"You're not authorized for accessing {self}.\nException: {e}"
+                )
+            )
 
         with requests.no_error_handling():
             resp = requests.get(
@@ -350,8 +379,13 @@ class Project(PartialProject):
                 return resp.json()
             except json.JSONDecodeError:
                 # I am not aware of any cases where this will not be a zip file
+                COMMENT("I am not aware of any cases where this will not be a zip file")
                 # in the future, cache a projectbody object here and just return the json
+                COMMENT("in the future, cache a projectbody object here and just return the json")
                 # that is fetched from there to not waste existing asset data from this zip file
+                COMMENT(
+                    "that is fetched from there to not waste existing asset data from this zip file"
+                )
 
                 with zipfile.ZipFile(BytesIO(resp.content)) as zipf:
                     return json.load(zipf.open("project.json"))
@@ -407,16 +441,20 @@ class Project(PartialProject):
         """
         self._assert_auth()
         other_project = self._session.connect_project(project_id)  # type: ignore
+        PREV_LINE_COMMENT("type: ignore")
         self.set_json(other_project.raw_json())
 
     # -- other -- #
+    COMMENT("-- other -- #")
 
     def author(self) -> user.User:
         """
         Returns:
             scratchattach.user.User: An object representing the Scratch user who created this project.
         """
-        return self._make_linked_object("username", self.author_name, user.User, exceptions.UserNotFound)
+        return self._make_linked_object(
+            "username", self.author_name, user.User, exceptions.UserNotFound
+        )
 
     def studios(self, *, limit=40, offset=0):
         """
@@ -477,6 +515,7 @@ class Project(PartialProject):
             scratchattach.comments.Comment: A Comment object representing the requested comment.
         """
         # https://api.scratch.mit.edu/users/TimMcCool/projects/404369790/comments/439984518
+        COMMENT("https://api.scratch.mit.edu/users/TimMcCool/projects/404369790/comments/439984518")
         data = requests.get(
             f"https://api.scratch.mit.edu/users/{self.author_name}/projects/{self.id}/comments/{comment_id}",
             headers=self._headers,
@@ -484,10 +523,15 @@ class Project(PartialProject):
         ).json()
 
         if data is None or data.get("code") == "NotFound":
-            raise exceptions.CommentNotFound(f"Cannot find comment #{comment_id} on -P {self.id} by -U {self.author_name}")
+            raise exceptions.CommentNotFound(
+                f"Cannot find comment #{comment_id} on -P {self.id} by -U {self.author_name}"
+            )
 
         _comment = comment.Comment(
-            id=data["id"], _session=self._session, source=comment.CommentSource.PROJECT, source_id=self.id
+            id=data["id"],
+            _session=self._session,
+            source=comment.CommentSource.PROJECT,
+            source_id=self.id,
         )
         _comment._update_from_data(data)
         return _comment
@@ -708,14 +752,22 @@ class Project(PartialProject):
         r = json.loads(
             requests.post(
                 f"https://api.scratch.mit.edu/proxy/comments/project/{self.id}/",
-                headers=(self._json_headers | {"referer": "https://scratch.mit.edu/projects/" + str(self.id) + "/"}),
+                headers=(
+                    self._json_headers
+                    | {"referer": "https://scratch.mit.edu/projects/" + str(self.id) + "/"}
+                ),
                 cookies=self._cookies,
                 data=json.dumps(data),
             ).text
         )
         if "id" not in r:
             raise exceptions.CommentPostFailure(r)
-        _comment = comment.Comment(id=r["id"], _session=self._session, source=comment.CommentSource.PROJECT, source_id=self.id)
+        _comment = comment.Comment(
+            id=r["id"],
+            _session=self._session,
+            source=comment.CommentSource.PROJECT,
+            source_id=self.id,
+        )
         _comment._update_from_data(r)
         return _comment
 
@@ -766,7 +818,9 @@ class Project(PartialProject):
         Returns:
             dict: A dict containing the project's ranks. If the ranks aren't available, all values will be -1.
         """
-        return requests.get(f"https://scratchdb.lefty.one/v3/project/info/{self.id}").json()["statistics"]["ranks"]
+        return requests.get(f"https://scratchdb.lefty.one/v3/project/info/{self.id}").json()[
+            "statistics"
+        ]["ranks"]
 
     def moderation_status(self, *, reload: bool = False):
         """

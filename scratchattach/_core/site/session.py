@@ -33,8 +33,10 @@ else:
     T = TypeVar("T")
 
 if "IS_PRE_CODEGEN":
+
     def COMMENT(comment: str): ...
     def PREV_LINE_COMMENT(comment: str): ...
+
 
 from bs4 import BeautifulSoup, Tag
 from typing_extensions import deprecated
@@ -84,6 +86,17 @@ C = TypeVar("C", bound=BaseSiteComponent)
 
 class UnauthSession:
     http_session: http._HTTPSession
+
+    def get_headers(self) -> dict[str, str]:
+        return dict(headers)
+
+    def get_cookies(self) -> dict[str, str]:
+        return {
+            "scratchcsrftoken": "a",
+            "scratchlanguage": "en",
+            "accept": "application/json",
+            "Content-Type": "application/json",
+        }
 
 
 @dataclass
@@ -302,7 +315,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         self.http_session.clear_cookies()
         self.http_session.update_cookies(self._cookies)
         self.http_session.clear_headers()
-        self.http_session.update_headers(self._headers)
+        self.http_session.update_headers(new=self._headers)
 
     def set_ocular_token(self, token: str):
         self.ocular_token = token
@@ -331,7 +344,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         COMMENT("backwards compatibility with v1")
 
         # To avoid inconsistencies with "connect" and "get", this function was renamed
-        COMMENT("To avoid inconsistencies with \"connect\" and \"get\", this function was renamed")
+        COMMENT('To avoid inconsistencies with "connect" and "get", this function was renamed')
         return self.connect_linked_user()
 
     async def set_country(self, country: str = "Antarctica"):
@@ -425,7 +438,9 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
         """
         # TODO: consider using an enum here for project label and match that with user.get_featured_data
-        COMMENT("TODO: consider using an enum here for project label and match that with user.get_featured_data")
+        COMMENT(
+            "TODO: consider using an enum here for project label and match that with user.get_featured_data"
+        )
         payload: dict[str, int | str] = {}
         if project_label is not None:
             payload["featured_project_label"] = str(project_label)
@@ -459,9 +474,13 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
 
     async def get_ocular_status(self) -> typed_dicts.OcularUserDict:
         # You can use sess.connect_linked_user().ocular_status() but this uses the ocular token to work out the username.
-        COMMENT("You can use sess.connect_linked_user().ocular_status() but this uses the ocular token to work out the username.")
+        COMMENT(
+            "You can use sess.connect_linked_user().ocular_status() but this uses the ocular token to work out the username."
+        )
         # In the case the username does not match the session, this would mismatch, and a warning could even be issued
-        COMMENT("In the case the username does not match the session, this would mismatch, and a warning could even be issued")
+        COMMENT(
+            "In the case the username does not match the session, this would mismatch, and a warning could even be issued"
+        )
         self._assert_ocular_auth()
 
         async with self.http_session.get(
@@ -713,11 +732,14 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
     COMMENT("-- Project JSON editing capabilities ---")
     # These are set to staticmethods right now, but they probably should not be
     COMMENT("These are set to staticmethods right now, but they probably should not be")
+
     def connect_empty_project_pb(self) -> editor.Project:
         pb = editor.Project.from_json(
             empty_project_json
         )  # in the future, ideally just init a new editor.Project, instead of loading an empty one
-        PREV_LINE_COMMENT("in the future, ideally just init a new editor.Project, instead of loading an empty one")
+        PREV_LINE_COMMENT(
+            "in the future, ideally just init a new editor.Project, instead of loading an empty one"
+        )
         pb._session = self
         return pb
 
@@ -1254,7 +1276,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
     # --- Connect classes inheriting from BaseCloud ---
     COMMENT("--- Connect classes inheriting from BaseCloud ---")
 
-    @overload # type: ignore[no-overload-impl]
+    @overload  # type: ignore[no-overload-impl]
     def connect_cloud(self, project_id, *, cloud_class: type[T]) -> T:
         """
         Connects to a cloud as logged-in user.
@@ -1285,8 +1307,9 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         """
 
     COMMENT("noinspection PyPep8Naming")
+
     # noinspection PyPep8Naming
-    def connect_cloud( # type: ignore[no-redef]
+    def connect_cloud(  # type: ignore[no-redef]
         self, project_id, *, cloud_class: Optional[type[_base.BaseCloud]] = None
     ) -> _base.BaseCloud:
         cloud_class = cloud_class or cloud.ScratchCloud
@@ -1321,6 +1344,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
     COMMENT("noinspection PyPep8Naming")
     # Class is camelcase here
     COMMENT("Class is camelcase here")
+
     def _make_linked_object(
         self,
         identificator_name: str,
@@ -1340,9 +1364,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         COMMENT("noinspection PyProtectedMember")
         # _get_object is protected
         COMMENT("_get_object is protected")
-        return cls._get_object(
-            identificator_name, identificator, not_found_exception, self
-        )
+        return cls._get_object(identificator_name, identificator, not_found_exception, self)
 
     def connect_user(self, username: str) -> user.User:
         """
@@ -1498,7 +1520,7 @@ class Session(BaseSiteComponent[typed_dicts.SessionDict]):
         try:
             async with self.http_session.get(
                 f"https://scratch.mit.edu/discuss/{category_id}/",
-                shared_http.options().params({"page": page}).value
+                shared_http.options().params({"page": page}).value,
             ) as response:
                 soup = BeautifulSoup(await response.text(), "html.parser")
         except Exception as e:

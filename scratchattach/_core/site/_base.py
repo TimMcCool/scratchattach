@@ -18,9 +18,11 @@ from ..primitives import http
 D = TypeVar("D")
 C = TypeVar("C", bound="BaseSiteComponent")
 
+SessionLike: TypeAlias = session.Session | session.UnauthSession
+
 
 class BaseSiteComponent(ABC, Generic[D]):
-    _session: session.Session | session.UnauthSession
+    _session: SessionLike
     update_api: str
 
     # @abstractmethod
@@ -31,7 +33,7 @@ class BaseSiteComponent(ABC, Generic[D]):
         """
         Updates the attributes of the object by performing an API response. Returns True if the update was successful.
         """
-        async with self._session.http_session.request(
+        async with self.get_http_session().request(
             self.update_method, self.update_api, shared_http.options().timeout(10).value
         ) as response:
             if response.status_code == 429:
@@ -72,7 +74,7 @@ class BaseSiteComponent(ABC, Generic[D]):
         identificator_name: str,
         identificator: Any,
         not_found_exception,
-        session: session.Session | session.UnauthSession,
+        session: SessionLike,
     ) -> Self:
         # Internal function: Generalization of the process ran by get_user, get_studio etc.
         # Builds an object of class that is inheriting from BaseSiteComponent
@@ -109,20 +111,26 @@ class BaseSiteComponent(ABC, Generic[D]):
             raise e
 
     def _make_linked_object(
-        self, identificator_name: str, identificator: Any, cls: type[C], not_found_exception: type[Exception]
+        self,
+        identificator_name: str,
+        identificator: Any,
+        cls: type[C],
+        not_found_exception: type[Exception],
     ) -> C:
         """
         Internal function for making a linked object (authentication kept) based on an identificator (like a project id or username)
         Class must inherit from BaseSiteComponent
         """
-        return cls._get_object(identificator_name, identificator, not_found_exception, self._session)
+        return cls._get_object(
+            identificator_name, identificator, not_found_exception, self._session
+        )
 
     @classmethod
     def parse_object_list(
         cls,
         raw: list[D],
         /,
-        session: session.Session | session.UnauthSession,
+        session: SessionLike,
         primary_key: str = "id",
     ) -> list[Self]:
         results = []
@@ -148,6 +156,9 @@ class BaseSiteComponent(ABC, Generic[D]):
     """
     HTTP method for getting updated information for this component
     """
+
+    def get_http_session(self) -> http._HTTPSession:
+        return self._session.http_session
 
 
 F = TypeVar("F")
@@ -226,7 +237,7 @@ async def api_iterative_data(
 
 
 async def api_iterative(
-    session: session.Session | session.UnauthSession,
+    session: SessionLike,
     url: str,
     *,
     limit: int,
@@ -251,10 +262,7 @@ async def api_iterative(
         """
         async with session.http_session.get(
             f"{url}?limit={lim}&offset={off}{add_params}",
-            shared_http.options()
-            .headers(_headers)
-            .cookies(cookies)
-            .value
+            shared_http.options().headers(_headers).cookies(cookies).value,
         ) as response:
             resp = cast(
                 list[F],
