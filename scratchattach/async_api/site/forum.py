@@ -1,4 +1,5 @@
 """ForumTopic and ForumPost classes"""
+
 from __future__ import annotations
 import warnings
 from dataclasses import dataclass, field
@@ -12,6 +13,7 @@ from scratchattach.utils.commons import headers
 from scratchattach.utils import exceptions, commons
 from ._base import BaseSiteComponent
 from scratchattach.utils.requests import requests
+
 
 @dataclass
 class ForumTopic(BaseSiteComponent):
@@ -36,6 +38,7 @@ class ForumTopic(BaseSiteComponent):
 
     :.update(): Updates the attributes
     """
+
     id: int
     title: str
     category_name: Optional[str] = None
@@ -45,11 +48,11 @@ class ForumTopic(BaseSiteComponent):
     view_count: Optional[int] = field(default=None)
 
     def __str__(self):
-        return f'-F {self.title} ({self.id})'
+        return f"-F {self.title} ({self.id})"
 
     def __post_init__(self):
         self.update_function = requests.get
-        self.update_api = f'https://scratch.mit.edu/discuss/feeds/topic/{self.id}/'
+        self.update_api = f"https://scratch.mit.edu/discuss/feeds/topic/{self.id}/"
         if self._session is None:
             self._headers = headers
             self._cookies = {}
@@ -57,20 +60,24 @@ class ForumTopic(BaseSiteComponent):
             self._headers = self._session.get_headers()
             self._cookies = self._session.get_cookies()
         self._json_headers = dict(self._headers)
-        self._json_headers['accept'] = 'application/json'
-        self._json_headers['Content-Type'] = 'application/json'
+        self._json_headers["accept"] = "application/json"
+        self._json_headers["Content-Type"] = "application/json"
 
     def update(self):
         response = self.update_function(self.update_api, headers=self._headers, cookies=self._cookies, timeout=20)
-        if '429' in str(response):
-            return '429'
+        if "429" in str(response):
+            return "429"
         if response.status_code == 200:
             try:
                 root = ET.fromstring(response.text)
-                namespace = {'atom': 'http://www.w3.org/2005/Atom'}
-                title = root.findtext('atom:title', namespaces=namespace).replace('Latest posts on ', '')
-                category_name = root.findall('.//atom:entry', namespaces=namespace)[0].findtext('.//atom:title', namespaces=namespace).split(' :: ')[1]
-                last_updated = root.findtext('atom:updated', namespaces=namespace)
+                namespace = {"atom": "http://www.w3.org/2005/Atom"}
+                title = root.findtext("atom:title", namespaces=namespace).replace("Latest posts on ", "")
+                category_name = (
+                    root.findall(".//atom:entry", namespaces=namespace)[0]
+                    .findtext(".//atom:title", namespaces=namespace)
+                    .split(" :: ")[1]
+                )
+                last_updated = root.findtext("atom:updated", namespaces=namespace)
             except Exception as e:
                 raise exceptions.ScrapeError(str(e))
         else:
@@ -81,8 +88,8 @@ class ForumTopic(BaseSiteComponent):
         return True
 
     @classmethod
-    def from_id(cls, __id: int, session: module_session.Session, update: bool=False):
-        new = cls(id=__id, _session=session, title='', last_updated='', category_name='')
+    def from_id(cls, __id: int, session: module_session.Session, update: bool = False):
+        new = cls(id=__id, _session=session, title="", last_updated="", category_name="")
         if update:
             new.update()
         return new
@@ -90,47 +97,53 @@ class ForumTopic(BaseSiteComponent):
     def _update_from_data(self, data: dict[str, Any]):
         self.__dict__.update(data)
 
-    def posts(self, *, page=1, order='oldest') -> list[ForumPost]:
+    def posts(self, *, page=1, order="oldest") -> list[ForumPost]:
         """
         Args:
             page (int): The page of the forum topic that should be returned. First page is at index 1.
 
         Returns:
-            list<scratchattach.forum.ForumPost>: A list containing the posts from the specified page of the forum topic 
+            list<scratchattach.forum.ForumPost>: A list containing the posts from the specified page of the forum topic
         """
-        if order != 'oldest':
+        if order != "oldest":
             warnings.warn("Warning: All post orders except for 'oldest' are deprecated and no longer work")
         posts = []
         try:
-            url = f'https://scratch.mit.edu/discuss/topic/{self.id}/?page={page}'
+            url = f"https://scratch.mit.edu/discuss/topic/{self.id}/?page={page}"
             response = requests.get(url, headers=headers, cookies=self._cookies)
         except Exception as e:
             raise exceptions.FetchError(str(e))
         try:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            soup_elm = soup.find('div', class_='djangobb')
+            soup = BeautifulSoup(response.content, "html.parser")
+            soup_elm = soup.find("div", class_="djangobb")
             assert isinstance(soup_elm, Tag)
             try:
-                pagination_div = soup_elm.find('div', class_='pagination')
+                pagination_div = soup_elm.find("div", class_="pagination")
                 assert isinstance(pagination_div, Tag)
-                num_pages = int(pagination_div.find_all('a', class_='page')[-1].text)
+                num_pages = int(pagination_div.find_all("a", class_="page")[-1].text)
             except Exception:
                 num_pages = 1
             try:
-                topic_category = ''
-                breadcrumb_ul = soup_elm.find_all('ul')[1]
+                topic_category = ""
+                breadcrumb_ul = soup_elm.find_all("ul")[1]
                 if breadcrumb_ul:
                     assert isinstance(breadcrumb_ul, Tag)
-                    link = breadcrumb_ul.find_all('a')[1]
+                    link = breadcrumb_ul.find_all("a")[1]
                     topic_category = link.text.strip()
             except Exception as e:
                 warnings.warn(f"Warning: Couldn't scrape topic category for topic {self.id} - {e}")
-                topic_category = ''
-            post_htmls = soup.find_all('div', class_='blockpost')
+                topic_category = ""
+            post_htmls = soup.find_all("div", class_="blockpost")
             for raw_post in post_htmls:
                 if not isinstance(raw_post, Tag):
                     continue
-                post = ForumPost(id=int(str(raw_post['id']).replace('p', '')), topic_id=self.id, _session=self._session, topic_category=topic_category, topic_num_pages=num_pages)
+                post = ForumPost(
+                    id=int(str(raw_post["id"]).replace("p", "")),
+                    topic_id=self.id,
+                    _session=self._session,
+                    topic_category=topic_category,
+                    topic_num_pages=num_pages,
+                )
                 post.update_from_html(raw_post)
                 posts.append(post)
         except Exception as e:
@@ -140,11 +153,12 @@ class ForumTopic(BaseSiteComponent):
     def first_post(self):
         """
         Returns:
-            scratchattach.forum.ForumPost: An object representing the first topic post 
+            scratchattach.forum.ForumPost: An object representing the first topic post
         """
         posts = self.posts(page=1)
         if len(posts) > 0:
             return posts[0]
+
 
 @dataclass
 class ForumPost(BaseSiteComponent):
@@ -176,25 +190,26 @@ class ForumPost(BaseSiteComponent):
     :.content: Returns the content as text
 
     :.post_index: The index that the post has in the topic
-        
+
     :.update(): Updates the attributes
     """
+
     id: int = field(default=0)
     topic_id: int = field(default=0)
-    topic_name: str = field(default='')
-    topic_category: str = field(default='')
+    topic_name: str = field(default="")
+    topic_category: str = field(default="")
     topic_num_pages: int = field(default=0)
-    author_name: str = field(default='')
-    author_avatar_url: str = field(default='')
-    posted: str = field(default='')
+    author_name: str = field(default="")
+    author_avatar_url: str = field(default="")
+    posted: str = field(default="")
     deleted: bool = field(default=False)
-    html_content: str = field(default='')
-    content: str = field(default='')
+    html_content: str = field(default="")
+    content: str = field(default="")
     post_index: int = field(default=0)
     _session: Optional[module_session.Session] = field(default=None)
 
     def __post_init__(self):
-        self.update_api = ''
+        self.update_api = ""
         if self._session is None:
             self._headers = headers
             self._cookies = {}
@@ -202,11 +217,11 @@ class ForumPost(BaseSiteComponent):
             self._headers = self._session.get_headers()
             self._cookies = self._session.get_cookies()
         self._json_headers = dict(self._headers)
-        self._json_headers['accept'] = 'application/json'
-        self._json_headers['Content-Type'] = 'application/json'
+        self._json_headers["accept"] = "application/json"
+        self._json_headers["Content-Type"] = "application/json"
 
     def update_function(self, *args, **kwargs):
-        raise TypeError('Forum posts cannot be updated like this')
+        raise TypeError("Forum posts cannot be updated like this")
 
     def update(self):
         """
@@ -234,25 +249,25 @@ class ForumPost(BaseSiteComponent):
         return self._update_from_html(soup_html)
 
     def _update_from_html(self, soup_html: Tag):
-        post_index_elm = soup_html.find('span', class_='conr')
+        post_index_elm = soup_html.find("span", class_="conr")
         assert isinstance(post_index_elm, Tag)
-        id_attr = soup_html['id']
+        id_attr = soup_html["id"]
         assert isinstance(id_attr, str)
-        posted_elm = soup_html.find('a', href=True)
+        posted_elm = soup_html.find("a", href=True)
         assert isinstance(posted_elm, Tag)
-        content_elm = soup_html.find('div', class_='post_body_html')
+        content_elm = soup_html.find("div", class_="post_body_html")
         assert isinstance(content_elm, Tag)
-        author_name_elm = soup_html.select_one('dl dt a')
+        author_name_elm = soup_html.select_one("dl dt a")
         assert isinstance(author_name_elm, Tag)
-        topic_name_elm = soup_html.find('h3')
+        topic_name_elm = soup_html.find("h3")
         assert isinstance(topic_name_elm, Tag)
-        self.post_index = int(post_index_elm.text.strip('#'))
-        self.id = int(id_attr.replace('p', ''))
+        self.post_index = int(post_index_elm.text.strip("#"))
+        self.id = int(id_attr.replace("p", ""))
         self.posted = posted_elm.text.strip()
         self.content = content_elm.text.strip()
-        self.html_content = str(soup_html.find('div', class_='post_body_html'))
+        self.html_content = str(soup_html.find("div", class_="post_body_html"))
         self.author_name = author_name_elm.text.strip()
-        self.author_avatar_url = str(author_name_elm['href'])
+        self.author_avatar_url = str(author_name_elm["href"])
         self.topic_name = topic_name_elm.text.strip()
         return True
 
@@ -261,30 +276,54 @@ class ForumPost(BaseSiteComponent):
         Returns:
             scratchattach.forum.ForumTopic: An object representing the forum topic this post is in.
         """
-        return self._make_linked_object('id', self.topic_id, ForumTopic, exceptions.ForumContentNotFound)
+        return self._make_linked_object("id", self.topic_id, ForumTopic, exceptions.ForumContentNotFound)
 
     def ocular_reactions(self):
-        return requests.get(f'https://my-ocular.jeffalo.net/api/reactions/{self.id}', timeout=10).json()
+        return requests.get(f"https://my-ocular.jeffalo.net/api/reactions/{self.id}", timeout=10).json()
 
     def author(self):
         """
         Returns:
             scratchattach.user.User: An object representing the user who created this forum post.
         """
-        return self._make_linked_object('username', self.author_name, user.User, exceptions.UserNotFound)
+        return self._make_linked_object("username", self.author_name, user.User, exceptions.UserNotFound)
 
     def edit(self, new_content: str):
         """
         Changes the content of the forum post.  You can only use this function if this object was created using :meth:`scratchattach.session.Session.connect_post` or through another method that requires authentication. You must own the forum post.
-        
+
         Args:
             new_content (str): The text that the forum post will be set to.
         """
         self._assert_auth()
         cookies = dict(self._cookies)
-        cookies['accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
-        cookies['Content-Type'] = 'application/x-www-form-urlencoded'
-        r = requests.post(f'https://scratch.mit.edu/discuss/post/{self.id}/edit/', headers={'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'accept-language': 'de,en;q=0.9', 'cache-control': 'max-age=0', 'content-type': 'application/x-www-form-urlencoded', 'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"', 'sec-ch-ua-mobile': '?0', 'sec-ch-ua-platform': '"Windows"', 'sec-fetch-dest': 'document', 'sec-fetch-mode': 'navigate', 'sec-fetch-site': 'same-origin', 'sec-fetch-user': '?1', 'upgrade-insecure-requests': '1', 'Referer': f'https://scratch.mit.edu/discuss/post/{self.id}/edit/', 'x-csrftoken': 'a'}, cookies=cookies, json=f'csrfmiddlewaretoken=a&body={new_content}&', timeout=10)
+        cookies["accept"] = (
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
+        )
+        cookies["Content-Type"] = "application/x-www-form-urlencoded"
+        r = requests.post(
+            f"https://scratch.mit.edu/discuss/post/{self.id}/edit/",
+            headers={
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                "accept-language": "de,en;q=0.9",
+                "cache-control": "max-age=0",
+                "content-type": "application/x-www-form-urlencoded",
+                "sec-ch-ua": '" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"',
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": '"Windows"',
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "same-origin",
+                "sec-fetch-user": "?1",
+                "upgrade-insecure-requests": "1",
+                "Referer": f"https://scratch.mit.edu/discuss/post/{self.id}/edit/",
+                "x-csrftoken": "a",
+            },
+            cookies=cookies,
+            json=f"csrfmiddlewaretoken=a&body={new_content}&",
+            timeout=10,
+        )
+
 
 def get_topic(topic_id) -> ForumTopic:
     """
@@ -300,10 +339,11 @@ def get_topic(topic_id) -> ForumTopic:
         Scratch's API uses very heavy caching for logged out users, therefore the returned data will not be up to date.
 
         Any methods that require authentication will not work on the returned object.
-        
+
         If you need up-to-date data or want to use methods that require authentication, create the object with :meth:`scratchattach.session.Session.connect_topic` instead.
     """
-    return commons._get_object('id', topic_id, ForumTopic, exceptions.ForumContentNotFound)
+    return commons._get_object("id", topic_id, ForumTopic, exceptions.ForumContentNotFound)
+
 
 def get_topic_list(category_id, *, page=1):
     """
@@ -311,7 +351,7 @@ def get_topic_list(category_id, *, page=1):
 
     Args:
         category_id (str): ID of the forum category
-    
+
     Keyword Arguments:
         page (str): Page of the category topics that should be returned
 
@@ -326,31 +366,41 @@ def get_topic_list(category_id, *, page=1):
         If you need up-to-date data or want to use methods that require authentication, get the forum topics with :meth:`scratchattach.session.Session.connect_topic_list` instead.
     """
     try:
-        response = requests.get(f'https://scratch.mit.edu/discuss/{category_id}/?page={page}')
-        soup = BeautifulSoup(response.content, 'html.parser')
+        response = requests.get(f"https://scratch.mit.edu/discuss/{category_id}/?page={page}")
+        soup = BeautifulSoup(response.content, "html.parser")
     except Exception as e:
         raise exceptions.FetchError(str(e))
     try:
-        category_name = soup.find('h4').find('span').get_text()
+        category_name = soup.find("h4").find("span").get_text()
     except Exception as e:
-        raise exceptions.BadRequest('Invalid category id')
+        raise exceptions.BadRequest("Invalid category id")
     try:
-        topics = soup.find_all('tr')
+        topics = soup.find_all("tr")
         topics.pop(0)
         return_topics = []
         for topic in topics:
-            title_link = topic.find('a')
+            title_link = topic.find("a")
             title = title_link.text.strip()
-            topic_id = title_link['href'].split('/')[-2]
-            columns = topic.find_all('td')
+            topic_id = title_link["href"].split("/")[-2]
+            columns = topic.find_all("td")
             columns = [column.text for column in columns]
             if len(columns) == 1:
                 continue
-            last_updated = columns[3].split(' ')[0] + ' ' + columns[3].split(' ')[1]
-            return_topics.append(ForumTopic(id=int(topic_id), title=title, category_name=category_name, last_updated=last_updated, reply_count=int(columns[1]), view_count=int(columns[2])))
+            last_updated = columns[3].split(" ")[0] + " " + columns[3].split(" ")[1]
+            return_topics.append(
+                ForumTopic(
+                    id=int(topic_id),
+                    title=title,
+                    category_name=category_name,
+                    last_updated=last_updated,
+                    reply_count=int(columns[1]),
+                    view_count=int(columns[2]),
+                )
+            )
         return return_topics
     except Exception as e:
         raise exceptions.ScrapeError(str(e))
+
 
 def youtube_link_to_scratch(link: str):
     """
@@ -359,8 +409,8 @@ def youtube_link_to_scratch(link: str):
     """
     url_parse = urlparse(link)
     query_parse = parse_qs(url_parse.query)
-    if 'v' in query_parse:
-        video_id = query_parse['v'][0]
+    if "v" in query_parse:
+        video_id = query_parse["v"][0]
     else:
-        video_id = url_parse.path.split('/')[-1]
-    return f'https://scratch.mit.edu/discuss/youtube/{video_id}'
+        video_id = url_parse.path.split("/")[-1]
+    return f"https://scratch.mit.edu/discuss/youtube/{video_id}"

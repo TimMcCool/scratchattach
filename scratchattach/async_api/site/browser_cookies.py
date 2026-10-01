@@ -2,6 +2,7 @@ from typing import Optional, TYPE_CHECKING
 from typing_extensions import assert_never
 from http.cookiejar import CookieJar
 from enum import Enum, auto
+
 browsercookie_err = None
 try:
     if TYPE_CHECKING:
@@ -12,6 +13,7 @@ except Exception as e:
     browsercookie = None
     browsercookie_err = e
 
+
 class Browser(Enum):
     ANY = auto()
     FIREFOX = auto()
@@ -21,6 +23,8 @@ class Browser(Enum):
     CHROMIUM = auto()
     VIVALDI = auto()
     EDGE_DEV = auto()
+
+
 FIREFOX = Browser.FIREFOX
 CHROME = Browser.CHROME
 EDGE = Browser.EDGE
@@ -30,7 +34,8 @@ VIVALDI = Browser.VIVALDI
 ANY = Browser.ANY
 EDGE_DEV = Browser.EDGE_DEV
 
-def cookies_from_browser(browser: Browser=ANY) -> dict[str, str]:
+
+def cookies_from_browser(browser: Browser = ANY) -> dict[str, str]:
     """
     Import cookies from browser to login
     """
@@ -52,8 +57,8 @@ def cookies_from_browser(browser: Browser=ANY) -> dict[str, str]:
     elif browser is Browser.VIVALDI:
         cookies = browser_cookie3.vivaldi()
     elif browser is Browser.EDGE_DEV:
-        raise ValueError('EDGE_DEV is not supported anymore.')
+        raise ValueError("EDGE_DEV is not supported anymore.")
     else:
         assert_never(browser)
     assert isinstance(cookies, CookieJar)
-    return {cookie.name: cookie.value for cookie in cookies if 'scratch.mit.edu' in cookie.domain and cookie.value}
+    return {cookie.name: cookie.value for cookie in cookies if "scratch.mit.edu" in cookie.domain and cookie.value}

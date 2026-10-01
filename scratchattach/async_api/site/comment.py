@@ -1,4 +1,5 @@
 """Comment class"""
+
 from __future__ import annotations
 import warnings
 import html
@@ -10,17 +11,20 @@ from . import user, project, studio, session
 from ._base import BaseSiteComponent
 from scratchattach.utils import exceptions
 
+
 class CommentSource(Enum):
     PROJECT = auto()
     USER_PROFILE = auto()
     STUDIO = auto()
     UNKNOWN = auto()
 
+
 @dataclass
 class Comment(BaseSiteComponent):
     """
     Represents a Scratch comment (on a profile, studio or project)
     """
+
     id: Optional[int | str] = None
     source: CommentSource = CommentSource.UNKNOWN
     source_id: Optional[int | str] = None
@@ -43,20 +47,25 @@ class Comment(BaseSiteComponent):
         return False
 
     def _update_from_data(self, data: dict[str, str | dict | Any]):
-        self.id = data['id']
-        self.parent_id = data.get('parent_id')
-        self.commentee_id = data.get('commentee_id')
-        self.content = str(data['content'])
-        self.datetime_created = data['datetime_created']
-        author = data.get('author', {})
-        self.author_name = author.get('username', self.author_name)
-        self.author_id = author.get('id', self.author_id)
-        self.written_by_scratchteam = author.get('scratchteam', self.written_by_scratchteam)
-        self.reply_count = data.get('reply_count', self.reply_count)
-        source: str = data.get('source')
+        self.id = data["id"]
+        self.parent_id = data.get("parent_id")
+        self.commentee_id = data.get("commentee_id")
+        self.content = str(data["content"])
+        self.datetime_created = data["datetime_created"]
+        author = data.get("author", {})
+        self.author_name = author.get("username", self.author_name)
+        self.author_id = author.get("id", self.author_id)
+        self.written_by_scratchteam = author.get("scratchteam", self.written_by_scratchteam)
+        self.reply_count = data.get("reply_count", self.reply_count)
+        source: str = data.get("source")
         if self.source is CommentSource.UNKNOWN:
-            self.source = {'project': CommentSource.PROJECT, 'studio': CommentSource.STUDIO, 'profile': CommentSource.USER_PROFILE, None: CommentSource.UNKNOWN}[source]
-        self.source_id = data.get('source_id', self.source_id)
+            self.source = {
+                "project": CommentSource.PROJECT,
+                "studio": CommentSource.STUDIO,
+                "profile": CommentSource.USER_PROFILE,
+                None: CommentSource.UNKNOWN,
+            }[source]
+        self.source_id = data.get("source_id", self.source_id)
 
     @property
     def text(self) -> str:
@@ -68,7 +77,7 @@ class Comment(BaseSiteComponent):
         return str(html.unescape(self.content))
 
     def author(self) -> user.User:
-        return self._make_linked_object('username', self.author_name, user.User, exceptions.UserNotFound)
+        return self._make_linked_object("username", self.author_name, user.User, exceptions.UserNotFound)
 
     def place(self) -> user.User | studio.Studio | project.Project:
         """
@@ -77,11 +86,11 @@ class Comment(BaseSiteComponent):
         If the place can't be traced back, None is returned.
         """
         if self.source == CommentSource.USER_PROFILE:
-            return self._make_linked_object('username', self.source_id, user.User, exceptions.UserNotFound)
+            return self._make_linked_object("username", self.source_id, user.User, exceptions.UserNotFound)
         elif self.source == CommentSource.STUDIO:
-            return self._make_linked_object('id', self.source_id, studio.Studio, exceptions.UserNotFound)
+            return self._make_linked_object("id", self.source_id, studio.Studio, exceptions.UserNotFound)
         elif self.source == CommentSource.PROJECT:
-            return self._make_linked_object('id', self.source_id, project.Project, exceptions.UserNotFound)
+            return self._make_linked_object("id", self.source_id, project.Project, exceptions.UserNotFound)
         else:
             assert_never(self.source)
 
@@ -90,41 +99,49 @@ class Comment(BaseSiteComponent):
             return None
         if self.cached_parent_comment is not None:
             return self.cached_parent_comment
-        if self.source == 'profile':
-            self.cached_parent_comment = user.User(username=self.source_id, _session=self._session).comment_by_id(self.parent_id)
-        elif self.source == 'project':
+        if self.source == "profile":
+            self.cached_parent_comment = user.User(username=self.source_id, _session=self._session).comment_by_id(
+                self.parent_id
+            )
+        elif self.source == "project":
             p = project.Project(id=self.source_id, _session=self._session)
             p.update()
             self.cached_parent_comment = p.comment_by_id(self.parent_id)
-        elif self.source == 'studio':
+        elif self.source == "studio":
             self.cached_parent_comment = studio.Studio(id=self.source_id, _session=self._session).comment_by_id(self.parent_id)
         return self.cached_parent_comment
 
-    def replies(self, *, use_cache: bool=True, limit=40, offset=0):
+    def replies(self, *, use_cache: bool = True, limit=40, offset=0):
         """
         Keyword Arguments:
             use_cache (bool): Returns the replies cached on the first reply fetch. This makes it SIGNIFICANTLY faster for profile comments. Warning: For profile comments, the replies are retrieved and cached on object creation.
         """
         if self.cached_replies is None or not use_cache:
             if self.source == CommentSource.USER_PROFILE:
-                self.cached_replies = user.User(username=self.source_id, _session=self._session).comment_by_id(self.id).cached_replies[offset:offset + limit]
+                self.cached_replies = (
+                    user.User(username=self.source_id, _session=self._session)
+                    .comment_by_id(self.id)
+                    .cached_replies[offset : offset + limit]
+                )
             elif self.source == CommentSource.PROJECT:
                 p = project.Project(id=self.source_id, _session=self._session)
                 p.update()
                 self.cached_replies = p.comment_replies(comment_id=self.id, limit=limit, offset=offset)
             elif self.source == CommentSource.STUDIO:
-                self.cached_replies = studio.Studio(id=self.source_id, _session=self._session).comment_replies(comment_id=self.id, limit=limit, offset=offset)
+                self.cached_replies = studio.Studio(id=self.source_id, _session=self._session).comment_replies(
+                    comment_id=self.id, limit=limit, offset=offset
+                )
         return self.cached_replies
 
     def reply(self, content, *, commentee_id=None):
         """
         Posts a reply comment to the comment.
-        
+
         Warning:
             Scratch only shows comments replying to top-level comments, and all replies to replies are actually replies to top-level comments in the API.
 
             Therefore, if this comment is a reply, this method will not reply to the comment itself but to the corresponding top-level comment.
-    
+
         Args:
             content (str): Comment content to post.
 
@@ -145,16 +162,20 @@ class Comment(BaseSiteComponent):
             if self.author_id:
                 commentee_id = self.author_id
             else:
-                commentee_id = ''
+                commentee_id = ""
         if self.source == CommentSource.USER_PROFILE:
-            return user.User(username=self.source_id, _session=self._session).reply_comment(content, parent_id=str(parent_id), commentee_id=commentee_id)
+            return user.User(username=self.source_id, _session=self._session).reply_comment(
+                content, parent_id=str(parent_id), commentee_id=commentee_id
+            )
         if self.source == CommentSource.PROJECT:
             p = project.Project(id=self.source_id, _session=self._session)
             p.update()
             return p.reply_comment(content, parent_id=str(parent_id), commentee_id=commentee_id)
         if self.source == CommentSource.STUDIO:
-            return studio.Studio(id=self.source_id, _session=self._session).reply_comment(content, parent_id=str(parent_id), commentee_id=commentee_id)
-        raise ValueError(f'Unknown source: {self.source}')
+            return studio.Studio(id=self.source_id, _session=self._session).reply_comment(
+                content, parent_id=str(parent_id), commentee_id=commentee_id
+            )
+        raise ValueError(f"Unknown source: {self.source}")
 
     def delete(self):
         """
