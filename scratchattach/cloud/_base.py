@@ -1,4 +1,6 @@
 from __future__ import annotations
+import queue
+import threading
 import traceback
 
 import json
@@ -13,6 +15,7 @@ from collections.abc import Iterator
 from scratchattach.cloud import cloud as cloud_module
 
 if TYPE_CHECKING:
+    from scratchattach.eventhandlers import cloud_server
     from _typeshed import SupportsRead
 else:
     T = TypeVar("T")
@@ -91,7 +94,9 @@ class AnyCloud(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries: int = 2):
+    def set_vars(
+        self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries: int = 2
+    ):
         """
         Sets multiple cloud variables at once (works for an unlimited amount of variables).
 
@@ -104,11 +109,13 @@ class AnyCloud(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> T:
+    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> T | None:
         pass
 
     @abstractmethod
-    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> dict[str, T]:
+    def get_all_vars(
+        self, *, recorder_initial_values: Optional[dict[str, Any]] = None
+    ) -> dict[str, T]:
         pass
 
     def events(self) -> CloudEvents:
@@ -124,10 +131,16 @@ class AnyCloud(ABC, Generic[T]):
     ) -> CloudRequests:
         used_cloud_vars = used_cloud_vars or ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         return CloudRequests(
-            self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss, respond_order=respond_order, debug=debug
+            self,
+            used_cloud_vars=used_cloud_vars,
+            no_packet_loss=no_packet_loss,
+            respond_order=respond_order,
+            debug=debug,
         )
 
-    def storage(self, *, no_packet_loss: bool = False, used_cloud_vars: Optional[list[str]] = None) -> CloudStorage:
+    def storage(
+        self, *, no_packet_loss: bool = False, used_cloud_vars: Optional[list[str]] = None
+    ) -> CloudStorage:
         used_cloud_vars = used_cloud_vars or ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         return CloudStorage(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
 
@@ -136,7 +149,7 @@ class AnyCloud(ABC, Generic[T]):
         pass
 
 
-class DummyCloud(AnyCloud[Any]):
+class DummyCloud(AnyCloud[T]):
     class DummyEventStream(EventStream):
         def read(self, length=...):
             return iter(())
@@ -159,13 +172,17 @@ class DummyCloud(AnyCloud[Any]):
     def set_var(self, variable: str, value: T, *, max_retries: int = 2) -> None:
         pass
 
-    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries: int = 2):
+    def set_vars(
+        self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries: int = 2
+    ):
         pass
 
-    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> Any:
-        pass
+    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, T]] = None) -> T | None:
+        return None
 
-    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    def get_all_vars(
+        self, *, recorder_initial_values: Optional[dict[str, T]] = None
+    ) -> dict[str, T]:
         return {}
 
 
@@ -197,9 +214,12 @@ class WebSocketEventStream(EventStream):
         try:
             self.source_cloud.connect()
         except exceptions.CloudConnectionError:
-            warnings.warn("Initial cloud connection attempt failed, retrying...", exceptions.UnexpectedWebsocketEventWarning)
+            warnings.warn(
+                "Initial cloud connection attempt failed, retrying...",
+                exceptions.UnexpectedWebsocketEventWarning,
+            )
         self.packets_left = []
-    
+
     def wait_before_reconnect(self):
         if time.time() - self.most_recent_reconnection_time > self.RECENT_RECONNECT_TIME_DELTA:
             self.recent_reconnect_count = 0
@@ -243,12 +263,16 @@ class WebSocketEventStream(EventStream):
             while not done:
                 # print("Getting data...")
                 try:
-                    self.receive_new(not recv_once, timeout=timeout_end - time.time() if has_timeout else None)
+                    self.receive_new(
+                        not recv_once, timeout=timeout_end - time.time() if has_timeout else None
+                    )
                     while (not has_timeout or time.time() < timeout_end) and (
                         (recv_once and self.packets_left) or (not recv_once and i < recv_at_least)
                     ):
                         if not self.packets_left and not recv_once:
-                            self.receive_new(timeout=timeout_end - time.time() if has_timeout else None)
+                            self.receive_new(
+                                timeout=timeout_end - time.time() if has_timeout else None
+                            )
                         if not self.packets_left:
                             continue
                         i += 1
@@ -276,7 +300,7 @@ class WebSocketEventStream(EventStream):
         self.source_cloud.disconnect()
 
 
-class BaseCloud(AnyCloud[Union[str, int]]):
+class BaseCloud(AnyCloud[Union[str, int, float]]):
     """
     Base class for a project's cloud variables. Represents a cloud.
 
@@ -323,7 +347,9 @@ class BaseCloud(AnyCloud[Union[str, int]]):
 
         # Required internal attributes that every object representing a cloud needs to have (no matter what cloud is represented):
         self._session = _session
-        self.active_connection = False  # whether a connection to a cloud variable server is currently established
+        self.active_connection = (
+            False  # whether a connection to a cloud variable server is currently established
+        )
 
         self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
         self.recorder = None  # A CloudRecorder object that records cloud activity for the values to be retrieved later,
@@ -368,7 +394,9 @@ class BaseCloud(AnyCloud[Union[str, int]]):
                 self._send_recursive(data, current_depth=current_depth + 1, max_depth=max_depth)
             else:
                 self.active_connection = False
-                raise exceptions.CloudConnectionError(f"Sending packet failed {max_depth + 1} tries: {data}")
+                raise exceptions.CloudConnectionError(
+                    f"Sending packet failed {max_depth + 1} tries: {data}"
+                )
 
     def _send_packet(self, packet, *, max_retries=2):
         self._send_recursive(json.dumps(packet) + "\n", max_depth=max_retries)
@@ -428,7 +456,8 @@ class BaseCloud(AnyCloud[Union[str, int]]):
     def _enforce_ratelimit(self, *, n):
         # n is the amount of variables being set
         if (
-            (time.time() - self.first_var_set) / (self.var_sets_since_first + 1) > self.ws_longterm_ratelimit
+            (time.time() - self.first_var_set) / (self.var_sets_since_first + 1)
+            > self.ws_longterm_ratelimit
         ):  # if the average delay between cloud variable sets has been bigger than the long-term rate-limit, cloud variables can be set fast (wait time smaller than long-term rate limit) again
             self.var_sets_since_first = 0
             self.first_var_set = time.time()
@@ -518,19 +547,25 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             if recorder_initial_values is None and project_id is not None:
                 recorder_initial_values = _get_cloud_var_initial_data_or_none(project_id)
             recorder_initial_values = recorder_initial_values or {}
-            self.recorder = recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
+            self.recorder = recorder = cloud_recorder.CloudRecorder(
+                self, initial_values=recorder_initial_values
+            )
             recorder.start()
             # print("Started recorder.")
             recorder.received_data.wait(timeout=1)
             time.sleep(0.01)
         return recorder
 
-    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None):
+    def get_var(
+        self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None
+    ) -> str | int | float | None:
         var = "☁ " + var.removeprefix("☁ ")
         recorder = self._ensure_recorder_running(recorder_initial_values=recorder_initial_values)
         return recorder.get_var(var)
 
-    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None):
+    def get_all_vars(
+        self, *, recorder_initial_values: Optional[dict[str, Any]] = None
+    ) -> dict[str, str | int | float]:
         recorder = self._ensure_recorder_running(recorder_initial_values=recorder_initial_values)
         return recorder.get_all_vars()
 
@@ -563,7 +598,9 @@ def _get_cloud_var_initial_data(project_id: Union[str, int]) -> dict[str, Any]:
     from scratchattach.site import project
 
     data: dict[str, Any] = {}
-    if isinstance((j := project.get_project(project_id).raw_json()), dict) and isinstance(targets := j.get("targets"), list):
+    if isinstance((j := project.get_project(project_id).raw_json()), dict) and isinstance(
+        targets := j.get("targets"), list
+    ):
         for target in targets:
             if not isinstance(target, dict):
                 continue
@@ -589,3 +626,126 @@ def _get_cloud_var_initial_data_or_none(project_id: Union[str, int]) -> Optional
         return _get_cloud_var_initial_data(project_id)
     except Exception:
         return None
+
+
+class CloudServerAdapter(AnyCloud[str | int | float]):
+    server: "cloud_server.BaseCloudServer"
+    disconnected: threading.Event
+    project_id: str | int
+    connected_event_stream_queues: dict[int, queue.Queue[dict[str, Any]]]
+
+    def __init__(self, server: "cloud_server.BaseCloudServer", project_id: str | int):
+        self.server = server
+        self.disconnected = threading.Event()
+        self.project_id = project_id
+        self.connected_event_stream_queues = {}
+        
+        @self.server.event
+        def on_outgoing_packet(event):
+            for listener in self.connected_event_stream_queues.values():
+                listener.put(event)
+
+    def connect(self):
+        self.active_connection = True
+        self.disconnected.clear()
+
+    def disconnect(self):
+        self.active_connection = False
+        self.disconnected.set()
+
+    def reconnect(self):
+        self.disconnect()
+        time.sleep(0.1)
+        self.connect()
+
+    def _enforce_ratelimit(self, *, n: int) -> None:
+        pass
+
+    def set_var(self, variable: str, value: str | int | float, *, max_retries: int = 2) -> None:
+        """
+        Sets a cloud variable.
+
+        Args:
+            variable (str): The name of the cloud variable that should be set (provided without the cloud emoji)
+            value (Any): The value the cloud variable should be set to
+
+        Kwargs:
+            max_retries (int) : Maximum number of times to retry setting the var if setting fails before raising an exception
+        """
+        if self.disconnected.is_set():
+            return
+        self.server.set_var(
+            self.project_id,
+            variable,
+            value,
+        )
+
+    def set_vars(
+        self,
+        var_value_dict: dict[str, str | int | float],
+        *,
+        intelligent_waits: bool = True,
+        max_retries: int = 2,
+    ):
+        """
+        Sets multiple cloud variables at once (works for an unlimited amount of variables).
+
+        Args:
+            var_value_dict (dict): variable:value dictionary with the variables / values to set. The dict should like this: {"var1":"value1", "var2":"value2", ...}
+
+        Kwargs:
+            intelligent_waits (boolean): When enabled, the method will automatically decide how long to wait before performing this cloud variable set, to make sure no rate limits are triggered
+            max_retries (int) : Maximum number of times to retry setting the var if setting fails before raising an exception
+        """
+        if self.disconnected.is_set():
+            return
+        self.server.set_project_vars(self.project_id, var_value_dict)
+
+    def get_var(
+        self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None
+    ) -> str | int | float | None:
+        return self.server.get_var(self.project_id, var)
+
+    def get_all_vars(
+        self, *, recorder_initial_values: Optional[dict[str, Any]] = None
+    ) -> dict[str, str | int | float]:
+        return self.server.get_project_vars(self.project_id).copy()
+
+    def create_event_stream(self) -> CloudServerAdapterEventStream:
+        return CloudServerAdapterEventStream(self)
+
+
+class CloudServerAdapterEventStream(EventStream):
+    adapter: CloudServerAdapter
+    disconnected: threading.Event
+    _queue: queue.Queue[dict[str, Any]]
+
+    def __init__(self, adapter: CloudServerAdapter):
+        self.adapter = adapter
+        self.disconnected = threading.Event()
+        self._queue = queue.Queue()
+        self.adapter.connected_event_stream_queues[id(self)] = self._queue
+
+    def read(self, amount: int = -1) -> Iterator[dict[str, Any]]:
+        if self.disconnected.is_set() or self.adapter.disconnected.is_set():
+            return
+        end_time = time.time() + self.timeout if self.timeout is not None else None
+        progress = 0
+        while (progress < amount if amount >= 0 else progress == 0) and (
+            time.time() < end_time if end_time is not None else True
+        ):
+            try:
+                yield self._queue.get(
+                    self.timeout is None or self.timeout > 0.0,
+                    max(end_time - time.time(), 0) if end_time is not None else None,
+                )
+            except queue.Empty:
+                pass
+
+    def __del__(self):
+        self.close()
+
+    def close(self) -> None:
+        if not self.disconnected.is_set():
+            del self.adapter.connected_event_stream_queues[id(self)]
+        self.disconnected.set()
