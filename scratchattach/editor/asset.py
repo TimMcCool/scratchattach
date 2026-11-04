@@ -15,7 +15,7 @@ class AssetFile:
     - stores the filename, data, and md5 hash
     """
     filename: str
-    _data: Optional[bytes] = field(repr=False, default=None)
+    _data: bytes | None = field(repr=False, default=None)
     _md5: str = field(repr=False, default_factory=str)
 
     @property
@@ -170,7 +170,7 @@ class Asset(base.SpriteSubComponent):
     def from_file(fp: str, name: str = None):
         image_types = ("png", "jpg", "jpeg", "svg")
         sound_types = ("wav", "mp3")
-        
+
         # Should save data as well so it can be uploaded to scratch if required (add to project asset data)
         ...
     """
@@ -230,8 +230,8 @@ class Sound(Asset):
                  name: str = "pop",
                  file_name: str = "83a9787d4cb6f3b7632b4ddfebf74367.wav",
 
-                 rate: Optional[int] = None,
-                 sample_count: Optional[int] = None,
+                 rate: int | None = None,
+                 sample_count: int | None = None,
                  _sprite: sprite.Sprite = build_defaulting.SPRITE_DEFAULT):
         """
         A sound. An asset with additional properties

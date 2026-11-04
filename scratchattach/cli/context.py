@@ -19,8 +19,8 @@ import scratchattach as sa
 class _Ctx:
     args: ArgSpace = field(default_factory=ArgSpace)
     parser: argparse.ArgumentParser = field(default_factory=argparse.ArgumentParser)
-    _username: Optional[str] = None
-    _session: Optional[sa.Session] = None
+    _username: str | None = None
+    _session: sa.Session | None = None
 
     # TODO: implement this
     def sessionable(self, func):
@@ -84,7 +84,7 @@ class _Ctx:
             db.conn.commit()
 
     @staticmethod
-    def db_get_sessid(username: str) -> Optional[str]:
+    def db_get_sessid(username: str) -> str | None:
         ret = db.cursor.execute("SELECT ID FROM SESSIONS WHERE USERNAME = ?", (username,)).fetchone()
         if ret:
             ret = ret[0]

@@ -48,7 +48,7 @@ class EventStream(SupportsRead[Iterator[dict[str, Any]]], SupportsClose):
     Allows you to stream events
     """
 
-    timeout: Optional[Union[float, int]] = None
+    timeout: Union[float, int] | None = None
 
 
 class AnyCloud(ABC, Generic[T]):
@@ -58,7 +58,7 @@ class AnyCloud(ABC, Generic[T]):
 
     active_connection: bool
     var_sets_since_first: int
-    _session: Optional[session.Session]
+    _session: session.Session | None
 
     @abstractmethod
     def connect(self):
@@ -104,11 +104,11 @@ class AnyCloud(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> T:
+    def get_var(self, var, *, recorder_initial_values: dict[str, Any] | None = None) -> T:
         pass
 
     @abstractmethod
-    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> dict[str, T]:
+    def get_all_vars(self, *, recorder_initial_values: dict[str, Any]] = None) -> dict[str, T | None:
         pass
 
     def events(self) -> CloudEvents:
@@ -118,7 +118,7 @@ class AnyCloud(ABC, Generic[T]):
         self,
         *,
         no_packet_loss: bool = False,
-        used_cloud_vars: Optional[list[str]] = None,
+        used_cloud_vars: list[str] | None = None,
         respond_order=RespondOrder.RECEIVE,
         debug: bool = False,
     ) -> CloudRequests:
@@ -127,7 +127,7 @@ class AnyCloud(ABC, Generic[T]):
             self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss, respond_order=respond_order, debug=debug
         )
 
-    def storage(self, *, no_packet_loss: bool = False, used_cloud_vars: Optional[list[str]] = None) -> CloudStorage:
+    def storage(self, *, no_packet_loss: bool = False, used_cloud_vars: list[str] | None = None) -> CloudStorage:
         used_cloud_vars = used_cloud_vars or ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         return CloudStorage(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
 
@@ -162,10 +162,10 @@ class DummyCloud(AnyCloud[Any]):
     def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries: int = 2):
         pass
 
-    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> Any:
+    def get_var(self, var, *, recorder_initial_values: dict[str, Any] | None = None) -> Any:
         pass
 
-    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    def get_all_vars(self, *, recorder_initial_values: dict[str, Any]] = None) -> dict[str, Any | None:
         return {}
 
 
@@ -199,7 +199,7 @@ class WebSocketEventStream(EventStream):
         except exceptions.CloudConnectionError:
             warnings.warn("Initial cloud connection attempt failed, retrying...", exceptions.UnexpectedWebsocketEventWarning)
         self.packets_left = []
-    
+
     def wait_before_reconnect(self):
         if time.time() - self.most_recent_reconnection_time > self.RECENT_RECONNECT_TIME_DELTA:
             self.recent_reconnect_count = 0
@@ -210,7 +210,7 @@ class WebSocketEventStream(EventStream):
             time.sleep(1.0)
         self.most_recent_reconnection_time = time.time()
 
-    def receive_new(self, non_blocking: bool = False, timeout: Optional[float] = 0):
+    def receive_new(self, non_blocking: bool = False, timeout: float | None = 0):
         timeout = None if timeout is None else max(timeout, 0)
         timeout_value = self.timeout if timeout is None else timeout
         if non_blocking:
@@ -287,7 +287,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
 
     _PACKET_FAILURE_SLEEPDURATIONS = (0.1, 0.2, 1.5)
 
-    project_id: Optional[Union[str, int]]
+    project_id: Union[str, int] | None
     "Project id of the cloud variables"
     cloud_host: str
     'URL of the websocket server ("wss://..." or "ws://...")'
@@ -301,25 +301,25 @@ class BaseCloud(AnyCloud[Union[str, int]]):
     "Length limit for cloud variable values. Defaults to 100000"
     username: str
     'The username to send during handshake. Defaults to "scratchattach"'
-    header: Optional[dict]
+    header: dict | None
     "The header to send. Defaults to None"
-    cookie: Optional[dict]
+    cookie: dict | None
     "The cookie to send. Defaults to None"
-    origin: Optional[str]
+    origin: str | None
     "The origin to send. Defaults to None"
     print_connect_message: bool
     "Whether to print a message on every connect to the cloud server. Defaults to False."
-    ws_timeout: Optional[int]
+    ws_timeout: int | None
     websocket: websocket.WebSocket
-    event_stream: Optional[EventStream] = None
-    recorder: Optional[cloud_recorder.CloudRecorder]
-    _session: Optional[session.Session]
+    event_stream: EventStream | None = None
+    recorder: cloud_recorder.CloudRecorder | None
+    _session: session.Session | None
     "Either None or a scratchattach.site.session.Session object. Defaults to None."
     first_var_set: float
     last_var_set: float
     var_sets_since_first: int
 
-    def __init__(self, *, project_id: Optional[Union[int, str]] = None, _session=None):
+    def __init__(self, *, project_id: Union[int, str] | None = None, _session=None):
 
         # Required internal attributes that every object representing a cloud needs to have (no matter what cloud is represented):
         self._session = _session
@@ -510,7 +510,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self.last_var_set = time.time()
 
     def _ensure_recorder_running(
-        self, *, recorder_initial_values: Optional[dict[str, Any]] = None
+        self, *, recorder_initial_values: dict[str, Any] | None = None
     ) -> cloud_recorder.CloudRecorder:
         recorder = self.recorder
         if recorder is None:
@@ -525,12 +525,12 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             time.sleep(0.01)
         return recorder
 
-    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None):
+    def get_var(self, var, *, recorder_initial_values: dict[str, Any] | None = None):
         var = "☁ " + var.removeprefix("☁ ")
         recorder = self._ensure_recorder_running(recorder_initial_values=recorder_initial_values)
         return recorder.get_var(var)
 
-    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None):
+    def get_all_vars(self, *, recorder_initial_values: dict[str, Any] | None = None):
         recorder = self._ensure_recorder_running(recorder_initial_values=recorder_initial_values)
         return recorder.get_all_vars()
 
@@ -554,7 +554,7 @@ class LogCloudMeta(ABCMeta):
 class LogCloud(BaseCloud, metaclass=LogCloudMeta):
     @abstractmethod
     def logs(
-        self, *, filter_by_var_named: Optional[str] = None, limit: int = 100, offset: int = 0
+        self, *, filter_by_var_named: str | None = None, limit: int = 100, offset: int = 0
     ) -> list[cloud_activity.CloudActivity]:
         pass
 
@@ -584,7 +584,7 @@ def _get_cloud_var_initial_data(project_id: Union[str, int]) -> dict[str, Any]:
     return data
 
 
-def _get_cloud_var_initial_data_or_none(project_id: Union[str, int]) -> Optional[dict[str, Any]]:
+def _get_cloud_var_initial_data_or_none(project_id: Union[str, int]) -> dict[str, Any] | None:
     try:
         return _get_cloud_var_initial_data(project_id)
     except Exception:

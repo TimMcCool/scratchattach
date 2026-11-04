@@ -23,20 +23,20 @@ class Studio(BaseSiteComponent):
     Represents a Scratch studio.
     """
     id: int
-    title: Optional[str] = None
-    description: Optional[str] = None
-    host_id: Optional[int] = None
+    title: str | None = None
+    description: str | None = None
+    host_id: int | None = None
     "The user id of the studio host"
-    follower_count: Optional[int] = None
-    manager_count: Optional[int] = None
-    project_count: Optional[int] = None
-    image_url: Optional[str] = None
-    open_to_all: Optional[bool] = None
+    follower_count: int | None = None
+    manager_count: int | None = None
+    project_count: int | None = None
+    image_url: str | None = None
+    open_to_all: bool | None = None
     "Whether everyone is allowed to add projects"
-    comments_allowed: Optional[bool] = None
-    created: Optional[str] = None
-    modified: Optional[str] = None
-    _session: Optional[session.Session] = None
+    comments_allowed: bool | None = None
+    created: str | None = None
+    modified: str | None = None
+    _session: session.Session | None = None
 
     def __post_init__(self):
         # Info on how the .update method has to fetch the data:
@@ -168,9 +168,9 @@ class Studio(BaseSiteComponent):
         response = commons.api_iterative(
             f"https://api.scratch.mit.edu/studios/{self.id}/comments/{comment_id}/replies", limit=limit, offset=offset, add_params=f"&cachebust={random.randint(0,9999)}")
         for x in response:
-            x["parent_id"] = comment_id    
+            x["parent_id"] = comment_id
             x["source"] = "studio"
-            x["source_id"] = self.id    
+            x["source_id"] = self.id
         return commons.parse_object_list(response, comment.Comment, self._session)
 
     def comment_by_id(self, comment_id):
@@ -194,7 +194,7 @@ class Studio(BaseSiteComponent):
         Keyword Arguments:
             parent_id: ID of the comment you want to reply to. If you don't want to mention a user, don't put the argument.
             commentee_id: ID of the user that will be mentioned in your comment and will receive a message about your comment. If you don't want to mention a user, don't put the argument.
-        
+
         Returns:
             scratchattach.comment.Comment: The posted comment as Comment object.
         """
@@ -303,7 +303,7 @@ class Studio(BaseSiteComponent):
 
         Warning:
             Only replies to top-level comments are shown on the Scratch website. Replies to replies are actually replies to the corresponding top-level comment in the API.
-            
+
             Therefore, parent_id should be the comment id of a top level comment.
 
         Keyword Arguments:
@@ -390,17 +390,17 @@ class Studio(BaseSiteComponent):
             ).json()
         except Exception:
             raise (exceptions.Unauthorized)
-    
+
     def transfer_ownership(self, new_owner, *, password):
         """
         Makes another Scratcher studio host. You need to specify your password to do this.
-        
+
         Arguments:
             new_owner (str): Username of new host
 
         Keyword arguments:
             password (str): The password of your Scratch account
-        
+
         Warning:
             This action is irreversible!
         """
@@ -415,7 +415,7 @@ class Studio(BaseSiteComponent):
             ).json()
         except Exception:
             raise (exceptions.Unauthorized)
-    
+
 
     def leave(self):
         """
@@ -587,7 +587,7 @@ class Studio(BaseSiteComponent):
             cookies=self._cookies,
             timeout=10,
         ).json()
-    
+
     def your_role(self) -> StudioRoleDict:
         """
         Returns a dict with information about your role in the studio (whether you're following, curating, managing it or are invited)

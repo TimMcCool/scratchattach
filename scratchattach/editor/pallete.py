@@ -14,7 +14,7 @@ from scratchattach.utils.enums import _EnumWrapper
 @dataclass
 class FieldUsage:
     name: str
-    value_type: Optional[prim.PrimTypes] = None
+    value_type: prim.PrimTypes | None = None
 
 
 @dataclass
@@ -28,18 +28,18 @@ class SpecialFieldUsage(FieldUsage):
 @dataclass
 class InputUsage:
     name: str
-    value_type: Optional[prim.PrimTypes] = None
-    default_obscurer: Optional[BlockUsage] = None
+    value_type: prim.PrimTypes | None = None
+    default_obscurer: BlockUsage | None = None
 
 
 @dataclass
 class BlockUsage:
     opcode: str
-    fields: Optional[list[FieldUsage]] = None
+    fields: list[FieldUsage] | None = None
     if fields is None:
         fields = []
 
-    inputs: Optional[list[InputUsage]] = None
+    inputs: list[InputUsage] | None = None
     if inputs is None:
         inputs = []
 

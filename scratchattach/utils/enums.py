@@ -21,7 +21,7 @@ class Language:
 # should this underscore be removed
 class _EnumWrapper(Enum):
     @classmethod
-    def find(cls, value, by: str, apply_func: Optional[Callable] = None):
+    def find(cls, value, by: str, apply_func: Callable | None = None):
         """
         Finds the enum item with the given attribute that is equal to the given value.
         the apply_func will be applied to the attribute of each language object before comparison.
@@ -49,7 +49,7 @@ class _EnumWrapper(Enum):
                 pass
 
     @classmethod
-    def all_of(cls, attr_name: str, apply_func: Optional[Callable] = None) -> Iterable:
+    def all_of(cls, attr_name: str, apply_func: Callable | None = None) -> Iterable:
         """
         Returns the list of each listed enum item's specified attribute by "attr_name"
 
@@ -74,7 +74,7 @@ class _EnumWrapper(Enum):
                 yield attr
 
     @classmethod
-    def find_by_attrs(cls, value, bys: list[str], apply_func: Optional[Callable] = None) -> list:
+    def find_by_attrs(cls, value, bys: list[str], apply_func: Callable | None = None) -> list:
         """
         Calls the EnumWrapper.by function multiple times until a match is found, using the provided 'by' attribute names
         """
@@ -159,11 +159,11 @@ class Languages(_EnumWrapper):
     es_US = Language(None, None, ['es-419'], 'es-US', False)
 
     @classmethod
-    def find(cls, value, by: str = "name", apply_func: Optional[Callable] = None) -> Language:
+    def find(cls, value, by: str = "name", apply_func: Callable | None = None) -> Language:
         return super().find(value, by, apply_func)
 
     @classmethod
-    def all_of(cls, attr_name: str = "name", apply_func: Optional[Callable] = None) -> list:
+    def all_of(cls, attr_name: str = "name", apply_func: Callable | None = None) -> list:
         return super().all_of(attr_name, apply_func)
 
 
@@ -188,11 +188,11 @@ class TTSVoices(_EnumWrapper):
     kitten = TTSVoice("kitten", "female", 1.41)
 
     @classmethod
-    def find(cls, value, by: str = "name", apply_func: Optional[Callable] = None) -> TTSVoice:
+    def find(cls, value, by: str = "name", apply_func: Callable | None = None) -> TTSVoice:
         return super().find(value, by, apply_func)
 
     @classmethod
-    def all_of(cls, attr_name: str = "name", apply_func: Optional[Callable] = None) -> Iterable:
+    def all_of(cls, attr_name: str = "name", apply_func: Callable | None = None) -> Iterable:
         return super().all_of(attr_name, apply_func)
 
 
@@ -233,5 +233,5 @@ class AlertTypes(_EnumWrapper):
     default = AlertType(-1, "{username} had an admin action performed.") # default case
 
     @classmethod
-    def find(cls, value, by: str = "id", apply_func: Optional[Callable] = None) -> AlertType:
+    def find(cls, value, by: str = "id", apply_func: Callable | None = None) -> AlertType:
         return super().find(value, by, apply_func)

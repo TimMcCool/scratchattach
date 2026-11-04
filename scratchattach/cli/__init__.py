@@ -11,7 +11,7 @@ from scratchattach.cli.context import ctx
 
 
 # noinspection PyPackageRequirements
-def try_get_img(image: bytes, size: tuple[int, int] | None = None) -> Optional[RenderableType]:
+def try_get_img(image: bytes, size: tuple[int, int] | None = None) -> RenderableType | None:
     try:
         from PIL import Image
         from rich_pixels import Pixels

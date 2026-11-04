@@ -66,7 +66,7 @@ class ScratchCloud(LogCloud):
         except Exception as e:
             raise exceptions.FetchError(str(e))
 
-    def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None, use_logs=False):
+    def get_var(self, var, *, recorder_initial_values: dict[str, Any] | None = None, use_logs=False):
         var = var.removeprefix("☁ ")
         if self._session is None or use_logs:
             filtered = self.logs(limit=100, filter_by_var_named="☁ " + var)
@@ -80,7 +80,7 @@ class ScratchCloud(LogCloud):
             else:
                 return super().get_var("☁ " + var, recorder_initial_values=recorder_initial_values)
 
-    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None, use_logs=False):
+    def get_all_vars(self, *, recorder_initial_values: dict[str, Any] | None = None, use_logs=False):
         if self._session is None or use_logs:
             logs = self.logs(limit=100)
             logs.reverse()

@@ -24,20 +24,20 @@ class Comment(BaseSiteComponent):
     """
     Represents a Scratch comment (on a profile, studio or project)
     """
-    id: Optional[int | str] = None
+    id: int | str | None = None
     source: CommentSource = CommentSource.UNKNOWN
-    source_id: Optional[int | str] = None
-    cached_replies: Optional[list[Comment]] = None
-    parent_id: Optional[int | str] = None
-    cached_parent_comment: Optional[Comment] = None
-    commentee_id: Optional[int] = None
-    content: Optional[str] = None
-    reply_count: Optional[int] = None
-    written_by_scratchteam: Optional[bool] = None
-    author_id: Optional[int] = None
-    author_name: Optional[str] = None
+    source_id: int | str | None = None
+    cached_replies: list[Comment] | None = None
+    parent_id: int | str | None = None
+    cached_parent_comment: Comment | None = None
+    commentee_id: int | None = None
+    content: str | None = None
+    reply_count: int | None = None
+    written_by_scratchteam: bool | None = None
+    author_id: int | None = None
+    author_name: str | None = None
 
-    _session: Optional[session.Session] = None
+    _session: session.Session | None = None
 
     def __str__(self):
         return self.text
@@ -149,12 +149,12 @@ class Comment(BaseSiteComponent):
     def reply(self, content, *, commentee_id=None):
         """
         Posts a reply comment to the comment.
-        
+
         Warning:
             Scratch only shows comments replying to top-level comments, and all replies to replies are actually replies to top-level comments in the API.
 
             Therefore, if this comment is a reply, this method will not reply to the comment itself but to the corresponding top-level comment.
-    
+
         Args:
             content (str): Comment content to post.
 
@@ -208,7 +208,7 @@ class Comment(BaseSiteComponent):
 
         elif self.source == CommentSource.STUDIO:
             return studio.Studio(id=self.source_id, _session=self._session).delete_comment(comment_id=self.id)
-        
+
         return None  # raise error?
 
     def report(self):

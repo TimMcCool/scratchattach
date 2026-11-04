@@ -70,7 +70,7 @@ class ArgSettings(base.Base):
 class Argument(base.MutationSubComponent):
     name: str
     default: str = ""
-    _type: Optional[ArgumentType] = None
+    _type: ArgumentType | None = None
 
     _id: str = None
     """
@@ -85,7 +85,7 @@ class Argument(base.MutationSubComponent):
         return self.mutation.arguments.index(self)
 
     @property
-    def type(self) -> Optional[ArgumentType]:
+    def type(self) -> ArgumentType | None:
         if not self._type:
             if not self.mutation:
                 raise ValueError(
@@ -121,7 +121,7 @@ class ArgTypes(enums._EnumWrapper):
     NUMBER_OR_TEXT = ArgumentType("number or text", "%s")
 
 
-def parse_proc_code(_proc_code: str) -> Optional[list[str | ArgumentType]]:
+def parse_proc_code(_proc_code: str) -> list[str | ArgumentType] | None:
     """
     Parse a proccode (part of a mutation) into argument types and strings
     """
@@ -202,14 +202,14 @@ class Mutation(base.BlockSubComponent):
     def __init__(
         self,
         _tag_name: str = "mutation",
-        _children: Optional[list] = None,
-        _proc_code: Optional[str] = None,
-        _is_warp: Optional[bool] = None,
-        _arguments: Optional[list[Argument]] = None,
-        _has_next: Optional[bool] = None,
-        _argument_settings: Optional[ArgSettings] = None,
+        _children: list | None = None,
+        _proc_code: str | None = None,
+        _is_warp: bool | None = None,
+        _arguments: list[Argument] | None = None,
+        _has_next: bool | None = None,
+        _argument_settings: ArgSettings | None = None,
         *,
-        _block: Optional[block.Block] = None,
+        _block: block.Block | None = None,
     ):
         """
         Mutation for Control:stop block and procedures

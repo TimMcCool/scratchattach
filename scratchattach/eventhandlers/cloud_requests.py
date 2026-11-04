@@ -56,7 +56,7 @@ class Request:
         self.response_priority = response_priority
         self.cloud_requests = cloud_requests # the corresponding CloudRequests object
         self.debug = debug or self.cloud_requests.debug
-        
+
     def __call__(self, received_request: ReceivedRequest):
         if not self.enabled:
             self.cloud_requests.call_event("on_disabled_request", [received_request])
@@ -91,7 +91,7 @@ class Request:
 class EmptyRequest(Request):
     def __init__(self):
         pass
-    
+
     def __call__(self, received_request):
         raise TypeError("Empty request can not be called.")
 
@@ -134,15 +134,15 @@ class CloudRequests(CloudEvents):
     responded_request_ids: list[str]
     packet_memory: list[ResponseMemory]
     _packets_to_resend: list[str]
-    executer_thread: Optional[Thread]
-    responder_thread: Optional[Thread]
+    executer_thread: Thread | None
+    responder_thread: Thread | None
     extra_executor_threads: list[Thread]
     cloud: _base.AnyCloud
 
     def __init__(
         self,
         cloud: _base.AnyCloud,
-        used_cloud_vars: Optional[list[str]] = None,
+        used_cloud_vars: list[str] | None = None,
         no_packet_loss: bool = False,
         respond_order: RespondOrder = RespondOrder.RECEIVE,
         debug = False
@@ -176,7 +176,7 @@ class CloudRequests(CloudEvents):
         self.responder_thread = Thread(target=self._responder)
         self.executer_thread.start()
         self.responder_thread.start()
-        
+
         self.extra_executor_threads = []
 
         self.current_var = 0 # ID of the last set FROM_HOST_ variable (when a response is sent back to Scratch, these are set cyclically)
@@ -282,7 +282,7 @@ class CloudRequests(CloudEvents):
         memory = ResponseMemory(rid=request_id, packets={})#{"rid":request_id}
         remaining_response = str(response)
         length_limit = getattr(self.cloud, "length_limit", 256) - (len(str(request_id))+6) # the subtrahend is the worst-case length of the "."+numbers after the "."
-        
+
         i = 0
         while not remaining_response == "":
             if len(remaining_response) > length_limit:
@@ -299,7 +299,7 @@ class CloudRequests(CloudEvents):
 
                 value_to_send = f"{response_part}.{request_id}{iteration_string}1"
                 memory["packets"][i] = value_to_send
-                
+
                 self._set_FROM_HOST_var(value_to_send)
 
             else:
@@ -346,7 +346,7 @@ class CloudRequests(CloudEvents):
                     self.request_parts[request_id] = []
                 self.request_parts[request_id].append(raw_request[1:])
                 return
-            
+
             self.responded_request_ids.insert(0, request_id)
             self.responded_request_ids = self.responded_request_ids[:35]
 
@@ -363,7 +363,7 @@ class CloudRequests(CloudEvents):
             request = Encoding.decode(raw_request)
             arguments = request.split("&")
             request_name = arguments.pop(0)
-            
+
             # Check if the request is unknown:
             if request_name not in self._requests:
                 print(
@@ -380,7 +380,7 @@ class CloudRequests(CloudEvents):
                     )
                 ])
                 return
-            
+
             received_request = ReceivedRequest(
                 request = self._requests[request_name],
                 request_name=request_name,
@@ -399,14 +399,14 @@ class CloudRequests(CloudEvents):
             else:
                 self.received_requests.append(received_request)
                 self.executer_event.set() # Activate the ._executer process so that it handles the received request
-    
+
     def _executer(self):
         """
         A process that detects new requests in .received_requests, moves them to .executed_requests and executes them. Only requests not running in threads are handled in this process.
         """
         # If .no_packet_loss is enabled and the cloud provides logs, the logs are used to check whether there are cloud activities that were not received over the cloud connection used by the underlying cloud events
         use_extra_data = (self.no_packet_loss and hasattr(self.cloud, "logs"))
-        
+
         self.executer_event.wait() # Wait for requests to be received
         while self.executer_thread is not None: # If self.executer_thread is None, it means cloud requests were stopped using .stop()
             self.executer_event.clear()
@@ -433,7 +433,7 @@ class CloudRequests(CloudEvents):
         while self.responder_thread is not None: # If self.responder_thread is None, it means cloud requests were stopped using .stop()
             self.responder_event.wait() # Wait for executed requests to respond
             self.responder_event.clear()
-            
+
             while self._packets_to_resend != []:
                 self._set_FROM_HOST_var(self._packets_to_resend.pop(0))
                 if self.hard_stopped: # stop immediately without exiting safely
@@ -466,7 +466,7 @@ class CloudRequests(CloudEvents):
                     self.on_set(activity) # Read in the fetched activity
         except Exception:
             pass
-    
+
     # -- Functions to be used in requests to get info about the request --
 
     def get_requester(self):
@@ -533,7 +533,7 @@ class CloudRequests(CloudEvents):
             return
         for thread in self.extra_executor_threads:
             thread.join()
-    
+
     def hard_stop(self):
         """
         Stops the request handler and all associated threads forever. Stops running response sending processes immediately.

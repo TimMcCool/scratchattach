@@ -117,13 +117,13 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
     scratchteam: bool = field(kw_only=True, repr=False, default=False)
     _is_member: bool = field(kw_only=True, repr=False, default=False)
     _has_ears: bool = field(kw_only=True, repr=False, default=False)
-    _classroom: tuple[bool, Optional[classroom.Classroom]] = field(
+    _classroom: tuple[bool, classroom.Classroom] | None = field(
         init=False, default=(False, None)
     )
     _headers: dict[str, str] = field(init=False, default_factory=headers.copy)
     _cookies: dict[str, str] = field(init=False, default_factory=dict)
     _json_headers: dict[str, str] = field(init=False, default_factory=dict)
-    _session: Optional[session.Session] = field(kw_only=True, default=None)
+    _session: session.Session | None = field(kw_only=True, default=None)
 
     def __str__(self):
         return f"-U {self.username}"
@@ -266,7 +266,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
 
         return ret
 
-    def connect_featured_project(self) -> Optional[project.Project]:
+    def connect_featured_project(self) -> project.Project | None:
         data = self.featured_data() or {}
         if pid := data.get("id"):
             return self._session.connect_project(int(pid))
@@ -323,7 +323,7 @@ class User(BaseSiteComponent[typed_dicts.UserDict]):
 
         return self._classroom[1]
 
-    def does_exist(self) -> Optional[bool]:
+    def does_exist(self) -> bool | None:
         """
         Returns:
             boolean : True if the user exists, False if the user is deleted, None if an error occured

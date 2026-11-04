@@ -22,7 +22,7 @@ class Browser(Enum):
     VIVALDI = auto()
     EDGE_DEV = auto()
 
-    
+
 FIREFOX = Browser.FIREFOX
 CHROME = Browser.CHROME
 EDGE = Browser.EDGE
@@ -38,7 +38,7 @@ def cookies_from_browser(browser : Browser = ANY) -> dict[str, str]:
     """
     if not browser_cookie3:
         raise browsercookie_err or ModuleNotFoundError()
-    cookies : Optional[CookieJar] = None
+    cookies : CookieJar | None = None
     if browser is Browser.ANY:
         cookies = browser_cookie3.load()
     elif browser is Browser.FIREFOX:

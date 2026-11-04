@@ -12,11 +12,11 @@ from . import base, block
 
 
 class Monitor(base.ProjectSubcomponent):
-    def __init__(self, reporter: Optional[base.NamedIDComponent] = None,
+    def __init__(self, reporter: base.NamedIDComponent | None = None,
                  mode: str = "default",
                  opcode: str = "data_variable",
-                 params: Optional[dict] = None,
-                 sprite_name: Optional[str] = None,
+                 params: dict | None = None,
+                 sprite_name: str | None = None,
                  value=0,
                  width: int | float = 0,
                  height: int | float = 0,
@@ -25,7 +25,7 @@ class Monitor(base.ProjectSubcomponent):
                  visible: bool = False,
                  slider_min: int | float = 0,
                  slider_max: int | float = 100,
-                 is_discrete: bool = True, *, reporter_id: Optional[str] = None, _project: Optional[project.Project] = None):
+                 is_discrete: bool = True, *, reporter_id: str] = None, _project: Optional[project.Project | None = None):
         """
         Represents a variable/list monitor
         https://en.scratch-wiki.info/wiki/Scratch_File_Format#Monitors

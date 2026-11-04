@@ -32,7 +32,7 @@ class CloudActivity(BaseSiteComponent[Union[typed_dicts.CloudActivityDict, typed
     "If the cloud variable was set, then this attribute provides the value the cloud variable was set to"
     cloud: _base.AnyCloud = field(kw_only=True, default_factory=lambda : _base.DummyCloud())
     "The cloud (as object inheriting from scratchattach.Cloud.BaseCloud) that the cloud activity corresponds to"
-    _session: Optional[session.Session] = field(kw_only=True, default=None)
+    _session: session.Session | None = field(kw_only=True, default=None)
 
     # def __init__(self, **entries):
     #     # Set attributes every CloudActivity object needs to have:
@@ -53,7 +53,7 @@ class CloudActivity(BaseSiteComponent[Union[typed_dicts.CloudActivityDict, typed
     def __eq__(self, activity2):
         # CloudLogEvents needs to check if two activites are equal (to finde new ones), therefore CloudActivity objects need to be comparable
         return self.user == activity2.user and self.type == activity2.type and self.timestamp == activity2.timestamp and self.value == activity2.value and self.name == activity2.name
-    
+
     def _update_from_dict(self, data: Union[typed_dicts.CloudActivityDict, typed_dicts.CloudLogActivityDict]) -> bool:
         def is_cloud_log_activity(activity: Union[typed_dicts.CloudActivityDict, typed_dicts.CloudLogActivityDict]) -> TypeGuard[typed_dicts.CloudLogActivityDict]:
             return "verb" in activity
@@ -94,7 +94,7 @@ class CloudActivity(BaseSiteComponent[Union[typed_dicts.CloudActivityDict, typed
             else:
                 print("Warning: There aren't cloud logs available for this cloud, therefore the user and exact timestamp can't be loaded")
         return False
-    
+
     def actor(self):
         """
         Returns the user that performed the cloud activity as scratchattach.user.User object
@@ -103,7 +103,7 @@ class CloudActivity(BaseSiteComponent[Union[typed_dicts.CloudActivityDict, typed
             return None
         return self._make_linked_object("username", self.username, user.User, exceptions.UserNotFound)
 
-    def project(self) -> Optional[project_module.Project]:
+    def project(self) -> project_module.Project | None:
         """
         Returns the project where the cloud activity was performed as scratchattach.project.Project object
         """

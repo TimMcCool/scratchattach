@@ -97,7 +97,7 @@ def api_iterative_data(fetch_func: Callable[[int, int], list], limit: int, offse
 
 
 def api_iterative(url: str, *, limit: int, offset: int, max_req_limit: int = 40, add_params: str = "",
-                  _headers: Optional[dict] = None, cookies: Optional[dict] = None):
+                  _headers: dict] = None, cookies: Optional[dict | None = None):
     """
     Function for getting data from one of Scratch's iterative JSON API endpoints (like /users/<user>/followers, or /users/<user>/projects)
     """
@@ -203,7 +203,7 @@ class LockEvent:
         self._locks = []
         self._access_locks = Lock()
 
-    def wait(self, blocking: bool = True, timeout: Optional[Union[int, float]] = None) -> bool:
+    def wait(self, blocking: bool = True, timeout: Union[int, float] | None = None) -> bool:
         """
         Wait for the event.
         """

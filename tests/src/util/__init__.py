@@ -10,7 +10,7 @@ from scratchattach import login, Session as _Session, LoginDataWarning
 
 warnings.filterwarnings("ignore", category=LoginDataWarning)
 
-_session: Optional[_Session] = None
+_session: _Session | None = None
 
 
 def credentials_available() -> bool:
@@ -33,10 +33,10 @@ def session() -> _Session:
     return _session
 
 
-_teacher_session: Optional[_Session] = None
+_teacher_session: _Session | None = None
 
 
-def teacher_session() -> Optional[_Session]:
+def teacher_session() -> _Session | None:
     global _teacher_session
 
     if not _teacher_session:

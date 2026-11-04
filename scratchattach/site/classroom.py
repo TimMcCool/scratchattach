@@ -25,7 +25,7 @@ class Classroom(BaseSiteComponent):
     id: int = 0
     classtoken: str = ""
 
-    author: Optional[user.User] = None
+    author: user.User | None = None
     about_class: str = ""
     working_on: str = ""
 
@@ -34,7 +34,7 @@ class Classroom(BaseSiteComponent):
 
 
     update_function: Callable = field(repr=False, default=requests.get)
-    _session: Optional[Session] = field(repr=False, default=None)
+    _session: Session | None = field(repr=False, default=None)
 
     def __post_init__(self):
         # Info on how the .update method has to fetch the data:
@@ -128,10 +128,10 @@ class Classroom(BaseSiteComponent):
     def student_names(self, *, page=1) -> list[str]:
         """
         Returns the student on the class.
-        
+
         Keyword Arguments:
             page: The page of the students that should be returned.
-        
+
         Returns:
             list<str>: The usernames of the class students
         """
@@ -178,10 +178,10 @@ class Classroom(BaseSiteComponent):
     def class_studio_ids(self, *, page: int = 1) -> list[int]:
         """
         Returns the class studio on the class.
-        
+
         Keyword Arguments:
             page: The page of the students that should be returned.
-        
+
         Returns:
             list<int>: The id of the class studios
         """
@@ -312,9 +312,9 @@ class Classroom(BaseSiteComponent):
             warnings.warn(f"{self._session} may not be authenticated to edit {self}")
             raise e
 
-    def register_student(self, username: str, password: str = '', birth_month: Optional[int] = None,
-                         birth_year: Optional[int] = None,
-                         gender: Optional[str] = None, country: Optional[str] = None, is_robot: bool = False) -> None:
+    def register_student(self, username: str, password: str = '', birth_month: int | None = None,
+                         birth_year: int | None = None,
+                         gender: str] = None, country: Optional[str | None = None, is_robot: bool = False) -> None:
         return register_by_token(self.id, self.classtoken, username, password, birth_month or 1, birth_year or 2000, gender or "(Prefer not to say)", country or "United+States",
                                  is_robot)
 
@@ -354,7 +354,7 @@ class Classroom(BaseSiteComponent):
 
         return activities
 
-    def activity(self, student: str = "all", mode: str = "Last created", page: Optional[int] = None) -> list[activity.Activity]:
+    def activity(self, student: str = "all", mode: str = "Last created", page: int] = None) -> list[activity.Activity | None:
         """
         Get a list of private activity, only available to the class owner.
         Returns:
