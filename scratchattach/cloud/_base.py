@@ -220,7 +220,7 @@ class WebSocketEventStream(EventStream):
         # print("Receiving...")
         try:
             received = self.source_cloud.websocket.recv().splitlines()
-        except (websocket.WebSocketTimeoutException, ssl.SSLWantReadError):
+        except (websocket.WebSocketTimeoutException, ssl.SSLWantReadError, BlockingIOError): #BlockingIOError can happen on non-SSL cloud servers (like self-hosted cloud servers)
             return
         # print(f"{received=}")
         self.packets_left.extend(received)
