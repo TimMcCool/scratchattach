@@ -163,23 +163,17 @@ class TwCloudSocket(WebSocket):
             print("Internal error in handleConntected:", e)
 
     def handleClose(self):
-        if not self.server.running:
+        client_info = self.server.tw_clients.pop(self.address, None)
+        if not self.server.running or client_info is None:
             return
         try:
-            if self.address in self.server.tw_clients:
-                # raise event
-                self.server.call_event(
-                    "on_disconnect",
-                    [
-                        self.server.tw_clients[self.address]["username"],
-                        self.server.tw_clients[self.address]["project_id"],
-                        self,
-                    ],
-                )
-                print(self.address[0] + ":" + str(self.address[1]), "disconnected")
+            self.server.call_event(
+                "on_disconnect",
+                [client_info["username"], client_info["project_id"], self],
+            )
+            print(self.address[0] + ":" + str(self.address[1]), "disconnected")
         except Exception as e:
             print("Internal error in handleClose:", e)
-
 
 class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
     def __init__(
