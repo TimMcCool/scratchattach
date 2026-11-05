@@ -18,6 +18,10 @@ class TwCloudSocket(WebSocket):
 
     def handle_set(self, data: dict):
         # cloud variable set received
+        # check if client handshaked and username is confirmed
+        client_info = self.server.tw_clients.get(self.address)
+        if client_info is None or not client_info["name_confirmed"]:
+            return
         # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
         if self.server.whitelisted_projects is not None:
             if data["project_id"] not in self.server.whitelisted_projects:
@@ -61,6 +65,30 @@ class TwCloudSocket(WebSocket):
         _a._update_from_dict(send_to_clients)
         self.server.call_event("on_set", [_a, self])
 
+    def _user_existence_check(self, username: str):
+        check_error = None
+        try:
+            exists = User(username=username).does_exist()
+        except Exception as e:
+            exists = False
+            check_error = e
+        client_info = self.server.tw_clients.get(self.address)
+        if client_info is None or client_info["client"] is not self:
+            return  # client disconnected by now
+        if exists:
+            client_info["name_confirmed"] = True
+            self.server.call_event("on_handshake", [client_info["username"], client_info["project_id"], self])
+        else:
+            if check_error is None:
+                print(
+                    self.address[0] + ":" + str(self.address[1]),
+                    "tried to handshake using a username not existing on Scratch (will be disconnected), user:",
+                    username,
+                )
+            else:
+                print(self.address[0] + ":" + str(self.address[1]), "username check failed:", check_error, "\nThe Scratch website is inaccessible or down. Consider disabling username checks by setting allow_nonscratch_names=True so users can still connect.")
+            self.close(4002)
+
     def handle_handshake(self, data: dict):
         # check if handshake is valid
         if not "user" in data:
@@ -71,18 +99,8 @@ class TwCloudSocket(WebSocket):
             print(self.address[0] + ":" + str(self.address[1]), "tried to handshake without providing a project_id")
             self.close(4002)
             return
-        # check if project_id is in username is allowed
-        if self.server.allow_nonscratch_names is False:
-            if not User(username=data["user"]).does_exist():
-                print(
-                    self.address[0] + ":" + str(self.address[1]),
-                    "tried to handshake using a username not existing on Scratch, project:",
-                    data["project_id"],
-                    "user:",
-                    data["user"],
-                )
-                self.close(4002)
-                return
+        self.server.tw_clients[self.address]["username"] = data["user"]
+        self.server.tw_clients[self.address]["project_id"] = data["project_id"]
         # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
         if self.server.whitelisted_projects is not None:
             if str(data["project_id"]) not in self.server.whitelisted_projects:
@@ -95,6 +113,11 @@ class TwCloudSocket(WebSocket):
                     data["user"],
                 )
                 return
+        # check if project_id is in username is allowed
+        if self.server.allow_nonscratch_names is False:
+            Thread(target=self._user_existence_check, args=(data["user"],), daemon=True).start()
+        else:
+            self.server.tw_clients[self.address]["name_confirmed"] = True
         # register handshake in users list (save username and project_id)
         print(
             self.address[0] + ":" + str(self.address[1]),
@@ -103,8 +126,6 @@ class TwCloudSocket(WebSocket):
             "user:",
             data["user"],
         )
-        self.server.tw_clients[self.address]["username"] = data["user"]
-        self.server.tw_clients[self.address]["project_id"] = data["project_id"]
         # send current cloud variable values to the user who handshaked
         self.sendMessage(
             "\n".join(
@@ -124,7 +145,8 @@ class TwCloudSocket(WebSocket):
         )
         self.sendMessage("This server uses @TimMcCool's scratchattach 2.0.0")
         # raise event
-        self.server.call_event("on_handshake", [data["user"], data["project_id"], self])
+        if self.server.allow_nonscratch_names: # if username checks are enabled, the on_handshake event will be raised after the username existence check is completed (in _user_existence_check)
+            self.server.call_event("on_handshake", [data["user"], data["project_id"], self])
 
     def handleMessage(self):
         if not self.server.running:
@@ -158,7 +180,7 @@ class TwCloudSocket(WebSocket):
                 return
 
             print(self.address[0] + ":" + str(self.address[1]), "connected")
-            self.server.tw_clients[self.address] = {"client": self, "username": None, "project_id": None}
+            self.server.tw_clients[self.address] = {"client": self, "username": None, "project_id": None, "name_confirmed":False}
             # raise event
             self.server.call_event("on_connect", [self])
         except Exception as e:
