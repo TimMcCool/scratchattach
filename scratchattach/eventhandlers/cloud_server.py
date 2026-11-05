@@ -297,7 +297,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
                 for varname in data
             ]
         )
-        self._distribute_to_clients(project_id, json_string, user=user)
+        self._distribute_to_clients(project_id, json_string)
 
     def set_var(self, project_id, var_name, value, *, user="@server", skip_forward=None):
         var_name = var_name.replace("☁ ", "")
@@ -316,7 +316,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
             }
         )
         if self.sync_players is True:
-            self._distribute_to_clients(project_id, json_string, user=user, skip_forward=skip_forward)
+            self._distribute_to_clients(project_id, json_string, skip_forward=skip_forward)
 
     def _check_value(self, value):
         # Checks if a received cloud value satisfies the server's constraints
