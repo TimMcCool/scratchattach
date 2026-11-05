@@ -130,7 +130,7 @@ class TwCloudSocket(WebSocket):
                 )
                 return
         # check if project_id is in username is allowed
-        if self.server.allow_nonscratch_names is False:
+        if not self.server.allow_nonscratch_names:
             Thread(target=self._user_existence_check, args=(data["user"],), daemon=True).start()
         else:
             self.server.tw_clients[self.address]["name_confirmed"] = True
@@ -366,7 +366,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
                 "user": user,
             }
         )
-        if self.sync_players is True:
+        if self.sync_players:
             self._distribute_to_clients(project_id, json_string, skip_forward=skip_forward)
 
     def _check_value(self, value):
@@ -374,7 +374,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         if self.length_limit is not None:
             if len(str(value)) > self.length_limit:
                 return False
-        if self.allow_non_numeric is False:
+        if not self.allow_non_numeric:
             x = value.replace(".", "")
             x = x.replace("-", "")
             if not (x.isnumeric() or x == ""):
