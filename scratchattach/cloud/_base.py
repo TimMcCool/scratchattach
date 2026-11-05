@@ -91,7 +91,9 @@ class AnyCloud(ABC, Generic[T]):
         """
 
     @abstractmethod
-    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries: int = 2):
+    def set_vars(
+        self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries: int = 2
+    ):
         """
         Sets multiple cloud variables at once (works for an unlimited amount of variables).
 
@@ -108,7 +110,9 @@ class AnyCloud(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> dict[str, T]:
+    def get_all_vars(
+        self, *, recorder_initial_values: Optional[dict[str, Any]] = None
+    ) -> dict[str, T]:
         pass
 
     def events(self) -> CloudEvents:
@@ -124,10 +128,16 @@ class AnyCloud(ABC, Generic[T]):
     ) -> CloudRequests:
         used_cloud_vars = used_cloud_vars or ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         return CloudRequests(
-            self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss, respond_order=respond_order, debug=debug
+            self,
+            used_cloud_vars=used_cloud_vars,
+            no_packet_loss=no_packet_loss,
+            respond_order=respond_order,
+            debug=debug,
         )
 
-    def storage(self, *, no_packet_loss: bool = False, used_cloud_vars: Optional[list[str]] = None) -> CloudStorage:
+    def storage(
+        self, *, no_packet_loss: bool = False, used_cloud_vars: Optional[list[str]] = None
+    ) -> CloudStorage:
         used_cloud_vars = used_cloud_vars or ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         return CloudStorage(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
 
@@ -159,13 +169,17 @@ class DummyCloud(AnyCloud[Any]):
     def set_var(self, variable: str, value: T, *, max_retries: int = 2) -> None:
         pass
 
-    def set_vars(self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries: int = 2):
+    def set_vars(
+        self, var_value_dict: dict[str, T], *, intelligent_waits: bool = True, max_retries: int = 2
+    ):
         pass
 
     def get_var(self, var, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> Any:
         pass
 
-    def get_all_vars(self, *, recorder_initial_values: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    def get_all_vars(
+        self, *, recorder_initial_values: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         return {}
 
 
@@ -197,9 +211,12 @@ class WebSocketEventStream(EventStream):
         try:
             self.source_cloud.connect()
         except exceptions.CloudConnectionError:
-            warnings.warn("Initial cloud connection attempt failed, retrying...", exceptions.UnexpectedWebsocketEventWarning)
+            warnings.warn(
+                "Initial cloud connection attempt failed, retrying...",
+                exceptions.UnexpectedWebsocketEventWarning,
+            )
         self.packets_left = []
-    
+
     def wait_before_reconnect(self):
         if time.time() - self.most_recent_reconnection_time > self.RECENT_RECONNECT_TIME_DELTA:
             self.recent_reconnect_count = 0
@@ -220,7 +237,11 @@ class WebSocketEventStream(EventStream):
         # print("Receiving...")
         try:
             received = self.source_cloud.websocket.recv().splitlines()
-        except (websocket.WebSocketTimeoutException, ssl.SSLWantReadError, BlockingIOError): #BlockingIOError can happen on non-SSL cloud servers (like self-hosted cloud servers)
+        except (
+            websocket.WebSocketTimeoutException,
+            ssl.SSLWantReadError,
+            BlockingIOError,
+        ):  # BlockingIOError can happen on non-SSL cloud servers (like self-hosted cloud servers)
             return
         # print(f"{received=}")
         self.packets_left.extend(received)
@@ -243,12 +264,16 @@ class WebSocketEventStream(EventStream):
             while not done:
                 # print("Getting data...")
                 try:
-                    self.receive_new(not recv_once, timeout=timeout_end - time.time() if has_timeout else None)
+                    self.receive_new(
+                        not recv_once, timeout=timeout_end - time.time() if has_timeout else None
+                    )
                     while (not has_timeout or time.time() < timeout_end) and (
                         (recv_once and self.packets_left) or (not recv_once and i < recv_at_least)
                     ):
                         if not self.packets_left and not recv_once:
-                            self.receive_new(timeout=timeout_end - time.time() if has_timeout else None)
+                            self.receive_new(
+                                timeout=timeout_end - time.time() if has_timeout else None
+                            )
                         if not self.packets_left:
                             continue
                         i += 1
@@ -323,7 +348,9 @@ class BaseCloud(AnyCloud[Union[str, int]]):
 
         # Required internal attributes that every object representing a cloud needs to have (no matter what cloud is represented):
         self._session = _session
-        self.active_connection = False  # whether a connection to a cloud variable server is currently established
+        self.active_connection = (
+            False  # whether a connection to a cloud variable server is currently established
+        )
 
         self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
         self.recorder = None  # A CloudRecorder object that records cloud activity for the values to be retrieved later,
@@ -368,7 +395,9 @@ class BaseCloud(AnyCloud[Union[str, int]]):
                 self._send_recursive(data, current_depth=current_depth + 1, max_depth=max_depth)
             else:
                 self.active_connection = False
-                raise exceptions.CloudConnectionError(f"Sending packet failed {max_depth + 1} tries: {data}")
+                raise exceptions.CloudConnectionError(
+                    f"Sending packet failed {max_depth + 1} tries: {data}"
+                )
 
     def _send_packet(self, packet, *, max_retries=2):
         self._send_recursive(json.dumps(packet) + "\n", max_depth=max_retries)
@@ -428,7 +457,8 @@ class BaseCloud(AnyCloud[Union[str, int]]):
     def _enforce_ratelimit(self, *, n):
         # n is the amount of variables being set
         if (
-            (time.time() - self.first_var_set) / (self.var_sets_since_first + 1) > self.ws_longterm_ratelimit
+            (time.time() - self.first_var_set) / (self.var_sets_since_first + 1)
+            > self.ws_longterm_ratelimit
         ):  # if the average delay between cloud variable sets has been bigger than the long-term rate-limit, cloud variables can be set fast (wait time smaller than long-term rate limit) again
             self.var_sets_since_first = 0
             self.first_var_set = time.time()
@@ -518,7 +548,9 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             if recorder_initial_values is None and project_id is not None:
                 recorder_initial_values = _get_cloud_var_initial_data_or_none(project_id)
             recorder_initial_values = recorder_initial_values or {}
-            self.recorder = recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
+            self.recorder = recorder = cloud_recorder.CloudRecorder(
+                self, initial_values=recorder_initial_values
+            )
             recorder.start()
             # print("Started recorder.")
             recorder.received_data.wait(timeout=1)
@@ -563,7 +595,9 @@ def _get_cloud_var_initial_data(project_id: Union[str, int]) -> dict[str, Any]:
     from scratchattach.site import project
 
     data: dict[str, Any] = {}
-    if isinstance((j := project.get_project(project_id).raw_json()), dict) and isinstance(targets := j.get("targets"), list):
+    if isinstance((j := project.get_project(project_id).raw_json()), dict) and isinstance(
+        targets := j.get("targets"), list
+    ):
         for target in targets:
             if not isinstance(target, dict):
                 continue

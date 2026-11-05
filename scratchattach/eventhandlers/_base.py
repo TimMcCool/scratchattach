@@ -9,6 +9,7 @@ import traceback
 from scratchattach.utils.requests import requests
 from scratchattach.utils import exceptions
 
+
 class BaseEventHandler(ABC):
     _events: defaultdict[str, list[Callable]]
     _threaded_events: defaultdict[str, list[Callable]]
@@ -45,35 +46,33 @@ class BaseEventHandler(ABC):
     def _clear_finished_threads(self):
         self._call_threads = [t for t in self._call_threads if t.is_alive()]
 
-    def call_event(self, event_name, args : list = []):
+    def call_event(self, event_name, args: list = []):
         try:
             # print(f"Calling for {event_name}...")
             if event_name in self._threaded_events:
                 for func in self._threaded_events[event_name]:
                     thread = Thread(target=func, args=args)
-                    self._clear_finished_threads()
                     self._call_threads.append(thread)
                     thread.start()
+                self._clear_finished_threads()
             if event_name in self._events:
                 for func in self._events[event_name]:
                     # print(f"Called {func}.")
                     func(*args)
         except Exception as e:
             if self.ignore_exceptions:
-                print(
-                    f"Warning: Caught error in event '{event_name}' - Full error below"
-                )
+                print(f"Warning: Caught error in event '{event_name}' - Full error below")
                 try:
                     traceback.print_exc()
                 except Exception:
                     print(e)
             else:
-                raise(e)
+                raise (e)
 
     @abstractmethod
     def _updater(self):
         pass
-    
+
     def __del__(self):
         self.stop()
 
@@ -112,6 +111,7 @@ class BaseEventHandler(ABC):
         """
         Decorator function. Adds an event.
         """
+
         def inner(function):
             # called directly if the decorator provides arguments
             if thread is True:

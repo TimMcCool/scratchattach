@@ -13,6 +13,7 @@ import traceback
 
 CLIENT_SEND_QUEUE_LIMIT = 1000  # if a client has more than this many messages in their send queue, disconnect them to prevent lag
 
+
 class TwCloudSocket(WebSocket):
     server: TwCloudServer
 
@@ -49,7 +50,9 @@ class TwCloudSocket(WebSocket):
                 "user:",
                 data["user"],
             )
-        self.server.set_var(data["project_id"], data["name"], data["value"], user=data["user"], skip_forward=self)
+        self.server.set_var(
+            data["project_id"], data["name"], data["value"], user=data["user"], skip_forward=self
+        )
         send_to_clients = {
             "method": "set",
             "user": data["user"],
@@ -57,7 +60,7 @@ class TwCloudSocket(WebSocket):
             "name": data["name"],
             "value": data["value"],
             "timestamp": round(time.time() * 1000),
-            "server": "scratchattach/2.0.0",
+            "server": "scratchattach/3.0.0",
         }
         # raise event
         _a = cloud_activity.CloudActivity(timestamp=time.time() * 1000)
@@ -77,7 +80,9 @@ class TwCloudSocket(WebSocket):
             return  # client disconnected by now
         if exists:
             client_info["name_confirmed"] = True
-            self.server.call_event("on_handshake", [client_info["username"], client_info["project_id"], self])
+            self.server.call_event(
+                "on_handshake", [client_info["username"], client_info["project_id"], self]
+            )
         else:
             if check_error is None:
                 print(
@@ -86,17 +91,28 @@ class TwCloudSocket(WebSocket):
                     username,
                 )
             else:
-                print(self.address[0] + ":" + str(self.address[1]), "username check failed:", check_error, "\nThe Scratch website is inaccessible or down. Consider disabling username checks by setting allow_nonscratch_names=True so users can still connect.")
+                print(
+                    self.address[0] + ":" + str(self.address[1]),
+                    "username check failed:",
+                    check_error,
+                    "\nThe Scratch website is inaccessible or down. Consider disabling username checks by setting allow_nonscratch_names=True so users can still connect.",
+                )
             self.close(4002)
 
     def handle_handshake(self, data: dict):
         # check if handshake is valid
         if not "user" in data:
-            print(self.address[0] + ":" + str(self.address[1]), "tried to handshake without providing a username")
+            print(
+                self.address[0] + ":" + str(self.address[1]),
+                "tried to handshake without providing a username",
+            )
             self.close(4002)
             return
         if not "project_id" in data:
-            print(self.address[0] + ":" + str(self.address[1]), "tried to handshake without providing a project_id")
+            print(
+                self.address[0] + ":" + str(self.address[1]),
+                "tried to handshake without providing a project_id",
+            )
             self.close(4002)
             return
         self.server.tw_clients[self.address]["username"] = data["user"]
@@ -136,16 +152,16 @@ class TwCloudSocket(WebSocket):
                             "project_id": data["project_id"],
                             "name": "☁ " + varname,
                             "value": self.server.tw_variables[str(data["project_id"])][varname],
-                            "server": "scratchattach/2.0.0",
+                            "server": "scratchattach/3.0.0",
                         }
                     )
                     for varname in self.server.get_project_vars(str(data["project_id"]))
                 ]
             )
         )
-        self.sendMessage("This server uses @TimMcCool's scratchattach 2.0.0")
+        self.sendMessage("This server uses @TimMcCool's scratchattach 3.0.0")
         # raise event
-        if self.server.allow_nonscratch_names: # if username checks are enabled, the on_handshake event will be raised after the username existence check is completed (in _user_existence_check)
+        if self.server.allow_nonscratch_names:  # if username checks are enabled, the on_handshake event will be raised after the username existence check is completed (in _user_existence_check)
             self.server.call_event("on_handshake", [data["user"], data["project_id"], self])
 
     def handleMessage(self):
@@ -180,7 +196,12 @@ class TwCloudSocket(WebSocket):
                 return
 
             print(self.address[0] + ":" + str(self.address[1]), "connected")
-            self.server.tw_clients[self.address] = {"client": self, "username": None, "project_id": None, "name_confirmed":False}
+            self.server.tw_clients[self.address] = {
+                "client": self,
+                "username": None,
+                "project_id": None,
+                "name_confirmed": False,
+            }
             # raise event
             self.server.call_event("on_connect", [self])
         except Exception as e:
@@ -198,6 +219,7 @@ class TwCloudSocket(WebSocket):
             print(self.address[0] + ":" + str(self.address[1]), "disconnected")
         except Exception as e:
             print("Internal error in handleClose:", e)
+
 
 class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
     def __init__(
@@ -260,7 +282,12 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         return [self.tw_clients[user]["username"] for user in self.active_user_ips(project_id)]
 
     def active_user_ips(self, project_id):
-        return list(filter(lambda user: str(self.tw_clients[user]["project_id"]) == str(project_id), self.tw_clients))
+        return list(
+            filter(
+                lambda user: str(self.tw_clients[user]["project_id"]) == str(project_id),
+                self.tw_clients,
+            )
+        )
 
     def get_global_vars(self):
         return self.tw_variables
@@ -291,7 +318,9 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
             if client == skip_forward:
                 continue
-            if len(client.sendq) > CLIENT_SEND_QUEUE_LIMIT: # if the client has a large send queue, disconnect them to prevent lag
+            if (
+                len(client.sendq) > CLIENT_SEND_QUEUE_LIMIT
+            ):  # if the client has a large send queue, disconnect them to prevent lag
                 client.sendq.clear()  # free the memory now
                 try:
                     client.client.shutdown(socket.SHUT_RDWR)
@@ -311,7 +340,7 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
                         "project_id": project_id,
                         "name": "☁ " + varname,
                         "value": data[varname],
-                        "server": "scratchattach/2.0.0",
+                        "server": "scratchattach/3.0.0",
                         "timestamp": time.time() * 1000,
                         "user": user,
                     }
