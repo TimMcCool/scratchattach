@@ -6,11 +6,15 @@ import json
 import time
 import warnings
 import ssl
+import socket
 from scratchattach.utils import exceptions
 from scratchattach.site import cloud_activity
 from scratchattach.site.user import User
 from ._base import BaseEventHandler
 from SimpleWebSocketServer import SimpleWebSocketServer, SimpleSSLWebSocketServer, WebSocket
+
+
+CLIENT_SEND_QUEUE_LIMIT = 1000  # if a client has more than this many messages in their send queue, disconnect them to prevent lag
 
 
 class TwCloudSocket(WebSocket):
@@ -29,17 +33,23 @@ class TwCloudSocket(WebSocket):
 
             if data["method"] == "set":
                 # cloud variable set received
+                # check if client handshaked and username is confirmed
+                client_info = self.server.tw_clients.get(self.address)
+                if client_info is None or not client_info["name_confirmed"]:
+                    return
                 # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
-                if self.server.whitelisted_projects is not None:
-                    if str(data["project_id"]) not in self.server.whitelisted_projects:
-                        self.close(4002)
-                        if self.server.log_var_sets:
-                            print(
-                                f"{self.address[0]}:{self.address[1]} tried to set a var on non-whitelisted project "
-                                f"and was disconnected, project: {data['project_id']} "
-                                f"user: {data['user']}",
-                            )
-                        return
+                if (
+                    self.server.whitelisted_projects is not None
+                    and str(data["project_id"]) not in self.server.whitelisted_projects
+                ):
+                    self.close(4002)
+                    if self.server.log_var_sets:
+                        print(
+                            f"{self.address[0]}:{self.address[1]} tried to set a var on non-whitelisted project "
+                            f"and was disconnected, project: {data['project_id']} "
+                            f"user: {data['user']}",
+                        )
+                    return
                 # check if value is valid
                 if not self.server._check_value(data["value"]):
                     if self.server.log_var_sets:
@@ -98,7 +108,7 @@ class TwCloudSocket(WebSocket):
                     self.close(4002)
                     return
                 # check if project_id is in username is allowed
-                if self.server.allow_nonscratch_names is False:
+                if not self.server.allow_nonscratch_names:
                     if not User(username=data["user"]).does_exist():
                         print(
                             self.address[0] + ":" + str(self.address[1]),
@@ -109,18 +119,29 @@ class TwCloudSocket(WebSocket):
                         )
                         self.close(4002)
                         return
+                self.server.tw_clients[self.address]["username"] = data["user"]
+                self.server.tw_clients[self.address]["project_id"] = data["project_id"]
                 # check if project_id is in whitelisted projects (if there's a list of whitelisted projects)
-                if self.server.whitelisted_projects is not None:
-                    if str(data["project_id"]) not in self.server.whitelisted_projects:
-                        self.close(4002)
-                        print(
-                            self.address[0] + ":" + str(self.address[1]),
-                            "tried to handshake on a non-whitelisted project:",
-                            data["project_id"],
-                            "user:",
-                            data["user"],
-                        )
-                        return
+                if (
+                    self.server.whitelisted_projects is not None
+                    and str(data["project_id"]) not in self.server.whitelisted_projects
+                ):
+                    self.close(4002)
+                    print(
+                        self.address[0] + ":" + str(self.address[1]),
+                        "tried to handshake on a non-whitelisted project:",
+                        data["project_id"],
+                        "user:",
+                        data["user"],
+                    )
+                    return
+                # check if project_id is in username is allowed
+                if not self.server.allow_nonscratch_names:
+                    Thread(
+                        target=self._user_existence_check, args=(data["user"],), daemon=True
+                    ).start()
+                else:
+                    self.server.tw_clients[self.address]["name_confirmed"] = True
                 # register handshake in users list (save username and project_id)
                 print(
                     self.address[0] + ":" + str(self.address[1]),
@@ -154,7 +175,8 @@ class TwCloudSocket(WebSocket):
                 )
                 self.sendMessage("This server uses @TimMcCool's scratchattach 2.0.0")
                 # raise event
-                self.server.call_event("on_handshake", [data["user"], data["project_id"], self])
+                if self.server.allow_nonscratch_names:  # if username checks are enabled, the on_handshake event will be raised after the username existence check is completed (in _user_existence_check)
+                    self.server.call_event("on_handshake", [data["user"], data["project_id"], self])
 
             else:
                 print(
@@ -165,6 +187,37 @@ class TwCloudSocket(WebSocket):
 
         except Exception as e:
             print("Internal error in handleMessage:", e)
+
+    def _user_existence_check(self, username: str):
+        check_error = None
+        try:
+            exists = User(username=username).does_exist()
+        except Exception as e:
+            exists = False
+            check_error = e
+        client_info = self.server.tw_clients.get(self.address)
+        if client_info is None or client_info["client"] is not self:
+            return  # client disconnected by now
+        if exists:
+            client_info["name_confirmed"] = True
+            self.server.call_event(
+                "on_handshake", [client_info["username"], client_info["project_id"], self]
+            )
+        else:
+            if check_error is None:
+                print(
+                    self.address[0] + ":" + str(self.address[1]),
+                    "tried to handshake using a username not existing on Scratch (will be disconnected), user:",
+                    username,
+                )
+            else:
+                print(
+                    self.address[0] + ":" + str(self.address[1]),
+                    "username check failed:",
+                    check_error,
+                    "\nThe Scratch website is inaccessible or down. Consider disabling username checks by setting allow_nonscratch_names=True so users can still connect.",
+                )
+            self.close(4002)
 
     def handleConnected(self):
         if not self.server.running:
@@ -178,27 +231,23 @@ class TwCloudSocket(WebSocket):
                 "client": self,
                 "username": None,
                 "project_id": None,
+                "name_confirmed": False,
             }
             # raise event
             self.server.call_event("on_connect", [self])
         except Exception as e:
-            print("Internal error in handleConntected:", e)
+            print("Internal error in handleConnected:", e)
 
     def handleClose(self):
-        if not self.server.running:
+        client_info = self.server.tw_clients.pop(self.address, None)
+        if not self.server.running or client_info is None:
             return
         try:
-            if self.address in self.server.tw_clients:
-                # raise event
-                self.server.call_event(
-                    "on_disconnect",
-                    [
-                        self.server.tw_clients[self.address]["username"],
-                        self.server.tw_clients[self.address]["project_id"],
-                        self,
-                    ],
-                )
-                print(self.address[0] + ":" + str(self.address[1]), "disconnected")
+            self.server.call_event(
+                "on_disconnect",
+                [client_info["username"], client_info["project_id"], self],
+            )
+            print(self.address[0] + ":" + str(self.address[1]), "disconnected")
         except Exception as e:
             print("Internal error in handleClose:", e)
 
@@ -312,30 +361,43 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         for project_id in data:
             self.set_project_vars(project_id, data[project_id])
 
+    def _distribute_to_clients(self, project_id, json_string, *, skip_forward=None):
+        for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
+            if client == skip_forward:
+                continue
+            if (
+                len(client.sendq) > CLIENT_SEND_QUEUE_LIMIT
+            ):  # if the client has a large send queue, disconnect them to prevent lag
+                client.sendq.clear()  # free the memory now
+                try:
+                    client.client.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+                continue
+            client.sendMessage(json_string)
+
     def set_project_vars(
         self, project_id: Union[str, int], data: dict[str, Any], *, user: str = "@server"
     ):
         project_id = str(project_id)
-        self.tw_variables[project_id] = data
-        for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
-            client.sendMessage(
-                "\n".join(
-                    [
-                        json.dumps(
-                            {
-                                "method": "set",
-                                "project_id": project_id,
-                                "name": "☁ " + varname if self.remove_cloud_prefix else varname,
-                                "value": data[varname],
-                                "server": "scratchattach/2.0.0",
-                                "timestamp": time.time() * 1000,
-                                "user": user,
-                            }
-                        )
-                        for varname in data
-                    ]
+        self.tw_variables[project_id].update(data)
+        json_string = "\n".join(
+            [
+                json.dumps(
+                    {
+                        "method": "set",
+                        "project_id": project_id,
+                        "name": "☁ " + varname,
+                        "value": data[varname],
+                        "server": "scratchattach/2.0.0",
+                        "timestamp": time.time() * 1000,
+                        "user": user,
+                    }
                 )
-            )
+                for varname in data
+            ]
+        )
+        self._distribute_to_clients(project_id, json_string)
 
     def set_var(
         self,
@@ -352,32 +414,26 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         if project_id not in self.tw_variables:
             self.tw_variables[project_id] = {}
         self.tw_variables[project_id][var_name] = value
+        json_string = json.dumps(
+            {
+                "method": "set",
+                "project_id": project_id,
+                "name": "☁ " + var_name,
+                "value": value,
+                "timestamp": time.time() * 1000,
+                "user": user,
+            }
+        )
 
-        if self.sync_players is True:
-            for client in [
-                self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)
-            ]:
-                if client == skip_forward:
-                    continue
-                client.sendMessage(
-                    json.dumps(
-                        {
-                            "method": "set",
-                            "project_id": project_id,
-                            "name": "☁ " + var_name if self.remove_cloud_prefix else var_name,
-                            "value": value,
-                            "timestamp": time.time() * 1000,
-                            "user": user,
-                        }
-                    )
-                )
+        if self.sync_players:
+            self._distribute_to_clients(project_id, json_string, skip_forward=skip_forward)
 
     def _check_value(self, value: Any) -> bool:
         # Checks if a received cloud value satisfies the server's constraints
         if self.length_limit is not None:
             if len(str(value)) > self.length_limit:
                 return False
-        if self.allow_non_numeric is False:
+        if not self.allow_non_numeric:
             x = value.replace(".", "")
             x = x.replace("-", "")
             if not (x.isnumeric() or x == ""):
@@ -581,30 +637,43 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
         for project_id in data:
             self.set_project_vars(project_id, data[project_id])
 
+    def _distribute_to_clients(self, project_id, json_string, *, skip_forward=None):
+        for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
+            if client == skip_forward:
+                continue
+            if (
+                len(client.sendq) > CLIENT_SEND_QUEUE_LIMIT
+            ):  # if the client has a large send queue, disconnect them to prevent lag
+                client.sendq.clear()  # free the memory now
+                try:
+                    client.client.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+                continue
+            client.sendMessage(json_string)
+
     def set_project_vars(
         self, project_id: Union[str, int], data: dict[str, Any], *, user: str = "@server"
     ):
         project_id = str(project_id)
-        self.tw_variables[project_id] = data
-        for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
-            client.sendMessage(
-                "\n".join(
-                    [
-                        json.dumps(
-                            {
-                                "method": "set",
-                                "project_id": project_id,
-                                "name": "☁ " + varname if self.remove_cloud_prefix else varname,
-                                "value": data[varname],
-                                "server": "scratchattach/2.0.0",
-                                "timestamp": time.time() * 1000,
-                                "user": user,
-                            }
-                        )
-                        for varname in data
-                    ]
+        self.tw_variables[project_id].update(data)
+        json_string = "\n".join(
+            [
+                json.dumps(
+                    {
+                        "method": "set",
+                        "project_id": project_id,
+                        "name": "☁ " + varname,
+                        "value": data[varname],
+                        "server": "scratchattach/2.0.0",
+                        "timestamp": time.time() * 1000,
+                        "user": user,
+                    }
                 )
-            )
+                for varname in data
+            ]
+        )
+        self._distribute_to_clients(project_id, json_string)
 
     def set_var(
         self,
@@ -621,32 +690,25 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
         if project_id not in self.tw_variables:
             self.tw_variables[project_id] = {}
         self.tw_variables[project_id][var_name] = value
-
+        json_string = json.dumps(
+            {
+                "method": "set",    
+                "project_id": project_id,
+                "name": "☁ " + var_name,
+                "value": value,
+                "timestamp": time.time() * 1000,
+                "user": user,
+            }
+        )
         if self.sync_players is True:
-            for client in [
-                self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)
-            ]:
-                if client == skip_forward:
-                    continue
-                client.sendMessage(
-                    json.dumps(
-                        {
-                            "method": "set",
-                            "project_id": project_id,
-                            "name": "☁ " + var_name if self.remove_cloud_prefix else var_name,
-                            "value": value,
-                            "timestamp": time.time() * 1000,
-                            "user": user,
-                        }
-                    )
-                )
+            self._distribute_to_clients(project_id, json_string, skip_forward=skip_forward)
 
     def _check_value(self, value: Any) -> bool:
         # Checks if a received cloud value satisfies the server's constraints
         if self.length_limit is not None:
             if len(str(value)) > self.length_limit:
                 return False
-        if self.allow_non_numeric is False:
+        if not self.allow_non_numeric:
             x = value.replace(".", "")
             x = x.replace("-", "")
             if not (x.isnumeric() or x == ""):
@@ -716,9 +778,11 @@ def init_ssl_cloud_server(
             "`thread` is set in `init_ssl_cloud_server`, which has no effect. "
             "Maybe you meant to provide `thread` in the `start` method of the cloud server?"
         )
-        
+
     if (certfile is None or keyfile is None) and ssl_context is None:
-        warnings.warn("To init a ssl cloud server, you need provide `certfile` and `keyfile` or `ssl_context`.")
+        warnings.warn(
+            "To init a ssl cloud server, you need provide `certfile` and `keyfile` or `ssl_context`."
+        )
 
     return TwSSLCloudServer(
         hostname,

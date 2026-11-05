@@ -16,15 +16,18 @@ if TYPE_CHECKING:
     from _typeshed import SupportsRead
 else:
     T = TypeVar("T")
+
     class SupportsRead(ABC, Generic[T]):
         @abstractmethod
         def read(self) -> T:
             pass
 
+
 class SupportsClose(ABC):
     @abstractmethod
     def close(self) -> None:
         pass
+
 
 import websocket
 
@@ -38,20 +41,24 @@ from scratchattach.site import cloud_activity
 
 T = TypeVar("T")
 
+
 class EventStream(SupportsRead[Iterator[dict[str, Any]]], SupportsClose):
     """
     Allows you to stream events
     """
+
     timeout: Optional[Union[float, int]] = None
+
 
 class AnyCloud(ABC, Generic[T]):
     """
     Represents a cloud that is not necessarily using a websocket.
     """
+
     active_connection: bool
     var_stets_since_first: int
     _session: Optional[session.Session]
-    
+
     @abstractmethod
     def connect(self):
         pass
@@ -63,7 +70,7 @@ class AnyCloud(ABC, Generic[T]):
     def reconnect(self):
         self.disconnect()
         self.connect()
-        
+
     @abstractmethod
     def _enforce_ratelimit(self, *, n: int) -> None:
         pass
@@ -85,7 +92,7 @@ class AnyCloud(ABC, Generic[T]):
 
         Args:
             var_value_dict (dict): variable:value dictionary with the variables / values to set. The dict should like this: {"var1":"value1", "var2":"value2", ...}
-        
+
         Kwargs:
             intelligent_waits (boolean): When enabled, the method will automatically decide how long to wait before performing this cloud variable set, to make sure no rate limits are triggered
         """
@@ -101,23 +108,40 @@ class AnyCloud(ABC, Generic[T]):
     def events(self) -> CloudEvents:
         return CloudEvents(self)
 
-    def requests(self, *, no_packet_loss: bool = False, used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-                 respond_order="receive", debug: bool = False) -> CloudRequests:
-        return CloudRequests(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss,
-                             respond_order=respond_order, debug=debug)
+    def requests(
+        self,
+        *,
+        no_packet_loss: bool = False,
+        used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        respond_order="receive",
+        debug: bool = False,
+    ) -> CloudRequests:
+        return CloudRequests(
+            self,
+            used_cloud_vars=used_cloud_vars,
+            no_packet_loss=no_packet_loss,
+            respond_order=respond_order,
+            debug=debug,
+        )
 
-    def storage(self, *, no_packet_loss: bool = False, used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]) -> CloudStorage:
+    def storage(
+        self,
+        *,
+        no_packet_loss: bool = False,
+        used_cloud_vars: list[str] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+    ) -> CloudStorage:
         return CloudStorage(self, used_cloud_vars=used_cloud_vars, no_packet_loss=no_packet_loss)
-    
+
     def shortterm_ratelimit_hint(self) -> float:
         return 0.06667
-    
+
     def longterm_ratelimit_hint(self) -> float:
         return 0.1
-    
+
     @abstractmethod
     def create_event_stream(self) -> EventStream:
         pass
+
 
 class WebSocketEventStream(EventStream):
     packets_left: list[Union[str, bytes]]
@@ -126,6 +150,7 @@ class WebSocketEventStream(EventStream):
     recent_reconnect_count: int
     most_recent_reconnection_time: float
     RECENT_RECONNECT_TIME_DELTA: float = 1.0
+
     def __init__(self, cloud: BaseCloud):
         super().__init__()
         # NOTE: maybe consider using copy.copy here (copy.deepcopy doesn't work as you cannot deepcopy a Thread)
@@ -139,16 +164,19 @@ class WebSocketEventStream(EventStream):
         self.source_cloud.header = cloud.header
         self.source_cloud.origin = cloud.origin
         self.source_cloud.username = cloud.username
-        self.source_cloud.ws_timeout = None # No timeout -> allows continous listening
+        self.source_cloud.ws_timeout = None  # No timeout -> allows continous listening
         self.reading = Lock()
         self.most_recent_reconnection_time = time.time()
         self.recent_reconnect_count = 1
         try:
             self.source_cloud.connect()
         except exceptions.CloudConnectionError:
-            warnings.warn("Initial cloud connection attempt failed, retrying...", exceptions.UnexpectedWebsocketEventWarning)
+            warnings.warn(
+                "Initial cloud connection attempt failed, retrying...",
+                exceptions.UnexpectedWebsocketEventWarning,
+            )
         self.packets_left = []
-    
+
     def wait_before_reconnect(self):
         if time.time() - self.most_recent_reconnection_time > self.RECENT_RECONNECT_TIME_DELTA:
             self.recent_reconnect_count = 0
@@ -166,16 +194,17 @@ class WebSocketEventStream(EventStream):
             timeout_value = 0
         if self.source_cloud.websocket.gettimeout() != timeout_value:
             self.source_cloud.websocket.settimeout(timeout_value)
-        # print("Receiving...")
         try:
             received = self.source_cloud.websocket.recv().splitlines()
-        except (websocket.WebSocketTimeoutException, ssl.SSLWantReadError):
+        except (
+            websocket.WebSocketTimeoutException,
+            ssl.SSLWantReadError,
+            BlockingIOError,
+        ):  # BlockingIOError can happen on non-SSL cloud servers (like self-hosted cloud servers)
             return
-        # print(f"{received=}")
         self.packets_left.extend(received)
 
     def read(self, amount: int = -1) -> Iterator[dict[str, Any]]:
-        # print("Reading...")
         i = 0
         recv_once = amount == -1
         recv_at_least = max(amount, 0)
@@ -187,16 +216,19 @@ class WebSocketEventStream(EventStream):
             has_timeout = False
             timeout_end = 0.0
         done = False
-        # print("Getting data...")
         with self.reading:
             while not done:
-                # print("Getting data...")
                 try:
-                    self.receive_new(not recv_once, timeout = timeout_end - time.time() if has_timeout else None)
-                    while ((not has_timeout or time.time() < timeout_end)
-                        and ((recv_once and self.packets_left) or (not recv_once and i < recv_at_least))):
+                    self.receive_new(
+                        not recv_once, timeout=timeout_end - time.time() if has_timeout else None
+                    )
+                    while (not has_timeout or time.time() < timeout_end) and (
+                        (recv_once and self.packets_left) or (not recv_once and i < recv_at_least)
+                    ):
                         if not self.packets_left and not recv_once:
-                            self.receive_new(timeout = timeout_end - time.time() if has_timeout else None)
+                            self.receive_new(
+                                timeout=timeout_end - time.time() if has_timeout else None
+                            )
                         if not self.packets_left:
                             continue
                         i += 1
@@ -216,12 +248,13 @@ class WebSocketEventStream(EventStream):
                     traceback.print_exc()
                     self.wait_before_reconnect()
                     self.source_cloud.reconnect()
-    
+
     def __del__(self):
         self.close()
-        
+
     def close(self) -> None:
         self.source_cloud.disconnect()
+
 
 class BaseCloud(AnyCloud[Union[str, int]]):
     """
@@ -258,6 +291,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
 
         print_connect_messages: Whether to print a message on every connect to the cloud server. Defaults to False.
     """
+
     project_id: Optional[Union[str, int]]
     cloud_host: str
     ws_shortterm_ratelimit: float
@@ -278,7 +312,9 @@ class BaseCloud(AnyCloud[Union[str, int]]):
 
         # Required internal attributes that every object representing a cloud needs to have (no matter what cloud is represented):
         self._session = _session
-        self.active_connection = False #whether a connection to a cloud variable server is currently established
+        self.active_connection = (
+            False  # whether a connection to a cloud variable server is currently established
+        )
 
         self.websocket = websocket.WebSocket(sslopt={"cert_reqs": ssl.CERT_NONE})
         self.recorder = None  # A CloudRecorder object that records cloud activity for the values to be retrieved later,
@@ -300,12 +336,12 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self.cookie = None
         self.origin = None
         self.print_connect_message = False
-        
+
         self.project_id = project_id
-    
+
     def shortterm_ratelimit_hint(self) -> float:
         return self.ws_shortterm_ratelimit
-    
+
     def longterm_ratelimit_hint(self) -> float:
         return self.ws_longterm_ratelimit
 
@@ -316,7 +352,8 @@ class BaseCloud(AnyCloud[Union[str, int]]):
     def _assert_auth(self):
         if self._session is None:
             raise exceptions.Unauthenticated(
-                "You need to use session.connect_cloud (NOT get_cloud) in order to perform this operation.")
+                "You need to use session.connect_cloud (NOT get_cloud) in order to perform this operation."
+            )
 
     def _send_packet(self, packet):
         try:
@@ -341,7 +378,9 @@ class BaseCloud(AnyCloud[Union[str, int]]):
                         self.websocket.send(json.dumps(packet) + "\n")
                     except Exception:
                         self.active_connection = False
-                        raise exceptions.CloudConnectionError(f"Sending packet failed three times in a row: {packet}")
+                        raise exceptions.CloudConnectionError(
+                            f"Sending packet failed three times in a row: {packet}"
+                        )
 
     def _send_packet_list(self, packet_list):
         packet_string = "".join([json.dumps(packet) + "\n" for packet in packet_list])
@@ -368,7 +407,8 @@ class BaseCloud(AnyCloud[Union[str, int]]):
                     except Exception:
                         self.active_connection = False
                         raise exceptions.CloudConnectionError(
-                            f"Sending packet list failed four times in a row: {packet_list}")
+                            f"Sending packet list failed four times in a row: {packet_list}"
+                        )
 
     def _handshake(self):
         packet = {"method": "handshake", "user": self.username, "project_id": self.project_id}
@@ -386,7 +426,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             origin=self.origin,
             enable_multithread=True,
             timeout=self.ws_timeout,
-            header=self.header
+            header=self.header,
         )
         self._handshake()
         self.active_connection = True
@@ -408,29 +448,29 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             self.event_stream = None
 
     def _assert_valid_value(self, value):
-        if not (value in [True, False, float('inf'), -float('inf')]):
+        if not (value in [True, False, float("inf"), -float("inf")]):
             value = str(value)
             if len(value) > self.length_limit:
-                raise (exceptions.InvalidCloudValue(
-                    f"Value exceeds length limit: {str(value)}"
-                ))
+                raise (exceptions.InvalidCloudValue(f"Value exceeds length limit: {str(value)}"))
             if not self.allow_non_numeric:
                 x = value.replace(".", "")
                 x = x.replace("-", "")
                 if not (x.isnumeric() or x == ""):
-                    raise (exceptions.InvalidCloudValue(
-                        "Value not numeric"
-                    ))
+                    raise (exceptions.InvalidCloudValue("Value not numeric"))
 
     def _enforce_ratelimit(self, *, n):
         # n is the amount of variables being set
-        if (time.time() - self.first_var_set) / (
-                self.var_stets_since_first + 1) > self.ws_longterm_ratelimit:  # if the average delay between cloud variable sets has been bigger than the long-term rate-limit, cloud variables can be set fast (wait time smaller than long-term rate limit) again
+        if (
+            (time.time() - self.first_var_set) / (self.var_stets_since_first + 1)
+            > self.ws_longterm_ratelimit
+        ):  # if the average delay between cloud variable sets has been bigger than the long-term rate-limit, cloud variables can be set fast (wait time smaller than long-term rate limit) again
             self.var_stets_since_first = 0
             self.first_var_set = time.time()
 
         wait_time = self.ws_shortterm_ratelimit * n
-        if time.time() - self.first_var_set > 25:  # if cloud variables have been continously set fast (wait time smaller than long-term rate limit) for 25 seconds, they should be set slow now (wait time = long-term rate limit) to avoid getting rate-limited
+        if (
+            time.time() - self.first_var_set > 25
+        ):  # if cloud variables have been continously set fast (wait time smaller than long-term rate limit) for 25 seconds, they should be set slow now (wait time = long-term rate limit) to avoid getting rate-limited
             wait_time = self.ws_longterm_ratelimit * n
         while self.last_var_set + wait_time >= time.time():
             time.sleep(0.001)
@@ -469,7 +509,7 @@ class BaseCloud(AnyCloud[Union[str, int]]):
 
         Args:
             var_value_dict (dict): variable:value dictionary with the variables / values to set. The dict should like this: {"var1":"value1", "var2":"value2", ...}
-        
+
         Kwargs:
             intelligent_waits (boolean): When enabled, the method will automatically decide how long to wait before performing this cloud variable set, to make sure no rate limits are triggered
         """
@@ -499,9 +539,11 @@ class BaseCloud(AnyCloud[Union[str, int]]):
         self.last_var_set = time.time()
 
     def get_var(self, var, *, recorder_initial_values: Optional[dict] = None):
-        var = "☁ "+var.removeprefix("☁ ")
+        var = "☁ " + var.removeprefix("☁ ")
         if self.recorder is None:
-            self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
+            self.recorder = cloud_recorder.CloudRecorder(
+                self, initial_values=recorder_initial_values
+            )
             self.recorder.start()
             start_time = time.time()
             while not (self.recorder.cloud_values != {} or start_time < time.time() - 5):
@@ -510,7 +552,9 @@ class BaseCloud(AnyCloud[Union[str, int]]):
 
     def get_all_vars(self, *, recorder_initial_values: Optional[dict] = None):
         if self.recorder is None:
-            self.recorder = cloud_recorder.CloudRecorder(self, initial_values=recorder_initial_values)
+            self.recorder = cloud_recorder.CloudRecorder(
+                self, initial_values=recorder_initial_values
+            )
             self.recorder.start()
             start_time = time.time()
             while not (self.recorder.cloud_values != {} or start_time < time.time() - 5):
@@ -522,9 +566,10 @@ class BaseCloud(AnyCloud[Union[str, int]]):
             raise ValueError("Cloud already has an event stream.")
         self.event_stream = WebSocketEventStream(self)
         return self.event_stream
-    
+
     def __del__(self):
         self.disconnect()
+
 
 class LogCloudMeta(ABCMeta):
     def __instancecheck__(cls, instance) -> bool:
@@ -532,7 +577,10 @@ class LogCloudMeta(ABCMeta):
             return isinstance(instance, BaseCloud)
         return False
 
+
 class LogCloud(BaseCloud, metaclass=LogCloudMeta):
     @abstractmethod
-    def logs(self, *, filter_by_var_named: Optional[str] = None, limit: int = 100, offset: int = 0) -> list[cloud_activity.CloudActivity]:
+    def logs(
+        self, *, filter_by_var_named: Optional[str] = None, limit: int = 100, offset: int = 0
+    ) -> list[cloud_activity.CloudActivity]:
         pass
