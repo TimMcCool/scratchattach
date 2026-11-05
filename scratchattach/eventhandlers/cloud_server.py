@@ -1,4 +1,5 @@
 from __future__ import annotations
+import socket
 
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from threading import Thread
@@ -10,6 +11,7 @@ from scratchattach.site.user import User
 from ._base import BaseEventHandler
 import traceback
 
+CLIENT_SEND_QUEUE_LIMIT = 1000  # if a client has more than this many messages in their send queue, disconnect them to prevent lag
 
 class TwCloudSocket(WebSocket):
     server: TwCloudServer
@@ -197,7 +199,6 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         BaseEventHandler.__init__(self)
 
         self.running = False
-        self._events = {}  # saves event functions called on cloud updates
 
         self.tw_clients = {}  # saves connected clients
         self.tw_variables = {}  # holds cloud variable states
@@ -264,28 +265,39 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         for project_id in data:
             self.set_project_vars(project_id, data[project_id])
 
+    def _distribute_to_clients(self, project_id, json_string, *, skip_forward=None):
+        for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
+            if client == skip_forward:
+                continue
+            if len(client.sendq) > CLIENT_SEND_QUEUE_LIMIT: # if the client has a large send queue, disconnect them to prevent lag
+                client.sendq.clear()  # free the memory now
+                try:
+                    client.client.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+                continue
+            client.sendMessage(json_string)
+
     def set_project_vars(self, project_id, data, *, user="@server"):
         project_id = str(project_id)
         self.tw_variables[project_id] = data
-        for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
-            client.sendMessage(
-                "\n".join(
-                    [
-                        json.dumps(
-                            {
-                                "method": "set",
-                                "project_id": project_id,
-                                "name": "☁ " + varname,
-                                "value": data[varname],
-                                "server": "scratchattach/2.0.0",
-                                "timestamp": time.time() * 1000,
-                                "user": user,
-                            }
-                        )
-                        for varname in data
-                    ]
+        json_string = "\n".join(
+            [
+                json.dumps(
+                    {
+                        "method": "set",
+                        "project_id": project_id,
+                        "name": "☁ " + varname,
+                        "value": data[varname],
+                        "server": "scratchattach/2.0.0",
+                        "timestamp": time.time() * 1000,
+                        "user": user,
+                    }
                 )
-            )
+                for varname in data
+            ]
+        )
+        self._distribute_to_vars(project_id, json_string, user=user)
 
     def set_var(self, project_id, var_name, value, *, user="@server", skip_forward=None):
         var_name = var_name.replace("☁ ", "")
@@ -293,23 +305,18 @@ class TwCloudServer(SimpleWebSocketServer, BaseEventHandler):
         if project_id not in self.tw_variables:
             self.tw_variables[project_id] = {}
         self.tw_variables[project_id][var_name] = value
-
+        json_string = json.dumps(
+            {
+                "method": "set",
+                "project_id": project_id,
+                "name": "☁ " + var_name,
+                "value": value,
+                "timestamp": time.time() * 1000,
+                "user": user,
+            }
+        )
         if self.sync_players is True:
-            for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
-                if client == skip_forward:
-                    continue
-                client.sendMessage(
-                    json.dumps(
-                        {
-                            "method": "set",
-                            "project_id": project_id,
-                            "name": "☁ " + var_name,
-                            "value": value,
-                            "timestamp": time.time() * 1000,
-                            "user": user,
-                        }
-                    )
-                )
+            self._distribute_to_vars(project_id, json_string, user=user, skip_forward=skip_forward)
 
     def _check_value(self, value):
         # Checks if a received cloud value satisfies the server's constraints
