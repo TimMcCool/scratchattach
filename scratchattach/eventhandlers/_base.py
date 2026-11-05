@@ -41,13 +41,17 @@ class BaseEventHandler(ABC):
             else:
                 self._thread = None
                 self._updater()
-    
+
+    def _clear_finished_threads(self):
+        self._call_threads = [t for t in self._call_threads if t.is_alive()]
+
     def call_event(self, event_name, args : list = []):
         try:
             # print(f"Calling for {event_name}...")
             if event_name in self._threaded_events:
                 for func in self._threaded_events[event_name]:
                     thread = Thread(target=func, args=args)
+                    self._clear_finished_threads()
                     self._call_threads.append(thread)
                     thread.start()
             if event_name in self._events:
