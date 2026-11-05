@@ -700,7 +700,7 @@ class TwSSLCloudServer(SimpleSSLWebSocketServer, BaseEventHandler):
                 "user": user,
             }
         )
-        if self.sync_players is True:
+        if self.sync_players:
             self._distribute_to_clients(project_id, json_string, skip_forward=skip_forward)
 
     def _check_value(self, value: Any) -> bool:
