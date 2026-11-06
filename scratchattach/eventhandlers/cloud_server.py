@@ -5,8 +5,8 @@ import json
 import time
 import ssl
 import traceback
-import socket
 from typing import Any
+from threading import Thread
 import warnings
 
 from SimpleWebSocketServer import SimpleSSLWebSocketServer, SimpleWebSocketServer, WebSocket
@@ -73,10 +73,7 @@ class TwCloudSocket(WebSocket):
             "cloud": self.server.get_project_cloud(data["project_id"]),
         }
         # raise event
-        _a = cloud_activity.CloudActivity(
-            username=data["user"],
-            timestamp=time.time() * 1000
-        )
+        _a = cloud_activity.CloudActivity(username=data["user"], timestamp=time.time() * 1000)
         _a._update_from_dict(send_to_clients)
         self.server.call_event("on_set", [_a, self])
 

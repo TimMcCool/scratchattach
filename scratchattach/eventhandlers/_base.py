@@ -135,6 +135,7 @@ class BaseEventHandler(ABC):
             # => the decorator doesn't provide arguments
             inner(function)
 
+
 CLIENT_SEND_QUEUE_LIMIT = 1000  # if a client has more than this many messages in their send queue, disconnect them to prevent lag
 
 
@@ -263,9 +264,9 @@ class BaseCloudServer(BaseEventHandler):
         for project_id, project_data in data.items():
             self.set_project_vars(project_id, project_data, no_prefix=no_prefix)
 
-    def _distribute_to_clients(self, project_id, json_string, *, skip_forward=None):
+    def _distribute_to_clients(self, project_id, json_string, *, skip_broadcast_for=None):
         for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
-            if client == skip_forward:
+            if client == skip_broadcast_for:
                 continue
             if (
                 len(client.sendq) > CLIENT_SEND_QUEUE_LIMIT
@@ -290,8 +291,8 @@ class BaseCloudServer(BaseEventHandler):
         if not no_prefix:
             data = {"☁ " + key.removeprefix("☁ "): value for key, value in data.items()}
         self.tw_variables[project_id].update(data)
-        json_string = "\n".join(
-            json.dumps(
+        packets = [
+            (
                 {
                     "method": "set",
                     "project_id": project_id,
@@ -303,7 +304,8 @@ class BaseCloudServer(BaseEventHandler):
                 }
             )
             for varname in data
-        )
+        ]
+        json_string = "\n".join(json.dumps(packets) for packet in packets)
         self._distribute_to_clients(project_id, json_string)
         for packet in packets:
             self.call_event("outgoing_packet", [packet])
@@ -324,18 +326,19 @@ class BaseCloudServer(BaseEventHandler):
         if project_id not in self.tw_variables:
             self.tw_variables[project_id] = {}
         self.tw_variables[project_id][var_name] = value
-        json_string = json.dumps(
-            {
-                "method": "set",
-                "project_id": project_id,
-                "name": var_name,
-                "value": value,
-                "timestamp": time.time() * 1000,
-                "user": user,
-            }
-        )
+        packet = {
+            "method": "set",
+            "project_id": project_id,
+            "name": var_name,
+            "value": value,
+            "timestamp": time.time() * 1000,
+            "user": user,
+        }
+        json_string = json.dumps(packet)
         if self.sync_players:
-            self._distribute_to_clients(project_id, json_string, skip_forward=skip_forward)
+            self._distribute_to_clients(
+                project_id, json_string, skip_broadcast_for=skip_broadcast_for
+            )
         self.call_event("outgoing_packet", [packet])
 
     def _check_value(self, value):
@@ -363,6 +366,7 @@ class BaseCloudServer(BaseEventHandler):
         project_id = str(project_id)
         if project_id not in self.linked_clouds:
             from scratchattach.cloud import _base as cloud_base
+
             self.linked_clouds[project_id] = cloud_base.CloudServerAdapter(self, project_id)
         return self.linked_clouds[project_id]
 
