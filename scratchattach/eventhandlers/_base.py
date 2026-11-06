@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import time
 import ssl
+import socket
 from abc import ABC, abstractmethod
 from typing import Optional, Any, TYPE_CHECKING
 from collections import defaultdict
@@ -51,6 +52,9 @@ class BaseEventHandler(ABC):
                 self._thread = None
                 self._updater()
 
+    def _clear_finished_threads(self):
+        self._call_threads = [t for t in self._call_threads if t.is_alive()]
+
     def call_event(self, event_name, args: list = []):
         try:
             # print(f"Calling for {event_name}...")
@@ -59,6 +63,7 @@ class BaseEventHandler(ABC):
                     thread = Thread(target=func, args=args)
                     self._call_threads.append(thread)
                     thread.start()
+                self._clear_finished_threads()
             if event_name in self._events:
                 for func in self._events[event_name]:
                     # print(f"Called {func}.")
@@ -129,6 +134,8 @@ class BaseEventHandler(ABC):
         else:
             # => the decorator doesn't provide arguments
             inner(function)
+
+CLIENT_SEND_QUEUE_LIMIT = 1000  # if a client has more than this many messages in their send queue, disconnect them to prevent lag
 
 
 class BaseCloudServer(BaseEventHandler):
@@ -256,6 +263,21 @@ class BaseCloudServer(BaseEventHandler):
         for project_id, project_data in data.items():
             self.set_project_vars(project_id, project_data, no_prefix=no_prefix)
 
+    def _distribute_to_clients(self, project_id, json_string, *, skip_forward=None):
+        for client in [self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)]:
+            if client == skip_forward:
+                continue
+            if (
+                len(client.sendq) > CLIENT_SEND_QUEUE_LIMIT
+            ):  # if the client has a large send queue, disconnect them to prevent lag
+                client.sendq.clear()  # free the memory now
+                try:
+                    client.client.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+                continue
+            client.sendMessage(json_string)
+
     def set_project_vars(
         self,
         project_id: Any,
@@ -268,21 +290,21 @@ class BaseCloudServer(BaseEventHandler):
         if not no_prefix:
             data = {"☁ " + key.removeprefix("☁ "): value for key, value in data.items()}
         self.tw_variables[project_id].update(data)
-        packets = [
-            {
-                "method": "set",
-                "project_id": project_id,
-                "name": varname,
-                "value": data[varname],
-                "server": "scratchattach/3",
-                "timestamp": time.time() * 1000,
-                "user": user,
-            }
+        json_string = "\n".join(
+            json.dumps(
+                {
+                    "method": "set",
+                    "project_id": project_id,
+                    "name": varname,
+                    "value": data[varname],
+                    "server": "scratchattach/3",
+                    "timestamp": time.time() * 1000,
+                    "user": user,
+                }
+            )
             for varname in data
-        ]
-        packets_string = "\n".join(json.dumps(packet) for packet in packets)
-        for client in (self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)):
-            client.sendMessage(packets_string)
+        )
+        self._distribute_to_clients(project_id, json_string)
         for packet in packets:
             self.call_event("outgoing_packet", [packet])
 
@@ -302,23 +324,18 @@ class BaseCloudServer(BaseEventHandler):
         if project_id not in self.tw_variables:
             self.tw_variables[project_id] = {}
         self.tw_variables[project_id][var_name] = value
-
-        packet = {
-            "method": "set",
-            "project_id": project_id,
-            "name": var_name,
-            "value": value,
-            "server": "scratchattach/3",
-            "timestamp": time.time() * 1000,
-            "user": user,
-        }
-        if self.sync_players is True:
-            for client in (
-                self.tw_clients[ip]["client"] for ip in self.active_user_ips(project_id)
-            ):
-                if client == skip_broadcast_for:
-                    continue
-                client.sendMessage(json.dumps(packet))
+        json_string = json.dumps(
+            {
+                "method": "set",
+                "project_id": project_id,
+                "name": var_name,
+                "value": value,
+                "timestamp": time.time() * 1000,
+                "user": user,
+            }
+        )
+        if self.sync_players:
+            self._distribute_to_clients(project_id, json_string, skip_forward=skip_forward)
         self.call_event("outgoing_packet", [packet])
 
     def _check_value(self, value):
@@ -326,7 +343,7 @@ class BaseCloudServer(BaseEventHandler):
         if self.length_limit is not None:
             if len(str(value)) > self.length_limit:
                 return False
-        if self.allow_non_numeric is False:
+        if not self.allow_non_numeric:
             x = value.replace(".", "")
             x = x.replace("-", "")
             if not (x.isnumeric() or x == ""):
