@@ -69,7 +69,6 @@ class TwCloudSocket(WebSocket):
             "project_id": data["project_id"],
             "name": data["name"],
             "value": data["value"],
-            # TODO: Add a cloud to the activity dict (possibly some kind of adapter)
             "cloud": self.server.get_project_cloud(data["project_id"]),
         }
         # raise event
