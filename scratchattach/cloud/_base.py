@@ -743,6 +743,7 @@ class CloudServerAdapterEventStream(EventStream):
                     self.timeout is None or self.timeout > 0.0,
                     max(end_time - time.time(), 0) if end_time is not None else None,
                 )
+                progress += 1
             except queue.Empty:
                 pass
 

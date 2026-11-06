@@ -290,7 +290,7 @@ class BaseCloudServer(BaseEventHandler):
         project_id = str(project_id)
         if not no_prefix:
             data = {"☁ " + key.removeprefix("☁ "): value for key, value in data.items()}
-        self.tw_variables[project_id].update(data)
+        self.tw_variables.setdefault(project_id, {}).update(data)
         packets = [
             (
                 {
@@ -305,7 +305,7 @@ class BaseCloudServer(BaseEventHandler):
             )
             for varname in data
         ]
-        json_string = "\n".join(json.dumps(packets) for packet in packets)
+        json_string = "\n".join(json.dumps(packet) for packet in packets)
         self._distribute_to_clients(project_id, json_string)
         for packet in packets:
             self.call_event("outgoing_packet", [packet])
