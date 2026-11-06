@@ -14,4 +14,13 @@ identifier.sqlite
 obfuscated.sb3
 .pytest_cache
 .ruff_cache
+
+.coverage
+certfile.pem
+coverage.xml
+keyfile.pem
+.test/test.py
+.test/teststststs.py
+.test/ws_client_test.py
+tests/test_tw_cloud_debug_compliance.py
 .vscode
